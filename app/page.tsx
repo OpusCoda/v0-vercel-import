@@ -868,6 +868,24 @@ export default function Home() {
           {data && (
             <>
               <div className="bg-card border border-card rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-4 pb-4 border-b border-[#27272a]">
+                  <h3 className="text-lg font-semibold">Tokens</h3>
+                  <div className="flex gap-2">
+                    <input
+                      className="w-64 p-2 text-sm bg-[#0b0b0d] border border-[#27272a] rounded-xl text-white placeholder:text-[#71717a] focus:outline-none focus:ring-2 focus:ring-[#7c3aed] transition-all"
+                      placeholder="Token address (0x...)"
+                      value={newToken}
+                      onChange={(e) => setNewToken(e.target.value)}
+                    />
+                    <button
+                      className="px-4 py-2 text-sm bg-accent hover:bg-accent-hover text-white rounded-xl transition-all whitespace-nowrap font-semibold"
+                      onClick={addToken}
+                    >
+                      Add token
+                    </button>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-[minmax(200px,2fr)_1fr_1fr_1fr] gap-6 pb-3 mb-3 border-b border-[#27272a]">
                   <div className="text-sm font-semibold text-[#a1a1aa]">Token</div>
                   <div className="text-sm font-semibold text-[#a1a1aa] text-right">Price</div>
@@ -1196,84 +1214,6 @@ export default function Home() {
                   ))}
                 </div>
               )}
-
-              <div className="pt-5 border-t border-[#27272a] space-y-3">
-                <h3 className="text-base font-semibold">Track Tokens</h3>
-                <p className="text-xs text-[#a1a1aa]">Add ERC20 token contract addresses to track balances</p>
-                <div className="flex gap-2">
-                  <input
-                    className="flex-1 p-3 text-sm bg-[#0b0b0d] border border-[#27272a] rounded-xl text-white placeholder:text-[#71717a] focus:outline-none focus:ring-2 focus:ring-[#7c3aed] transition-all"
-                    placeholder="Token Contract Address (0x...)"
-                    value={newToken}
-                    onChange={(e) => setNewToken(e.target.value)}
-                  />
-                  <button
-                    className="px-6 p-3 text-sm bg-accent hover:bg-accent-hover text-white rounded-xl transition-all whitespace-nowrap font-semibold"
-                    onClick={addToken}
-                  >
-                    Add
-                  </button>
-                </div>
-
-                {tokens.length > 0 && (
-                  <div className="space-y-2">
-                    {tokens.map((token, i) => (
-                      <div
-                        key={i}
-                        className="flex justify-between items-center p-3 bg-[#0b0b0d] border border-[#27272a] rounded-xl text-sm"
-                      >
-                        <span className="break-all text-white font-mono text-xs">
-                          {token.slice(0, 6)}...{token.slice(-4)}
-                        </span>
-                        <button
-                          className="px-3 py-1.5 ml-3 bg-[#FF5252] text-white rounded-lg hover:bg-[#E04848] text-xs whitespace-nowrap transition-all"
-                          onClick={() => removeToken(i)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-5 border-t border-[#27272a] space-y-3">
-                <h3 className="text-base font-semibold">Track Validators</h3>
-                <p className="text-xs text-[#a1a1aa]">Add validator IDs to track your validator positions</p>
-                <div className="flex gap-2">
-                  <input
-                    className="flex-1 p-3 text-sm bg-[#0b0b0d] border border-[#27272a] rounded-xl text-white placeholder:text-[#71717a] focus:outline-none focus:ring-2 focus:ring-[#7c3aed] transition-all"
-                    placeholder="Validator ID (e.g., 1)"
-                    value={newValidatorId}
-                    onChange={(e) => setNewValidatorId(e.target.value)}
-                  />
-                  <button
-                    className="px-6 p-3 text-sm bg-accent hover:bg-accent-hover text-white rounded-xl transition-all whitespace-nowrap font-semibold"
-                    onClick={addValidatorId}
-                  >
-                    Add
-                  </button>
-                </div>
-
-                {manualValidatorIds.length > 0 && (
-                  <div className="space-y-2">
-                    {manualValidatorIds.map((validatorId, i) => (
-                      <div
-                        key={i}
-                        className="flex justify-between items-center p-3 bg-[#0b0b0d] border border-[#27272a] rounded-xl text-sm"
-                      >
-                        <span className="text-white font-mono text-xs">Validator #{validatorId}</span>
-                        <button
-                          className="px-3 py-1.5 ml-3 bg-[#FF5252] text-white rounded-lg hover:bg-[#E04848] text-xs whitespace-nowrap transition-all"
-                          onClick={() => removeValidatorId(i)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               {wallets.length > 0 && (
                 <button
