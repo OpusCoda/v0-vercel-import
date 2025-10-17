@@ -4,7 +4,6 @@ import { neon } from "@neondatabase/serverless"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-// Generate a unique 6-character Portfolio ID
 function generateUniqueId(): string {
   const chars = "ABCDEFGHJKLMNOPQRSTUVWXYZ23456789"
   let code = ""
@@ -14,9 +13,8 @@ function generateUniqueId(): string {
   return code
 }
 
-export async function savePortfolio(wallets: { address: string; label?: string }[]) {
+export async function savePortfolio(wallets: { address: string; label?: string }[], tokens: string[] = []) {
   try {
-    // Generate unique ID (retry if collision)
     let portfolioId = generateUniqueId()
     let attempts = 0
 
@@ -24,11 +22,10 @@ export async function savePortfolio(wallets: { address: string; label?: string }
       try {
         await sql`
           INSERT INTO portfolios (portfolio_id, wallet_data)
-          VALUES (${portfolioId}, ${JSON.stringify({ wallets })})
+          VALUES (${portfolioId}, ${JSON.stringify({ wallets, tokens })})
         `
         return { success: true, portfolioId }
       } catch (error: any) {
-        // If unique constraint violation, try again with new ID
         if (error.code === "23505") {
           portfolioId = generateUniqueId()
           attempts++
@@ -57,8 +54,15 @@ export async function loadPortfolio(portfolioId: string) {
       return { success: false, error: "Portfolio ID not found" }
     }
 
-    const walletData = result[0].wallet_data as { wallets: { address: string; label?: string }[] }
-    return { success: true, wallets: walletData.wallets }
+    const walletData = result[0].wallet_data as {
+      wallets: { address: string; label?: string }[]
+      tokens?: string[]
+    }
+    return {
+      success: true,
+      wallets: walletData.wallets,
+      tokens: walletData.tokens || [],
+    }
   } catch (error) {
     console.error("Error loading portfolio:", error)
     return { success: false, error: "Failed to load portfolio" }

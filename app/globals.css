@@ -38,6 +38,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --font-inter: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 .dark {
@@ -76,8 +78,8 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-mono), "JetBrains Mono", "Roboto Mono", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -120,26 +122,66 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    background-color: #000;
-    color: #fff;
-    font-family: "Press Start 2P", cursive;
+    background-color: #0b0b0d;
+    color: #f1f1f1;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  input,
+  button {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  h1 {
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 600;
+  }
+
+  h2 {
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 500;
+  }
+
+  h3 {
+    font-size: 16px;
+    line-height: 1.3;
+    font-weight: 500;
   }
 }
 
-.nes-container {
-  background-color: #212529;
-  margin-bottom: 1rem;
-}
+@layer utilities {
+  .text-gain {
+    color: #00c853;
+  }
 
-.pulse-green {
-  color: #00ff00;
-}
+  .text-loss {
+    color: #ff5252;
+  }
 
-.mario-red {
-  color: #ff0000;
-}
+  .text-neutral {
+    color: #a1a1aa;
+  }
 
-.coin-yellow {
-  color: #ffd700;
+  .bg-card {
+    background-color: #131316;
+  }
+
+  .border-card {
+    border-color: #27272a;
+  }
+
+  .bg-accent {
+    background-color: #7c3aed;
+  }
+
+  .bg-accent-hover {
+    background-color: #8b5cf6;
+  }
 }
