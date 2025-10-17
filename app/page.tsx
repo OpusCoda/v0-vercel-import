@@ -6,6 +6,7 @@ import { ethers } from "ethers"
 import { savePortfolio, loadPortfolio } from "./actions"
 import PortfolioCard from "@/components/portfolio-card"
 import { fetchPulseAssets, fetchLPPositions } from "@/lib/fetch-live-data"
+import ValidatorInfo from "@/components/validator-info" // Import ValidatorInfo
 
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -189,6 +190,8 @@ export default function Home() {
   const [tokenPriceChanges, setTokenPriceChanges] = useState<Record<string, number>>({})
   const [hexStakes, setHexStakes] = useState<any[]>([])
   const [validatorPositions, setValidatorPositions] = useState<any[]>([]) // Updated validator positions state to include more comprehensive data
+  const [manualValidatorIds, setManualValidatorIds] = useState<string[]>([]) // Added state for manual validator IDs
+  const [newValidatorId, setNewValidatorId] = useState("") // Added state for new manual validator ID input
   const [notification, setNotification] = useState<{ message: string; show: boolean }>({ message: "", show: false })
 
   const priceCache = useRef<{
@@ -267,7 +270,7 @@ export default function Home() {
     }
     const updated = [...tokens, newToken]
     setTokens(updated)
-    localStorage.setItem("tracker_portfolio", JSON.stringify({ wallets, tokens: updated }))
+    localStorage.setItem("tracker_portfolio", JSON.JSON.stringify({ wallets, tokens: updated }))
     setNewToken("")
     setError("")
   }
@@ -277,6 +280,41 @@ export default function Home() {
     setTokens(updated)
     localStorage.setItem("tracker_portfolio", JSON.stringify({ wallets, tokens: updated }))
   }
+
+  const addValidatorId = () => {
+    const trimmedId = newValidatorId.trim()
+    if (!trimmedId || manualValidatorIds.includes(trimmedId)) {
+      setError("Invalid or duplicate validator ID")
+      return
+    }
+    const updated = [...manualValidatorIds, trimmedId]
+    setManualValidatorIds(updated)
+    localStorage.setItem("tracker_validator_ids", JSON.stringify(updated))
+    setNewValidatorId("")
+    setError("")
+  }
+
+  const removeValidatorId = (index: number) => {
+    const updated = manualValidatorIds.filter((_, i) => i !== index)
+    setManualValidatorIds(updated)
+    localStorage.setItem("tracker_validator_ids", JSON.stringify(updated))
+  }
+
+  useEffect(() => {
+    const saved = localStorage.getItem("tracker_validator_ids")
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed)) {
+          setManualValidatorIds(parsed)
+        }
+      } catch (err) {
+        console.error("Error loading validator IDs:", err)
+      }
+    } else {
+      setManualValidatorIds(["1"])
+    }
+  }, [])
 
   const savePortfolioId = async () => {
     if (wallets.length === 0) {
@@ -1034,9 +1072,20 @@ export default function Home() {
                 />
               )}
 
+              {manualValidatorIds.length > 0 && (
+                <div className="bg-card border border-card rounded-2xl p-5">
+                  <h3 className="text-lg font-semibold mb-4">Manual Validator Positions</h3>
+                  <div className="space-y-4">
+                    {manualValidatorIds.map((validatorId) => (
+                      <ValidatorInfo key={validatorId} validatorId={validatorId} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {validatorPositions.length > 0 && (
                 <PortfolioCard
-                  title="PulseChain Validator Positions"
+                  title="PulseChain Validator Positions (Auto-discovered)"
                   total={`${validatorPositions.reduce((sum, v) => sum + Number(v.totalStaked), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS staked | ${validatorPositions.length} validator${validatorPositions.length > 1 ? "s" : ""}`}
                   totalLabel=""
                   items={validatorPositions.flatMap((validator: any) => {
@@ -1179,6 +1228,44 @@ export default function Home() {
                         <button
                           className="px-3 py-1.5 ml-3 bg-[#FF5252] text-white rounded-lg hover:bg-[#E04848] text-xs whitespace-nowrap transition-all"
                           onClick={() => removeToken(i)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-5 border-t border-[#27272a] space-y-3">
+                <h3 className="text-base font-semibold">Track Validators</h3>
+                <p className="text-xs text-[#a1a1aa]">Add validator IDs to track your validator positions</p>
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 p-3 text-sm bg-[#0b0b0d] border border-[#27272a] rounded-xl text-white placeholder:text-[#71717a] focus:outline-none focus:ring-2 focus:ring-[#7c3aed] transition-all"
+                    placeholder="Validator ID (e.g., 1)"
+                    value={newValidatorId}
+                    onChange={(e) => setNewValidatorId(e.target.value)}
+                  />
+                  <button
+                    className="px-6 p-3 text-sm bg-accent hover:bg-accent-hover text-white rounded-xl transition-all whitespace-nowrap font-semibold"
+                    onClick={addValidatorId}
+                  >
+                    Add
+                  </button>
+                </div>
+
+                {manualValidatorIds.length > 0 && (
+                  <div className="space-y-2">
+                    {manualValidatorIds.map((validatorId, i) => (
+                      <div
+                        key={i}
+                        className="flex justify-between items-center p-3 bg-[#0b0b0d] border border-[#27272a] rounded-xl text-sm"
+                      >
+                        <span className="text-white font-mono text-xs">Validator #{validatorId}</span>
+                        <button
+                          className="px-3 py-1.5 ml-3 bg-[#FF5252] text-white rounded-lg hover:bg-[#E04848] text-xs whitespace-nowrap transition-all"
+                          onClick={() => removeValidatorId(i)}
                         >
                           Remove
                         </button>
