@@ -270,7 +270,7 @@ export default function Home() {
     }
     const updated = [...tokens, newToken]
     setTokens(updated)
-    localStorage.setItem("tracker_portfolio", JSON.JSON.stringify({ wallets, tokens: updated }))
+    localStorage.setItem("tracker_portfolio", JSON.stringify({ wallets, tokens: updated }))
     setNewToken("")
     setError("")
   }
