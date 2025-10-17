@@ -11,6 +11,7 @@ interface ValidatorData {
 export default function ValidatorInfo({ validatorId }: { validatorId: string }) {
   const [data, setData] = useState<ValidatorData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [hint, setHint] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -23,23 +24,29 @@ export default function ValidatorInfo({ validatorId }: { validatorId: string }) 
 
     setLoading(true)
     setError(null)
+    setHint(null)
 
     fetch(`/api?validatorId=${validatorId}`)
       .then((res) => {
         console.log("[v0] API response status:", res.status)
-        return res.json()
+        return res.json().then((data) => ({ status: res.status, data }))
       })
-      .then((result) => {
-        console.log("[v0] API response data:", result)
-        if (result.error) throw new Error(result.error)
+      .then(({ status, data: result }) => {
+        if (status === 404 || status === 503) {
+          setError(result.error || "Failed to fetch validator data")
+          setHint(result.hint || null)
+          return
+        }
+
+        if (result.error) {
+          throw new Error(result.error)
+        }
 
         const validatorData: ValidatorData = {
-          index: result.data?.index || result.index || validatorId,
-          balance: result.data?.balance ? Number(result.data.balance) / 1e9 : result.balance || 0,
-          status: result.data?.status || result.status || "Unknown",
-          effectiveBalance: result.data?.effective_balance
-            ? Number(result.data.effective_balance) / 1e9
-            : result.effectiveBalance || 0,
+          index: result.index || validatorId,
+          balance: result.balance || 0,
+          status: result.status || "Unknown",
+          effectiveBalance: result.effectiveBalance || 0,
         }
 
         console.log("[v0] Parsed validator data:", validatorData)
@@ -54,12 +61,23 @@ export default function ValidatorInfo({ validatorId }: { validatorId: string }) 
 
   if (!validatorId) return null
   if (loading) return <p className="text-sm text-[#a1a1aa]">Loading validator #{validatorId}...</p>
-  if (error)
+
+  if (error) {
     return (
-      <p className="text-sm text-red-500">
-        Error loading validator #{validatorId}: {error}
-      </p>
+      <div className="space-y-2 p-3 bg-yellow-500/5 border border-yellow-500/20 rounded">
+        <p className="text-sm text-yellow-500 font-medium">⚠️ Validator #{validatorId}</p>
+        <div className="text-xs text-[#a1a1aa] space-y-2">
+          <p>{error}</p>
+          {hint && <p className="text-yellow-500/80 italic">{hint}</p>}
+          <p className="pt-2 border-t border-yellow-500/10">
+            <strong className="text-white">Note:</strong> The PulseChain Beacon API is currently listed as "Available
+            Soon" on PublicNode. Validator tracking will work automatically once the API becomes publicly available.
+          </p>
+        </div>
+      </div>
     )
+  }
+
   if (!data) return <p className="text-sm text-[#a1a1aa]">No data available for validator #{validatorId}</p>
 
   return (

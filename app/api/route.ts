@@ -8,58 +8,107 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "validatorId is required" }, { status: 400 })
   }
 
-  const beaconUrl = process.env.BEACON_RPC_URL || "https://beacon.g4mm4.io"
+  const rpcUrls = [
+    process.env.BEACON_RPC_URL,
+    "https://checkpoint.pulsechain.com",
+    "https://pulsechain-beacon.publicnode.com",
+  ].filter(Boolean)
 
-  console.log(`[v0] Fetching validator ${validatorId} from beacon chain API`)
+  const stateIds = ["finalized", "head", "justified"]
 
-  try {
-    console.log(`[v0] Trying beacon API: ${beaconUrl}/eth/v1/beacon/states/head/validators/${validatorId}`)
+  let lastError = ""
+  let emptyResponseCount = 0
 
-    const response = await fetch(`${beaconUrl}/eth/v1/beacon/states/head/validators/${validatorId}`, {
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      signal: AbortSignal.timeout(10000),
-    })
+  for (const url of rpcUrls) {
+    for (const stateId of stateIds) {
+      try {
+        const fullUrl = `${url}/eth/v1/beacon/states/${stateId}/validators/${validatorId}`
+        console.log("[v0] Attempting fetch from:", fullUrl)
 
-    console.log(`[v0] Response status: ${response.status} from ${beaconUrl}`)
+        const response = await fetch(fullUrl, {
+          headers: { Accept: "application/json" },
+          signal: AbortSignal.timeout(5000),
+        })
 
-    if (!response.ok) {
-      const text = await response.text()
-      console.log(`[v0] Error response from ${beaconUrl}: ${text.substring(0, 200)}`)
-      throw new Error(`Beacon API returned ${response.status}: ${response.statusText}`)
+        console.log(`[v0] Response from ${url} (${stateId}): ${response.status}`)
+
+        const responseText = await response.text()
+        console.log(`[v0] Response body length: ${responseText.length}`)
+
+        if (response.status === 404) {
+          console.log(`[v0] Validator ${validatorId} not found at ${url} (${stateId})`)
+          lastError = "not_found"
+          continue
+        }
+
+        if (response.ok) {
+          if (!responseText || responseText.trim().length === 0) {
+            console.log(`[v0] Empty response body from ${url} (${stateId}) - endpoint may not support beacon API`)
+            emptyResponseCount++
+            lastError = "empty_response"
+            continue
+          }
+
+          try {
+            const data = JSON.parse(responseText)
+            console.log("[v0] Successfully parsed JSON from:", url, stateId)
+
+            if (!data.data) {
+              console.log("[v0] No validator data in response")
+              lastError = "invalid_response"
+              continue
+            }
+
+            const validatorData = {
+              index: data.data.index,
+              balance: Number(data.data.balance) / 1e9,
+              status: data.data.status,
+              effectiveBalance: Number(data.data.effective_balance) / 1e9,
+            }
+
+            return NextResponse.json(validatorData)
+          } catch (parseError) {
+            console.log(`[v0] JSON parse error from ${url} (${stateId}):`, parseError.message)
+            lastError = `json_parse_error: ${parseError.message}`
+            continue
+          }
+        }
+
+        console.log(`[v0] Failed ${url} (${stateId}): ${response.status} - ${response.statusText}`)
+        lastError = `${response.status}: ${response.statusText}`
+      } catch (error) {
+        console.log(`[v0] Error fetching from ${url} (${stateId}):`, error.message)
+        lastError = error.message
+      }
     }
-
-    const contentType = response.headers.get("content-type")
-    console.log(`[v0] Response content-type: ${contentType}`)
-
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await response.text()
-      console.log(`[v0] Non-JSON response: ${text.substring(0, 200)}`)
-      throw new Error("Beacon API returned non-JSON response")
-    }
-
-    const data = await response.json()
-    console.log(`[v0] Received data structure:`, Object.keys(data))
-
-    if (!data.data) {
-      console.log(`[v0] Invalid data structure:`, data)
-      throw new Error("Invalid validator data structure")
-    }
-
-    const validatorData = {
-      index: data.data?.index || "N/A",
-      balance: data.data?.balance ? Number(data.data.balance) / 1e9 : 0,
-      status: data.data?.status || "Unknown",
-      effectiveBalance: data.data?.effective_balance ? Number(data.data.effective_balance) / 1e9 : 0,
-    }
-
-    console.log(`[v0] Successfully parsed validator data:`, validatorData)
-
-    return NextResponse.json(validatorData)
-  } catch (error) {
-    console.error("[v0] Validator fetch error:", error)
-    return NextResponse.json({ error: `Failed to fetch validator data: ${error.message}` }, { status: 500 })
   }
+
+  if (lastError === "not_found") {
+    return NextResponse.json(
+      {
+        error: `Validator #${validatorId} not found`,
+        hint: "This validator may not exist on PulseChain yet. Try a different validator ID.",
+      },
+      { status: 404 },
+    )
+  }
+
+  if (emptyResponseCount > 0 || lastError === "empty_response") {
+    return NextResponse.json(
+      {
+        error: "PulseChain Beacon API is not publicly available",
+        hint: "The PulseChain Beacon API is currently listed as 'Available Soon' on PublicNode. Validator tracking will work once the API is publicly launched.",
+      },
+      { status: 503 },
+    )
+  }
+
+  return NextResponse.json(
+    {
+      error: "Unable to fetch validator data",
+      hint: "The PulseChain Beacon API may not be publicly available yet. Check back later or configure a custom BEACON_RPC_URL.",
+      lastError,
+    },
+    { status: 503 },
+  )
 }

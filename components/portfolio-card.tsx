@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 
 interface PortfolioCardProps {
   title: string
@@ -10,6 +10,7 @@ interface PortfolioCardProps {
   totalRight?: { label: string; value: string }
   items?: { label: string; value: string; valueColor?: string }[]
   defaultExpanded?: boolean
+  children?: ReactNode
 }
 
 export default function PortfolioCard({
@@ -20,6 +21,7 @@ export default function PortfolioCard({
   totalRight,
   items = [],
   defaultExpanded = false,
+  children,
 }: PortfolioCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
 
@@ -58,14 +60,16 @@ export default function PortfolioCard({
         </svg>
       </button>
 
-      {isExpanded && items.length > 0 && (
+      {isExpanded && (children || items.length > 0) && (
         <div className="px-5 pb-5 space-y-3 border-t border-[#27272a] pt-4">
-          {items.map((item, i) => (
-            <div key={i} className="flex justify-between items-center text-sm">
-              <span className="text-[#a1a1aa]">{item.label}</span>
-              <span className={`font-mono font-semibold ${item.valueColor || "text-white"}`}>{item.value}</span>
-            </div>
-          ))}
+          {children
+            ? children
+            : items.map((item, i) => (
+                <div key={i} className="flex justify-between items-center text-sm">
+                  <span className="text-[#a1a1aa]">{item.label}</span>
+                  <span className={`font-mono font-semibold ${item.valueColor || "text-white"}`}>{item.value}</span>
+                </div>
+              ))}
         </div>
       )}
     </div>

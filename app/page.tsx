@@ -51,7 +51,7 @@ const FEATURED_TOKENS = [
 const PLS_ADDRESS = "0xA1077a294dDE1B09bB078844df40758a5D0f9a27" // Wrapped PLS address for price lookup
 
 const HEX_PULSECHAIN_ADDRESS = "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39"
-const HEX_ETHEREUM_ADDRESS = "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39"
+const HEX_ETHEREUM_ADDRESS = "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39" // HEX on Ethereum mainnet
 
 const HEX_STAKING_ABI = [
   "function stakeCount(address) view returns (uint256)",
@@ -123,6 +123,26 @@ const fetchTokenPrices = async (
       console.error(`[v0] Error fetching PLS price:`, err)
     }
 
+    try {
+      console.log(`[v0] Fetching Ethereum HEX price`)
+      const ethHexResponse = await fetch(
+        `https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=${HEX_ETHEREUM_ADDRESS}&vs_currencies=usd&include_24hr_change=true`,
+      )
+      const ethHexData = await ethHexResponse.json()
+      if (ethHexData[HEX_ETHEREUM_ADDRESS.toLowerCase()]?.usd) {
+        // Store with a special key to differentiate from PulseChain HEX
+        prices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] = ethHexData[HEX_ETHEREUM_ADDRESS.toLowerCase()].usd
+        changes[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] =
+          ethHexData[HEX_ETHEREUM_ADDRESS.toLowerCase()].usd_24h_change || 0
+        console.log(
+          `[v0] Ethereum HEX price: $${prices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`]}, 24h change: ${changes[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`]}%`,
+        )
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200))
+    } catch (err) {
+      console.error(`[v0] Error fetching Ethereum HEX price:`, err)
+    }
+
     // Fetch prices one by one to avoid CoinGecko free tier limit
     for (const address of tokenAddresses) {
       if (address.toLowerCase() === PLS_ADDRESS.toLowerCase()) continue
@@ -190,7 +210,7 @@ export default function Home() {
   const [tokenPriceChanges, setTokenPriceChanges] = useState<Record<string, number>>({})
   const [hexStakes, setHexStakes] = useState<any[]>([])
   const [validatorPositions, setValidatorPositions] = useState<any[]>([]) // Updated validator positions state to include more comprehensive data
-  const [manualValidatorIds, setManualValidatorIds] = useState<string[]>([]) // Added state for manual validator IDs
+  const [manualValidatorIds, setManualValidatorIds] = useState<string[]>(["1"]) // Changed default validator ID from "1" to "10000"
   const [newValidatorId, setNewValidatorId] = useState("") // Added state for new manual validator ID input
   const [notification, setNotification] = useState<{ message: string; show: boolean }>({ message: "", show: false })
 
@@ -302,17 +322,22 @@ export default function Home() {
 
   useEffect(() => {
     const saved = localStorage.getItem("tracker_validator_ids")
+    console.log("[v0] Loading validator IDs from localStorage:", saved)
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Only use saved IDs if array is not empty
+          console.log("[v0] Parsed validator IDs:", parsed)
           setManualValidatorIds(parsed)
+        } else {
+          console.log("[v0] Saved validator IDs empty, keeping default: ['1']")
         }
       } catch (err) {
-        console.error("Error loading validator IDs:", err)
+        console.error("[v0] Error loading validator IDs:", err)
       }
     } else {
-      setManualValidatorIds(["1"])
+      console.log("[v0] No saved validator IDs, keeping default: ['1']")
     }
   }, [])
 
@@ -1010,9 +1035,11 @@ export default function Home() {
                   items={(() => {
                     const pulsechainStakes = hexStakes.filter((s) => s.chain === "PulseChain")
                     const ethereumStakes = hexStakes.filter((s) => s.chain === "Ethereum")
-                    const hexPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
+                    const hexPulsechainPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
+                    const hexEthereumPrice = tokenPrices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] || 0
 
                     const createStakeItem = (stake: any) => {
+                      const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
                       const usdValue = stake.stakedHearts * hexPrice
                       return {
                         label: `Day ${stake.daysPassed}/${stake.stakedDays} (${stake.daysRemaining} days left) — Staked HEX ${stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} — ${stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares`,
@@ -1090,16 +1117,18 @@ export default function Home() {
                 />
               )}
 
-              {manualValidatorIds.length > 0 && (
-                <div className="bg-card border border-card rounded-2xl p-5">
-                  <h3 className="text-lg font-semibold mb-4">Manual Validator Positions</h3>
-                  <div className="space-y-4">
-                    {manualValidatorIds.map((validatorId) => (
-                      <ValidatorInfo key={validatorId} validatorId={validatorId} />
-                    ))}
-                  </div>
+              <PortfolioCard
+                title="Validators"
+                total={`${manualValidatorIds.length} validator${manualValidatorIds.length > 1 ? "s" : ""} tracked`}
+                totalLabel=""
+              >
+                <div className="space-y-4">
+                  {manualValidatorIds.map((validatorId) => {
+                    console.log("[v0] Rendering ValidatorInfo for ID:", validatorId)
+                    return <ValidatorInfo key={validatorId} validatorId={validatorId} />
+                  })}
                 </div>
-              )}
+              </PortfolioCard>
 
               {validatorPositions.length > 0 && (
                 <PortfolioCard
