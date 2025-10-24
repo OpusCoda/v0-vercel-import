@@ -6,7 +6,6 @@ import { ethers } from "ethers"
 import { savePortfolio, loadPortfolio } from "./actions"
 import PortfolioCard from "@/components/portfolio-card"
 import { fetchPulseAssets, fetchLPPositions } from "@/lib/fetch-live-data"
-import ValidatorInfo from "@/components/validator-info" // Import ValidatorInfo
 
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -59,6 +58,14 @@ const HEX_STAKING_ABI = [
   "function currentDay() view returns (uint256)",
 ]
 
+const HSI_MANAGER_ABI = [
+  "function stakeCount(address) view returns (uint256)",
+  "function stakeLists(address, uint256) view returns (uint40 stakeId, uint72 stakedHearts, uint72 stakeShares, uint16 lockedDay, uint16 stakedDays, uint16 unlockedDay, bool isAutoStake)",
+]
+
+const HSI_MANAGER_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3"
+const HSI_MANAGER_ETHEREUM_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3"
+
 const VALIDATOR_DEPOSIT_ABI = [
   "event DepositEvent(bytes pubkey, bytes withdrawal_credentials, bytes amount, bytes signature, bytes index)",
   "function get_deposit_count() view returns (bytes)",
@@ -98,6 +105,40 @@ const fetchINCPrice = async (plsUsdPrice: number): Promise<number> => {
   }
 }
 
+const fetchEHEXPrice = async (plsUsdPrice: number): Promise<number> => {
+  try {
+    // eHEX/WPLS pair on PulseX - you may need to find the correct pair address
+    // For now, we'll try to fetch from a common pair or return 0 if not available
+    const EHEX_WPLS_PAIR = "0x87188e66e973c6264d34781d0b03b413a63180d4" // Actual eHEX/WPLS pair on PulseX
+
+    // If we don't have a valid pair address, skip DEX fetch
+    if (EHEX_WPLS_PAIR === "0x0000000000000000000000000000000000000000") {
+      console.log("[v0] eHEX DEX pair not configured, skipping DEX price fetch")
+      return 0
+    }
+
+    const PAIR_ABI = [
+      "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
+    ]
+
+    const provider = new ethers.JsonRpcProvider("https://rpc.pulsechain.com")
+    const pairContract = new ethers.Contract(EHEX_WPLS_PAIR, PAIR_ABI, provider)
+
+    const reserves = await pairContract.getReserves()
+    const reserveEHEX = Number(ethers.formatUnits(reserves.reserve0, 8)) // eHEX has 8 decimals
+    const reserveWPLS = Number(ethers.formatUnits(reserves.reserve1, 18)) // WPLS is reserve1
+
+    const ehexPriceInPLS = reserveWPLS / reserveEHEX
+    const ehexUsdPrice = ehexPriceInPLS * plsUsdPrice
+
+    console.log(`[v0] eHEX price from DEX: $${ehexUsdPrice.toFixed(8)}`)
+    return ehexUsdPrice
+  } catch (error) {
+    console.error("[v0] Error fetching eHEX price from DEX:", error)
+    return 0
+  }
+}
+
 const fetchTokenPrices = async (
   tokenAddresses: string[],
 ): Promise<{ prices: Record<string, number>; changes: Record<string, number> }> => {
@@ -123,6 +164,8 @@ const fetchTokenPrices = async (
       console.error(`[v0] Error fetching PLS price:`, err)
     }
 
+    let ethereumHexPrice = 0
+    let ethereumHexChange = 0
     try {
       console.log(`[v0] Fetching Ethereum HEX price`)
       const ethHexResponse = await fetch(
@@ -130,12 +173,19 @@ const fetchTokenPrices = async (
       )
       const ethHexData = await ethHexResponse.json()
       if (ethHexData[HEX_ETHEREUM_ADDRESS.toLowerCase()]?.usd) {
-        // Store with a special key to differentiate from PulseChain HEX
-        prices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] = ethHexData[HEX_ETHEREUM_ADDRESS.toLowerCase()].usd
-        changes[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] =
-          ethHexData[HEX_ETHEREUM_ADDRESS.toLowerCase()].usd_24h_change || 0
+        ethereumHexPrice = ethHexData[HEX_ETHEREUM_ADDRESS.toLowerCase()].usd
+        ethereumHexChange = ethHexData[HEX_ETHEREUM_ADDRESS.toLowerCase()].usd_24h_change || 0
+
+        // Store Ethereum HEX price with special key for HEX stakes display
+        prices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] = ethereumHexPrice
+        changes[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] = ethereumHexChange
+
+        // Use Ethereum HEX price for eHEX (0x57fde0a71132198BBeC939B98976993d8D89D225)
+        prices["0x57fde0a71132198bbec939b98976993d8d89d225"] = ethereumHexPrice
+        changes["0x57fde0a71132198bbec939b98976993d8d89d225"] = ethereumHexChange
+
         console.log(
-          `[v0] Ethereum HEX price: $${prices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`]}, 24h change: ${changes[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`]}%`,
+          `[v0] Ethereum HEX price: $${ethereumHexPrice}, 24h change: ${ethereumHexChange}% (also used for eHEX)`,
         )
       }
       await new Promise((resolve) => setTimeout(resolve, 200))
@@ -143,9 +193,17 @@ const fetchTokenPrices = async (
       console.error(`[v0] Error fetching Ethereum HEX price:`, err)
     }
 
+    let pulsechainHexPrice = 0
+    let pulsechainHexChange = 0
+
     // Fetch prices one by one to avoid CoinGecko free tier limit
     for (const address of tokenAddresses) {
       if (address.toLowerCase() === PLS_ADDRESS.toLowerCase()) continue
+
+      if (address.toLowerCase() === "0x57fde0a71132198bbec939b98976993d8d89d225") {
+        console.log(`[v0] Skipping eHEX price fetch (already set from Ethereum HEX)`)
+        continue
+      }
 
       if (address.toLowerCase() === "0x2fa878ab3f87cc1c9737fc071108f904c0b0c95d") {
         if (plsUsdPrice > 0) {
@@ -171,12 +229,17 @@ const fetchTokenPrices = async (
           console.log(
             `[v0] Price for ${address}: $${data[address.toLowerCase()].usd}, 24h change: ${changes[address.toLowerCase()]}%`,
           )
+
+          if (address.toLowerCase() === HEX_PULSECHAIN_ADDRESS.toLowerCase()) {
+            pulsechainHexPrice = data[address.toLowerCase()].usd
+            pulsechainHexChange = data[address.toLowerCase()].usd_24h_change || 0
+          }
         }
 
         // Add small delay to avoid rate limiting
         await new Promise((resolve) => setTimeout(resolve, 200))
       } catch (err) {
-        console.error(`[v0] Error fetching price for ${address}:`, err)
+        console.log(`[v0] Skipping price for ${address} (fetch failed)`)
       }
     }
 
@@ -209,9 +272,8 @@ export default function Home() {
   const [tokenPrices, setTokenPrices] = useState<Record<string, number>>({})
   const [tokenPriceChanges, setTokenPriceChanges] = useState<Record<string, number>>({})
   const [hexStakes, setHexStakes] = useState<any[]>([])
-  const [validatorPositions, setValidatorPositions] = useState<any[]>([]) // Updated validator positions state to include more comprehensive data
-  const [manualValidatorIds, setManualValidatorIds] = useState<string[]>(["1"]) // Changed default validator ID from "1" to "10000"
-  const [newValidatorId, setNewValidatorId] = useState("") // Added state for new manual validator ID input
+  const [hsiStakes, setHsiStakes] = useState<any[]>([]) // Declare hsiStakes here
+  const [hsiCount, setHsiCount] = useState<number>(0)
   const [notification, setNotification] = useState<{ message: string; show: boolean }>({ message: "", show: false })
 
   const priceCache = useRef<{
@@ -220,9 +282,13 @@ export default function Home() {
     timestamp: number
   } | null>(null)
   const PRICE_CACHE_TTL = 60000 // 60 seconds
+  const ETHEREUM_TIMEOUT = 60000 // 60 second timeout for Ethereum RPC calls
 
-  const provider = useMemo(() => new ethers.JsonRpcProvider("https://rpc.pulsechain.com"), [])
-  const ethereumProvider = useMemo(() => new ethers.JsonRpcProvider("https://eth.llamarpc.com"), [])
+  const provider = useMemo(() => {
+    const rpcUrls = ["https://rpc.pulsechain.com", "https://pulsechain-rpc.publicnode.com"]
+    return new ethers.JsonRpcProvider(rpcUrls[0])
+  }, [])
+  const ethereumProvider = useMemo(() => new ethers.JsonRpcProvider("https://ethereum.publicnode.com"), [])
 
   const vaultManager = useMemo(() => {
     const liquidLoansVaultManagerAddress = "0xD79bfb86fA06e8782b401bC0197d92563602D2Ab"
@@ -249,6 +315,8 @@ export default function Home() {
       fetchData()
     }
   }, [filteredWallets.length, tokens.length])
+
+  // Load cached NFTs on mount
 
   const toggleWalletSelection = (address: string) => {
     setSelectedWallets((prev) => {
@@ -300,46 +368,6 @@ export default function Home() {
     setTokens(updated)
     localStorage.setItem("tracker_portfolio", JSON.stringify({ wallets, tokens: updated }))
   }
-
-  const addValidatorId = () => {
-    const trimmedId = newValidatorId.trim()
-    if (!trimmedId || manualValidatorIds.includes(trimmedId)) {
-      setError("Invalid or duplicate validator ID")
-      return
-    }
-    const updated = [...manualValidatorIds, trimmedId]
-    setManualValidatorIds(updated)
-    localStorage.setItem("tracker_validator_ids", JSON.stringify(updated))
-    setNewValidatorId("")
-    setError("")
-  }
-
-  const removeValidatorId = (index: number) => {
-    const updated = manualValidatorIds.filter((_, i) => i !== index)
-    setManualValidatorIds(updated)
-    localStorage.setItem("tracker_validator_ids", JSON.stringify(updated))
-  }
-
-  useEffect(() => {
-    const saved = localStorage.getItem("tracker_validator_ids")
-    console.log("[v0] Loading validator IDs from localStorage:", saved)
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Only use saved IDs if array is not empty
-          console.log("[v0] Parsed validator IDs:", parsed)
-          setManualValidatorIds(parsed)
-        } else {
-          console.log("[v0] Saved validator IDs empty, keeping default: ['1']")
-        }
-      } catch (err) {
-        console.error("[v0] Error loading validator IDs:", err)
-      }
-    } else {
-      console.log("[v0] No saved validator IDs, keeping default: ['1']")
-    }
-  }, [])
 
   const savePortfolioId = async () => {
     if (wallets.length === 0) {
@@ -435,7 +463,8 @@ export default function Home() {
     setLpPositions([])
     setFeaturedTokenBalances([])
     setHexStakes([])
-    setValidatorPositions([]) // Reset validator positions
+    setHsiStakes([]) // Reset HSI stakes
+    setHsiCount(0) // Reset HSI count
 
     try {
       let totalPLS = ethers.parseEther("0")
@@ -443,9 +472,9 @@ export default function Home() {
       let totalDebt = ethers.parseEther("0")
       const tokenBalances: any[] = []
       const allLPPositions: any[] = []
-      const allHexStakes: any[] = []
+      const allHexStakes: any[] = [] // Initialize as empty array
+      const allHsiStakes: any[] = [] // Initialize as empty array
       const liquidLoansVaults: any[] = []
-      const allValidatorPositions: any[] = [] // Added array for validator positions
 
       const now = Date.now()
       let prices: Record<string, number>
@@ -457,7 +486,11 @@ export default function Home() {
         changes = priceCache.current.changes
       } else {
         console.log("[v0] Fetching fresh prices")
-        const addressesToFetch = [PLS_ADDRESS, ...FEATURED_TOKENS.map((t) => t.address)]
+        const addressesToFetch = [
+          PLS_ADDRESS,
+          ...FEATURED_TOKENS.map((t) => t.address),
+          HEX_ETHEREUM_ADDRESS, // Ensure eHEX address is included
+        ]
         console.log("[v0] Fetching prices for tokens:", addressesToFetch)
         const result = await fetchTokenPrices(addressesToFetch)
         prices = result.prices
@@ -576,7 +609,7 @@ export default function Home() {
 
               allHexStakes.push({
                 wallet: wallet.address,
-                chain: "PulseChain",
+                chain: "Pulsechain",
                 stakeId: stake.stakeId.toString(),
                 stakedHearts: Number(stakedHearts),
                 stakeShares: Number(stakeShares),
@@ -589,21 +622,23 @@ export default function Home() {
                 isActive,
               })
             } catch (err) {
-              console.error(`[v0] Error fetching PulseChain HEX stake ${i}:`, err)
+              console.error(`[v0] Error fetching Pulsechain HEX stake ${i}:`, err)
             }
           }
         } catch (err) {
-          console.log(`[v0] No PulseChain HEX stakes found for ${wallet.address}`)
+          console.log(`[v0] No Pulsechain HEX stakes found for ${wallet.address}`)
         }
 
+        // Starting Ethereum HEX stakes fetch
         try {
-          const ETHEREUM_TIMEOUT = 10000 // 10 second timeout
+          console.log(`[v0] Starting Ethereum HEX stakes fetch for ${wallet.address}`)
 
-          const fetchEthereumStakes = async () => {
+          const fetchEthereumHEX = async () => {
             const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+
             const stakeCount = await hexEthContract.stakeCount(wallet.address)
             const currentDay = await hexEthContract.currentDay()
-            console.log(`[v0] Ethereum HEX stakes for ${wallet.address}: ${stakeCount.toString()}`)
+            console.log(`[v0] Ethereum HEX stakeCount: ${stakeCount.toString()}, currentDay: ${currentDay.toString()}`)
 
             for (let i = 0; i < Number(stakeCount); i++) {
               try {
@@ -636,138 +671,131 @@ export default function Home() {
           }
 
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Ethereum RPC timeout")), ETHEREUM_TIMEOUT),
+            setTimeout(() => reject(new Error("Ethereum HEX fetch timed out")), ETHEREUM_TIMEOUT),
           )
 
-          await Promise.race([fetchEthereumStakes(), timeoutPromise])
+          await Promise.race([fetchEthereumHEX(), timeoutPromise])
+          console.log(`[v0] Finished fetching Ethereum HEX stakes for ${wallet.address}`)
         } catch (err: any) {
-          if (err.message === "Ethereum RPC timeout") {
-            console.log(
-              `[v0] Ethereum HEX stakes fetch timed out for ${wallet.address} - continuing without Ethereum stakes`,
-            )
+          if (err.message === "Ethereum HEX fetch timed out") {
+            console.log(`[v0] Ethereum HEX stakes fetch timed out for ${wallet.address}`)
           } else {
-            console.log(`[v0] No Ethereum HEX stakes found for ${wallet.address}`)
+            console.error(`[v0] Error fetching Ethereum HEX stakes for ${wallet.address}:`, err)
           }
         }
 
         try {
-          console.log(`[v0] Fetching validator positions for ${wallet.address}`)
+          console.log(`[v0] HSI contract call for ${wallet.address} at ${HSI_MANAGER_ADDRESS}`)
+          const hsiContract = new ethers.Contract(HSI_MANAGER_ADDRESS, HSI_MANAGER_ABI, provider)
+          const hexContract = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, provider)
 
-          const VALIDATOR_FETCH_TIMEOUT = 15000 // 15 second timeout
-          const MAX_TRANSACTIONS_TO_CHECK = 100 // Limit transactions checked
+          const hsiStakeCount = await hsiContract.stakeCount(wallet.address)
+          console.log(`[v0] HSI stakeCount call result for ${wallet.address}: ${hsiStakeCount.toString()}`)
 
-          const fetchValidatorPositions = async () => {
-            const depositContract = new ethers.Contract(PULSECHAIN_DEPOSIT_CONTRACT, VALIDATOR_DEPOSIT_ABI, provider)
-            const currentBlock = await provider.getBlockNumber()
-            const CHUNK_SIZE = 10000
-            const LOOKBACK_BLOCKS = 100000
-            const fromBlock = Math.max(0, currentBlock - LOOKBACK_BLOCKS)
+          if (Number(hsiStakeCount) === 0) {
+            console.log(`[v0] No HSI stakes detected for ${wallet.address}`)
+          }
 
-            console.log(
-              `[v0] Querying deposit events from block ${fromBlock} to ${currentBlock} in chunks of ${CHUNK_SIZE}`,
-            )
+          const currentDay = await hexContract.currentDay()
 
-            const allLogs: any[] = []
+          for (let i = 0; i < Number(hsiStakeCount); i++) {
+            try {
+              const stake = await hsiContract.stakeLists(wallet.address, i)
+              console.log(`[v0] HSI stake ${i} loaded:`, stake)
 
-            for (let start = fromBlock; start <= currentBlock; start += CHUNK_SIZE) {
-              const end = Math.min(start + CHUNK_SIZE - 1, currentBlock)
+              const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
+              const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
 
+              const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+              const daysRemaining = Number(stake.stakedDays) - daysPassed
+              const isActive = stake.unlockedDay === 0
+
+              allHsiStakes.push({
+                wallet: wallet.address,
+                chain: "Pulsechain",
+                stakeId: stake.stakeId.toString(),
+                stakedHearts: Number(stakedHearts),
+                stakeShares: Number(stakeShares),
+                lockedDay: Number(stake.lockedDay),
+                stakedDays: Number(stake.stakedDays),
+                unlockedDay: Number(stake.unlockedDay),
+                currentDay: Number(currentDay),
+                daysPassed,
+                daysRemaining: Math.max(0, daysRemaining),
+                isAutoStake: stake.isAutoStake,
+                isActive,
+              })
+            } catch (err) {
+              console.error(`[v0] Error fetching HSI stake ${i}:`, err)
+            }
+          }
+        } catch (err) {
+          console.log(`[v0] No HSI stakes found for ${wallet.address}`)
+        }
+
+        try {
+          console.log(`[v0] Starting Ethereum HSI stakes fetch for ${wallet.address}`)
+
+          const fetchEthereumHSI = async () => {
+            const hsiEthContract = new ethers.Contract(HSI_MANAGER_ETHEREUM_ADDRESS, HSI_MANAGER_ABI, ethereumProvider)
+            const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+
+            const hsiStakeCount = await hsiEthContract.stakeCount(wallet.address)
+            console.log(`[v0] Ethereum HSI stakeCount: ${hsiStakeCount.toString()}`)
+
+            if (Number(hsiStakeCount) === 0) {
+              console.log(`[v0] No Ethereum HSI stakes detected for ${wallet.address}`)
+              return
+            }
+
+            const currentDay = await hexEthContract.currentDay()
+            console.log(`[v0] Ethereum currentDay: ${currentDay.toString()}`)
+
+            for (let i = 0; i < Number(hsiStakeCount); i++) {
               try {
-                const filter = depositContract.filters.DepositEvent()
-                const logs = await provider.getLogs({
-                  address: PULSECHAIN_DEPOSIT_CONTRACT,
-                  topics: filter.topics,
-                  fromBlock: start,
-                  toBlock: end,
+                console.log(`[v0] Fetching Ethereum HSI stake ${i}`)
+                const stake = await hsiEthContract.stakeLists(wallet.address, i)
+                console.log(`[v0] Ethereum HSI stake ${i} loaded:`, stake)
+
+                const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
+                const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
+
+                const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+                const daysRemaining = Number(stake.stakedDays) - daysPassed
+                const isActive = stake.unlockedDay === 0
+
+                allHsiStakes.push({
+                  wallet: wallet.address,
+                  chain: "Ethereum",
+                  stakeId: stake.stakeId.toString(),
+                  stakedHearts: Number(stakedHearts),
+                  stakeShares: Number(stakeShares),
+                  lockedDay: Number(stake.lockedDay),
+                  stakedDays: Number(stake.stakedDays),
+                  unlockedDay: Number(stake.unlockedDay),
+                  currentDay: Number(currentDay),
+                  daysPassed,
+                  daysRemaining: Math.max(0, daysRemaining),
+                  isAutoStake: stake.isAutoStake,
+                  isActive,
                 })
-
-                allLogs.push(...logs)
-                console.log(`[v0] Queried blocks ${start}-${end}: found ${logs.length} deposit events`)
-              } catch (chunkError) {
-                console.log(`[v0] Error querying blocks ${start}-${end}:`, chunkError)
+              } catch (err) {
+                console.error(`[v0] Error fetching Ethereum HSI stake ${i}:`, err)
               }
             }
-
-            console.log(`[v0] Found ${allLogs.length} total deposit events`)
-
-            const logsToCheck = allLogs.slice(0, MAX_TRANSACTIONS_TO_CHECK)
-            console.log(`[v0] Checking ${logsToCheck.length} transactions for wallet ${wallet.address}`)
-
-            let checkedCount = 0
-            for (const log of logsToCheck) {
-              try {
-                const tx = await provider.getTransaction(log.transactionHash)
-                checkedCount++
-
-                if (checkedCount % 10 === 0) {
-                  console.log(`[v0] Checked ${checkedCount}/${logsToCheck.length} transactions`)
-                }
-
-                if (tx && tx.from.toLowerCase() === wallet.address.toLowerCase()) {
-                  const parsedLog = depositContract.interface.parseLog({
-                    topics: log.topics as string[],
-                    data: log.data,
-                  })
-
-                  if (parsedLog) {
-                    const amount = ethers.hexlify(parsedLog.args.amount)
-                    const amountInEther = ethers.formatEther(ethers.toBigInt(amount))
-                    const validatorIndex = ethers.toBigInt(parsedLog.args.index).toString()
-
-                    console.log(`[v0] Found validator deposit: index ${validatorIndex}, amount ${amountInEther} PLS`)
-
-                    let status = "active"
-                    let apr = "—"
-
-                    try {
-                      const beaconResponse = await fetch(
-                        `https://beacon.g4mm4.io/eth/v1/beacon/states/head/validators/${validatorIndex}`,
-                        { headers: { Accept: "application/json" } },
-                      )
-
-                      if (beaconResponse.ok) {
-                        const beaconData = await beaconResponse.json()
-                        status = beaconData.data?.validator?.status || "active"
-                        apr = "8.5" // Placeholder - would need rewards calculation
-                        console.log(`[v0] Beacon API data fetched for validator ${validatorIndex}: status ${status}`)
-                      }
-                    } catch (beaconError) {
-                      console.log(`[v0] Beacon API unavailable for validator ${validatorIndex}, using defaults`)
-                    }
-
-                    allValidatorPositions.push({
-                      wallet: wallet.address,
-                      validatorIndex,
-                      selfStake: amountInEther,
-                      delegations: "0",
-                      totalStaked: amountInEther,
-                      lifetimeRewards: "0",
-                      apr,
-                      status,
-                      timestamp: new Date(log.blockNumber * 12 * 1000).toLocaleDateString(), // Approximate timestamp
-                    })
-                  }
-                }
-              } catch (txError) {
-                console.log(`[v0] Error processing transaction:`, txError)
-              }
-            }
-
-            console.log(
-              `[v0] Validator positions for ${wallet.address}: ${allValidatorPositions.filter((v) => v.wallet === wallet.address).length}`,
-            )
           }
 
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Validator fetch timeout")), VALIDATOR_FETCH_TIMEOUT),
+            setTimeout(() => reject(new Error("Ethereum HSI fetch timed out")), ETHEREUM_TIMEOUT),
           )
 
-          await Promise.race([fetchValidatorPositions(), timeoutPromise])
+          await Promise.race([fetchEthereumHSI(), timeoutPromise])
+          console.log(`[v0] Finished fetching Ethereum HSI stakes for ${wallet.address}`)
         } catch (err: any) {
-          if (err.message === "Validator fetch timeout") {
-            console.log(`[v0] Validator fetch timed out for ${wallet.address} - continuing without complete data`)
+          if (err.message === "Ethereum HSI fetch timed out") {
+            console.log(`[v0] Ethereum HSI stakes fetch timed out for ${wallet.address}`)
           } else {
-            console.log(`[v0] Error fetching validator positions for ${wallet.address}:`, err)
+            console.error(`[v0] Error fetching Ethereum HSI stakes for ${wallet.address}:`, err)
           }
         }
       }
@@ -807,7 +835,9 @@ export default function Home() {
       const sortedHexStakes = allHexStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
       setHexStakes(sortedHexStakes)
 
-      setValidatorPositions(allValidatorPositions) // Set validator positions
+      const sortedHsiStakes = allHsiStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
+      setHsiStakes(sortedHsiStakes) // This line is still setting the hsiStakes state.
+      setHsiCount(sortedHsiStakes.length) // Set the HSI count
 
       setData({
         totalPLS: ethers.formatEther(totalPLS),
@@ -1030,10 +1060,27 @@ export default function Home() {
               {hexStakes.length > 0 && (
                 <PortfolioCard
                   title="HEX Stakes"
-                  total={`${hexStakes.reduce((sum, stake) => sum + stake.stakeShares, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} T-shares | ${hexStakes.length} stake${hexStakes.length > 1 ? "s" : ""} | Average stake length: ${(hexStakes.reduce((sum, stake) => sum + stake.stakedDays, 0) / hexStakes.length).toFixed(0)} days`}
+                  total={(() => {
+                    const hexPulsechainPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
+                    const hexEthereumPrice = tokenPrices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] || 0
+
+                    const totalValue = hexStakes.reduce((sum, stake) => {
+                      const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
+                      return sum + stake.stakedHearts * hexPrice
+                    }, 0)
+
+                    const avgStakeLength = (
+                      hexStakes.reduce((sum, stake) => sum + stake.stakedDays, 0) / hexStakes.length
+                    ).toFixed(0)
+                    const totalTShares = hexStakes
+                      .reduce((sum, stake) => sum + stake.stakeShares, 0)
+                      .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+                    return `${totalTShares} T-shares | ${hexStakes.length} stake${hexStakes.length > 1 ? "s" : ""} | Average length: ${avgStakeLength} days | Total value: $${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  })()}
                   totalLabel=""
                   items={(() => {
-                    const pulsechainStakes = hexStakes.filter((s) => s.chain === "PulseChain")
+                    const pulsechainStakes = hexStakes.filter((s) => s.chain === "Pulsechain")
                     const ethereumStakes = hexStakes.filter((s) => s.chain === "Ethereum")
                     const hexPulsechainPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
                     const hexEthereumPrice = tokenPrices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] || 0
@@ -1055,7 +1102,7 @@ export default function Home() {
 
                     if (pulsechainStakes.length > 0) {
                       items.push({
-                        label: "PulseChain Stakes",
+                        label: "Pulsechain Stakes",
                         value: "",
                         valueColor: "text-[#a1a1aa]",
                       })
@@ -1083,98 +1130,76 @@ export default function Home() {
                 />
               )}
 
-              {data.liquidLoansVaults && data.liquidLoansVaults.length > 0 && (
+              {hsiStakes.length > 0 && (
                 <PortfolioCard
-                  title="Liquid Loans"
-                  totalLeft={{
-                    label: "Total PLS in collateral",
-                    value: `${Number.parseFloat(data.totalLockedPLS).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS`,
-                  }}
-                  totalRight={{
-                    label: "Total debt (USDL)",
-                    value: `${Number.parseFloat(data.totalDebt).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDL`,
-                  }}
-                  items={data.liquidLoansVaults.flatMap((vault: any) => {
-                    const shortAddress = `${vault.wallet.slice(0, 4)}…${vault.wallet.slice(-4)}`
-                    return [
-                      {
-                        label: `${shortAddress} - PLS in collateral`,
-                        value: Number.parseFloat(vault.lockedPLS).toLocaleString(undefined, {
-                          maximumFractionDigits: 0,
-                        }),
-                        valueColor: "text-white",
-                      },
-                      {
-                        label: `${shortAddress} - Debt (USDL)`,
-                        value: Number.parseFloat(vault.debt).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }),
-                        valueColor: "text-white",
-                      },
-                    ]
-                  })}
-                />
-              )}
+                  title="HSI Stakes"
+                  total={(() => {
+                    const hexPulsechainPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
+                    const hexEthereumPrice = tokenPrices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] || 0
 
-              <PortfolioCard
-                title="Validators"
-                total={`${manualValidatorIds.length} validator${manualValidatorIds.length > 1 ? "s" : ""} tracked`}
-                totalLabel=""
-              >
-                <div className="space-y-4">
-                  {manualValidatorIds.map((validatorId) => {
-                    console.log("[v0] Rendering ValidatorInfo for ID:", validatorId)
-                    return <ValidatorInfo key={validatorId} validatorId={validatorId} />
-                  })}
-                </div>
-              </PortfolioCard>
+                    const totalValue = hsiStakes.reduce((sum, stake) => {
+                      const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
+                      return sum + stake.stakedHearts * hexPrice
+                    }, 0)
 
-              {validatorPositions.length > 0 && (
-                <PortfolioCard
-                  title="PulseChain Validator Positions (Auto-discovered)"
-                  total={`${validatorPositions.reduce((sum, v) => sum + Number(v.totalStaked), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS staked | ${validatorPositions.length} validator${validatorPositions.length > 1 ? "s" : ""}`}
+                    const avgStakeLength = (
+                      hsiStakes.reduce((sum, stake) => sum + stake.stakedDays, 0) / hsiStakes.length
+                    ).toFixed(0)
+                    const totalTShares = hsiStakes
+                      .reduce((sum, stake) => sum + stake.stakeShares, 0)
+                      .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+                    return `${totalTShares} T-shares | ${hsiStakes.length} HSI${hsiStakes.length > 1 ? "s" : ""} | Average length: ${avgStakeLength} days | Total value: $${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  })()}
                   totalLabel=""
-                  items={validatorPositions.flatMap((validator: any) => {
-                    const shortAddress = `${validator.wallet.slice(0, 4)}…${validator.wallet.slice(-4)}`
-                    return [
-                      {
-                        label: `${shortAddress} - Validator #${validator.validatorIndex}`,
+                  items={(() => {
+                    const pulsechainHSI = hsiStakes.filter((s) => s.chain === "Pulsechain")
+                    const ethereumHSI = hsiStakes.filter((s) => s.chain === "Ethereum")
+                    const hexPulsechainPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
+                    const hexEthereumPrice = tokenPrices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] || 0
+
+                    const createHSIItem = (stake: any) => {
+                      const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
+                      const usdValue = stake.stakedHearts * hexPrice
+                      return {
+                        label: `Day ${stake.daysPassed}/${stake.stakedDays} (${stake.daysRemaining} days left) — Staked HEX ${stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} — ${stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares${stake.isAutoStake ? " (Auto)" : ""}`,
+                        value:
+                          hexPrice > 0
+                            ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : "—",
+                        valueColor: stake.isActive ? "text-gain" : "text-neutral",
+                      }
+                    }
+
+                    const items = []
+
+                    if (pulsechainHSI.length > 0) {
+                      items.push({
+                        label: "Pulsechain HSI Stakes",
                         value: "",
                         valueColor: "text-[#a1a1aa]",
-                      },
-                      {
-                        label: "Self-Stake",
-                        value: `${Number.parseFloat(validator.selfStake).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS`,
-                        valueColor: "text-white",
-                      },
-                      {
-                        label: "Delegations",
-                        value: `${Number.parseFloat(validator.delegations).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS`,
-                        valueColor: "text-white",
-                      },
-                      {
-                        label: "Total Staked",
-                        value: `${Number.parseFloat(validator.totalStaked).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS`,
-                        valueColor: "text-gain",
-                      },
-                      {
-                        label: "Lifetime Rewards",
-                        value: `${Number.parseFloat(validator.lifetimeRewards).toLocaleString(undefined, { maximumFractionDigits: 2 })} PLS`,
-                        valueColor: "text-gain",
-                      },
-                      {
-                        label: "APR / Status",
-                        value: `${validator.apr}% — ${validator.status}`,
-                        valueColor: validator.status === "active" ? "text-gain" : "text-neutral",
-                      },
-                      {
-                        label: "",
+                      })
+                      items.push(...pulsechainHSI.map(createHSIItem))
+                    }
+
+                    if (ethereumHSI.length > 0) {
+                      if (pulsechainHSI.length > 0) {
+                        items.push({
+                          label: "",
+                          value: "",
+                          valueColor: "text-transparent",
+                        })
+                      }
+                      items.push({
+                        label: "Ethereum HSI Stakes",
                         value: "",
-                        valueColor: "text-transparent",
-                      },
-                    ]
-                  })}
+                        valueColor: "text-[#a1a1aa]",
+                      })
+                      items.push(...ethereumHSI.map(createHSIItem))
+                    }
+
+                    return items
+                  })()}
                 />
               )}
             </>
