@@ -365,6 +365,7 @@ const fetchEHEXPrice = async (plsUsdPrice: number): Promise<number> => {
   }
 }
 
+// Modified fetchDexscreenerPrice to filter by liquidity and add manual pair for BEAST
 const fetchDexscreenerPrice = async (
   tokenAddress: string,
   pairAddress?: string,
@@ -396,11 +397,19 @@ const fetchDexscreenerPrice = async (
       const pulsechainPairs = data.pairs.filter((pair: any) => pair.chainId === "pulsechain")
 
       if (pulsechainPairs.length > 0) {
+        const highLiquidityPairs = pulsechainPairs.filter((pair: any) => (pair.liquidity?.usd || 0) >= 1000)
+
+        // If we have high liquidity pairs, use them; otherwise fall back to all pairs
+        const validPairs = highLiquidityPairs.length > 0 ? highLiquidityPairs : pulsechainPairs
+
         // Sort by liquidity and take the highest
-        const bestPair = pulsechainPairs.sort((a: any, b: any) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0]
+        const bestPair = validPairs.sort((a: any, b: any) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0]
         const price = Number.parseFloat(bestPair.priceUsd) || 0
         const change = Number.parseFloat(bestPair.priceChange?.h24) || 0
-        console.log(`[v0] Dexscreener price for ${tokenAddress}: $${price}, 24h change: ${change}%`)
+        const liquidity = bestPair.liquidity?.usd || 0
+        console.log(
+          `[v0] Dexscreener price for ${tokenAddress}: $${price}, 24h change: ${change}%, liquidity: $${liquidity.toFixed(2)}`,
+        )
         return { price, change }
       }
     }
