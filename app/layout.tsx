@@ -1,7 +1,6 @@
 import type React from "react"
 import "./globals.css"
-import { Sacramento, Inter } from "next/font/google"
-import localFont from "next/font/local"
+import { Sacramento, Inter, Merriweather } from "next/font/google"
 
 const sacramento = Sacramento({
   subsets: ["latin"],
@@ -9,17 +8,11 @@ const sacramento = Sacramento({
   weight: "400",
 })
 
-const goudy = localFont({
-  src: [
-    {
-      path: "../public/fonts/GoudyBookletter1911.woff2",
-      weight: "400",
-      style: "normal",
-    },
-  ],
+const merriweather = Merriweather({
+  subsets: ["latin"],
   variable: "--font-goudy",
+  weight: ["400", "700"],
   display: "swap",
-  fallback: ["Georgia", "serif"],
 })
 
 const inter = Inter({
@@ -36,7 +29,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${goudy.variable} ${sacramento.variable} ${inter.variable}`}>{children}</body>
+      <body className={`${merriweather.variable} ${sacramento.variable} ${inter.variable}`}>{children}</body>
     </html>
   )
 }
