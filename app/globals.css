@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-/* Removed @import "nes.css/css/nes.min.css" - NES.css is loaded via CDN in layout.tsx instead */
 
 @custom-variant dark (&:is(.dark *));
 
@@ -38,8 +37,9 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --font-inter: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  /* Adding serif fonts for classical aesthetic */
+  --font-playfair: "Playfair Display", serif;
+  --font-crimson: "Crimson Text", serif;
 }
 
 .dark {
@@ -78,8 +78,13 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: var(--font-mono), "JetBrains Mono", "Roboto Mono", monospace;
+  /* Updated font hierarchy: Goudy for body, Sacramento for decorative, Inter for UI */
+  --font-goudy: var(--font-goudy), "Goudy Bookletter 1911", Georgia, serif;
+  --font-sacramento: var(--font-sacramento), "Sacramento", cursive;
+  --font-inter: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: var(--font-goudy);
+  --font-serif: var(--font-goudy);
+  --font-mono: "Courier New", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -123,65 +128,90 @@
     @apply border-border outline-ring/50;
   }
 
+  /* Updated body to use Goudy as default with improved typography */
   body {
-    background-color: #0b0b0d;
-    color: #f1f1f1;
-    font-family: var(--font-sans);
-    font-size: 15px;
+    background-color: #0a0a0c;
+    color: #e8e6e3;
+    font-family: var(--font-goudy);
+    font-size: 16px;
     line-height: 1.6;
+    letter-spacing: 0.01em;
   }
 
+  /* UI elements use Inter font */
   input,
   button {
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 15px;
+    line-height: 1.6;
+    font-family: var(--font-inter);
   }
 
+  /* Headings use Goudy with improved letter spacing */
   h1 {
-    font-size: 24px;
-    line-height: 1.2;
-    font-weight: 600;
+    font-family: var(--font-goudy);
+    font-size: 32px;
+    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: 0.01em;
   }
 
   h2 {
-    font-size: 18px;
-    line-height: 1.3;
-    font-weight: 500;
+    font-family: var(--font-goudy);
+    font-size: 22px;
+    line-height: 1.4;
+    font-weight: 600;
+    letter-spacing: 0.01em;
   }
 
   h3 {
-    font-size: 16px;
-    line-height: 1.3;
-    font-weight: 500;
+    font-family: var(--font-goudy);
+    font-size: 18px;
+    line-height: 1.4;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  h4,
+  h5,
+  h6 {
+    letter-spacing: 0.01em;
+  }
+
+  /* Improved paragraph readability */
+  p {
+    line-height: 1.6;
   }
 }
 
 @layer utilities {
+  /* Using gold/yellow for gains instead of green */
   .text-gain {
-    color: #00c853;
+    color: #d4af37;
   }
 
   .text-loss {
-    color: #ff5252;
+    color: #c9302c;
   }
 
   .text-neutral {
-    color: #a1a1aa;
+    color: #9ca3af;
   }
 
   .bg-card {
-    background-color: #131316;
+    background-color: #12121a;
   }
 
   .border-card {
-    border-color: #27272a;
+    border-color: #2a2a35;
   }
 
+  /* Using gold accent color instead of purple */
   .bg-accent {
-    background-color: #7c3aed;
+    color: #0a0a0c;
+    background-color: #d4af37;
   }
 
   .bg-accent-hover {
-    background-color: #8b5cf6;
+    background-color: #c19b2e;
   }
 }

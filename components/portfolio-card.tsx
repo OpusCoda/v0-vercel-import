@@ -64,12 +64,18 @@ export default function PortfolioCard({
         <div className="px-5 pb-5 space-y-3 border-t border-[#27272a] pt-4">
           {children
             ? children
-            : items.map((item, i) => (
-                <div key={i} className="flex justify-between items-center text-sm">
-                  <span className="text-[#a1a1aa]">{item.label}</span>
-                  <span className={`font-mono font-semibold ${item.valueColor || "text-white"}`}>{item.value}</span>
-                </div>
-              ))}
+            : items.map((item, i) => {
+                const isHeader = item.valueColor?.includes("text-base") && item.valueColor?.includes("font-semibold")
+
+                return (
+                  <div key={i} className="flex justify-between items-center text-sm">
+                    <span className={isHeader ? item.valueColor : `text-[#a1a1aa]`}>{item.label}</span>
+                    <span className={`font-mono font-semibold ${isHeader ? "" : item.valueColor || "text-white"}`}>
+                      {item.value}
+                    </span>
+                  </div>
+                )
+              })}
         </div>
       )}
     </div>

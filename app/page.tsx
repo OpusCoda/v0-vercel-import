@@ -6,6 +6,7 @@ import { ethers } from "ethers"
 import { savePortfolio, loadPortfolio } from "./actions"
 import PortfolioCard from "@/components/portfolio-card"
 import { fetchPulseAssets, fetchLPPositions } from "@/lib/fetch-live-data"
+import { Skeleton } from "@/components/ui/skeleton" // Changed from default import to named import
 
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -30,7 +31,7 @@ const FEATURED_TOKENS = [
   {
     address: "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39",
     symbol: "HEX",
-    name: "HEX (PulseChain)",
+    name: "HEX (Pulsechain)",
     logo: "https://gopulse.com/img/coins/HEX.svg", // Using GoPulse logo for HEX
   },
   {
@@ -45,7 +46,221 @@ const FEATURED_TOKENS = [
     name: "Incentive",
     logo: "https://gopulse.com/img/coins/INC.svg", // Using GoPulse logo
   },
+  {
+    address: "0xAbF663531FA10ab8116cbf7d5c6229B018A26Ff9",
+    symbol: "eHDRN",
+    name: "HDRN (from Ethereum)",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0xAbF663531FA10ab8116cbf7d5c6229B018A26Ff9.png",
+  },
+  {
+    address: "0xefD766cCb38EaF1dfd701853BFCe31359239F305",
+    symbol: "eDAI",
+    name: "DAI (from Ethereum)",
+    logo: "https://gopulse.com/img/coins/DAI.svg",
+  },
+  {
+    address: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+    symbol: "pDAI",
+    name: "pDAI",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x6B175474E89094C44Da98b954EedeAC495271d0F.png",
+  },
+  {
+    address: "0x15D38573d2feeb82e7ad5187aB8c1D52810B1f07",
+    symbol: "eUSDC",
+    name: "USDC (from Ethereum)",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x15D38573d2feeb82e7ad5187aB8c1D52810B1f07.png",
+  },
+  {
+    address: "0xfc4913214444af5c715cc9f7b52655e788a569ed",
+    symbol: "ICSA",
+    name: "Icosa",
+    logo: "https://gopulse.com/img/coins/ICSA.svg",
+  },
+  {
+    address: "0xca35638a3fddd02fec597d8c1681198c06b23f58",
+    symbol: "TIME",
+    name: "TIME",
+    logo: "https://gopulse.com/img/coins/TIME.svg",
+  },
+  {
+    address: "0x9159f1d2a9f51998fc9ab03fbd8f265ab14a1b3b",
+    symbol: "LOAN",
+    name: "LOAN",
+    logo: "https://gopulse.com/img/coins/LOAN.svg",
+  },
+  {
+    address: "0xb513038bbfdf9d40b676f41606f4f61d4b02c4a2",
+    symbol: "EARN",
+    name: "EARN",
+    logo: "https://gopulse.com/img/coins/EARN.svg",
+  },
+  {
+    address: "0x3819f64f282bf135d62168C1e513280dAF905e06",
+    symbol: "HDRN",
+    name: "Hedron",
+    logo: "https://gopulse.com/img/coins/HDRN.svg",
+  },
+  {
+    address: "0xCc78A0acDF847A2C1714D2A925bB4477df5d48a6",
+    symbol: "ATROPA",
+    name: "Atropa",
+    logo: "https://gopulse.com/img/coins/ATROPA.svg",
+  },
+  {
+    address: "0x207e6b4529840a4fd518f73c68bc9c19b2a15944",
+    symbol: "MINT",
+    name: "Mintra",
+    logo: "https://gopulse.com/img/coins/MINT.svg",
+  },
+  {
+    address: "0x8BDB63033b02C15f113De51EA1C3a96Af9e8ecb5",
+    symbol: "AXIS",
+    name: "AxisAlive",
+    logo: "https://gopulse.com/img/coins/AXIS.svg",
+  },
+  {
+    address: "0x5a9790bfe63f3ec57f01b087cd65bd656c9034a8",
+    symbol: "COM",
+    name: "Communis",
+    logo: "https://gopulse.com/img/coins/COM.svg",
+  },
+  {
+    address: "0xAeC4C07537B03E3E62fc066EC62401Aed5Fdd361",
+    symbol: "TETRA",
+    name: "TETRA",
+    logo: "https://gopulse.com/img/coins/TETRA.svg",
+  },
 ]
+
+const OGWEBCHEF_TOKENS = [
+  {
+    address: "0x2401E09acE92C689570a802138D6213486407B24",
+    symbol: "🎭",
+    name: "REMEMBER",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x2401E09acE92C689570a802138D6213486407B24.png",
+  },
+  {
+    address: "0xd79E7D1696D71E6Ce2EaA9d867230DB78d6F46C1",
+    symbol: "DADAISM",
+    name: "DADAISM",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0xd79E7D1696D71E6Ce2EaA9d867230DB78d6F46C1.png",
+  },
+  {
+    address: "0x8220342e1a61abd28d65f6b1d9eb653d8dfd1c85",
+    symbol: "FLEXMAS",
+    name: "FLEXMAS",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x8220342e1a61abd28d65f6b1d9eb653d8dfd1c85.png",
+  },
+  {
+    address: "0x041a80b38d3a5b4dbb30e56440cA8F0C8DFA6412",
+    symbol: "SⒶV",
+    name: "SⒶVⒶNT",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x041a80b38d3a5b4dbb30e56440ca8f0c8dfa6412.png",
+  },
+  {
+    address: "0x1C81b4358246d3088Ab4361aB755F3D8D4dd62d2",
+    symbol: "FINVESTA",
+    name: "Finvesta",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x1C81b4358246d3088Ab4361aB755F3D8D4dd62d2.png",
+  },
+  {
+    address: "0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106",
+    symbol: "GAS",
+    name: "Gas Money",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106.png",
+  },
+  {
+    address: "0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA",
+    symbol: "DOMINANCE",
+    name: "DOMINANCE",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA.png",
+  },
+  {
+    address: "0xdc60f0EE40bEd3078614bE202555d2f07d38166e",
+    symbol: "BEAST",
+    name: "BEAST",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0xdc60f0EE40bEd3078614bE202555d2f07d38166e.png",
+  },
+  {
+    address: "0x063E79CF6A555dac9033EAa3c61A8f02F1020759",
+    symbol: "MISSOR",
+    name: "Missor",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x063E79CF6A555dac9033EAa3c61A8f02F1020759.png",
+  },
+  {
+    address: "0x770CFA2FB975E7bCAEDDe234D92c3858C517Adca",
+    symbol: "WGPDAIP",
+    name: "WORLDS GREATEST PDAI PRINTER",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x770CFA2FB975E7bCAEDDe234D92c3858C517Adca.png",
+  },
+  {
+    address: "0x5Db83315591bD3c121700890E03B8fE6Fe40a486",
+    symbol: "👵🏽",
+    name: "Nana",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x5Db83315591bD3c121700890E03B8fE6Fe40a486.png",
+  },
+  {
+    address: "0xA9D27362ff93f1BCEAa8290FFC36b6D98f4669b9",
+    symbol: "🔊",
+    name: "RAISE IT UP",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0xA9D27362ff93f1BCEAa8290FFC36b6D98f4669b9.png",
+  },
+  {
+    address: "0x406A63a837AC947ec0C2f0E6673e8Ef481cA7807",
+    symbol: "FLEXBOOST",
+    name: "FLEXBOOST",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x406A63a837AC947ec0C2f0E6673e8Ef481cA7807.png",
+  },
+  {
+    address: "0x578Cd5Aed5e8F06a5b7959caaFc6213e954F434E",
+    symbol: "🧠",
+    name: "Mnemonics",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x578Cd5Aed5e8F06a5b7959caaFc6213e954F434E.png",
+  },
+  {
+    address: "0x6d664cb8F9DB9C5BCB7190c954d5b45F67f2d809",
+    symbol: "ESE",
+    name: "ESE BABY",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x6d664cb8F9DB9C5BCB7190c954d5b45F67f2d809.png",
+  },
+  {
+    address: "0x121Ed41dEE86741193F8856eC0CfB38158A7cBAA",
+    symbol: "↑↑↑",
+    name: "Sursum",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0x121Ed41dEE86741193F8856eC0CfB38158A7cBAA.png",
+  },
+  {
+    address: "0xE547B798DA37Ecda21Cb1886f33CB34e85852657",
+    symbol: "🏧",
+    name: "GAS Station",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0xE547B798DA37Ecda21Cb1886f33CB34e85852657.png",
+  },
+]
+
+const ALWAYS_VISIBLE_TOKENS = [
+  {
+    address: "0xbdE852ef424Aa15B83b8Eb6442Dc0C165d2E63F4",
+    symbol: "OPUS",
+    name: "Opus",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0xbdE852ef424Aa15B83b8Eb6442Dc0C165d2E63F4.png",
+  },
+  {
+    address: "0xDC3262de8d7DE75f6A58304475C8cf3950626F7e",
+    symbol: "CODA",
+    name: "Coda",
+    logo: "https://dd.dexscreener.com/ds-data/tokens/pulsechain/0xDC3262de8d7DE75f6A58304475C8cf3950626F7e.png",
+  },
+]
+
+const getTokenLogo = (address: string): string => {
+  // Check if token has a custom logo in ALWAYS_VISIBLE_TOKENS
+  const customToken = ALWAYS_VISIBLE_TOKENS.find((t) => t.address.toLowerCase() === address.toLowerCase())
+  if (customToken) {
+    return customToken.logo
+  }
+  // Default to PulseX token images
+  return `https://tokens.app.pulsex.com/images/tokens/${address}.png`
+}
 
 const PLS_ADDRESS = "0xA1077a294dDE1B09bB078844df40758a5D0f9a27" // Wrapped PLS address for price lookup
 
@@ -63,8 +278,8 @@ const HSI_MANAGER_ABI = [
   "function stakeLists(address, uint256) view returns (uint40 stakeId, uint72 stakedHearts, uint72 stakeShares, uint16 lockedDay, uint16 stakedDays, uint16 unlockedDay, bool isAutoStake)",
 ]
 
-const HSI_MANAGER_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3"
-const HSI_MANAGER_ETHEREUM_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3"
+const HSI_MANAGER_ADDRESS = ethers.getAddress("0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3")
+const HSI_MANAGER_ETHEREUM_ADDRESS = ethers.getAddress("0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3")
 
 const VALIDATOR_DEPOSIT_ABI = [
   "event DepositEvent(bytes pubkey, bytes withdrawal_credentials, bytes amount, bytes signature, bytes index)",
@@ -76,8 +291,19 @@ const PULSECHAIN_DEPOSIT_CONTRACT = "0x3693693693693693693693693693693693693693"
 const getDecimalPlaces = (symbol: string): number => {
   const upperSymbol = symbol.toUpperCase()
   if (upperSymbol === "WETH") return 4
-  if (["HEX", "EHEX", "PLSX", "PLS"].includes(upperSymbol)) return 0
+  if (["HEX", "EHEX", "PLSX", "PLS", "🎭", "REMEMBER"].includes(upperSymbol)) return 0
   return 2 // default for other tokens
+}
+
+const formatLargeNumber = (value: number, decimals: number): string => {
+  if (value > 1_000_000_000_000) {
+    // More than 1 trillion
+    return `${(value / 1_000_000_000_000).toFixed(3)}T`
+  }
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: decimals,
+  })
 }
 
 const fetchINCPrice = async (plsUsdPrice: number): Promise<number> => {
@@ -87,7 +313,7 @@ const fetchINCPrice = async (plsUsdPrice: number): Promise<number> => {
       "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
     ]
 
-    const provider = new ethers.JsonRpcProvider("https://rpc.pulsechain.com")
+    const provider = new ethers.JsonRpcProvider("https://rpc.pulsechain.com/v1")
     const pairContract = new ethers.Contract(INC_WPLS_PAIR, PAIR_ABI, provider)
 
     const reserves = await pairContract.getReserves()
@@ -121,7 +347,7 @@ const fetchEHEXPrice = async (plsUsdPrice: number): Promise<number> => {
       "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
     ]
 
-    const provider = new ethers.JsonRpcProvider("https://rpc.pulsechain.com")
+    const provider = new ethers.JsonRpcProvider("https://rpc.pulsechain.com/v1")
     const pairContract = new ethers.Contract(EHEX_WPLS_PAIR, PAIR_ABI, provider)
 
     const reserves = await pairContract.getReserves()
@@ -139,6 +365,54 @@ const fetchEHEXPrice = async (plsUsdPrice: number): Promise<number> => {
   }
 }
 
+const fetchDexscreenerPrice = async (
+  tokenAddress: string,
+  pairAddress?: string,
+): Promise<{ price: number; change: number }> => {
+  try {
+    console.log(`[v0] Fetching Dexscreener price for ${tokenAddress}${pairAddress ? ` using pair ${pairAddress}` : ""}`)
+
+    // If specific pair address is provided, fetch from that pair directly
+    if (pairAddress) {
+      const response = await fetch(`https://api.dexscreener.com/latest/dex/pairs/pulsechain/${pairAddress}`)
+      const data = await response.json()
+
+      if (data.pair) {
+        const price = Number.parseFloat(data.pair.priceUsd) || 0
+        const change = Number.parseFloat(data.pair.priceChange?.h24) || 0
+        console.log(
+          `[v0] Dexscreener price for ${tokenAddress} from pair ${pairAddress}: $${price}, 24h change: ${change}%`,
+        )
+        return { price, change }
+      }
+    }
+
+    // Otherwise, use the token address to find the best pair
+    const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`)
+    const data = await response.json()
+
+    if (data.pairs && data.pairs.length > 0) {
+      // Find the pair with highest liquidity on PulseChain
+      const pulsechainPairs = data.pairs.filter((pair: any) => pair.chainId === "pulsechain")
+
+      if (pulsechainPairs.length > 0) {
+        // Sort by liquidity and take the highest
+        const bestPair = pulsechainPairs.sort((a: any, b: any) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0]
+        const price = Number.parseFloat(bestPair.priceUsd) || 0
+        const change = Number.parseFloat(bestPair.priceChange?.h24) || 0
+        console.log(`[v0] Dexscreener price for ${tokenAddress}: $${price}, 24h change: ${change}%`)
+        return { price, change }
+      }
+    }
+
+    console.log(`[v0] No Dexscreener price found for ${tokenAddress}`)
+    return { price: 0, change: 0 }
+  } catch (error) {
+    console.error(`[v0] Error fetching Dexscreener price for ${tokenAddress}:`, error)
+    return { price: 0, change: 0 }
+  }
+}
+
 const fetchTokenPrices = async (
   tokenAddresses: string[],
 ): Promise<{ prices: Record<string, number>; changes: Record<string, number> }> => {
@@ -152,16 +426,37 @@ const fetchTokenPrices = async (
       const plsResponse = await fetch(
         `https://api.coingecko.com/api/v3/simple/token_price/pulsechain?contract_addresses=${PLS_ADDRESS}&vs_currencies=usd&include_24hr_change=true`,
       )
+
+      if (!plsResponse.ok) {
+        throw new Error(`CoinGecko API returned ${plsResponse.status}`)
+      }
+
       const plsData = await plsResponse.json()
       if (plsData[PLS_ADDRESS.toLowerCase()]?.usd) {
         plsUsdPrice = plsData[PLS_ADDRESS.toLowerCase()].usd
         prices[PLS_ADDRESS.toLowerCase()] = plsUsdPrice
         changes[PLS_ADDRESS.toLowerCase()] = plsData[PLS_ADDRESS.toLowerCase()].usd_24h_change || 0
-        console.log(`[v0] PLS price: $${plsUsdPrice}, 24h change: ${changes[PLS_ADDRESS.toLowerCase()]}%`)
+        console.log(
+          `[v0] PLS price from CoinGecko: $${plsUsdPrice}, 24h change: ${changes[PLS_ADDRESS.toLowerCase()]}%`,
+        )
+      } else {
+        console.log(`[v0] CoinGecko returned no data for PLS, trying Dexscreener`)
+        const dexPrice = await fetchDexscreenerPrice(PLS_ADDRESS)
+        if (dexPrice.price > 0) {
+          plsUsdPrice = dexPrice.price
+          prices[PLS_ADDRESS.toLowerCase()] = dexPrice.price
+          changes[PLS_ADDRESS.toLowerCase()] = dexPrice.change
+        }
       }
       await new Promise((resolve) => setTimeout(resolve, 200))
     } catch (err) {
-      console.error(`[v0] Error fetching PLS price:`, err)
+      console.log(`[v0] CoinGecko unavailable for PLS, using Dexscreener fallback`)
+      const dexPrice = await fetchDexscreenerPrice(PLS_ADDRESS)
+      if (dexPrice.price > 0) {
+        plsUsdPrice = dexPrice.price
+        prices[PLS_ADDRESS.toLowerCase()] = dexPrice.price
+        changes[PLS_ADDRESS.toLowerCase()] = dexPrice.change
+      }
     }
 
     let ethereumHexPrice = 0
@@ -171,32 +466,64 @@ const fetchTokenPrices = async (
       const ethHexResponse = await fetch(
         `https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=${HEX_ETHEREUM_ADDRESS}&vs_currencies=usd&include_24hr_change=true`,
       )
+
+      if (!ethHexResponse.ok) {
+        throw new Error(`CoinGecko API returned ${ethHexResponse.status}`)
+      }
+
       const ethHexData = await ethHexResponse.json()
       if (ethHexData[HEX_ETHEREUM_ADDRESS.toLowerCase()]?.usd) {
         ethereumHexPrice = ethHexData[HEX_ETHEREUM_ADDRESS.toLowerCase()].usd
         ethereumHexChange = ethHexData[HEX_ETHEREUM_ADDRESS.toLowerCase()].usd_24h_change || 0
 
-        // Store Ethereum HEX price with special key for HEX stakes display
         prices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] = ethereumHexPrice
         changes[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] = ethereumHexChange
 
-        // Use Ethereum HEX price for eHEX (0x57fde0a71132198BBeC939B98976993d8D89D225)
         prices["0x57fde0a71132198bbec939b98976993d8d89d225"] = ethereumHexPrice
         changes["0x57fde0a71132198bbec939b98976993d8d89d225"] = ethereumHexChange
 
         console.log(
-          `[v0] Ethereum HEX price: $${ethereumHexPrice}, 24h change: ${ethereumHexChange}% (also used for eHEX)`,
+          `[v0] Ethereum HEX price from CoinGecko: $${ethereumHexPrice}, 24h change: ${ethereumHexChange}% (also used for eHEX)`,
         )
+      } else {
+        console.log(`[v0] CoinGecko returned no data for Ethereum HEX, trying Dexscreener`)
+        const dexPrice = await fetchDexscreenerPrice(HEX_ETHEREUM_ADDRESS)
+        if (dexPrice.price > 0) {
+          ethereumHexPrice = dexPrice.price
+          ethereumHexChange = dexPrice.change
+          prices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] = ethereumHexPrice
+          changes[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] = ethereumHexChange
+          prices["0x57fde0a71132198bbec939b98976993d8d89d225"] = ethereumHexPrice
+          changes["0x57fde0a71132198bbec939b98976993d8d89d225"] = ethereumHexChange
+        }
       }
       await new Promise((resolve) => setTimeout(resolve, 200))
     } catch (err) {
-      console.error(`[v0] Error fetching Ethereum HEX price:`, err)
+      console.log(`[v0] CoinGecko unavailable for Ethereum HEX, using Dexscreener fallback`)
+      const dexPrice = await fetchDexscreenerPrice(HEX_ETHEREUM_ADDRESS)
+      if (dexPrice.price > 0) {
+        ethereumHexPrice = dexPrice.price
+        ethereumHexChange = dexPrice.change
+        prices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] = ethereumHexPrice
+        changes[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] = ethereumHexChange
+        prices["0x57fde0a71132198bbec939b98976993d8d89d225"] = ethereumHexPrice
+        changes["0x57fde0a71132198bbec939b98976993d8d89d225"] = ethereumHexChange
+      }
     }
 
     let pulsechainHexPrice = 0
     let pulsechainHexChange = 0
 
-    // Fetch prices one by one to avoid CoinGecko free tier limit
+    const ogwebchefAddresses = OGWEBCHEF_TOKENS.map((t) => t.address.toLowerCase())
+    const alwaysVisibleAddresses = ALWAYS_VISIBLE_TOKENS.map((t) => t.address.toLowerCase())
+    const bridgedAddresses = [
+      "0xAbF663531FA10ab8116cbf7d5c6229B018A26Ff9", // eHDRN
+      "0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C", // eWETH
+      "0xefD766cCb38EaF1dfd701853BFCe31359239F305", // eDAI
+      "0x6B175474E89094C44Da98b954EedeAC495271d0F", // pDAI (This is actually DAI from Mainnet, but let's assume it's intended to be bridged)
+      "0x15D38573d2feeb82e7ad5187aB8c1D52810B1f07", // eUSDC
+    ]
+
     for (const address of tokenAddresses) {
       if (address.toLowerCase() === PLS_ADDRESS.toLowerCase()) continue
 
@@ -210,9 +537,33 @@ const fetchTokenPrices = async (
           const incPrice = await fetchINCPrice(plsUsdPrice)
           if (incPrice > 0) {
             prices[address.toLowerCase()] = incPrice
-            changes[address.toLowerCase()] = 0 // No 24h change data from DEX
+            changes[address.toLowerCase()] = 0
           }
         }
+        continue
+      }
+
+      if (address.toLowerCase() === "0x041a80b38d3a5b4dbb30e56440ca8f0c8dfa6412") {
+        const dexPrice = await fetchDexscreenerPrice(address, "0x4d73f59d0b426ca2f3b1f3e1769e53c96fcd3f2e")
+        if (dexPrice.price > 0) {
+          prices[address.toLowerCase()] = dexPrice.price
+          changes[address.toLowerCase()] = dexPrice.change
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        continue
+      }
+
+      if (
+        ogwebchefAddresses.includes(address.toLowerCase()) ||
+        alwaysVisibleAddresses.includes(address.toLowerCase()) ||
+        bridgedAddresses.includes(address.toLowerCase())
+      ) {
+        const dexPrice = await fetchDexscreenerPrice(address)
+        if (dexPrice.price > 0) {
+          prices[address.toLowerCase()] = dexPrice.price
+          changes[address.toLowerCase()] = dexPrice.change
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300)) // Longer delay for Dexscreener
         continue
       }
 
@@ -221,6 +572,11 @@ const fetchTokenPrices = async (
         const response = await fetch(
           `https://api.coingecko.com/api/v3/simple/token_price/pulsechain?contract_addresses=${address}&vs_currencies=usd&include_24hr_change=true`,
         )
+
+        if (!response.ok) {
+          throw new Error(`CoinGecko API returned ${response.status}`)
+        }
+
         const data = await response.json()
 
         if (data[address.toLowerCase()]?.usd) {
@@ -234,12 +590,23 @@ const fetchTokenPrices = async (
             pulsechainHexPrice = data[address.toLowerCase()].usd
             pulsechainHexChange = data[address.toLowerCase()].usd_24h_change || 0
           }
+        } else {
+          console.log(`[v0] CoinGecko returned no data for ${address}, trying Dexscreener`)
+          const dexPrice = await fetchDexscreenerPrice(address)
+          if (dexPrice.price > 0) {
+            prices[address.toLowerCase()] = dexPrice.price
+            changes[address.toLowerCase()] = dexPrice.change
+          }
         }
 
-        // Add small delay to avoid rate limiting
         await new Promise((resolve) => setTimeout(resolve, 200))
       } catch (err) {
-        console.log(`[v0] Skipping price for ${address} (fetch failed)`)
+        console.log(`[v0] CoinGecko unavailable for ${address}, using Dexscreener fallback`)
+        const dexPrice = await fetchDexscreenerPrice(address)
+        if (dexPrice.price > 0) {
+          prices[address.toLowerCase()] = dexPrice.price
+          changes[address.toLowerCase()] = dexPrice.change
+        }
       }
     }
 
@@ -262,6 +629,9 @@ export default function Home() {
   const [data, setData] = useState<any>(null)
   const [lpPositions, setLpPositions] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  // ADDED STATE FOR LOADING STAGE TRACKING
+  const [loadingStage, setLoadingStage] = useState<string>("")
+  const [dataLoading, setDataLoading] = useState(false) // Add separate state for data loading
   const [error, setError] = useState("")
   const [loadId, setLoadId] = useState("")
   const [saving, setSaving] = useState(false)
@@ -269,6 +639,8 @@ export default function Home() {
   const [showLoadModal, setShowLoadModal] = useState(false)
   const [selectedWallets, setSelectedWallets] = useState<string[]>([])
   const [featuredTokenBalances, setFeaturedTokenBalances] = useState<any[]>([])
+  const [ogwebchefTokenBalances, setOgwebchefTokenBalances] = useState<any[]>([])
+  const [alwaysVisibleTokenBalances, setAlwaysVisibleTokenBalances] = useState<any[]>([])
   const [tokenPrices, setTokenPrices] = useState<Record<string, number>>({})
   const [tokenPriceChanges, setTokenPriceChanges] = useState<Record<string, number>>({})
   const [hexStakes, setHexStakes] = useState<any[]>([])
@@ -285,10 +657,10 @@ export default function Home() {
   const ETHEREUM_TIMEOUT = 60000 // 60 second timeout for Ethereum RPC calls
 
   const provider = useMemo(() => {
-    const rpcUrls = ["https://rpc.pulsechain.com", "https://pulsechain-rpc.publicnode.com"]
+    const rpcUrls = ["https://rpc.pulsechain.com/v1", "https://pulsechain-rpc.publicnode.com"]
     return new ethers.JsonRpcProvider(rpcUrls[0])
   }, [])
-  const ethereumProvider = useMemo(() => new ethers.JsonRpcProvider("https://ethereum.publicnode.com"), [])
+  const ethereumProvider = useMemo(() => new ethers.JsonRpcProvider("https://ethereum.rpc.thirdweb.com"), [])
 
   const vaultManager = useMemo(() => {
     const liquidLoansVaultManagerAddress = "0xD79bfb86fA06e8782b401bC0197d92563602D2Ab"
@@ -305,29 +677,47 @@ export default function Home() {
     }
   }, [wallets.length])
 
+  const toggleWalletSelection = (address: string) => {
+    console.log("[v0] toggleWalletSelection called for:", address)
+    console.log("[v0] Current selectedWallets:", selectedWallets)
+
+    setSelectedWallets((prev) => {
+      const newSelection = prev.includes(address)
+        ? prev.length === 1
+          ? prev
+          : prev.filter((a) => a !== address)
+        : [...prev, address]
+
+      console.log("[v0] New selectedWallets:", newSelection)
+      return newSelection
+    })
+  }
+
   const filteredWallets = useMemo(() => {
-    if (selectedWallets.length === 0) return wallets
-    return wallets.filter((w) => selectedWallets.includes(w.address))
+    const filtered = selectedWallets.length === 0 ? wallets : wallets.filter((w) => selectedWallets.includes(w.address))
+    console.log(
+      "[v0] filteredWallets updated:",
+      filtered.map((w) => w.address),
+    )
+    return filtered
   }, [wallets, selectedWallets])
 
   useEffect(() => {
+    console.log("[v0] selectedWallets changed, triggering fetchData")
+    console.log("[v0] filteredWallets.length:", filteredWallets.length)
+    console.log(
+      "[v0] filteredWallets addresses:",
+      filteredWallets.map((w) => w.address),
+    )
+
     if (filteredWallets.length > 0) {
       fetchData()
+    } else {
+      setData(null) // Clear data if no wallets are selected
     }
-  }, [filteredWallets.length, tokens.length])
+  }, [selectedWallets]) // Removed tokens.length dependency as it's handled by fetchData itself
 
   // Load cached NFTs on mount
-
-  const toggleWalletSelection = (address: string) => {
-    setSelectedWallets((prev) => {
-      if (prev.includes(address)) {
-        if (prev.length === 1) return prev
-        return prev.filter((a) => a !== address)
-      } else {
-        return [...prev, address]
-      }
-    })
-  }
 
   const addWallet = () => {
     if (!ethers.isAddress(newWallet) || wallets.some((w) => w.address.toLowerCase() === newWallet.toLowerCase())) {
@@ -361,6 +751,9 @@ export default function Home() {
     localStorage.setItem("tracker_portfolio", JSON.stringify({ wallets, tokens: updated }))
     setNewToken("")
     setError("")
+    if (filteredWallets.length > 0) {
+      fetchData()
+    }
   }
 
   const removeToken = (index: number) => {
@@ -451,34 +844,98 @@ export default function Home() {
     }
   }
 
+  const totalPortfolioValue = useMemo(() => {
+    if (!data) return 0
+
+    let total = 0
+
+    // PLS value
+    const plsPrice = tokenPrices[PLS_ADDRESS.toLowerCase()] || 0
+    total += Number.parseFloat(data.totalPLS) * plsPrice
+
+    // Featured tokens value (only those with $1+ value)
+    featuredTokenBalances
+      .filter((token) => {
+        const price = tokenPrices[token.address.toLowerCase()] || 0
+        const value = Number(token.balance) * price
+        return value >= 1
+      })
+      .forEach((token) => {
+        const price = tokenPrices[token.address.toLowerCase()] || 0
+        total += Number(token.balance) * price
+      })
+
+    // Opus and Coda printers
+    alwaysVisibleTokenBalances.forEach((token) => {
+      const price = tokenPrices[token.address.toLowerCase()] || 0
+      total += Number(token.balance) * price
+    })
+
+    // OGWebChef tokens (only those with $1+ value)
+    ogwebchefTokenBalances
+      .filter((token) => {
+        const price = tokenPrices[token.address.toLowerCase()] || 0
+        const value = Number(token.balance) * price
+        return value >= 1
+      })
+      .forEach((token) => {
+        const price = tokenPrices[token.address.toLowerCase()] || 0
+        total += Number(token.balance) * price
+      })
+
+    // HEX stakes value
+    const hexPulsechainPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
+    const hexEthereumPrice = tokenPrices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] || 0
+    hexStakes.forEach((stake) => {
+      const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
+      total += stake.stakedHearts * hexPrice
+    })
+
+    // HSI stakes value
+    hsiStakes.forEach((stake) => {
+      const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
+      total += stake.stakedHearts * hexPrice
+    })
+
+    // PLS value in Liquid Loans
+    total += Number.parseFloat(data.totalLockedPLS) * plsPrice
+
+    return total
+  }, [
+    data,
+    tokenPrices,
+    featuredTokenBalances,
+    alwaysVisibleTokenBalances,
+    ogwebchefTokenBalances,
+    hexStakes,
+    hsiStakes,
+  ])
+
   const fetchData = async () => {
+    console.log("[v0] fetchData called")
+    console.log(
+      "[v0] filteredWallets in fetchData:",
+      filteredWallets.map((w) => w.address),
+    )
+
     if (filteredWallets.length === 0) {
       setError("Add at least one wallet")
+      setData(null) // Clear existing data when no wallets are selected
       return
     }
 
-    setLoading(true)
-    setError("")
-    setData(null)
-    setLpPositions([])
-    setFeaturedTokenBalances([])
-    setHexStakes([])
-    setHsiStakes([]) // Reset HSI stakes
-    setHsiCount(0) // Reset HSI count
+    setDataLoading(true)
+    // UPDATED: Set initial loading message
+    setLoadingStage("Hold on a tick — we're just coaxing your numbers out of the blockchain.")
+    console.log("[v0] Starting data fetch for", filteredWallets.length, "wallets")
 
     try {
-      let totalPLS = ethers.parseEther("0")
-      let totalLockedPLS = ethers.parseEther("0")
-      let totalDebt = ethers.parseEther("0")
-      const tokenBalances: any[] = []
-      const allLPPositions: any[] = []
-      const allHexStakes: any[] = [] // Initialize as empty array
-      const allHsiStakes: any[] = [] // Initialize as empty array
-      const liquidLoansVaults: any[] = []
-
       const now = Date.now()
-      let prices: Record<string, number>
-      let changes: Record<string, number>
+      let prices: Record<string, number> = {}
+      let changes: Record<string, number> = {}
+
+      // UPDATED: Update loading stage for price fetching
+      setLoadingStage("Hold on a tick — we're just coaxing your numbers out of the blockchain...")
 
       if (priceCache.current && now - priceCache.current.timestamp < PRICE_CACHE_TTL) {
         console.log("[v0] Using cached prices")
@@ -489,36 +946,59 @@ export default function Home() {
         const addressesToFetch = [
           PLS_ADDRESS,
           ...FEATURED_TOKENS.map((t) => t.address),
-          HEX_ETHEREUM_ADDRESS, // Ensure eHEX address is included
+          ...OGWEBCHEF_TOKENS.map((t) => t.address),
+          ...ALWAYS_VISIBLE_TOKENS.map((t) => t.address),
+          "0xAbF663531FA10ab8116cbf7d5c6229B018A26Ff9",
+          "0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C",
+          "0xefD766cCb38EaF1dfd701853BFCe31359239F305",
+          "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+          "0x15D38573d2feeb82e7ad5187aB8c1D52810B1f07",
+          HEX_ETHEREUM_ADDRESS,
         ]
-        console.log("[v0] Fetching prices for tokens:", addressesToFetch)
         const result = await fetchTokenPrices(addressesToFetch)
         prices = result.prices
         changes = result.changes
-
-        // Cache the prices
-        priceCache.current = {
-          prices,
-          changes,
-          timestamp: now,
-        }
+        priceCache.current = { prices, changes, timestamp: now }
       }
 
-      console.log("[v0] Setting token prices state:", prices)
       setTokenPrices(prices)
       setTokenPriceChanges(changes)
 
+      // UPDATED: Update loading stage for token balances
+      setLoadingStage("Loading token balances...")
+
+      // === Fetch Featured, OGWebChef, AlwaysVisible Tokens (parallelized across wallets) ===
       const featuredBalances: any[] = []
       for (const featuredToken of FEATURED_TOKENS) {
-        try {
-          const tokenContract = new ethers.Contract(featuredToken.address, ERC20_ABI, provider)
-          const decimals = await tokenContract.decimals()
+        if (featuredToken.address === "0x0000000000000000000000000000000000000000") {
+          console.log(`[v0] Skipping ${featuredToken.symbol} - invalid address`)
+          continue
+        }
 
-          let totalBalance = BigInt(0)
-          for (const wallet of filteredWallets) {
-            const balance = await tokenContract.balanceOf(wallet.address)
-            totalBalance += balance
+        try {
+          if (!ethers.isAddress(featuredToken.address)) {
+            console.log(`[v0] Invalid address format for ${featuredToken.symbol}, skipping`)
+            continue
           }
+
+          const tokenContract = new ethers.Contract(featuredToken.address, ERC20_ABI, provider)
+          let decimals = 18
+          try {
+            decimals = await tokenContract.decimals()
+          } catch (decimalError) {
+            console.log(`[v0] Could not fetch decimals for ${featuredToken.symbol}, using default 18`)
+          }
+
+          const balancePromises = filteredWallets.map(async (wallet) => {
+            try {
+              return await tokenContract.balanceOf(wallet.address)
+            } catch (balanceError) {
+              console.log(`[v0] Could not fetch balance for ${featuredToken.symbol} from ${wallet.address}`)
+              return BigInt(0)
+            }
+          })
+          const balances = await Promise.all(balancePromises)
+          const totalBalance = balances.reduce((sum, bal) => sum + bal, BigInt(0))
 
           if (totalBalance > 0) {
             featuredBalances.push({
@@ -528,131 +1008,196 @@ export default function Home() {
             })
           }
         } catch (err) {
-          console.error(`Error fetching featured token ${featuredToken.symbol}:`, err)
+          console.log(`[v0] Error processing featured token ${featuredToken.symbol}, skipping`)
         }
       }
       setFeaturedTokenBalances(featuredBalances)
 
-      for (const wallet of filteredWallets) {
-        const plsBalance = await provider.getBalance(wallet.address)
-        totalPLS = totalPLS + plsBalance
-
-        try {
-          const walletTokens = await fetchPulseAssets(wallet.address)
-          for (const token of walletTokens) {
-            const existing = tokenBalances.find((t) => t.address.toLowerCase() === token.address.toLowerCase())
-            if (existing) {
-              existing.value += token.value
-            } else {
-              tokenBalances.push({ ...token })
-            }
-          }
-        } catch (err) {
-          console.error(`Error fetching tokens for ${wallet.address}:`, err)
+      const ogwebchefBalances: any[] = []
+      for (const ogToken of OGWEBCHEF_TOKENS) {
+        if (ogToken.address === "0x0000000000000000000000000000000000000000") {
+          console.log(`[v0] Skipping ${ogToken.symbol} - invalid address`)
+          continue
         }
 
         try {
-          const walletLPs = await fetchLPPositions(wallet.address)
-          for (const lp of walletLPs) {
-            const existing = allLPPositions.find((l) => l.pairId === lp.pairId)
-            if (existing) {
-              existing.value += lp.value
-            } else {
-              allLPPositions.push({ ...lp })
-            }
-          }
-        } catch (err) {
-          console.error(`Error fetching LP positions for ${wallet.address}:`, err)
-        }
-
-        try {
-          console.log(`[v0] Checking Liquid Loans vault for wallet: ${wallet.address}`)
-          const lockedPLS = await vaultManager.getVaultColl(wallet.address)
-          console.log(`[v0] getVaultColl returned:`, lockedPLS.toString())
-
-          const debtUSDL = await vaultManager.getVaultDebt(wallet.address)
-          console.log(`[v0] getVaultDebt returned:`, debtUSDL.toString())
-
-          if (lockedPLS > 0 || debtUSDL > 0) {
-            liquidLoansVaults.push({
-              wallet: wallet.address,
-              lockedPLS: ethers.formatEther(lockedPLS),
-              debt: ethers.formatEther(debtUSDL),
-            })
+          if (!ethers.isAddress(ogToken.address)) {
+            console.log(`[v0] Invalid address format for ${ogToken.symbol}, skipping`)
+            continue
           }
 
-          totalLockedPLS = totalLockedPLS + lockedPLS
-          totalDebt = totalDebt + debtUSDL
+          const tokenContract = new ethers.Contract(ogToken.address, ERC20_ABI, provider)
+          let decimals = 18
+          try {
+            decimals = await tokenContract.decimals()
+          } catch (decimalError) {
+            console.log(`[v0] Could not fetch decimals for ${ogToken.symbol}, using default 18`)
+          }
 
-          console.log(`[v0] Liquid Loans data fetched successfully for ${wallet.address}`)
-        } catch (vaultError: any) {
-          console.log(`[v0] Liquid Loans error for ${wallet.address}:`, vaultError.message)
-          console.log(`[v0] Error code:`, vaultError.code)
-          console.log(`[v0] Full error:`, vaultError)
-        }
-
-        try {
-          const hexContract = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, provider)
-          const stakeCount = await hexContract.stakeCount(wallet.address)
-          const currentDay = await hexContract.currentDay()
-          console.log(`[v0] PulseChain HEX stakes for ${wallet.address}: ${stakeCount.toString()}`)
-
-          for (let i = 0; i < Number(stakeCount); i++) {
+          const balancePromises = filteredWallets.map(async (wallet) => {
             try {
-              const stake = await hexContract.stakeLists(wallet.address, i)
-              const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
-              const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
+              return await tokenContract.balanceOf(wallet.address)
+            } catch (balanceError) {
+              console.log(`[v0] Could not fetch balance for ${ogToken.symbol} from ${wallet.address}`)
+              return BigInt(0)
+            }
+          })
+          const balances = await Promise.all(balancePromises)
+          const totalBalance = balances.reduce((sum, bal) => sum + bal, BigInt(0))
 
-              const daysPassed = Number(currentDay) - Number(stake.lockedDay)
-              const daysRemaining = Number(stake.stakedDays) - daysPassed
-              const isActive = stake.unlockedDay === 0
+          if (ogToken.address.toLowerCase() === "0x041a80b38d3a5b4dbb30e56440ca8f0c8dfa6412") {
+            console.log(`[v0] SⒶVⒶNT raw balance: ${totalBalance.toString()}`)
+            console.log(`[v0] SⒶVⒶNT formatted balance: ${ethers.formatUnits(totalBalance, decimals)}`)
+            console.log(`[v0] SⒶVⒶNT decimals: ${decimals}`)
+            console.log(`[v0] SⒶVⒶNT price: ${prices[ogToken.address.toLowerCase()] || 0}`)
+          }
 
-              allHexStakes.push({
-                wallet: wallet.address,
-                chain: "Pulsechain",
-                stakeId: stake.stakeId.toString(),
-                stakedHearts: Number(stakedHearts),
-                stakeShares: Number(stakeShares),
-                lockedDay: Number(stake.lockedDay),
-                stakedDays: Number(stake.stakedDays),
-                unlockedDay: Number(stake.unlockedDay),
-                currentDay: Number(currentDay),
-                daysPassed,
-                daysRemaining: Math.max(0, daysRemaining),
-                isActive,
-              })
-            } catch (err) {
-              console.error(`[v0] Error fetching Pulsechain HEX stake ${i}:`, err)
+          if (totalBalance > 0) {
+            ogwebchefBalances.push({
+              ...ogToken,
+              balance: ethers.formatUnits(totalBalance, decimals),
+              decimals,
+            })
+
+            if (ogToken.address.toLowerCase() === "0x041a80b38d3a5b4dbb30e56440ca8f0c8dfa6412") {
+              console.log(`[v0] SⒶVⒶNT added to ogwebchefBalances`)
+            }
+          } else {
+            if (ogToken.address.toLowerCase() === "0x041a80b38d3a5b4dbb30e56440ca8f0c8dfa6412") {
+              console.log(`[v0] SⒶVⒶNT balance is 0, not adding to list`)
             }
           }
         } catch (err) {
-          console.log(`[v0] No Pulsechain HEX stakes found for ${wallet.address}`)
+          console.log(`[v0] Error processing OGWebChef token ${ogToken.symbol}, skipping`)
+        }
+      }
+
+      console.log(`[v0] Total OGWEBCHEF tokens with balance > 0: ${ogwebchefBalances.length}`)
+      setOgwebchefTokenBalances(ogwebchefBalances)
+
+      const alwaysVisibleBalances: any[] = []
+      for (const alwaysVisibleToken of ALWAYS_VISIBLE_TOKENS) {
+        if (alwaysVisibleToken.address === "0x0000000000000000000000000000000000000000") {
+          console.log(`[v0] Skipping ${alwaysVisibleToken.symbol} - invalid address`)
+          alwaysVisibleBalances.push({
+            ...alwaysVisibleToken,
+            balance: "0",
+            decimals: 18,
+          })
+          continue
         }
 
-        // Starting Ethereum HEX stakes fetch
+        if (!ethers.isAddress(alwaysVisibleToken.address)) {
+          console.log(`[v0] Invalid address format for ${alwaysVisibleToken.symbol}, using 0 balance`)
+          alwaysVisibleBalances.push({
+            ...alwaysVisibleToken,
+            balance: "0",
+            decimals: 18,
+          })
+          continue
+        }
+
+        const tokenContract = new ethers.Contract(alwaysVisibleToken.address, ERC20_ABI, provider)
+        let decimals = 18
         try {
-          console.log(`[v0] Starting Ethereum HEX stakes fetch for ${wallet.address}`)
+          decimals = await tokenContract.decimals()
+        } catch (decimalError) {
+          console.log(`[v0] Could not fetch decimals for ${alwaysVisibleToken.symbol}, using default 18`)
+        }
 
-          const fetchEthereumHEX = async () => {
-            const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+        const balancePromises = filteredWallets.map(async (wallet) => {
+          try {
+            return await tokenContract.balanceOf(wallet.address)
+          } catch (balanceError) {
+            console.log(`[v0] Could not fetch balance for ${alwaysVisibleToken.symbol} from ${wallet.address}`)
+            return BigInt(0)
+          }
+        })
+        const balances = await Promise.all(balancePromises)
+        const totalBalance = balances.reduce((sum, bal) => sum + bal, BigInt(0))
 
-            const stakeCount = await hexEthContract.stakeCount(wallet.address)
-            const currentDay = await hexEthContract.currentDay()
-            console.log(`[v0] Ethereum HEX stakeCount: ${stakeCount.toString()}, currentDay: ${currentDay.toString()}`)
+        alwaysVisibleBalances.push({
+          ...alwaysVisibleToken,
+          balance: ethers.formatUnits(totalBalance, decimals),
+          decimals,
+        })
+      }
+      setAlwaysVisibleTokenBalances(alwaysVisibleBalances)
 
+      // UPDATED: Update loading stage for wallet data
+      setLoadingStage("Fetching wallet data...")
+
+      console.log("[v0] Fetching wallet data in parallel...")
+      const walletDataPromises = filteredWallets.map(async (wallet) => {
+        const walletData: any = {
+          address: wallet.address,
+          plsBalance: BigInt(0),
+          tokens: [],
+          lpPositions: [],
+          liquidLoansVault: null,
+          hexStakes: [],
+          hsiStakes: [],
+        }
+
+        try {
+          // Fetch PLS balance
+          walletData.plsBalance = await provider.getBalance(wallet.address)
+
+          // Fetch PulseAssets
+          try {
+            walletData.tokens = await fetchPulseAssets(wallet.address)
+          } catch (err) {
+            console.error(`Error fetching tokens for ${wallet.address}:`, err)
+          }
+
+          // UPDATED: Update loading stage for LP positions
+          setLoadingStage("Loading LP positions...")
+
+          // Fetch LP Positions
+          try {
+            console.log(`[LP] Fetching LP positions for ${wallet.address}`)
+            walletData.lpPositions = await fetchLPPositions(wallet.address, prices)
+            console.log(`[LP] Raw LPs from fetchLPPositions (${wallet.address}):`, walletData.lpPositions)
+          } catch (err) {
+            console.error("Error fetching LP positions for wallet:", err)
+          }
+
+          // Liquid Loans Vaults
+          try {
+            const lockedPLS = await vaultManager.getVaultColl(wallet.address)
+            const debtUSDL = await vaultManager.getVaultDebt(wallet.address)
+            if (lockedPLS > 0 || debtUSDL > 0) {
+              walletData.liquidLoansVault = {
+                wallet: wallet.address,
+                lockedPLS: ethers.formatEther(lockedPLS),
+                debt: ethers.formatEther(debtUSDL),
+                lockedPLSBigInt: lockedPLS,
+                debtBigInt: debtUSDL,
+              }
+            }
+          } catch (vaultError: any) {
+            console.log(`Liquid Loans error for ${wallet.address}:`, vaultError.message)
+          }
+
+          // UPDATED: Update loading stage for HEX stakes
+          setLoadingStage("Loading HEX stakes...")
+
+          // HEX Staking (Pulsechain)
+          try {
+            const hexContract = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, provider)
+            const currentDay = await hexContract.currentDay()
+            const stakeCount = await hexContract.stakeCount(wallet.address)
             for (let i = 0; i < Number(stakeCount); i++) {
               try {
-                const stake = await hexEthContract.stakeLists(wallet.address, i)
+                const stake = await hexContract.stakeLists(wallet.address, i)
                 const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
                 const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
-
                 const daysPassed = Number(currentDay) - Number(stake.lockedDay)
                 const daysRemaining = Number(stake.stakedDays) - daysPassed
                 const isActive = stake.unlockedDay === 0
-
-                allHexStakes.push({
+                walletData.hexStakes.push({
                   wallet: wallet.address,
-                  chain: "Ethereum",
+                  chain: "Pulsechain",
                   stakeId: stake.stakeId.toString(),
                   stakedHearts: Number(stakedHearts),
                   stakeShares: Number(stakeShares),
@@ -665,97 +1210,78 @@ export default function Home() {
                   isActive,
                 })
               } catch (err) {
-                console.error(`[v0] Error fetching Ethereum HEX stake ${i}:`, err)
+                console.error(`Error fetching Pulsechain HEX stake ${i}:`, err)
               }
             }
+          } catch (err) {
+            console.log(`No Pulsechain HEX stakes for ${wallet.address}`)
           }
 
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Ethereum HEX fetch timed out")), ETHEREUM_TIMEOUT),
-          )
-
-          await Promise.race([fetchEthereumHEX(), timeoutPromise])
-          console.log(`[v0] Finished fetching Ethereum HEX stakes for ${wallet.address}`)
-        } catch (err: any) {
-          if (err.message === "Ethereum HEX fetch timed out") {
-            console.log(`[v0] Ethereum HEX stakes fetch timed out for ${wallet.address}`)
-          } else {
-            console.error(`[v0] Error fetching Ethereum HEX stakes for ${wallet.address}:`, err)
-          }
-        }
-
-        try {
-          console.log(`[v0] HSI contract call for ${wallet.address} at ${HSI_MANAGER_ADDRESS}`)
-          const hsiContract = new ethers.Contract(HSI_MANAGER_ADDRESS, HSI_MANAGER_ABI, provider)
-          const hexContract = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, provider)
-
-          const hsiStakeCount = await hsiContract.stakeCount(wallet.address)
-          console.log(`[v0] HSI stakeCount call result for ${wallet.address}: ${hsiStakeCount.toString()}`)
-
-          if (Number(hsiStakeCount) === 0) {
-            console.log(`[v0] No HSI stakes detected for ${wallet.address}`)
-          }
-
-          const currentDay = await hexContract.currentDay()
-
-          for (let i = 0; i < Number(hsiStakeCount); i++) {
-            try {
-              const stake = await hsiContract.stakeLists(wallet.address, i)
-              console.log(`[v0] HSI stake ${i} loaded:`, stake)
-
-              const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
-              const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
-
-              const daysPassed = Number(currentDay) - Number(stake.lockedDay)
-              const daysRemaining = Number(stake.stakedDays) - daysPassed
-              const isActive = stake.unlockedDay === 0
-
-              allHsiStakes.push({
-                wallet: wallet.address,
-                chain: "Pulsechain",
-                stakeId: stake.stakeId.toString(),
-                stakedHearts: Number(stakedHearts),
-                stakeShares: Number(stakeShares),
-                lockedDay: Number(stake.lockedDay),
-                stakedDays: Number(stake.stakedDays),
-                unlockedDay: Number(stake.unlockedDay),
-                currentDay: Number(currentDay),
-                daysPassed,
-                daysRemaining: Math.max(0, daysRemaining),
-                isAutoStake: stake.isAutoStake,
-                isActive,
-              })
-            } catch (err) {
-              console.error(`[v0] Error fetching HSI stake ${i}:`, err)
+          // Ethereum HEX (timeout protected)
+          try {
+            const fetchEthereumHEX = async () => {
+              const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+              const currentDay = await hexEthContract.currentDay()
+              const stakeCount = await hexEthContract.stakeCount(wallet.address)
+              for (let i = 0; i < Number(stakeCount); i++) {
+                try {
+                  const stake = await hexEthContract.stakeLists(wallet.address, i)
+                  const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
+                  const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
+                  const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+                  const daysRemaining = Number(stake.stakedDays) - daysPassed
+                  const isActive = stake.unlockedDay === 0
+                  walletData.hexStakes.push({
+                    wallet: wallet.address,
+                    chain: "Ethereum",
+                    stakeId: stake.stakeId.toString(),
+                    stakedHearts: Number(stakedHearts),
+                    stakeShares: Number(stakeShares),
+                    lockedDay: Number(stake.lockedDay),
+                    stakedDays: Number(stake.stakedDays),
+                    unlockedDay: Number(stake.unlockedDay),
+                    currentDay: Number(currentDay),
+                    daysPassed,
+                    daysRemaining: Math.max(0, daysRemaining),
+                    isActive,
+                  })
+                } catch (err) {
+                  console.error(`Error fetching Ethereum HEX stake ${i}:`, err)
+                }
+              }
+            }
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Ethereum HEX fetch timed out")), ETHEREUM_TIMEOUT),
+            )
+            await Promise.race([fetchEthereumHEX(), timeoutPromise])
+          } catch (err: any) {
+            if (err.message !== "Ethereum HEX fetch timed out") {
+              console.error(`Error fetching Ethereum HEX stakes:`, err)
             }
           }
-        } catch (err) {
-          console.log(`[v0] No HSI stakes found for ${wallet.address}`)
-        }
 
-        try {
-          console.log(`[v0] Starting Ethereum HSI stakes fetch for ${wallet.address}`)
+          // UPDATED: Update loading stage for HSI stakes
+          setLoadingStage("Loading HSI stakes...")
 
-          const fetchEthereumHSI = async () => {
-            const hsiEthContract = new ethers.Contract(HSI_MANAGER_ETHEREUM_ADDRESS, HSI_MANAGER_ABI, ethereumProvider)
-            const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+          // Fetch HSI Stakes (Pulsechain)
+          try {
+            console.log(`[v0] HSI contract call for ${wallet.address} at ${HSI_MANAGER_ADDRESS}`)
+            const hsiContract = new ethers.Contract(HSI_MANAGER_ADDRESS, HSI_MANAGER_ABI, provider)
+            const hexContract = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, provider)
 
-            const hsiStakeCount = await hsiEthContract.stakeCount(wallet.address)
-            console.log(`[v0] Ethereum HSI stakeCount: ${hsiStakeCount.toString()}`)
+            const hsiStakeCount = await hsiContract.stakeCount(wallet.address)
+            console.log(`[v0] HSI stakeCount call result for ${wallet.address}: ${hsiStakeCount.toString()}`)
 
             if (Number(hsiStakeCount) === 0) {
-              console.log(`[v0] No Ethereum HSI stakes detected for ${wallet.address}`)
-              return
+              console.log(`[v0] No HSI stakes detected for ${wallet.address}`)
             }
 
-            const currentDay = await hexEthContract.currentDay()
-            console.log(`[v0] Ethereum currentDay: ${currentDay.toString()}`)
+            const currentDay = await hexContract.currentDay()
 
             for (let i = 0; i < Number(hsiStakeCount); i++) {
               try {
-                console.log(`[v0] Fetching Ethereum HSI stake ${i}`)
-                const stake = await hsiEthContract.stakeLists(wallet.address, i)
-                console.log(`[v0] Ethereum HSI stake ${i} loaded:`, stake)
+                const stake = await hsiContract.stakeLists(wallet.address, i)
+                console.log(`[v0] HSI stake ${i} loaded:`, stake)
 
                 const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
                 const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
@@ -764,9 +1290,9 @@ export default function Home() {
                 const daysRemaining = Number(stake.stakedDays) - daysPassed
                 const isActive = stake.unlockedDay === 0
 
-                allHsiStakes.push({
+                walletData.hsiStakes.push({
                   wallet: wallet.address,
-                  chain: "Ethereum",
+                  chain: "Pulsechain",
                   stakeId: stake.stakeId.toString(),
                   stakedHearts: Number(stakedHearts),
                   stakeShares: Number(stakeShares),
@@ -780,97 +1306,229 @@ export default function Home() {
                   isActive,
                 })
               } catch (err) {
-                console.error(`[v0] Error fetching Ethereum HSI stake ${i}:`, err)
+                console.error(`[v0] Error fetching HSI stake ${i}:`, err)
               }
             }
+          } catch (err) {
+            console.log(`[v0] No HSI stakes found for ${wallet.address}`)
           }
 
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Ethereum HSI fetch timed out")), ETHEREUM_TIMEOUT),
-          )
+          // Fetch Ethereum HSI Stakes
+          try {
+            console.log(`[v0] Starting Ethereum HSI stakes fetch for ${wallet.address}`)
 
-          await Promise.race([fetchEthereumHSI(), timeoutPromise])
-          console.log(`[v0] Finished fetching Ethereum HSI stakes for ${wallet.address}`)
-        } catch (err: any) {
-          if (err.message === "Ethereum HSI fetch timed out") {
-            console.log(`[v0] Ethereum HSI stakes fetch timed out for ${wallet.address}`)
-          } else {
-            console.error(`[v0] Error fetching Ethereum HSI stakes for ${wallet.address}:`, err)
+            const fetchEthereumHSI = async () => {
+              const hsiEthContract = new ethers.Contract(
+                HSI_MANAGER_ETHEREUM_ADDRESS,
+                HSI_MANAGER_ABI,
+                ethereumProvider,
+              )
+              const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+
+              const hsiStakeCount = await hsiEthContract.stakeCount(wallet.address)
+              console.log(`[v0] Ethereum HSI stakeCount: ${hsiStakeCount.toString()}`)
+
+              if (Number(hsiStakeCount) === 0) {
+                console.log(`[v0] No Ethereum HSI stakes detected for ${wallet.address}`)
+                return
+              }
+
+              const currentDay = await hexEthContract.currentDay()
+              console.log(`[v0] Ethereum currentDay: ${currentDay.toString()}`)
+
+              for (let i = 0; i < Number(hsiStakeCount); i++) {
+                try {
+                  console.log(`[v0] Fetching Ethereum HSI stake ${i}`)
+                  const stake = await hsiEthContract.stakeLists(wallet.address, i)
+                  console.log(`[v0] Ethereum HSI stake ${i} loaded:`, stake)
+
+                  const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
+                  const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
+
+                  const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+                  const daysRemaining = Number(stake.stakedDays) - daysPassed
+                  const isActive = stake.unlockedDay === 0
+
+                  walletData.hsiStakes.push({
+                    wallet: wallet.address,
+                    chain: "Ethereum",
+                    stakeId: stake.stakeId.toString(),
+                    stakedHearts: Number(stakedHearts),
+                    stakeShares: Number(stakeShares),
+                    lockedDay: Number(stake.lockedDay),
+                    stakedDays: Number(stake.stakedDays),
+                    unlockedDay: Number(stake.unlockedDay),
+                    currentDay: Number(currentDay),
+                    daysPassed,
+                    daysRemaining: Math.max(0, daysRemaining),
+                    isAutoStake: stake.isAutoStake,
+                    isActive,
+                  })
+                } catch (err) {
+                  console.error(`[v0] Error fetching Ethereum HSI stake ${i}:`, err)
+                }
+              }
+            }
+
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Ethereum HSI fetch timed out")), ETHEREUM_TIMEOUT),
+            )
+            await Promise.race([fetchEthereumHSI(), timeoutPromise])
+            console.log(`[v0] Finished fetching Ethereum HSI stakes for ${wallet.address}`)
+          } catch (err: any) {
+            if (err.message === "Ethereum HSI fetch timed out") {
+              console.log(`[v0] Ethereum HSI stakes fetch timed out for ${wallet.address}`)
+            } else {
+              console.log(`[v0] Ethereum HSI contract not accessible for ${wallet.address} (this is expected)`)
+            }
+          }
+          return walletData
+        } catch (err) {
+          console.error(`[v0] Error processing wallet ${wallet.address}:`, err)
+          // Return an empty walletData object or handle error as needed
+          return {
+            address: wallet.address,
+            plsBalance: BigInt(0),
+            tokens: [],
+            lpPositions: [],
+            liquidLoansVault: null,
+            hexStakes: [],
+            hsiStakes: [],
           }
         }
-      }
+      })
 
-      for (const tokenAddress of tokens) {
-        try {
-          const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider)
-          const [name, symbol, decimals] = await Promise.all([
-            tokenContract.name(),
-            tokenContract.symbol(),
-            tokenContract.decimals(),
-          ])
+      // UPDATED: Update loading stage for aggregating data
+      setLoadingStage("Aggregating portfolio data...")
 
-          let totalBalance = BigInt(0)
-          for (const wallet of filteredWallets) {
-            const balance = await tokenContract.balanceOf(wallet.address)
-            totalBalance += balance
+      // Wait for all wallet data to be fetched in parallel
+      const allWalletData = await Promise.all(walletDataPromises)
+      console.log("[v0] All wallet data fetched in parallel")
+
+      let totalPLS = ethers.parseEther("0")
+      let totalLockedPLS = ethers.parseEther("0")
+      let totalDebt = ethers.parseEther("0")
+      const tokenBalances: any[] = []
+      const allLPPositions: any[] = []
+      const allHexStakesAggregated: any[] = []
+      const allHsiStakesAggregated: any[] = []
+      const liquidLoansVaults: any[] = []
+
+      for (const walletData of allWalletData) {
+        // Aggregate PLS balance
+        totalPLS = totalPLS + walletData.plsBalance
+
+        // Aggregate tokens
+        for (const token of walletData.tokens) {
+          const existing = tokenBalances.find((t) => t.address.toLowerCase() === token.address.toLowerCase())
+          if (existing) {
+            existing.value += token.value
+          } else {
+            tokenBalances.push({ ...token })
           }
+        }
 
-          const existing = tokenBalances.find((t) => t.address.toLowerCase() === tokenAddress.toLowerCase())
-          if (!existing) {
-            tokenBalances.push({
-              address: tokenAddress,
-              name,
-              symbol,
-              value: Number(ethers.formatUnits(totalBalance, decimals)),
-              decimals,
+        // Aggregate LP positions
+        for (const lp of walletData.lpPositions) {
+          const sorted = [lp.token0.address, lp.token1.address].sort()
+          const pairId = `${sorted[0]}-${sorted[1]}`
+          const pairKey = `${pairId}-${lp.factory}`
+
+          const existing = allLPPositions.find((l) => {
+            const existingSorted = [l.token0.address, l.token1.address].sort()
+            const existingPairId = `${existingSorted[0]}-${existingSorted[1]}`
+            const existingPairKey = `${existingPairId}-${l.factory}`
+            return existingPairKey === pairKey
+          })
+
+          const lpValue = Number(lp.value) || 0
+          const lpBalance = String(lp.balance || "0")
+
+          if (existing) {
+            existing.value = (Number(existing.value) || 0) + lpValue
+            existing.balance = (Number.parseFloat(existing.balance || "0") + Number.parseFloat(lpBalance)).toString()
+            if (lp.isFarm) {
+              existing.isFarm = true
+              existing.pendingInc = (Number(existing.pendingInc) || 0) + Number(lp.pendingInc || 0)
+              existing.pendingIncUsdValue =
+                (Number(existing.pendingIncUsdValue) || 0) + Number(lp.pendingIncUsdValue || 0)
+            }
+          } else {
+            allLPPositions.push({
+              ...lp,
+              pairId,
+              pairKey,
+              value: lpValue,
+              balance: lpBalance,
             })
           }
-        } catch (err) {
-          console.error(`Error fetching token ${tokenAddress}:`, err)
         }
+
+        // Aggregate Liquid Loans
+        if (walletData.liquidLoansVault) {
+          liquidLoansVaults.push(walletData.liquidLoansVault)
+          totalLockedPLS = totalLockedPLS + walletData.liquidLoansVault.lockedPLSBigInt
+          totalDebt = totalDebt + walletData.liquidLoansVault.debtBigInt
+        }
+
+        // Aggregate HEX stakes
+        allHexStakesAggregated.push(...walletData.hexStakes)
+
+        // Aggregate HSI stakes
+        allHsiStakesAggregated.push(...walletData.hsiStakes)
       }
 
+      console.log("[LP] Final aggregated LP positions:", allLPPositions)
       setLpPositions(allLPPositions)
 
-      const sortedHexStakes = allHexStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
+      const sortedHexStakes = allHexStakesAggregated.sort((a, b) => a.daysRemaining - b.daysRemaining)
       setHexStakes(sortedHexStakes)
 
-      const sortedHsiStakes = allHsiStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
-      setHsiStakes(sortedHsiStakes) // This line is still setting the hsiStakes state.
-      setHsiCount(sortedHsiStakes.length) // Set the HSI count
+      const sortedHsiStakes = allHsiStakesAggregated.sort((a, b) => a.daysRemaining - b.daysRemaining)
+      setHsiStakes(sortedHsiStakes)
+      setHsiCount(sortedHsiStakes.length)
 
-      setData({
+      const portfolioData = {
         totalPLS: ethers.formatEther(totalPLS),
         totalLockedPLS: ethers.formatEther(totalLockedPLS),
         totalDebt: ethers.formatEther(totalDebt),
         walletCount: filteredWallets.length,
         tokenBalances: tokenBalances.filter((t) => t.value > 0),
         liquidLoansVaults,
-      })
+      }
+
+      setData(portfolioData)
     } catch (err) {
       setError("The data seems shy — try again in a moment.")
       console.error(err)
+    } finally {
+      setDataLoading(false)
+      // CLEARED LOADING STAGE
+      setLoadingStage("")
     }
-    setLoading(false)
   }
 
   return (
     <div className="min-h-screen bg-[#0b0b0d] text-[#f1f1f1] p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <header className="flex items-center justify-between gap-4 flex-wrap">
-          <h1 className="text-2xl font-medium">My portfolio</h1>
+          <h1 className="text-2xl font-medium">
+            {data && totalPortfolioValue > 0
+              ? `$${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : "My portfolio"}
+          </h1>
           <div className="flex gap-3">
             <button
               className="px-5 py-2.5 text-sm bg-[#7028E4] hover:bg-[#5c1fc7] text-white rounded-xl transition-all font-semibold"
               onClick={() => setShowManageModal(true)}
             >
-              Manage wallets
+              Manage your wallets
             </button>
             <button
               className="px-5 py-2.5 text-sm bg-accent hover:bg-accent-hover text-white rounded-xl transition-all font-semibold"
               onClick={() => setShowLoadModal(true)}
             >
-              Load portfolio by ID
+              Got a portfolio ID? Load it here
             </button>
           </div>
         </header>
@@ -902,25 +1560,56 @@ export default function Home() {
             </div>
           )}
 
-          {loading && (
-            <div className="bg-card p-6 border border-card rounded-2xl">
-              <p className="text-center text-[#a1a1aa] text-sm">Loading portfolio data...</p>
+          {dataLoading && !data && (
+            <div className="space-y-6">
+              {/* ADDED: Loading message above skeletons */}
+              {loadingStage && (
+                <div className="bg-card p-6 border border-card rounded-2xl text-center">
+                  <p className="text-muted-foreground text-lg">{loadingStage}</p>
+                </div>
+              )}
+
+              {/* Portfolio Overview Skeleton */}
+              <div className="bg-card p-6 border border-card rounded-2xl">
+                <Skeleton className="h-6 w-48 mb-4" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Skeleton className="h-24" />
+                  <Skeleton className="h-24" />
+                  <Skeleton className="h-24" />
+                </div>
+              </div>
+
+              {/* Tokens Skeleton */}
+              <div className="bg-card p-6 border border-card rounded-2xl">
+                <Skeleton className="h-6 w-32 mb-4" />
+                <div className="space-y-3">
+                  <Skeleton className="h-16" />
+                  <Skeleton className="h-16" />
+                  <Skeleton className="h-16" />
+                </div>
+              </div>
+
+              {/* LP Tokens Skeleton */}
+              <div className="bg-card p-6 border border-card rounded-2xl">
+                <Skeleton className="h-6 w-32 mb-4" />
+                <div className="space-y-3">
+                  <Skeleton className="h-16" />
+                  <Skeleton className="h-16" />
+                </div>
+              </div>
+
+              {/* HEX Stakes Skeleton */}
+              <div className="bg-card p-6 border border-card rounded-2xl">
+                <Skeleton className="h-6 w-32 mb-4" />
+                <div className="space-y-3">
+                  <Skeleton className="h-20" />
+                  <Skeleton className="h-20" />
+                </div>
+              </div>
             </div>
           )}
 
-          {!data && !loading && wallets.length === 0 && (
-            <div className="bg-card p-6 border border-card rounded-2xl text-center">
-              <p className="text-[#a1a1aa] mb-4">No wallets added yet</p>
-              <button
-                className="px-6 py-3 text-sm bg-[#7028E4] hover:bg-[#5c1fc7] text-white rounded-xl transition-all font-semibold"
-                onClick={() => setShowManageModal(true)}
-              >
-                Add your first wallet
-              </button>
-            </div>
-          )}
-
-          {data && (
+          {!dataLoading && data && (
             <>
               <div className="bg-card border border-card rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4 pb-4 border-b border-[#27272a]">
@@ -984,53 +1673,192 @@ export default function Home() {
                   </span>
                 </div>
 
-                {featuredTokenBalances.map((token) => {
-                  const price = tokenPrices[token.address.toLowerCase()] || 0
-                  const priceChange = tokenPriceChanges[token.address.toLowerCase()]
-                  const value = Number(token.balance) * price
+                {featuredTokenBalances
+                  .filter((token) => {
+                    const price = tokenPrices[token.address.toLowerCase()] || 0
+                    const value = Number(token.balance) * price
+                    return value >= 1 // Only show tokens with $1 or more in value
+                  })
+                  .map((token) => {
+                    const price = tokenPrices[token.address.toLowerCase()] || 0
+                    const priceChange = tokenPriceChanges[token.address.toLowerCase()]
+                    const value = Number(token.balance) * price
 
-                  return (
-                    <div
-                      key={token.address}
-                      className="grid grid-cols-[minmax(200px,2fr)_1fr_1fr_1fr] gap-6 items-center py-2"
-                    >
-                      <div className="flex items-center gap-2">
-                        <img
-                          src={token.logo || "/placeholder.svg"}
-                          alt={token.symbol}
-                          className="w-6 h-6 rounded-full"
-                        />
-                        <span className="text-white">{token.name}</span>
-                      </div>
-                      <div className="text-right">
-                        {price > 0 ? (
-                          <div className="flex flex-col items-end">
-                            <span className="text-white font-mono text-sm">${price.toFixed(price < 0.01 ? 8 : 2)}</span>
-                            {priceChange !== undefined && priceChange !== 0 && (
-                              <span className={`text-xs font-mono ${priceChange >= 0 ? "text-gain" : "text-loss"}`}>
-                                {priceChange >= 0 ? "+" : ""}
-                                {priceChange.toFixed(2)}%
+                    return (
+                      <div
+                        key={token.address}
+                        className="grid grid-cols-[minmax(200px,2fr)_1fr_1fr_1fr] gap-6 items-center py-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={token.logo || "/placeholder.svg"}
+                            alt={token.symbol}
+                            className="w-6 h-6 rounded-full"
+                          />
+                          <span className="text-white">{token.name}</span>
+                        </div>
+                        <div className="text-right">
+                          {price > 0 ? (
+                            <div className="flex flex-col items-end">
+                              <span className="text-white font-mono text-sm">
+                                ${price.toFixed(price < 0.01 ? 8 : 2)}
                               </span>
+                              {priceChange !== undefined && priceChange !== 0 && (
+                                <span className={`text-xs font-mono ${priceChange >= 0 ? "text-gain" : "text-loss"}`}>
+                                  {priceChange >= 0 ? "+" : ""}
+                                  {priceChange.toFixed(2)}%
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-white font-mono text-sm">—</span>
+                          )}
+                        </div>
+                        <span className="text-white font-mono text-right">
+                          {formatLargeNumber(Number(token.balance), getDecimalPlaces(token.symbol))}
+                        </span>
+                        <span className="text-white font-mono text-right">
+                          {price > 0
+                            ? `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : "—"}
+                        </span>
+                      </div>
+                    )
+                  })}
+
+                {alwaysVisibleTokenBalances.length > 0 && (
+                  <>
+                    <div className="mt-6 pt-4 border-t border-[#27272a]">
+                      <h4 className="text-sm font-semibold text-[#a1a1aa] mb-3">Opus and Coda</h4>
+                    </div>
+
+                    {alwaysVisibleTokenBalances.map((token) => {
+                      const price = tokenPrices[token.address.toLowerCase()] || 0
+                      const priceChange = tokenPriceChanges[token.address.toLowerCase()]
+                      const value = Number(token.balance) * price
+
+                      return (
+                        <div
+                          key={token.address}
+                          className="grid grid-cols-[minmax(200px,2fr)_1fr_1fr_1fr] gap-6 items-center py-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={token.logo || "/placeholder.svg"}
+                              alt={token.symbol}
+                              className="w-6 h-6 rounded-full"
+                              onError={(e) => {
+                                e.currentTarget.src = "/placeholder.svg?height=24&width=24"
+                              }}
+                            />
+                            <span className="text-white">{token.name}</span>
+                          </div>
+                          <div className="text-right">
+                            {price > 0 ? (
+                              <div className="flex flex-col items-end">
+                                <span className="text-white font-mono text-sm">
+                                  ${price.toFixed(price < 0.01 ? 8 : 2)}
+                                </span>
+                                {priceChange !== undefined && priceChange !== 0 && (
+                                  <span className={`text-xs font-mono ${priceChange >= 0 ? "text-gain" : "text-loss"}`}>
+                                    {priceChange >= 0 ? "+" : ""}
+                                    {priceChange.toFixed(2)}%
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-white font-mono text-sm">—</span>
                             )}
                           </div>
-                        ) : (
-                          <span className="text-white font-mono text-sm">—</span>
-                        )}
-                      </div>
-                      <span className="text-white font-mono text-right">
-                        {Number(token.balance).toLocaleString(undefined, {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: getDecimalPlaces(token.symbol),
-                        })}
-                      </span>
-                      <span className="text-white font-mono text-right">
-                        {price > 0
-                          ? `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                          : "—"}
-                      </span>
+                          <span className="text-white font-mono text-right">
+                            {formatLargeNumber(Number(token.balance), getDecimalPlaces(token.symbol))}
+                          </span>
+                          <span className="text-white font-mono text-right">
+                            {price > 0
+                              ? `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "—"}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </>
+                )}
+
+                {ogwebchefTokenBalances.length > 0 && (
+                  <>
+                    <div className="mt-6 pt-4 border-t border-[#27272a]">
+                      <h4 className="text-sm font-semibold text-[#a1a1aa] mb-3">OGWebChef tokens</h4>
                     </div>
-                  )
-                })}
+
+                    {ogwebchefTokenBalances
+                      .filter((token) => {
+                        const price = tokenPrices[token.address.toLowerCase()] || 0
+                        const value = Number(token.balance) * price
+                        if (token.address.toLowerCase() === "0x041a80b38d3a5b4dbb30e56440ca8f0c8dfa6412") {
+                          console.log(`[v0] SⒶVⒶNT balance: ${token.balance}, price: ${price}, value: ${value}`)
+                        }
+                        return value >= 1 // Only show tokens with $1 or more in value
+                      })
+                      .sort((a, b) => {
+                        const priceA = tokenPrices[a.address.toLowerCase()] || 0
+                        const priceB = tokenPrices[b.address.toLowerCase()] || 0
+                        const valueA = Number(a.balance) * priceA
+                        const valueB = Number(b.balance) * priceB
+                        return valueB - valueA // Sort by value descending
+                      })
+                      .map((token) => {
+                        const price = tokenPrices[token.address.toLowerCase()] || 0
+                        const priceChange = tokenPriceChanges[token.address.toLowerCase()]
+                        const value = Number(token.balance) * price
+
+                        return (
+                          <div
+                            key={token.address}
+                            className="grid grid-cols-[minmax(200px,2fr)_1fr_1fr_1fr] gap-6 items-center py-2"
+                          >
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={token.logo || "/placeholder.svg"}
+                                alt={token.symbol}
+                                className="w-6 h-6 rounded-full"
+                                onError={(e) => {
+                                  e.currentTarget.src = "/placeholder.svg?height=24&width=24"
+                                }}
+                              />
+                              <span className="text-white">{token.name}</span>
+                            </div>
+                            <div className="text-right">
+                              {price > 0 ? (
+                                <div className="flex flex-col items-end">
+                                  <span className="text-white font-mono text-sm">
+                                    ${price.toFixed(price < 0.01 ? 8 : 2)}
+                                  </span>
+                                  {priceChange !== undefined && priceChange !== 0 && (
+                                    <span
+                                      className={`text-xs font-mono ${priceChange >= 0 ? "text-gain" : "text-loss"}`}
+                                    >
+                                      {priceChange >= 0 ? "+" : ""}
+                                      {priceChange.toFixed(2)}%
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-white font-mono text-sm">—</span>
+                              )}
+                            </div>
+                            <span className="text-white font-mono text-right">
+                              {formatLargeNumber(Number(token.balance), getDecimalPlaces(token.symbol))}
+                            </span>
+                            <span className="text-white font-mono text-right">
+                              {price > 0
+                                ? `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                : "—"}
+                            </span>
+                          </div>
+                        )
+                      })}
+                  </>
+                )}
               </div>
 
               {data.tokenBalances && data.tokenBalances.length > 0 && (
@@ -1046,15 +1874,150 @@ export default function Home() {
               )}
 
               {lpPositions.length > 0 && (
-                <PortfolioCard
-                  title="LP Positions"
-                  total={`${lpPositions.length} position${lpPositions.length > 1 ? "s" : ""}`}
-                  totalLabel="Active Pools"
-                  items={lpPositions.map((lp: any) => ({
-                    label: lp.name,
-                    value: `$${lp.value.toFixed(2)}`,
-                  }))}
-                />
+                <div className="bg-card border border-card rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-4 pb-4 border-b border-[#27272a]">
+                    <h3 className="text-lg font-semibold">LP Positions</h3>
+                    <span className="text-sm text-[#a1a1aa]">
+                      {lpPositions.length} position{lpPositions.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-[minmax(150px,1.5fr)_2fr_1fr_1fr] gap-6 pb-3 mb-3 border-b border-[#27272a]">
+                    <div className="text-sm font-semibold text-[#a1a1aa]">LP Token</div>
+                    <div className="text-sm font-semibold text-[#a1a1aa]">Token Amounts</div>
+                    <div className="text-sm font-semibold text-[#a1a1aa] text-right">Pool Share</div>
+                    <div className="text-sm font-semibold text-[#a1a1aa] text-right">USD Value</div>
+                  </div>
+
+                  {lpPositions
+                    .sort((a, b) => b.value - a.value)
+                    .map((lp: any, index: number) => {
+                      if (lp.isStableSwap) {
+                        return (
+                          <div
+                            key={lp.pairId}
+                            className="grid grid-cols-[minmax(150px,1.5fr)_2fr_1fr_1fr] gap-6 items-center py-3 border-b border-[#27272a] last:border-0"
+                          >
+                            {/* LP Token column with triangle logo layout */}
+                            <div className="flex items-center gap-3">
+                              <div className="relative w-12 h-12">
+                                {/* Triangle layout: one on top, two below */}
+                                <img
+                                  src={getTokenLogo(lp.token0.address) || "/placeholder.svg"}
+                                  alt={lp.token0.symbol}
+                                  className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full border-2 border-background z-30"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "/placeholder.svg?height=28&width=28"
+                                  }}
+                                />
+                                <img
+                                  src={getTokenLogo(lp.token1.address) || "/placeholder.svg"}
+                                  alt={lp.token1.symbol}
+                                  className="absolute bottom-0 left-0 w-7 h-7 rounded-full border-2 border-background z-20"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "/placeholder.svg?height=28&width=28"
+                                  }}
+                                />
+                                <img
+                                  src={getTokenLogo(lp.token2.address) || "/placeholder.svg"}
+                                  alt={lp.token2.symbol}
+                                  className="absolute bottom-0 right-0 w-7 h-7 rounded-full border-2 border-background z-10"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "/placeholder.svg?height=28&width=28"
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <div className="font-medium">{lp.name}</div>
+                                <div className="text-xs text-[#a1a1aa]">PulseX {lp.factory}</div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="text-sm">
+                                {lp.token0.amount.toFixed(2)} {lp.token0.symbol}
+                              </div>
+                              <div className="text-sm">
+                                {lp.token1.amount.toFixed(2)} {lp.token1.symbol}
+                              </div>
+                              <div className="text-sm">
+                                {lp.token2.amount.toFixed(2)} {lp.token2.symbol}
+                              </div>
+                            </div>
+
+                            {/* Pool Share column */}
+                            <div className="text-right">
+                              <div className="text-sm font-medium text-yellow-500">{lp.poolShare.toFixed(4)}%</div>
+                            </div>
+
+                            {/* USD Value column */}
+                            <div className="text-right">
+                              <div className="text-sm font-medium">${lp.value.toLocaleString()}</div>
+                            </div>
+                          </div>
+                        )
+                      }
+
+                      // Regular 2-token LP positions
+                      return (
+                        <div
+                          key={lp.pairId}
+                          className="grid grid-cols-[minmax(150px,1.5fr)_2fr_1fr_1fr] gap-6 items-center py-3 border-b border-[#27272a] last:border-0"
+                        >
+                          {/* LP Token column */}
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-12 h-8">
+                              <img
+                                src={getTokenLogo(lp.token0.address) || "/placeholder.svg"}
+                                alt={lp.token0.symbol}
+                                className="absolute left-0 w-8 h-8 rounded-full border-2 border-background z-10"
+                                onError={(e) => {
+                                  e.currentTarget.src = "/placeholder.svg?height=32&width=32"
+                                }}
+                              />
+                              <img
+                                src={getTokenLogo(lp.token1.address) || "/placeholder.svg"}
+                                alt={lp.token1.symbol}
+                                className="absolute left-5 w-8 h-8 rounded-full border-2 border-background"
+                                onError={(e) => {
+                                  e.currentTarget.src = "/placeholder.svg?height=32&width=32"
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <div className="font-medium">{lp.name}</div>
+                              <div className="text-xs text-[#a1a1aa]">PulseX {lp.factory}</div>
+                            </div>
+                          </div>
+
+                          {/* Token Amounts column */}
+                          <div className="space-y-1">
+                            <div className="text-sm">
+                              {lp.token0.amount.toFixed(2)} {lp.token0.symbol}
+                            </div>
+                            <div className="text-sm">
+                              {lp.token1.amount.toFixed(2)} {lp.token1.symbol}
+                            </div>
+                            {lp.isFarm && lp.pendingInc > 0 && (
+                              <div className="text-xs text-green-500">
+                                +{lp.pendingInc.toFixed(4)} INC (${lp.pendingIncUsdValue.toFixed(2)})
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Pool Share column */}
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-yellow-500">{lp.poolShare.toFixed(4)}%</div>
+                          </div>
+
+                          {/* USD Value column */}
+                          <div className="text-right">
+                            <div className="text-sm font-medium">${lp.value.toLocaleString()}</div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                </div>
               )}
 
               {hexStakes.length > 0 && (
@@ -1064,6 +2027,7 @@ export default function Home() {
                     const hexPulsechainPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
                     const hexEthereumPrice = tokenPrices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] || 0
 
+                    const totalHexAmount = hexStakes.reduce((sum, stake) => sum + stake.stakedHearts, 0)
                     const totalValue = hexStakes.reduce((sum, stake) => {
                       const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
                       return sum + stake.stakedHearts * hexPrice
@@ -1076,7 +2040,7 @@ export default function Home() {
                       .reduce((sum, stake) => sum + stake.stakeShares, 0)
                       .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-                    return `${totalTShares} T-shares | ${hexStakes.length} stake${hexStakes.length > 1 ? "s" : ""} | Average length: ${avgStakeLength} days | Total value: $${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    return `${totalTShares} T-shares | ${hexStakes.length} stake${hexStakes.length > 1 ? "s" : ""} | Average length: ${avgStakeLength} days | Total: ${totalHexAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} HEX / $${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                   })()}
                   totalLabel=""
                   items={(() => {
@@ -1089,7 +2053,7 @@ export default function Home() {
                       const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
                       const usdValue = stake.stakedHearts * hexPrice
                       return {
-                        label: `Day ${stake.daysPassed}/${stake.stakedDays} (${stake.daysRemaining} days left) — Staked HEX ${stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} — ${stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares`,
+                        label: `Day ${stake.daysPassed}/${stake.stakedDays} (${stake.daysRemaining} days left) — Staked HEX ${stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} — ${stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares — ${stake.wallet.slice(0, 4)}…${stake.wallet.slice(-4)}`,
                         value:
                           hexPrice > 0
                             ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -1104,7 +2068,7 @@ export default function Home() {
                       items.push({
                         label: "Pulsechain Stakes",
                         value: "",
-                        valueColor: "text-[#a1a1aa]",
+                        valueColor: "text-[#a1a1aa] text-base font-semibold",
                       })
                       items.push(...pulsechainStakes.map(createStakeItem))
                     }
@@ -1120,7 +2084,7 @@ export default function Home() {
                       items.push({
                         label: "Ethereum Stakes",
                         value: "",
-                        valueColor: "text-[#a1a1aa]",
+                        valueColor: "text-[#a1a1aa] text-base font-semibold",
                       })
                       items.push(...ethereumStakes.map(createStakeItem))
                     }
@@ -1130,76 +2094,107 @@ export default function Home() {
                 />
               )}
 
-              {hsiStakes.length > 0 && (
+              <PortfolioCard
+                title="HSI Stakes"
+                total={
+                  hsiStakes.length > 0
+                    ? (() => {
+                        const hexPulsechainPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
+                        const hexEthereumPrice = tokenPrices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] || 0
+
+                        const totalHexAmount = hsiStakes.reduce((sum, stake) => sum + stake.stakedHearts, 0)
+                        const totalValue = hsiStakes.reduce((sum, stake) => {
+                          const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
+                          return sum + stake.stakedHearts * hexPrice
+                        }, 0)
+
+                        const avgStakeLength = (
+                          hsiStakes.reduce((sum, stake) => sum + stake.stakedDays, 0) / hsiStakes.length
+                        ).toFixed(0)
+                        const totalTShares = hsiStakes
+                          .reduce((sum, stake) => sum + stake.stakeShares, 0)
+                          .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+                        return `${totalTShares} T-shares | ${hsiStakes.length} HSI${hsiStakes.length > 1 ? "s" : ""} | Average length: ${avgStakeLength} days | Total: ${totalHexAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} HEX / $${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      })()
+                    : "No HSI stakes found"
+                }
+                totalLabel=""
+                items={
+                  hsiStakes.length > 0
+                    ? (() => {
+                        const pulsechainHSI = hsiStakes.filter((s) => s.chain === "Pulsechain")
+                        const ethereumHSI = hsiStakes.filter((s) => s.chain === "Ethereum")
+                        const hexPulsechainPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
+                        const hexEthereumPrice = tokenPrices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] || 0
+
+                        const createHSIItem = (stake: any) => {
+                          const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
+                          const usdValue = stake.stakedHearts * hexPrice
+                          return {
+                            label: `Day ${stake.daysPassed}/${stake.stakedDays} (${stake.daysRemaining} days left) — Staked HEX ${stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} — ${stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares${stake.isAutoStake ? " (Auto)" : ""} — ${stake.wallet.slice(0, 4)}…${stake.wallet.slice(-4)}`,
+                            value:
+                              hexPrice > 0
+                                ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                : "—",
+                            valueColor: stake.isActive ? "text-gain" : "text-neutral",
+                          }
+                        }
+
+                        const items = []
+
+                        if (pulsechainHSI.length > 0) {
+                          items.push({
+                            label: "Pulsechain HSI Stakes",
+                            value: "",
+                            valueColor: "text-[#a1a1aa] text-base font-semibold",
+                          })
+                          items.push(...pulsechainHSI.map(createHSIItem))
+                        }
+
+                        if (ethereumHSI.length > 0) {
+                          if (pulsechainHSI.length > 0) {
+                            items.push({
+                              label: "",
+                              value: "",
+                              valueColor: "text-transparent",
+                            })
+                          }
+                          items.push({
+                            label: "Ethereum HSI Stakes",
+                            value: "",
+                            valueColor: "text-[#a1a1aa] text-base font-semibold",
+                          })
+                          items.push(...ethereumHSI.map(createHSIItem))
+                        }
+
+                        return items
+                      })()
+                    : []
+                }
+              />
+
+              {data.liquidLoansVaults && data.liquidLoansVaults.length > 0 && (
                 <PortfolioCard
-                  title="HSI Stakes"
-                  total={(() => {
-                    const hexPulsechainPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
-                    const hexEthereumPrice = tokenPrices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] || 0
-
-                    const totalValue = hsiStakes.reduce((sum, stake) => {
-                      const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
-                      return sum + stake.stakedHearts * hexPrice
-                    }, 0)
-
-                    const avgStakeLength = (
-                      hsiStakes.reduce((sum, stake) => sum + stake.stakedDays, 0) / hsiStakes.length
-                    ).toFixed(0)
-                    const totalTShares = hsiStakes
-                      .reduce((sum, stake) => sum + stake.stakeShares, 0)
-                      .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-
-                    return `${totalTShares} T-shares | ${hsiStakes.length} HSI${hsiStakes.length > 1 ? "s" : ""} | Average length: ${avgStakeLength} days | Total value: $${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                  })()}
-                  totalLabel=""
-                  items={(() => {
-                    const pulsechainHSI = hsiStakes.filter((s) => s.chain === "Pulsechain")
-                    const ethereumHSI = hsiStakes.filter((s) => s.chain === "Ethereum")
-                    const hexPulsechainPrice = tokenPrices[HEX_PULSECHAIN_ADDRESS.toLowerCase()] || 0
-                    const hexEthereumPrice = tokenPrices[`eth_${HEX_ETHEREUM_ADDRESS.toLowerCase()}`] || 0
-
-                    const createHSIItem = (stake: any) => {
-                      const hexPrice = stake.chain === "Ethereum" ? hexEthereumPrice : hexPulsechainPrice
-                      const usdValue = stake.stakedHearts * hexPrice
-                      return {
-                        label: `Day ${stake.daysPassed}/${stake.stakedDays} (${stake.daysRemaining} days left) — Staked HEX ${stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} — ${stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares${stake.isAutoStake ? " (Auto)" : ""}`,
-                        value:
-                          hexPrice > 0
-                            ? `$${usdValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                            : "—",
-                        valueColor: stake.isActive ? "text-gain" : "text-neutral",
-                      }
-                    }
-
-                    const items = []
-
-                    if (pulsechainHSI.length > 0) {
-                      items.push({
-                        label: "Pulsechain HSI Stakes",
-                        value: "",
-                        valueColor: "text-[#a1a1aa]",
-                      })
-                      items.push(...pulsechainHSI.map(createHSIItem))
-                    }
-
-                    if (ethereumHSI.length > 0) {
-                      if (pulsechainHSI.length > 0) {
-                        items.push({
-                          label: "",
-                          value: "",
-                          valueColor: "text-transparent",
-                        })
-                      }
-                      items.push({
-                        label: "Ethereum HSI Stakes",
-                        value: "",
-                        valueColor: "text-[#a1a1aa]",
-                      })
-                      items.push(...ethereumHSI.map(createHSIItem))
-                    }
-
-                    return items
-                  })()}
+                  title="Liquid Loans"
+                  totalLeft={{
+                    label: "Total Locked PLS",
+                    value: Number.parseFloat(data.totalLockedPLS).toLocaleString(undefined, {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    }),
+                  }}
+                  totalRight={{
+                    label: "Total Debt (USDL)",
+                    value: Number.parseFloat(data.totalDebt).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }),
+                  }}
+                  items={data.liquidLoansVaults.map((vault: any) => ({
+                    label: `${vault.wallet.slice(0, 6)}...${vault.wallet.slice(-4)} — Locked: ${Number.parseFloat(vault.lockedPLS).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS`,
+                    value: `Debt: ${Number.parseFloat(vault.debt).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDL`,
+                  }))}
                 />
               )}
             </>
@@ -1282,7 +2277,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
       {showLoadModal && (
         <div
           className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
@@ -1324,7 +2318,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
       {notification.show && (
         <div
           className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
