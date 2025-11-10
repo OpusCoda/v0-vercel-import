@@ -562,6 +562,16 @@ const fetchTokenPrices = async (
         continue
       }
 
+      if (address.toLowerCase() === "0xdc60f0ee40bed3078614be202555d2f07d38166e") {
+        const dexPrice = await fetchDexscreenerPrice(address, "0xc273F0a563e4E2086e2435574E46D974CAF40D4e")
+        if (dexPrice.price > 0) {
+          prices[address.toLowerCase()] = dexPrice.price
+          changes[address.toLowerCase()] = dexPrice.change
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        continue
+      }
+
       if (
         ogwebchefAddresses.includes(address.toLowerCase()) ||
         alwaysVisibleAddresses.includes(address.toLowerCase()) ||
