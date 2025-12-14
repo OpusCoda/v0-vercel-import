@@ -1,6 +1,7 @@
 import type React from "react"
 import "./globals.css"
 import { Sacramento, Inter, Merriweather } from "next/font/google"
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap');
 
 const sacramento = Sacramento({
   subsets: ["latin"],
