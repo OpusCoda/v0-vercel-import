@@ -28,7 +28,7 @@ export default function Home() {
           className="mx-auto w-64 h-64 md:w-80 md:h-80 rounded-3xl shadow-[0_0_80px_rgba(249,115,22,0.35)]"
         />
         <p className="text-slate-200 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed">
-          The printer ecosystem on Pulsechain built for consistency and transparency
+          The printer ecosystem on Pulsechain built for consistency and transparency.
         </p>
       </div>
 
@@ -132,7 +132,7 @@ export default function Home() {
 
             {/* Footer note */}
             <p className="text-center text-slate-600 text-xs tracking-wide mt-6">
-            The long view tends to win.
+            © since deployment
             </p>
 
           </CardContent>
