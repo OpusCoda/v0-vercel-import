@@ -59,10 +59,38 @@ export default function Home() {
               <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
                 <h3 className="text-xl font-medium mb-3 text-cyan-300">Automatic rewards</h3>
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Simply hold Opus or Coda. Rewards arrive automatically
+                  Simply hold Opus or Coda. Rewards arrive automatically to your wallet.
                 </p>
               </div>
             </div>
+
+            <div className="text-center mt-12">
+  <p className="text-slate-400 text-sm mb-4">
+    Contract Addresses on PulseChain
+  </p>
+  <div className="space-y-3 text-cyan-300 text-base">
+    <div>
+      <Link 
+        href="https://otter.pulsechain.com/address/0x685c7864e566b4b56a0Bc50f8Af0Eab3488d44Bc" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="hover:underline hover:text-cyan-200 transition"
+      >
+        Opus: 0x685c7864e566b4b56a0Bc50f8Af0Eab3488d44Bc
+      </Link>
+    </div>
+    <div>
+      <Link 
+        href="https://otter.pulsechain.com/address/0x0c48dB6Fe846C62B75956Bf2Fb34367Cf8a76321" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="hover:underline hover:text-cyan-200 transition"
+      >
+        Coda: 0x0c48dB6Fe846C62B75956Bf2Fb34367Cf8a76321
+      </Link>
+    </div>
+  </div>
+</div>
 
             <div className="flex justify-center gap-6 mt-8">
               <Link href="https://x.com/OpusCodaPrinter" target="_blank" rel="noopener noreferrer" className="group">
