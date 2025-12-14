@@ -35,7 +35,7 @@ export default function Home() {
             <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
   <iframe
     className="w-full aspect-video"
-    src="https://www.youtube.com/embed/Zy_E_ktHuCM?autoplay=1&mute=1&loop=1&playlist=Zy_E_ktHuCM&controls=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&playsinline=1&disablekb=1&widget_referrer=blank"
+    src="https://www.youtube.com/embed/Zy_E_ktHuCM?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&playsinline=1"
     title="Opus and Coda explainer video"
     allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
     allowFullScreen={false}  // This disables the fullscreen button entirely
@@ -66,7 +66,7 @@ export default function Home() {
 
             <div className="text-center mt-12">
   <p className="text-slate-400 text-sm mb-4">
-    Contract Addresses on PulseChain
+    Contract addresses on Pulsechain
   </p>
   <div className="space-y-3 text-cyan-300 text-base">
     <div>
