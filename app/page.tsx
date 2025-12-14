@@ -8,29 +8,29 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0b0f1a] via-[#0d1426] to-[#0a1b3a] text-slate-100 flex items-center justify-center px-6 py-12">
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        className="max-w-5xl w-full"
-      >
-        <Card className="bg-[#0f172a]/90 backdrop-blur border border-blue-900/40 shadow-[0_0_80px_rgba(56,189,248,0.08)] rounded-3xl">
-          <CardContent className="p-12 grid gap-14">
-            <div className="flex items-center gap-8">  {/* reduced base gap, kept larger on md+ */}
-  <h1 className="text-5xl md:text-6xl font-['Roboto'] font-bold tracking-tight text-slate-200">
+  initial={{ opacity: 0, y: 24 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.7, ease: "easeOut" }}
+  className="max-w-5xl w-full"
+>
+  {/* New: Title at the absolute top */}
+  <h1 className="text-center text-6xl md:text-8xl font-['Marcellus_SC'] font-normal tracking-tight text-slate-200 mb-12">
     Opus and Coda
   </h1>
-  <img
-  src="/opuscoda.jpg"
-  alt="Opus & Coda logo"
-  className="w-40 h-40 rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.25)] flex-shrink-0 translate-x-2"
-  />
-</div>
 
-            <div className="text-center">
-              <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto">
-                A printer ecosystem built for consistency, not spectacle
-              </p>
-            </div>
+  <Card className="bg-[#0f172a]/90 backdrop-blur border border-blue-900/40 shadow-[0_0_80px_rgba(56,189,248,0.08)] rounded-3xl">
+    <CardContent className="p-12 flex flex-col gap-14">
+      {/* Logo and subtitle now first inside the card */}
+      <div className="text-center space-y-8">
+        <img
+          src="/opuscoda.jpg"
+          alt="Opus & Coda logo"
+          className="mx-auto w-64 h-64 md:w-80 md:h-80 rounded-3xl shadow-[0_0_80px_rgba(249,115,22,0.35)]"
+        />
+        <p className="text-slate-200 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed">
+          The printer ecosystem on Pulsechain built for consistency and transparency
+        </p>
+      </div>
 
             <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
   <iframe
@@ -59,7 +59,7 @@ export default function Home() {
               <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
                 <h3 className="text-xl font-medium mb-3 text-cyan-300">Automatic rewards</h3>
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Simply hold Opus or Coda. Rewards arrive automatically—nothing to claim, nothing to manage.
+                  Simply hold Opus or Coda. Rewards arrive automatically
                 </p>
               </div>
             </div>
