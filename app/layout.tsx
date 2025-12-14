@@ -1,24 +1,29 @@
 import type React from "react"
 import "./globals.css"
-import { Sacramento, Inter, Merriweather } from "next/font/google"
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap');
+import { Sacramento, Inter, Merriweather, Roboto } from "next/font/google"
 
 const sacramento = Sacramento({
   subsets: ["latin"],
-  variable: "--font-sacramento",
   weight: "400",
+  variable: "--font-sacramento",
 })
 
 const merriweather = Merriweather({
   subsets: ["latin"],
-  variable: "--font-goudy",
   weight: ["400", "700"],
   display: "swap",
+  variable: "--font-serif",
 })
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+})
+
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["700"],
+  variable: "--font-roboto",
 })
 
 export const metadata = {
@@ -30,7 +35,11 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${merriweather.variable} ${sacramento.variable} ${inter.variable}`}>{children}</body>
+      <body
+        className={`${merriweather.variable} ${sacramento.variable} ${inter.variable} ${roboto.variable}`}
+      >
+        {children}
+      </body>
     </html>
   )
 }
