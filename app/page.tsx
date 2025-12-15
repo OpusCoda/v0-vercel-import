@@ -64,6 +64,57 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Tokenomics section with two-column layout */}
+            <div className="grid md:grid-cols-2 gap-8 mt-8">
+              {/* Opus Tokenomics */}
+              <div className="rounded-2xl bg-[#111c3a] border border-orange-900/30 p-8 shadow-inner">
+                <h3 className="text-2xl font-medium mb-4 text-orange-300 text-center">Opus</h3>
+                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">6% Tax</p>
+                <ul className="space-y-2 text-slate-300">
+                  <li className="flex justify-between">
+                    <span>Missor</span>
+                    <span className="text-orange-300 font-medium">3%</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Finvesta</span>
+                    <span className="text-orange-300 font-medium">1%</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>World's Greatest pDAI Printer</span>
+                    <span className="text-orange-300 font-medium">1%</span>
+                  </li>
+                  <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
+                    <span>Added to liquidity</span>
+                    <span className="text-orange-300 font-medium">1%</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Coda Tokenomics */}
+              <div className="rounded-2xl bg-[#111c3a] border border-cyan-900/30 p-8 shadow-inner">
+                <h3 className="text-2xl font-medium mb-4 text-cyan-300 text-center">Coda</h3>
+                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">7% Tax</p>
+                <ul className="space-y-2 text-slate-300">
+                  <li className="flex justify-between">
+                    <span>WETH</span>
+                    <span className="text-cyan-300 font-medium">2%</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>pWBTC</span>
+                    <span className="text-cyan-300 font-medium">2%</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>PLSX</span>
+                    <span className="text-cyan-300 font-medium">2%</span>
+                  </li>
+                  <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
+                    <span>Added to liquidity</span>
+                    <span className="text-cyan-300 font-medium">1%</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
             <div className="text-center space-y-8">
               <h2 className="text-2xl md:text-3xl text-slate-200 font-medium">
                 Have you decided how many of each to own?
