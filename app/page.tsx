@@ -158,7 +158,7 @@ export default function Home() {
             </div>
 
             <div>
-              <p className="text-slate-200 text-sm mb-4 text-center">Contract addresses on Pulsechain</p>
+              <p className="text-slate-200 text-sm mb-4 text-center">Contract addresses</p>
               <div className="space-y-3 text-cyan-300 text-base text-center">
                 <div>
                   <Link
