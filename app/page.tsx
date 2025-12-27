@@ -123,7 +123,7 @@ export default function Home() {
               <div className="flex flex-col md:flex-row justify-center items-center gap-12">
                 {/* Opus */}
                 <Link
-                  href="https://pulsex.mypinata.cloud/ipfs/bafybeift2yakeymqmjmonkzlx2zyc4tty7clkwvg37suffn5bncjx4e6xq/#/?outputCurrency=0x685c7864e566b4b56a0Bc50f8Af0Eab3488d44Bc"
+                  href="https://pulsex.mypinata.cloud/ipfs/bafybeift2yakeymqmjmonkzlx2zyc4tty7clkwvg37suffn5bncjx4e6xq/#/?outputCurrency=0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
@@ -140,7 +140,7 @@ export default function Home() {
 
                 {/* Coda */}
                 <Link
-                  href="https://pulsex.mypinata.cloud/ipfs/bafybeift2yakeymqmjmonkzlx2zyc4tty7clkwvg37suffn5bncjx4e6xq/#/?outputCurrency=0x0c48dB6Fe846C62B75956Bf2Fb34367Cf8a76321"
+                  href="https://pulsex.mypinata.cloud/ipfs/bafybeift2yakeymqmjmonkzlx2zyc4tty7clkwvg37suffn5bncjx4e6xq/#/?outputCurrency=0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
