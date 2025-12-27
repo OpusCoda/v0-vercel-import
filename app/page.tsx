@@ -32,15 +32,15 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
+            {/* <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
               <iframe
                 className="w-full aspect-video"
                 src="https://www.youtube.com/embed/Zy_E_ktHuCM?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&playsinline=1"
                 title="Opus and Coda explainer video"
                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen={false} // This disables the fullscreen button entirely
+                allowFullScreen={false}
               />
-            </div>
+            </div> */}
 
             {/* Key points */}
             <div className="grid md:grid-cols-3 gap-8">
@@ -162,22 +162,22 @@ export default function Home() {
               <div className="space-y-3 text-cyan-300 text-base text-center">
                 <div>
                   <Link
-                    href="https://otter.pulsechain.com/address/0x685c7864e566b4b56a0Bc50f8Af0Eab3488d44Bc"
+                    href="https://otter.pulsechain.com/address/0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:underline hover:text-cyan-200 transition"
                   >
-                    Opus: 0x685c7864e566b4b56a0Bc50f8Af0Eab3488d44Bc
+                    Opus: 0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4
                   </Link>
                 </div>
                 <div>
                   <Link
-                    href="https://otter.pulsechain.com/address/0x0c48dB6Fe846C62B75956Bf2Fb34367Cf8a76321"
+                    href="https://otter.pulsechain.com/address/0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:underline hover:text-cyan-200 transition"
                   >
-                    Coda: 0x0c48dB6Fe846C62B75956Bf2Fb34367Cf8a76321
+                    Coda: 0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7
                   </Link>
                 </div>
               </div>
