@@ -32,15 +32,15 @@ export default function Home() {
               </p>
             </div>
 
-            {/* <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
+            <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
               <iframe
                 className="w-full aspect-video"
-                src="https://www.youtube.com/embed/Zy_E_ktHuCM?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&playsinline=1"
+                src="https://www.youtube.com/embed/gYR8UD9RlWg?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&iv_load_policy=3&fs=0&playsinline=1"
                 title="Opus and Coda explainer video"
                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen={false}
               />
-            </div> */}
+            </div>
 
             {/* Key points */}
             <div className="grid md:grid-cols-3 gap-8">
