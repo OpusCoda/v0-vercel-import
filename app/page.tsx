@@ -318,7 +318,7 @@ export default function Home() {
           Opus and Coda
         </h1>
         <Card className="bg-[#0f172a]/90 backdrop-blur border border-blue-900/40 shadow-[0_0_80px_rgba(56,189,248,0.08)] rounded-3xl">
-          <CardContent className="p-12 flex flex-col gap-14">
+          <CardContent className="py-12 flex flex-col gap-14">
             <div className="text-center space-y-8">
               <img
                 src="/opuscoda.jpg"
@@ -353,7 +353,7 @@ export default function Home() {
               </div>
               <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
                 <h3 className="text-xl font-medium mb-3 text-cyan-300">Automatic payouts</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
+                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">
                   Simply hold Opus or Coda and your rewards arrive automatically.
                 </p>
               </div>
@@ -408,315 +408,319 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="max-w-6xl mx-auto py-16 text-center"
+              className="py-16 text-center"
             >
-              <h2 className="text-3xl md:text-4xl font-goudy text-center mb-12 text-slate-200">
-                See what has accrued by holding Opus and Coda
-              </h2>
+              <div className="max-w-6xl mx-auto px-4">
+                <h2 className="text-2xl md:text-3xl text-center mb-12 text-slate-200 font-medium">
+                  See what has accrued by holding Opus and Coda
+                </h2>
 
-              <div className="space-y-6 max-w-4xl mx-auto w-full">
-                {" "}
-                {/* Added max-w-4xl mx-auto to constrain and center the checker */}
-                <div className="rounded-2xl bg-gradient-to-br from-[#1a2847] to-[#0f1629] border border-cyan-500/30 p-4 sm:p-8 shadow-2xl">
-                  <div className="space-y-4">
-                    {walletAddresses.map((address, index) => (
-                      <div key={index} className="grid grid-cols-[1fr_auto] gap-2">
-                        <input
-                          type="text"
-                          value={address}
-                          onChange={(e) => updateWalletAddress(index, e.target.value)}
-                          placeholder={`Wallet address ${index + 1}`}
-                          className="flex-1 px-4 py-3 bg-[#111c3a] border border-cyan-500/30 rounded-lg text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                        />
-                        {walletAddresses.length > 1 ? (
-                          <button
-                            onClick={() => removeWallet(index)}
-                            className="px-4 py-3 bg-red-900/40 hover:bg-red-900/60 text-red-300 rounded-lg transition-colors"
-                          >
-                            Remove
-                          </button>
-                        ) : (
-                          <div className="w-[86px]" /> // spacer = same width as button
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={addWallet}
-                      className="flex-1 px-6 py-3 bg-[#1a2847] hover:bg-[#243555] border border-cyan-500/30 text-cyan-300 rounded-lg font-medium transition-colors"
-                    >
-                      + Add wallet
-                    </button>
-                    <button
-                      onClick={() => fetchRewards()}
-                      disabled={loading}
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-cyan-600 hover:from-orange-500 hover:to-cyan-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? "Updating..." : rewards && rewards.length > 0 ? "Update rewards" : "Check rewards"}
-                    </button>
-                  </div>
-                  {error && <p className="text-red-400 text-sm">{error}</p>}
-
-                  <div className="mt-8 pt-8 border-t border-cyan-500/20">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {/* Save Section */}
-                      <div>
-                        <h3 className="text-lg text-slate-200 mb-3">Save current wallets</h3>
-                        <div className="flex gap-2">
+                <div className="space-y-6 max-w-4xl mx-auto w-full">
+                  {" "}
+                  {/* Added max-w-4xl mx-auto to constrain and center the checker */}
+                  <div className="rounded-2xl bg-gradient-to-br from-[#1a2847] to-[#0f1629] border border-cyan-500/30 p-4 sm:p-8 shadow-2xl">
+                    <div className="space-y-4">
+                      {walletAddresses.map((address, index) => (
+                        <div key={index} className="grid grid-cols-[1fr_auto] gap-2">
                           <input
                             type="text"
-                            value={savedName}
-                            onChange={(e) => setSavedName(e.target.value)}
-                            placeholder="e.g. elephant"
-                            className="flex-1 px-4 py-2 bg-[#111c3a] border border-cyan-500/30 rounded-lg text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                            onKeyDown={(e) => e.key === "Enter" && saveWalletList()}
+                            value={address}
+                            onChange={(e) => updateWalletAddress(index, e.target.value)}
+                            placeholder={`Wallet address ${index + 1}`}
+                            className="flex-1 px-4 py-3 bg-[#111c3a] border border-cyan-500/30 rounded-lg text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                           />
-                          <button
-                            onClick={saveWalletList}
-                            className="px-6 py-2 bg-green-900/40 hover:bg-green-900/60 text-green-300 rounded-lg transition-colors font-medium"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Load Section */}
-                      <div>
-                        <h3 className="text-lg text-slate-200 mb-3">Load saved wallets</h3>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={loadName}
-                            onChange={(e) => setLoadName(e.target.value)}
-                            placeholder="e.g. elephant"
-                            className="flex-1 px-4 py-2 bg-[#111c3a] border border-cyan-500/30 rounded-lg text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                            onKeyDown={(e) => e.key === "Enter" && loadWallets()}
-                          />
-                          <button
-                            onClick={() => loadWallets()}
-                            className="px-6 py-2 bg-cyan-900/40 hover:bg-cyan-900/60 text-cyan-300 rounded-lg transition-colors font-medium"
-                          >
-                            Load
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {saveMessage && <div className="mt-4 text-center text-sm text-cyan-300">{saveMessage}</div>}
-                  </div>
-                </div>
-                {/* Rewards Display */}
-                {rewards && rewards.length > 0 && (
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                    {rewards.length > 1 && totalRewards && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="grid md:grid-cols-2 gap-6 mt-8 border-t border-slate-700/50 pt-8"
-                      >
-                        <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-700/50">
-                          <h3 className="text-xl font-medium mb-4 text-orange-300 text-center">
-                            Total Opus rewards
-                            {tokenPrices.missor > 0 && tokenPrices.finvesta > 0 && tokenPrices.wgpp > 0 && (
-                              <span className="text-slate-400 text-base ml-2">
-                                ($
-                                {formatDecimals(
-                                  (
-                                    Number.parseFloat(totalRewards.opus.missor) * tokenPrices.missor +
-                                    Number.parseFloat(totalRewards.opus.finvesta) * tokenPrices.finvesta +
-                                    Number.parseFloat(totalRewards.opus.wgpp) * tokenPrices.wgpp
-                                  ).toString(),
-                                  2,
-                                )}
-                                )
-                              </span>
-                            )}
-                          </h3>
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-slate-300">Missor:</span>
-                              <span className="text-slate-100 font-medium">
-                                {formatDecimals(totalRewards.opus.missor)}
-                                {tokenPrices.missor > 0 && (
-                                  <span className="text-slate-400 text-sm ml-2">
-                                    ($
-                                    {formatDecimals(
-                                      (Number.parseFloat(totalRewards.opus.missor) * tokenPrices.missor).toString(),
-                                      2,
-                                    )}
-                                    )
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-slate-300">Finvesta:</span>
-                              <span className="text-slate-100 font-medium">
-                                {formatDecimals(totalRewards.opus.finvesta, 2)}
-                                {tokenPrices.finvesta > 0 && (
-                                  <span className="text-slate-400 text-sm ml-2">
-                                    ($
-                                    {formatDecimals(
-                                      (Number.parseFloat(totalRewards.opus.finvesta) * tokenPrices.finvesta).toString(),
-                                      2,
-                                    )}
-                                    )
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-slate-300">WGPP:</span>
-                              <span className="text-slate-100 font-medium">
-                                {formatDecimals(totalRewards.opus.wgpp, 2)}
-                                {tokenPrices.wgpp > 0 && (
-                                  <span className="text-slate-400 text-sm ml-2">
-                                    ($
-                                    {formatDecimals(
-                                      (Number.parseFloat(totalRewards.opus.wgpp) * tokenPrices.wgpp).toString(),
-                                      2,
-                                    )}
-                                    )
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-700/50">
-                          <h3 className="text-xl font-medium mb-4 text-cyan-300 text-center">
-                            Total Coda rewards
-                            {tokenPrices.weth > 0 && tokenPrices.pWbtc > 0 && tokenPrices.plsx > 0 && (
-                              <span className="text-slate-400 text-base ml-2">
-                                ($
-                                {formatDecimals(
-                                  (
-                                    Number.parseFloat(totalRewards.coda.weth) * tokenPrices.weth +
-                                    Number.parseFloat(totalRewards.coda.pWbtc) * tokenPrices.pWbtc +
-                                    Number.parseFloat(totalRewards.coda.plsx) * tokenPrices.plsx
-                                  ).toString(),
-                                  2,
-                                )}
-                                )
-                              </span>
-                            )}
-                          </h3>
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-slate-300">WETH:</span>
-                              <span className="text-slate-100 font-medium">
-                                {formatDecimals(totalRewards.coda.weth, 4)}
-                                {tokenPrices.weth > 0 && (
-                                  <span className="text-slate-400 text-sm ml-2">
-                                    ($
-                                    {formatDecimals(
-                                      (Number.parseFloat(totalRewards.coda.weth) * tokenPrices.weth).toString(),
-                                      2,
-                                    )}
-                                    )
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-slate-300">pWBTC:</span>
-                              <span className="text-slate-100 font-medium">
-                                {formatDecimals(totalRewards.coda.pWbtc, 4)}
-                                {tokenPrices.pWbtc > 0 && (
-                                  <span className="text-slate-400 text-sm ml-2">
-                                    ($
-                                    {formatDecimals(
-                                      (Number.parseFloat(totalRewards.coda.pWbtc) * tokenPrices.pWbtc).toString(),
-                                      2,
-                                    )}
-                                    )
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-slate-300">PLSX:</span>
-                              <span className="text-slate-100 font-medium">
-                                {formatWithCommas(totalRewards.coda.plsx)}
-                                {tokenPrices.plsx > 0 && (
-                                  <span className="text-slate-400 text-sm ml-2">
-                                    ($
-                                    {formatDecimals(
-                                      (Number.parseFloat(totalRewards.coda.plsx) * tokenPrices.plsx).toString(),
-                                      2,
-                                    )}
-                                    )
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Individual wallet rewards */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {rewards.map((walletRewards, walletIndex) => (
-                        <div key={walletIndex} className="space-y-4">
-                          <p className="text-slate-400 text-sm font-mono">
-                            {walletRewards.address.slice(0, 6)}...{walletRewards.address.slice(-4)}
-                          </p>
-                          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                            <div className="rounded-2xl bg-[#111c3a] border border-orange-900/30 p-6">
-                              <h3 className="text-xl font-medium mb-4 text-orange-300 text-center">Opus Rewards</h3>
-                              <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-slate-300">Missor:</span>
-                                  <span className="text-slate-100 font-medium">
-                                    {formatWithCommas(walletRewards.opus.missor)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <span className="text-slate-300">Finvesta:</span>
-                                  <span className="text-slate-100 font-medium">
-                                    {formatDecimals(walletRewards.opus.finvesta, 2)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <span className="text-slate-300">WGPP:</span>
-                                  <span className="text-slate-100 font-medium">
-                                    {formatDecimals(walletRewards.opus.wgpp, 2)}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="rounded-2xl bg-[#111c3a] border border-cyan-900/30 p-6">
-                              <h3 className="text-xl font-medium mb-4 text-cyan-300 text-center">Coda Rewards</h3>
-                              <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-slate-300">WETH:</span>
-                                  <span className="text-slate-100 font-medium">
-                                    {formatDecimals(walletRewards.coda.weth, 6)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <span className="text-slate-300">pWBTC:</span>
-                                  <span className="text-slate-100 font-medium">
-                                    {formatDecimals(walletRewards.coda.pWbtc, 4)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <span className="text-slate-300">PLSX:</span>
-                                  <span className="text-slate-100 font-medium">
-                                    {formatWithCommas(walletRewards.coda.plsx)}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          {walletAddresses.length > 1 ? (
+                            <button
+                              onClick={() => removeWallet(index)}
+                              className="px-4 py-3 bg-red-900/40 hover:bg-red-900/60 text-red-300 rounded-lg transition-colors"
+                            >
+                              Remove
+                            </button>
+                          ) : (
+                            <div className="w-[86px]" /> // spacer = same width as button
+                          )}
                         </div>
                       ))}
                     </div>
-                  </motion.div>
-                )}
+
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={addWallet}
+                        className="flex-1 px-6 py-3 bg-[#1a2847] hover:bg-[#243555] border border-cyan-500/30 text-cyan-300 rounded-lg font-medium transition-colors"
+                      >
+                        + Add wallet
+                      </button>
+                      <button
+                        onClick={() => fetchRewards()}
+                        disabled={loading}
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-cyan-600 hover:from-orange-500 hover:to-cyan-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loading ? "Updating..." : rewards && rewards.length > 0 ? "Update rewards" : "Check rewards"}
+                      </button>
+                    </div>
+                    {error && <p className="text-red-400 text-sm">{error}</p>}
+
+                    <div className="mt-8 pt-8 border-t border-cyan-500/20">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        {/* Save Section */}
+                        <div>
+                          <h3 className="text-lg text-slate-200 mb-3">Save current wallets</h3>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={savedName}
+                              onChange={(e) => setSavedName(e.target.value)}
+                              placeholder="e.g. elephant"
+                              className="flex-1 px-4 py-2 bg-[#111c3a] border border-cyan-500/30 rounded-lg text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                              onKeyDown={(e) => e.key === "Enter" && saveWalletList()}
+                            />
+                            <button
+                              onClick={saveWalletList}
+                              className="px-6 py-2 bg-green-900/40 hover:bg-green-900/60 text-green-300 rounded-lg transition-colors font-medium"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Load Section */}
+                        <div>
+                          <h3 className="text-lg text-slate-200 mb-3">Load saved wallets</h3>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={loadName}
+                              onChange={(e) => setLoadName(e.target.value)}
+                              placeholder="e.g. elephant"
+                              className="flex-1 px-4 py-2 bg-[#111c3a] border border-cyan-500/30 rounded-lg text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                              onKeyDown={(e) => e.key === "Enter" && loadWallets()}
+                            />
+                            <button
+                              onClick={() => loadWallets()}
+                              className="px-6 py-2 bg-cyan-900/40 hover:bg-cyan-900/60 text-cyan-300 rounded-lg transition-colors font-medium"
+                            >
+                              Load
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {saveMessage && <div className="mt-4 text-center text-sm text-cyan-300">{saveMessage}</div>}
+                    </div>
+                  </div>
+                  {/* Rewards Display */}
+                  {rewards && rewards.length > 0 && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                      {rewards.length > 1 && totalRewards && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="grid md:grid-cols-2 gap-6 mt-8 border-t border-slate-700/50 pt-8"
+                        >
+                          <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-700/50">
+                            <h3 className="text-xl font-medium mb-4 text-orange-300 text-center">
+                              Total Opus rewards
+                              {tokenPrices.missor > 0 && tokenPrices.finvesta > 0 && tokenPrices.wgpp > 0 && (
+                                <span className="text-slate-400 text-base ml-2">
+                                  ($
+                                  {formatDecimals(
+                                    (
+                                      Number.parseFloat(totalRewards.opus.missor) * tokenPrices.missor +
+                                      Number.parseFloat(totalRewards.opus.finvesta) * tokenPrices.finvesta +
+                                      Number.parseFloat(totalRewards.opus.wgpp) * tokenPrices.wgpp
+                                    ).toString(),
+                                    2,
+                                  )}
+                                  )
+                                </span>
+                              )}
+                            </h3>
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-300">Missor:</span>
+                                <span className="text-slate-100 font-medium">
+                                  {formatDecimals(totalRewards.opus.missor)}
+                                  {tokenPrices.missor > 0 && (
+                                    <span className="text-slate-400 text-sm ml-2">
+                                      ($
+                                      {formatDecimals(
+                                        (Number.parseFloat(totalRewards.opus.missor) * tokenPrices.missor).toString(),
+                                        2,
+                                      )}
+                                      )
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-300">Finvesta:</span>
+                                <span className="text-slate-100 font-medium">
+                                  {formatDecimals(totalRewards.opus.finvesta, 2)}
+                                  {tokenPrices.finvesta > 0 && (
+                                    <span className="text-slate-400 text-sm ml-2">
+                                      ($
+                                      {formatDecimals(
+                                        (
+                                          Number.parseFloat(totalRewards.opus.finvesta) * tokenPrices.finvesta
+                                        ).toString(),
+                                        2,
+                                      )}
+                                      )
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-300">WGPP:</span>
+                                <span className="text-slate-100 font-medium">
+                                  {formatDecimals(totalRewards.opus.wgpp, 2)}
+                                  {tokenPrices.wgpp > 0 && (
+                                    <span className="text-slate-400 text-sm ml-2">
+                                      ($
+                                      {formatDecimals(
+                                        (Number.parseFloat(totalRewards.opus.wgpp) * tokenPrices.wgpp).toString(),
+                                        2,
+                                      )}
+                                      )
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-700/50">
+                            <h3 className="text-xl font-medium mb-4 text-cyan-300 text-center">
+                              Total Coda rewards
+                              {tokenPrices.weth > 0 && tokenPrices.pWbtc > 0 && tokenPrices.plsx > 0 && (
+                                <span className="text-slate-400 text-base ml-2">
+                                  ($
+                                  {formatDecimals(
+                                    (
+                                      Number.parseFloat(totalRewards.coda.weth) * tokenPrices.weth +
+                                      Number.parseFloat(totalRewards.coda.pWbtc) * tokenPrices.pWbtc +
+                                      Number.parseFloat(totalRewards.coda.plsx) * tokenPrices.plsx
+                                    ).toString(),
+                                    2,
+                                  )}
+                                  )
+                                </span>
+                              )}
+                            </h3>
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-300">WETH:</span>
+                                <span className="text-slate-100 font-medium">
+                                  {formatDecimals(totalRewards.coda.weth, 4)}
+                                  {tokenPrices.weth > 0 && (
+                                    <span className="text-slate-400 text-sm ml-2">
+                                      ($
+                                      {formatDecimals(
+                                        (Number.parseFloat(totalRewards.coda.weth) * tokenPrices.weth).toString(),
+                                        2,
+                                      )}
+                                      )
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-300">pWBTC:</span>
+                                <span className="text-slate-100 font-medium">
+                                  {formatDecimals(totalRewards.coda.pWbtc, 4)}
+                                  {tokenPrices.pWbtc > 0 && (
+                                    <span className="text-slate-400 text-sm ml-2">
+                                      ($
+                                      {formatDecimals(
+                                        (Number.parseFloat(totalRewards.coda.pWbtc) * tokenPrices.pWbtc).toString(),
+                                        2,
+                                      )}
+                                      )
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-300">PLSX:</span>
+                                <span className="text-slate-100 font-medium">
+                                  {formatWithCommas(totalRewards.coda.plsx)}
+                                  {tokenPrices.plsx > 0 && (
+                                    <span className="text-slate-400 text-sm ml-2">
+                                      ($
+                                      {formatDecimals(
+                                        (Number.parseFloat(totalRewards.coda.plsx) * tokenPrices.plsx).toString(),
+                                        2,
+                                      )}
+                                      )
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* Individual wallet rewards */}
+                      <div className="grid md:grid-cols-2 gap-6">
+                        {rewards.map((walletRewards, walletIndex) => (
+                          <div key={walletIndex} className="space-y-4">
+                            <p className="text-slate-400 text-sm font-mono">
+                              {walletRewards.address.slice(0, 6)}...{walletRewards.address.slice(-4)}
+                            </p>
+                            <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                              <div className="rounded-2xl bg-[#111c3a] border border-orange-900/30 p-6">
+                                <h3 className="text-xl font-medium mb-4 text-orange-300 text-center">Opus Rewards</h3>
+                                <div className="space-y-3">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-slate-300">Missor:</span>
+                                    <span className="text-slate-100 font-medium">
+                                      {formatWithCommas(walletRewards.opus.missor)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-slate-300">Finvesta:</span>
+                                    <span className="text-slate-100 font-medium">
+                                      {formatDecimals(walletRewards.opus.finvesta, 2)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-slate-300">WGPP:</span>
+                                    <span className="text-slate-100 font-medium">
+                                      {formatDecimals(walletRewards.opus.wgpp, 2)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="rounded-2xl bg-[#111c3a] border border-cyan-900/30 p-6">
+                                <h3 className="text-xl font-medium mb-4 text-cyan-300 text-center">Coda Rewards</h3>
+                                <div className="space-y-3">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-slate-300">WETH:</span>
+                                    <span className="text-slate-100 font-medium">
+                                      {formatDecimals(walletRewards.coda.weth, 6)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-slate-300">pWBTC:</span>
+                                    <span className="text-slate-100 font-medium">
+                                      {formatDecimals(walletRewards.coda.pWbtc, 4)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-slate-300">PLSX:</span>
+                                    <span className="text-slate-100 font-medium">
+                                      {formatWithCommas(walletRewards.coda.plsx)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
               </div>
             </motion.section>
             <div className="text-center space-y-8 mt-8">
