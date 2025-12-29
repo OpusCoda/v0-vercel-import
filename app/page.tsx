@@ -233,12 +233,31 @@ export default function Home() {
   }
 
   const addWallet = () => {
-    setWalletAddresses([...walletAddresses, ""])
+    const newWalletAddress = ""
+    setWalletAddresses([...walletAddresses, newWalletAddress])
   }
 
   const removeWallet = (index: number) => {
     const newAddresses = walletAddresses.filter((_, i) => i !== index)
     setWalletAddresses(newAddresses.length > 0 ? newAddresses : [""])
+  }
+
+  const updateWalletAddress = (index: number, value: string) => {
+    const newAddresses = [...walletAddresses]
+    newAddresses[index] = value
+
+    // Check for duplicates
+    const normalizedValue = value.trim().toLowerCase()
+    if (
+      normalizedValue &&
+      walletAddresses.some((addr, i) => i !== index && addr.trim().toLowerCase() === normalizedValue)
+    ) {
+      setError("This wallet address is already added")
+      setTimeout(() => setError(""), 3000)
+      return
+    }
+
+    setWalletAddresses(newAddresses)
   }
 
   return (
@@ -343,7 +362,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="max-w-6xl mx-auto px-6 py-16"
+              className="max-w-6xl mx-auto px-4 sm:px-6 py-16"
             >
               <h2 className="text-3xl md:text-4xl font-goudy text-center mb-12 text-slate-200">
                 See what has accrued by holding Opus and Coda
@@ -357,11 +376,7 @@ export default function Home() {
                         <input
                           type="text"
                           value={address}
-                          onChange={(e) => {
-                            const newAddresses = [...walletAddresses]
-                            newAddresses[index] = e.target.value
-                            setWalletAddresses(newAddresses)
-                          }}
+                          onChange={(e) => updateWalletAddress(index, e.target.value)}
                           placeholder={`Wallet address ${index + 1}`}
                           className="flex-1 px-4 py-3 bg-[#111c3a] border border-cyan-500/30 rounded-lg text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                         />
