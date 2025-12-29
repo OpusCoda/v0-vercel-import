@@ -353,7 +353,7 @@ export default function Home() {
               </div>
               <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
                 <h3 className="text-xl font-medium mb-3 text-cyan-300">Automatic payouts</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
+                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">
                   Simply hold Opus or Coda and your rewards arrive automatically.
                 </p>
               </div>
@@ -408,13 +408,13 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="max-w-6xl mx-auto px-4 sm:px-6 py-16 text-center" // Added text-center for mobile centering
+              className="max-w-6xl mx-auto py-16 text-center"
             >
               <h2 className="text-3xl md:text-4xl font-goudy text-center mb-12 text-slate-200">
                 See what has accrued by holding Opus and Coda
               </h2>
 
-              <div className="space-y-6 max-w-4xl mx-auto">
+              <div className="space-y-6 max-w-4xl mx-auto w-full">
                 {" "}
                 {/* Added max-w-4xl mx-auto to constrain and center the checker */}
                 <div className="rounded-2xl bg-gradient-to-br from-[#1a2847] to-[#0f1629] border border-cyan-500/30 p-4 sm:p-8 shadow-2xl">
@@ -536,7 +536,7 @@ export default function Home() {
                             <div className="flex justify-between items-center">
                               <span className="text-slate-300">Missor:</span>
                               <span className="text-slate-100 font-medium">
-                                {formatWithCommas(totalRewards.opus.missor)}
+                                {formatDecimals(totalRewards.opus.missor)}
                                 {tokenPrices.missor > 0 && (
                                   <span className="text-slate-400 text-sm ml-2">
                                     ($
