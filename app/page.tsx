@@ -353,7 +353,7 @@ export default function Home() {
               </div>
               <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
                 <h3 className="text-xl font-medium mb-3 text-cyan-300">Automatic payouts</h3>
-                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">
+                <p className="text-slate-300 text-sm leading-relaxed">
                   Simply hold Opus or Coda and your rewards arrive automatically.
                 </p>
               </div>
@@ -465,7 +465,7 @@ export default function Home() {
                         {/* Save Section */}
                         <div>
                           <h3 className="text-lg text-slate-200 mb-3">Save current wallets</h3>
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <input
                               type="text"
                               value={savedName}
@@ -486,7 +486,7 @@ export default function Home() {
                         {/* Load Section */}
                         <div>
                           <h3 className="text-lg text-slate-200 mb-3">Load saved wallets</h3>
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <input
                               type="text"
                               value={loadName}
