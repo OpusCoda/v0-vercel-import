@@ -313,7 +313,7 @@ export default function Home() {
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-8 mt-8">
-              <div className="rounded-2xl bg-[#111c3a] border border-orange-900/30 p-8 shadow-inner">
+              <div className="rounded-2xl bg-[#111c3a] border border-orange-900/30 p-7 shadow-inner">
                 <h3 className="text-2xl font-medium mb-4 text-orange-300 text-center">Opus</h3>
                 <p className="text-slate-200 text-lg mb-4 text-center font-semibold">6% Tax</p>
                 <ul className="space-y-2 text-slate-300">
@@ -335,7 +335,7 @@ export default function Home() {
                   </li>
                 </ul>
               </div>
-              <div className="rounded-2xl bg-[#111c3a] border border-cyan-900/30 p-8 shadow-inner">
+              <div className="rounded-2xl bg-[#111c3a] border border-cyan-900/30 p-7 shadow-inner">
                 <h3 className="text-2xl font-medium mb-4 text-cyan-300 text-center">Coda</h3>
                 <p className="text-slate-200 text-lg mb-4 text-center font-semibold">7% Tax</p>
                 <ul className="space-y-2 text-slate-300">
@@ -369,7 +369,7 @@ export default function Home() {
               </h2>
 
               <div className="space-y-6">
-                <div className="rounded-2xl bg-gradient-to-br from-[#1a2847] to-[#0f1629] border border-cyan-500/30 p-8 shadow-2xl">
+                <div className="rounded-2xl bg-gradient-to-br from-[#1a2847] to-[#0f1629] border border-cyan-500/30 p-4 sm:p-8 shadow-2xl">
                   <div className="space-y-4">
                     {walletAddresses.map((address, index) => (
                       <div key={index} className="flex gap-2">
