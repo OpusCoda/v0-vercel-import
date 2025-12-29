@@ -353,7 +353,7 @@ export default function Home() {
               </div>
               <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
                 <h3 className="text-xl font-medium mb-3 text-cyan-300">Automatic payouts</h3>
-                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">
+                <p className="text-slate-300 text-sm leading-relaxed">
                   Simply hold Opus or Coda and your rewards arrive automatically.
                 </p>
               </div>
@@ -420,7 +420,7 @@ export default function Home() {
                 <div className="rounded-2xl bg-gradient-to-br from-[#1a2847] to-[#0f1629] border border-cyan-500/30 p-4 sm:p-8 shadow-2xl">
                   <div className="space-y-4">
                     {walletAddresses.map((address, index) => (
-                      <div key={index} className="flex gap-2">
+                      <div key={index} className="grid grid-cols-[1fr_auto] gap-2">
                         <input
                           type="text"
                           value={address}
@@ -428,13 +428,15 @@ export default function Home() {
                           placeholder={`Wallet address ${index + 1}`}
                           className="flex-1 px-4 py-3 bg-[#111c3a] border border-cyan-500/30 rounded-lg text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                         />
-                        {walletAddresses.length > 1 && (
+                        {walletAddresses.length > 1 ? (
                           <button
                             onClick={() => removeWallet(index)}
                             className="px-4 py-3 bg-red-900/40 hover:bg-red-900/60 text-red-300 rounded-lg transition-colors"
                           >
                             Remove
                           </button>
+                        ) : (
+                          <div className="w-[86px]" /> // spacer = same width as button
                         )}
                       </div>
                     ))}
