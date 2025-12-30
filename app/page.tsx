@@ -411,9 +411,10 @@ export default function Home() {
               className="py-16 text-center"
             >
               <div className="max-w-6xl mx-auto px-4">
-                <h2 className="text-2xl md:text-3xl text-center mb-12 text-slate-200 font-medium">
+                <h2 className="text-2xl md:text-3xl font-medium text-center mb-12 text-slate-200">
                   See what has accrued by holding Opus and Coda
                 </h2>
+                <p className="text-slate-400 text-sm text-center mb-6 -mt-8">Rewards tracked since December 28, 2025</p>
 
                 <div className="space-y-6 max-w-4xl mx-auto w-full">
                   {" "}
