@@ -62,8 +62,56 @@ export default function Home() {
   const [loadName, setLoadName] = useState("")
   const [saveMessage, setSaveMessage] = useState("")
 
+  const [liquidityData, setLiquidityData] = useState<{
+    opus: { opusAdded: string; plsAdded: string } | null
+    coda: { codaAdded: string; plsAdded: string } | null
+  }>({ opus: null, coda: null })
+
   useEffect(() => {
     // Fetch saved lists from database here if needed
+  }, [])
+
+  const fetchLiquidityData = async () => {
+    try {
+      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL!)
+
+      // Fetch Opus liquidity data
+      const opusLpAddedData = await provider.call({
+        to: OPUS_CONTRACT,
+        data: "0x77e34bcf", // totalOpusLpAdded
+      })
+      const opusPlsLpAddedData = await provider.call({
+        to: OPUS_CONTRACT,
+        data: "0x2f6ec43a", // totalPlsLpAdded
+      })
+
+      // Fetch Coda liquidity data
+      const codaLpAddedData = await provider.call({
+        to: CODA_CONTRACT,
+        data: "0x2af2db78", // totalCodaLpAdded
+      })
+      const codaPlsLpAddedData = await provider.call({
+        to: CODA_CONTRACT,
+        data: "0x2f6ec43a", // totalPlsLpAdded
+      })
+
+      setLiquidityData({
+        opus: {
+          opusAdded: ethers.formatUnits(opusLpAddedData, 18),
+          plsAdded: ethers.formatUnits(opusPlsLpAddedData, 18),
+        },
+        coda: {
+          codaAdded: ethers.formatUnits(codaLpAddedData, 18),
+          plsAdded: ethers.formatUnits(codaPlsLpAddedData, 18),
+        },
+      })
+    } catch (error) {
+      console.error("Error fetching liquidity data:", error)
+    }
+  }
+
+  useEffect(() => {
+    fetchLiquidityData()
   }, [])
 
   const saveWalletList = async () => {
@@ -379,6 +427,19 @@ export default function Home() {
                     <span>Added to liquidity</span>
                     <span className="text-orange-300 font-medium">1%</span>
                   </li>
+                  {liquidityData.opus && (
+                    <li className="text-xs text-slate-400 mt-3 space-y-1">
+                      <div className="font-medium text-slate-300 mb-2">Added to liquidity since 28 December 2025:</div>
+                      <div className="flex justify-between pl-2">
+                        <span>Opus</span>
+                        <span>{formatWithCommas(liquidityData.opus.opusAdded, 2)}</span>
+                      </div>
+                      <div className="flex justify-between pl-2">
+                        <span>PLS</span>
+                        <span>{formatWithCommas(liquidityData.opus.plsAdded, 2)}</span>
+                      </div>
+                    </li>
+                  )}
                 </ul>
               </div>
               <div className="rounded-2xl bg-[#111c3a] border border-cyan-900/30 p-7 shadow-inner">
@@ -401,6 +462,19 @@ export default function Home() {
                     <span>Added to liquidity</span>
                     <span className="text-cyan-300 font-medium">1%</span>
                   </li>
+                  {liquidityData.coda && (
+                    <li className="text-xs text-slate-400 mt-3 space-y-1">
+                      <div className="font-medium text-slate-300 mb-2">Added to liquidity since 28 December 2025:</div>
+                      <div className="flex justify-between pl-2">
+                        <span>Coda</span>
+                        <span>{formatWithCommas(liquidityData.coda.codaAdded, 2)}</span>
+                      </div>
+                      <div className="flex justify-between pl-2">
+                        <span>PLS</span>
+                        <span>{formatWithCommas(liquidityData.coda.plsAdded, 2)}</span>
+                      </div>
+                    </li>
+                  )}
                 </ul>
               </div>
             </div>
@@ -414,7 +488,7 @@ export default function Home() {
                 <h2 className="text-2xl md:text-3xl font-medium text-center mb-12 text-slate-200">
                   See what has accrued by holding Opus and Coda
                 </h2>
-                <p className="text-slate-400 text-sm text-center mb-6 -mt-8">Rewards tracked since December 28, 2025</p>
+                <p className="text-slate-400 text-sm text-center mb-6 -mt-8">Rewards tracked since 28 December, 2025</p>
 
                 <div className="space-y-6 max-w-4xl mx-auto w-full">
                   {" "}
