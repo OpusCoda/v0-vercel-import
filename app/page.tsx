@@ -757,7 +757,7 @@ export default function Home() {
                 <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                   {/* Opus Rewards */}
                   <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 space-y-5">
-                    <h3 className="text-lg font-medium text-orange-400 mb-4">Opus Rewards</h3>
+                    <h3 className="text-lg font-medium text-orange-400 mb-4">Opus</h3>
                     <div className="space-y-5 text-left">
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">Missor:</span>
@@ -801,7 +801,7 @@ export default function Home() {
 
                   {/* Coda Rewards */}
                   <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 space-y-5">
-                    <h3 className="text-lg font-medium text-cyan-400 mb-4">Coda Rewards</h3>
+                    <h3 className="text-lg font-medium text-cyan-400 mb-4">Coda</h3>
                     <div className="space-y-5 text-left">
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">WETH:</span>
