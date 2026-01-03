@@ -13,12 +13,18 @@ const formatDecimals = (v: string, decimals = 0) => {
 
 const formatWithCommas = (v: string, decimals = 0) => {
   const [i, d = ""] = v.split(".")
-  const withCommas = i.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  // Only add commas if the integer part has 5 or more digits
+  const withCommas = i.length >= 5 ? i.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : i
   return decimals > 0 ? `${withCommas}.${d.padEnd(decimals, "0").slice(0, decimals)}` : withCommas
 }
 
 const OPUS_CONTRACT = "0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4"
 const CODA_CONTRACT = "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
+const OPUS_V1_CONTRACT = "0x7251d2965f165fCE18Ae5fC4c4979e01b46057d7"
+const OPUS_V2_CONTRACT = "0x90501f0C51c3aaDc76c9b27E501b68Db153Dcc81"
+const CODA_V1_CONTRACT = "0xD9857f41E67812dbDFfdD3269B550836EC131D0C"
+const CODA_V2_CONTRACT = "0x502E10403E20D6Ff42CBBDa7fdDC4e1315Da19AF"
+
 const OPUS_ABI = [
   "function getTotalMissorEarned(address) view returns (uint256)", // 0x6887e0b3
   "function getTotalFinvestaEarned(address) view returns (uint256)", // 0x94a17cf0
@@ -30,37 +36,69 @@ const CODA_ABI = [
   "function getTotalPlsxEarned(address) view returns (uint256)", // 0x442b1c12
 ]
 
+const SHARES_ABI = [
+  "function shares(address) view returns (uint256 amount, uint256 missorTotalExcluded, uint256 missorTotalRealised, uint256 finvestaTotalExcluded, uint256 finvestaTotalRealised, uint256 wgppTotalExcluded, uint256 wgppTotalRealised)", // 0xce7c2ac2 for Opus
+]
+
+const CODA_SHARES_ABI = [
+  "function shares(address) view returns (uint256 amount, uint256 wethTotalExcluded, uint256 wethTotalRealised, uint256 wbtcTotalExcluded, uint256 wbtcTotalRealised, uint256 plsTotalExcluded, uint256 plsxTotalRealised)", // 0xce7c2ac2 for Coda
+]
+
+const DISTRIBUTOR_ABI = [
+  "function totalMissorDistributed() view returns (uint256)",
+  "function totalFinvestaDistributed() view returns (uint256)",
+  "function totalWgppDistributed() view returns (uint256)",
+  "function totalWethDistributed() view returns (uint256)",
+  "function totalWbtcDistributed() view returns (uint256)",
+  "function totalPlsxDistributed() view returns (uint256)",
+]
+
 export default function Home() {
+  const [rewards, setRewards] = useState<
+    Array<{
+      address: string
+      opus: { missor: string; finvesta: string; wgpp: string }
+      coda: { weth: string; Pwbtc: string; plsx: string }
+    }>
+  >([])
   const [walletAddresses, setWalletAddresses] = useState<string[]>([""])
   const [loading, setLoading] = useState(false)
-  const [rewards, setRewards] = useState<Array<{
-    address: string
+  const [walletRewards, setWalletRewards] = useState<{
     opus: { missor: string; finvesta: string; wgpp: string }
-    coda: { weth: string; pWbtc: string; plsx: string }
-  }> | null>(null)
+    coda: { weth: string; Pwbtc: string; plsx: string }
+  } | null>(null)
   const [error, setError] = useState("")
   const [totalRewards, setTotalRewards] = useState<{
     opus: { missor: string; finvesta: string; wgpp: string }
-    coda: { weth: string; pWbtc: string; plsx: string }
+    coda: { weth: string; Pwbtc: string; plsx: string }
   } | null>(null)
   const [tokenPrices, setTokenPrices] = useState<{
     missor: number
     finvesta: number
     wgpp: number
     weth: number
-    pWbtc: number
+    Pwbtc: number
     plsx: number
   }>({
     missor: 0,
     finvesta: 0,
     wgpp: 0,
     weth: 0,
-    pWbtc: 0,
+    Pwbtc: 0,
     plsx: 0,
   })
   const [savedName, setSavedName] = useState("")
   const [loadName, setLoadName] = useState("")
   const [saveMessage, setSaveMessage] = useState("")
+  const [totalDistributed, setTotalDistributed] = useState<{
+    missor: string
+    finvesta: string
+    wgpp: string
+    weth: string
+    Pwbtc: string
+    plsx: string
+  } | null>(null)
+  const [duplicateWarning, setDuplicateWarning] = useState("")
 
   const [liquidityData, setLiquidityData] = useState<{
     opus: { opusAdded: string; plsAdded: string } | null
@@ -95,24 +133,126 @@ export default function Home() {
         data: "0x2f6ec43a", // totalPlsLpAdded
       })
 
+      // Baseline PLS for Opus liquidity (pre-tracking amounts)
+      const opusPlsBaseline1 = BigInt("49666029536348406754405890")
+      const opusPlsBaseline2 = BigInt("17938960181623487006781877")
+      const totalOpusPls = BigInt(opusPlsLpAddedData) + opusPlsBaseline1 + opusPlsBaseline2
+
+      // Baseline PLS for Coda liquidity (pre-tracking amounts)
+      const codaPlsBaseline1 = BigInt("39551834742159002925770986")
+      const codaPlsBaseline2 = BigInt("16191801870025447450804067")
+      const totalCodaPls = BigInt(codaPlsLpAddedData) + codaPlsBaseline1 + codaPlsBaseline2
+
       setLiquidityData({
         opus: {
           opusAdded: ethers.formatUnits(opusLpAddedData, 18),
-          plsAdded: ethers.formatUnits(opusPlsLpAddedData, 18),
+          plsAdded: ethers.formatUnits(totalOpusPls.toString(), 18), // Use total with baseline
         },
         coda: {
           codaAdded: ethers.formatUnits(codaLpAddedData, 18),
-          plsAdded: ethers.formatUnits(codaPlsLpAddedData, 18),
+          plsAdded: ethers.formatUnits(totalCodaPls.toString(), 18), // Use total with baseline
         },
       })
     } catch (error) {
-      console.error("Error fetching liquidity data:", error)
+      console.error("Failed to fetch liquidity data:", error)
     }
   }
 
   useEffect(() => {
     fetchLiquidityData()
+    fetchTotalDistributed()
+    fetchTokenPrices()
   }, [])
+
+  const fetchTotalDistributed = async () => {
+    try {
+      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
+
+      // Opus distributor contract addresses (v1, v2, v3)
+      const opusDistributors = [
+        "0x7251d2965f165fCE18Ae5fC4c4979e01b46057d7", // v1
+        "0x90501f0C51c3aaDc76c9b27E501b68Db153Dcc81", // v2
+        "0xD14594f3c736E0D742Cfe2C3A177fb813c1C04B9", // v3
+      ]
+
+      // Coda distributor contract addresses (v1, v2, v3)
+      const codaDistributors = [
+        "0xD9857f41E67812dbDFfdD3269B550836EC131D0C", // v1
+        "0x502E10403E20D6Ff42CBBDa7fdDC4e1315Da19AF", // v2
+        "0x2924Dc56bb4eeF50d0d32D8aCD6AA7c61aFa5dfe", // v3
+      ]
+
+      let totalMissor = 0n
+      let totalFinvesta = 0n
+      let totalWgpp = 0n
+
+      for (const address of opusDistributors) {
+        const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
+        try {
+          const missor = await contract.totalMissorDistributed()
+          totalMissor += BigInt(missor)
+        } catch (err) {
+          console.error(`[v0] Error fetching Missor from ${address}:`, err)
+        }
+        try {
+          const finvesta = await contract.totalFinvestaDistributed()
+          totalFinvesta += BigInt(finvesta)
+        } catch (err) {
+          console.error(`[v0] Error fetching Finvesta from ${address}:`, err)
+        }
+        try {
+          const wgpp = await contract.totalWgppDistributed()
+          totalWgpp += BigInt(wgpp)
+        } catch (err) {
+          console.error(`[v0] Error fetching WGPP from ${address}:`, err)
+        }
+      }
+
+      let totalWeth = 0n
+      let totalPwbtc = 0n
+      let totalPlsx = 0n
+
+      for (const address of codaDistributors) {
+        const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
+        try {
+          const weth = await contract.totalWethDistributed()
+          totalWeth += BigInt(weth)
+        } catch (err) {
+          console.error(`[v0] Error fetching WETH from ${address}:`, err)
+        }
+        try {
+          const Pwbtc = await contract.totalWbtcDistributed()
+          totalPwbtc += BigInt(Pwbtc)
+        } catch (err) {
+          console.error(`[v0] Error fetching pWBTC from ${address}:`, err)
+        }
+        try {
+          const plsx = await contract.totalPlsxDistributed()
+          totalPlsx += BigInt(plsx)
+        } catch (err) {
+          console.error(`[v0] Error fetching PLSX from ${address}:`, err)
+        }
+      }
+
+      console.log("[v0] Total Missor:", totalMissor.toString())
+      console.log("[v0] Total Finvesta:", totalFinvesta.toString())
+      console.log("[v0] Total WGPP:", totalWgpp.toString())
+      console.log("[v0] Total WETH:", totalWeth.toString())
+      console.log("[v0] Total pWBTC:", totalPwbtc.toString())
+      console.log("[v0] Total PLSX:", totalPlsx.toString())
+
+      setTotalDistributed({
+        missor: ethers.formatUnits(totalMissor, 18),
+        finvesta: ethers.formatUnits(totalFinvesta, 8),
+        wgpp: ethers.formatUnits(totalWgpp, 18),
+        weth: ethers.formatUnits(totalWeth, 18),
+        Pwbtc: ethers.formatUnits(totalPwbtc, 8),
+        plsx: ethers.formatUnits(totalPlsx, 18),
+      })
+    } catch (err) {
+      console.error("Error fetching total distributed:", err)
+    }
+  }
 
   const saveWalletList = async () => {
     if (!savedName.trim()) {
@@ -128,7 +268,7 @@ export default function Home() {
       const response = await fetch("/api/saved-wallets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: JSON.JSON.stringify({
           name: savedName.toLowerCase().trim(),
           addresses: walletAddresses,
         }),
@@ -182,32 +322,36 @@ export default function Home() {
   }
 
   const fetchTokenPrices = async () => {
-    try {
-      const pairs = [
-        { name: "missor", address: "0xf3a8541894e4d789e6257a63440094d698d82bad" },
-        { name: "finvesta", address: "0x615cfd552e98eb97e5557b03aa41d0e85e98167b" },
-        { name: "wgpp", address: "0xf13ca5c98d9aae6294edb9e7299b0bbe1e71265d" },
-        { name: "weth", address: "0x42abdfdb63f3282033c766e72cc4810738571609" },
-        { name: "pWbtc", address: "0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf" },
-        { name: "plsx", address: "0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9" },
-      ]
+    const tokens = [
+      { name: "missor", address: "0xf3a8541894e4d789e6257a63440094d698d82bad" },
+      { name: "finvesta", address: "0x615cfd552e98eb97e5557b03aa41d0e85e98167b" },
+      { name: "wgpp", address: "0xf13ca5c98d9aae6294edb9e7299b0bbe1e71265d" },
+      { name: "weth", address: "0x42abdfdb63f3282033c766e72cc4810738571609" },
+      { name: "Pwbtc", address: "0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf" },
+      { name: "plsx", address: "0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9" },
+    ]
 
-      const prices: any = {}
-      for (const pair of pairs) {
+    const prices = await Promise.all(
+      tokens.map(async (token) => {
         try {
-          const response = await fetch(`https://api.dexscreener.com/latest/dex/pairs/pulsechain/${pair.address}`)
+          const response = await fetch(`https://api.dexscreener.com/latest/dex/pairs/pulsechain/${token.address}`)
           const data = await response.json()
-          if (data.pair && data.pair.priceUsd) {
-            prices[pair.name] = Number.parseFloat(data.pair.priceUsd)
-          }
+          const price = data?.pairs?.[0]?.priceUsd
+          return { name: token.name, price: Number.parseFloat(price || "0") }
         } catch (err) {
-          console.error(`[v0] Error fetching ${pair.name} price:`, err)
+          console.error(`[v0] Error fetching price for ${token.name}:`, err)
+          return { name: token.name, price: 0 }
         }
-      }
-      setTokenPrices(prices)
-    } catch (err) {
-      console.error("[v0] Error fetching token prices:", err)
-    }
+      }),
+    )
+    setTokenPrices({
+      missor: prices.find((p) => p.name === "missor")?.price || 0,
+      finvesta: prices.find((p) => p.name === "finvesta")?.price || 0,
+      wgpp: prices.find((p) => p.name === "wgpp")?.price || 0,
+      weth: prices.find((p) => p.name === "weth")?.price || 0,
+      Pwbtc: prices.find((p) => p.name === "Pwbtc")?.price || 0,
+      plsx: prices.find((p) => p.name === "plsx")?.price || 0,
+    })
   }
 
   const fetchRewards = async (addressesToFetch?: string[]) => {
@@ -221,6 +365,9 @@ export default function Home() {
     setLoading(true)
     setError("")
     setRewards(null)
+    setWalletRewards(null) // Clear individual wallet rewards as well
+    setTotalRewards(null) // Reset total rewards
+    await fetchTotalDistributed() // Fetch total distributed amounts
 
     await fetchTokenPrices()
 
@@ -229,58 +376,163 @@ export default function Home() {
       const opusContract = new ethers.Contract(OPUS_CONTRACT, OPUS_ABI, provider)
       const codaContract = new ethers.Contract(CODA_CONTRACT, CODA_ABI, provider)
 
+      const opusV1Contract = new ethers.Contract(OPUS_V1_CONTRACT, SHARES_ABI, provider)
+      const opusV2Contract = new ethers.Contract(OPUS_V2_CONTRACT, SHARES_ABI, provider)
+      const codaV1Contract = new ethers.Contract(CODA_V1_CONTRACT, CODA_SHARES_ABI, provider)
+      const codaV2Contract = new ethers.Contract(CODA_V2_CONTRACT, CODA_SHARES_ABI, provider)
+
       const allRewards = []
+      let distributedMissor = 0n
+      let distributedFinvesta = 0n
+      let distributedWgpp = 0n
+      let distributedWeth = 0n
+      let distributedPWbtc = 0n
+      let distributedPlsx = 0n
+
       for (const address of addresses) {
         console.log("[v0] Fetching rewards for:", address)
 
-        let opusMissor = "0"
-        let opusFinvesta = "0"
-        let opusWgpp = "0"
-        let codaWeth = "0"
-        let codaPWbtc = "0"
-        let codaPlsx = "0"
+        let opusMissor = 0n
+        let opusFinvesta = 0n
+        let opusWgpp = 0n
+        let codaWeth = 0n
+        let codaPWbtc = 0n
+        let codaPlsx = 0n
 
         try {
-          opusMissor = (await opusContract.getTotalMissorEarned(address)).toString()
-          console.log("[v0] Opus Missor:", opusMissor)
+          const opusMissorRaw = await opusContract.getTotalMissorEarned(address)
+          opusMissor = BigInt(opusMissorRaw)
+          console.log("[v0] Opus Missor (v3):", opusMissor.toString())
         } catch (err) {
           console.error("[v0] Error fetching Opus Missor:", err)
         }
 
         try {
-          opusFinvesta = (await opusContract.getTotalFinvestaEarned(address)).toString()
-          console.log("[v0] Opus Finvesta:", opusFinvesta)
+          const opusFinvestaRaw = await opusContract.getTotalFinvestaEarned(address)
+          opusFinvesta = BigInt(opusFinvestaRaw)
+          console.log("[v0] Opus Finvesta (v3):", opusFinvesta.toString())
         } catch (err) {
           console.error("[v0] Error fetching Opus Finvesta:", err)
         }
 
         try {
-          opusWgpp = (await opusContract.getTotalWgppEarned(address)).toString()
-          console.log("[v0] Opus WGPP:", opusWgpp)
+          const opusWgppRaw = await opusContract.getTotalWgppEarned(address)
+          opusWgpp = BigInt(opusWgppRaw)
+          console.log("[v0] Opus WGPP (v3):", opusWgpp.toString())
         } catch (err) {
           console.error("[v0] Error fetching Opus WGPP:", err)
         }
 
         try {
-          codaWeth = (await codaContract.getTotalWethEarned(address)).toString()
-          console.log("[v0] Coda WETH:", codaWeth)
+          const codaWethRaw = await codaContract.getTotalWethEarned(address)
+          codaWeth = BigInt(codaWethRaw)
+          console.log("[v0] Coda WETH (v3):", codaWeth.toString())
         } catch (err) {
           console.error("[v0] Error fetching Coda WETH:", err)
         }
 
         try {
-          codaPWbtc = (await codaContract.getTotalWbtcEarned(address)).toString()
-          console.log("[v0] Coda pWBTC:", codaPWbtc)
+          const codaPWbtcRaw = await codaContract.getTotalWbtcEarned(address)
+          codaPWbtc = BigInt(codaPWbtcRaw)
+          console.log("[v0] Coda pWBTC (v3):", codaPWbtc.toString())
         } catch (err) {
           console.error("[v0] Error fetching Coda pWBTC:", err)
         }
 
         try {
-          codaPlsx = (await codaContract.getTotalPlsxEarned(address)).toString()
-          console.log("[v0] Coda PLSX:", codaPlsx)
+          const codaPlsxRaw = await codaContract.getTotalPlsxEarned(address)
+          codaPlsx = BigInt(codaPlsxRaw)
+          console.log("[v0] Coda PLSX (v3):", codaPlsx.toString())
         } catch (err) {
           console.error("[v0] Error fetching Coda PLSX:", err)
         }
+
+        try {
+          const opusV1Shares = await opusV1Contract.shares(address)
+          const missorV1 = BigInt(opusV1Shares[2]) // missorTotalRealised at index 2
+          const finvestaV1 = BigInt(opusV1Shares[4]) // finvestaTotalRealised at index 4
+          const wgppV1 = BigInt(opusV1Shares[6]) // wgppTotalRealised at index 6
+          opusMissor += missorV1
+          opusFinvesta += finvestaV1
+          opusWgpp += wgppV1
+          console.log(
+            "[v0] Opus v1 historical - Missor:",
+            missorV1.toString(),
+            "Finvesta:",
+            finvestaV1.toString(),
+            "WGPP:",
+            wgppV1.toString(),
+          )
+        } catch (err) {
+          console.error("[v0] Error fetching Opus v1 historical rewards:", err)
+        }
+
+        try {
+          const opusV2Shares = await opusV2Contract.shares(address)
+          const missorV2 = BigInt(opusV2Shares[2]) // missorTotalRealised at index 2
+          const finvestaV2 = BigInt(opusV2Shares[4]) // finvestaTotalRealised at index 4
+          const wgppV2 = BigInt(opusV2Shares[6]) // wgppTotalRealised at index 6
+          opusMissor += missorV2
+          opusFinvesta += finvestaV2
+          opusWgpp += wgppV2
+          console.log(
+            "[v0] Opus v2 historical - Missor:",
+            missorV2.toString(),
+            "Finvesta:",
+            finvestaV2.toString(),
+            "WGPP:",
+            wgppV2.toString(),
+          )
+        } catch (err) {
+          console.error("[v0] Error fetching Opus v2 historical rewards:", err)
+        }
+
+        try {
+          const codaV1Shares = await codaV1Contract.shares(address)
+          const wethV1 = BigInt(codaV1Shares[2]) // wethTotalRealised at index 2
+          const wbtcV1 = BigInt(codaV1Shares[4]) // wbtcTotalRealised at index 4
+          const plsxV1 = BigInt(codaV1Shares[6]) // plsxTotalRealised at index 6
+          codaWeth += wethV1
+          codaPWbtc += wbtcV1
+          codaPlsx += plsxV1
+          console.log(
+            "[v0] Coda v1 historical - WETH:",
+            wethV1.toString(),
+            "pWBTC:",
+            wbtcV1.toString(),
+            "PLSX:",
+            plsxV1.toString(),
+          )
+        } catch (err) {
+          console.error("[v0] Error fetching Coda v1 historical rewards:", err)
+        }
+
+        try {
+          const codaV2Shares = await codaV2Contract.shares(address)
+          const wethV2 = BigInt(codaV2Shares[2]) // wethTotalRealised at index 2
+          const wbtcV2 = BigInt(codaV2Shares[4]) // wbtcTotalRealised at index 4
+          const plsxV2 = BigInt(codaV2Shares[6]) // plsxTotalRealised at index 6
+          codaWeth += wethV2
+          codaPWbtc += wbtcV2
+          codaPlsx += plsxV2
+          console.log(
+            "[v0] Coda v2 historical - WETH:",
+            wethV2.toString(),
+            "pWBTC:",
+            wbtcV2.toString(),
+            "PLSX:",
+            plsxV2.toString(),
+          )
+        } catch (err) {
+          console.error("[v0] Error fetching Coda v2 historical rewards:", err)
+        }
+
+        distributedMissor += opusMissor
+        distributedFinvesta += opusFinvesta
+        distributedWgpp += opusWgpp
+        distributedWeth += codaWeth
+        distributedPWbtc += codaPWbtc
+        distributedPlsx += codaPlsx
 
         allRewards.push({
           address,
@@ -291,7 +543,7 @@ export default function Home() {
           },
           coda: {
             weth: ethers.formatUnits(codaWeth, 18),
-            pWbtc: ethers.formatUnits(codaPWbtc, 8),
+            Pwbtc: ethers.formatUnits(codaPWbtc, 8),
             plsx: ethers.formatUnits(codaPlsx, 18),
           },
         })
@@ -308,16 +560,29 @@ export default function Home() {
           },
           coda: {
             weth: (Number.parseFloat(acc.coda.weth) + Number.parseFloat(wallet.coda.weth)).toString(),
-            pWbtc: (Number.parseFloat(acc.coda.pWbtc) + Number.parseFloat(wallet.coda.pWbtc)).toString(),
+            Pwbtc: (Number.parseFloat(acc.coda.Pwbtc) + Number.parseFloat(wallet.coda.Pwbtc)).toString(),
             plsx: (Number.parseFloat(acc.coda.plsx) + Number.parseFloat(wallet.coda.plsx)).toString(),
           },
         }),
         {
           opus: { missor: "0", finvesta: "0", wgpp: "0" },
-          coda: { weth: "0", pWbtc: "0", plsx: "0" },
+          coda: { weth: "0", Pwbtc: "0", plsx: "0" },
         },
       )
       setTotalRewards(totals)
+
+      setTotalRewards({
+        opus: {
+          missor: ethers.formatUnits(distributedMissor, 18),
+          finvesta: ethers.formatUnits(distributedFinvesta, 8),
+          wgpp: ethers.formatUnits(distributedWgpp, 18),
+        },
+        coda: {
+          weth: ethers.formatUnits(distributedWeth, 18),
+          Pwbtc: ethers.formatUnits(distributedPWbtc, 8),
+          plsx: ethers.formatUnits(distributedPlsx, 18),
+        },
+      })
     } catch (err) {
       console.error("[v0] Error fetching rewards:", err)
       setError("Failed to fetch rewards. Please check the wallet addresses and try again.")
@@ -342,16 +607,16 @@ export default function Home() {
 
     // Check for duplicates
     const normalizedValue = value.trim().toLowerCase()
-    if (
-      normalizedValue &&
-      walletAddresses.some((addr, i) => i !== index && addr.trim().toLowerCase() === normalizedValue)
-    ) {
-      setError("This wallet address is already added")
-      setTimeout(() => setError(""), 3000)
-      return
-    }
+    const isDuplicate = walletAddresses.some((addr, i) => i !== index && addr.trim().toLowerCase() === normalizedValue)
 
-    setWalletAddresses(newAddresses)
+    if (isDuplicate) {
+      setDuplicateWarning("This wallet address is already added")
+      setTimeout(() => setDuplicateWarning(""), 3000)
+      // Optionally, you might want to revert the change or prevent it from being applied
+    } else {
+      setDuplicateWarning("") // Clear the warning if the address is not a duplicate
+      setWalletAddresses(newAddresses)
+    }
   }
 
   return (
@@ -429,7 +694,7 @@ export default function Home() {
                   </li>
                   {liquidityData.opus && (
                     <li className="text-xs text-slate-400 mt-3 space-y-1">
-                      <div className="font-medium text-slate-300 mb-2">Added to liquidity since 28 December 2025:</div>
+                      <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
                       <div className="flex justify-between pl-2">
                         <span>Opus</span>
                         <span>{formatWithCommas(liquidityData.opus.opusAdded, 2)}</span>
@@ -464,7 +729,7 @@ export default function Home() {
                   </li>
                   {liquidityData.coda && (
                     <li className="text-xs text-slate-400 mt-3 space-y-1">
-                      <div className="font-medium text-slate-300 mb-2">Added to liquidity since 28 December 2025:</div>
+                      <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
                       <div className="flex justify-between pl-2">
                         <span>Coda</span>
                         <span>{formatWithCommas(liquidityData.coda.codaAdded, 2)}</span>
@@ -478,22 +743,120 @@ export default function Home() {
                 </ul>
               </div>
             </div>
+
+            {totalDistributed && (
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="max-w-6xl mx-auto py-12 text-center"
+              >
+                <h2 className="text-2xl md:text-3xl font-medium text-center mb-8 text-slate-200">
+                  Total distributed rewards
+                </h2>
+                <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                  {/* Opus Rewards */}
+                  <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 space-y-5">
+                    <h3 className="text-lg font-medium text-orange-400 mb-4">Opus Rewards</h3>
+                    <div className="space-y-5 text-left">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-300">Missor:</span>
+                        <span className="text-slate-100 text-right">
+                          {formatWithCommas(totalDistributed.missor)}{" "}
+                          <span className="text-slate-400 text-sm">
+                            ($
+                            {formatWithCommas(
+                              (Number.parseFloat(totalDistributed.missor) * tokenPrices.missor).toFixed(2),
+                            )}
+                            )
+                          </span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-300">Finvesta:</span>
+                        <span className="text-slate-100 text-right">
+                          {formatWithCommas(totalDistributed.finvesta)}{" "}
+                          <span className="text-slate-400 text-sm">
+                            ($
+                            {formatWithCommas(
+                              (Number.parseFloat(totalDistributed.finvesta) * tokenPrices.finvesta).toFixed(2),
+                            )}
+                            )
+                          </span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-300">WGPP:</span>
+                        <span className="text-slate-100 text-right">
+                          {formatWithCommas(totalDistributed.wgpp)}{" "}
+                          <span className="text-slate-400 text-sm">
+                            ($
+                            {formatWithCommas((Number.parseFloat(totalDistributed.wgpp) * tokenPrices.wgpp).toFixed(2))}
+                            )
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Coda Rewards */}
+                  <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 space-y-5">
+                    <h3 className="text-lg font-medium text-cyan-400 mb-4">Coda Rewards</h3>
+                    <div className="space-y-5 text-left">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-300">WETH:</span>
+                        <span className="text-slate-100 text-right">
+                          {formatDecimals(totalDistributed.weth, 4)}{" "}
+                          <span className="text-slate-400 text-sm">
+                            ($
+                            {formatWithCommas((Number.parseFloat(totalDistributed.weth) * tokenPrices.weth).toFixed(2))}
+                            )
+                          </span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-300">pWBTC:</span>
+                        <span className="text-slate-100 text-right">
+                          {formatDecimals(totalDistributed.Pwbtc, 4)}{" "}
+                          <span className="text-slate-400 text-sm">
+                            ($
+                            {formatWithCommas(
+                              (Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc).toFixed(2),
+                            )}
+                            )
+                          </span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-300">PLSX:</span>
+                        <span className="text-slate-100 text-right">
+                          {formatWithCommas(totalDistributed.plsx)}{" "}
+                          <span className="text-slate-400 text-sm">
+                            ($
+                            {formatWithCommas((Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx).toFixed(2))}
+                            )
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.section>
+            )}
+
             <motion.section
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="py-16 text-center"
+              className="max-w-6xl mx-auto py-16 text-center"
             >
               <div className="max-w-6xl mx-auto px-4">
                 <h2 className="text-2xl md:text-3xl font-medium text-center mb-12 text-slate-200">
                   See what has accrued by holding Opus and Coda
                 </h2>
-                <p className="text-slate-400 text-sm text-center mb-6 -mt-8">Rewards tracked since 28 December, 2025</p>
 
                 <div className="space-y-6 max-w-4xl mx-auto w-full">
-                  {" "}
-                  {/* Added max-w-4xl mx-auto to constrain and center the checker */}
-                  <div className="rounded-2xl bg-gradient-to-br from-[#1a2847] to-[#0f1629] border border-cyan-500/30 p-4 sm:p-8 shadow-2xl">
+                  <div className="rounded-2xl bg-gradient-to-br from-[#1a2847] to-[#0f1729] border border-cyan-500/30 p-4 sm:p-8 shadow-2xl">
                     <div className="space-y-4">
                       {walletAddresses.map((address, index) => (
                         <div key={index} className="grid grid-cols-[1fr_auto] gap-2">
@@ -512,7 +875,7 @@ export default function Home() {
                               Remove
                             </button>
                           ) : (
-                            <div className="w-[86px]" /> // spacer = same width as button
+                            <div className="w-[86px]" />
                           )}
                         </div>
                       ))}
@@ -534,6 +897,7 @@ export default function Home() {
                       </button>
                     </div>
                     {error && <p className="text-red-400 text-sm">{error}</p>}
+                    {duplicateWarning && <p className="text-red-400 text-sm">{duplicateWarning}</p>}
 
                     <div className="mt-8 pt-8 border-t border-cyan-500/20">
                       <div className="grid md:grid-cols-2 gap-6">
@@ -586,6 +950,7 @@ export default function Home() {
                   {/* Rewards Display */}
                   {rewards && rewards.length > 0 && (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                      {/* Fixed section to display wallet totalRewards instead of global totalDistributed */}
                       {rewards.length > 1 && totalRewards && (
                         <motion.div
                           initial={{ opacity: 0 }}
@@ -593,7 +958,7 @@ export default function Home() {
                           className="grid md:grid-cols-2 gap-6 mt-8 border-t border-slate-700/50 pt-8"
                         >
                           <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-700/50">
-                            <h3 className="text-xl font-medium mb-4 text-orange-300 text-center">
+                            <h3 className="text-xl font-medium mb-4 text-orange-400 text-center">
                               Total Opus rewards
                               {tokenPrices.missor > 0 && tokenPrices.finvesta > 0 && tokenPrices.wgpp > 0 && (
                                 <span className="text-slate-400 text-base ml-2">
@@ -664,18 +1029,20 @@ export default function Home() {
                             </div>
                           </div>
                           <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-700/50">
-                            <h3 className="text-xl font-medium mb-4 text-cyan-300 text-center">
+                            <h3 className="text-xl font-medium mb-4 text-cyan-400 text-center">
                               Total Coda rewards
-                              {tokenPrices.weth > 0 && tokenPrices.pWbtc > 0 && tokenPrices.plsx > 0 && (
+                              {tokenPrices.weth > 0 && tokenPrices.Pwbtc > 0 && tokenPrices.plsx > 0 && (
                                 <span className="text-slate-400 text-base ml-2">
                                   ($
-                                  {formatDecimals(
-                                    (
-                                      Number.parseFloat(totalRewards.coda.weth) * tokenPrices.weth +
-                                      Number.parseFloat(totalRewards.coda.pWbtc) * tokenPrices.pWbtc +
-                                      Number.parseFloat(totalRewards.coda.plsx) * tokenPrices.plsx
-                                    ).toString(),
-                                    2,
+                                  {formatWithCommas(
+                                    formatDecimals(
+                                      (
+                                        Number.parseFloat(totalRewards.coda.weth) * tokenPrices.weth +
+                                        Number.parseFloat(totalRewards.coda.Pwbtc) * tokenPrices.Pwbtc +
+                                        Number.parseFloat(totalRewards.coda.plsx) * tokenPrices.plsx
+                                      ).toString(),
+                                      2,
+                                    ),
                                   )}
                                   )
                                 </span>
@@ -701,12 +1068,12 @@ export default function Home() {
                               <div className="flex justify-between items-center">
                                 <span className="text-slate-300">pWBTC:</span>
                                 <span className="text-slate-100 font-medium">
-                                  {formatDecimals(totalRewards.coda.pWbtc, 4)}
-                                  {tokenPrices.pWbtc > 0 && (
+                                  {formatDecimals(totalRewards.coda.Pwbtc, 4)}
+                                  {tokenPrices.Pwbtc > 0 && (
                                     <span className="text-slate-400 text-sm ml-2">
                                       ($
                                       {formatDecimals(
-                                        (Number.parseFloat(totalRewards.coda.pWbtc) * tokenPrices.pWbtc).toString(),
+                                        (Number.parseFloat(totalRewards.coda.Pwbtc) * tokenPrices.Pwbtc).toString(),
                                         2,
                                       )}
                                       )
@@ -717,7 +1084,7 @@ export default function Home() {
                               <div className="flex justify-between items-center">
                                 <span className="text-slate-300">PLSX:</span>
                                 <span className="text-slate-100 font-medium">
-                                  {formatWithCommas(totalRewards.coda.plsx)}
+                                  {formatDecimals(totalRewards.coda.plsx, 2)}
                                   {tokenPrices.plsx > 0 && (
                                     <span className="text-slate-400 text-sm ml-2">
                                       ($
@@ -825,18 +1192,18 @@ export default function Home() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="flex justify-between items-start gap-4">
+                                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                                     <span className="text-slate-300 flex-shrink-0">pWBTC:</span>
                                     <div className="text-right flex-shrink-0">
-                                      <div className="text-slate-100 font-medium whitespace-nowrap">
-                                        {formatDecimals(walletRewards.coda.pWbtc, 4)}
+                                      <div className="whitespace-nowrap text-slate-100">
+                                        {formatDecimals(walletRewards.coda.Pwbtc, 4)}
                                       </div>
-                                      {tokenPrices.pWbtc > 0 && (
-                                        <div className="text-slate-400 text-sm whitespace-nowrap">
+                                      {tokenPrices.Pwbtc > 0 && (
+                                        <div className="text-xs text-slate-400 whitespace-nowrap">
                                           $
                                           {formatDecimals(
                                             (
-                                              Number.parseFloat(walletRewards.coda.pWbtc) * tokenPrices.pWbtc
+                                              Number.parseFloat(walletRewards.coda.Pwbtc) * tokenPrices.Pwbtc
                                             ).toString(),
                                             2,
                                           )}
