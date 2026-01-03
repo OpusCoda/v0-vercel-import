@@ -759,42 +759,42 @@ export default function Home() {
                   <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 space-y-5">
                     <h3 className="text-lg font-medium text-orange-400 mb-4">Opus Rewards</h3>
                     <div className="space-y-5 text-left">
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">Missor:</span>
-                        <span className="text-slate-100 text-right">
-                          {formatWithCommas(totalDistributed.missor)}{" "}
-                          <span className="text-slate-400 text-sm">
+                        <div className="text-right">
+                          <div className="text-slate-100">{formatWithCommas(totalDistributed.missor)}</div>
+                          <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas(
                               (Number.parseFloat(totalDistributed.missor) * tokenPrices.missor).toFixed(2),
                             )}
                             )
-                          </span>
-                        </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">Finvesta:</span>
-                        <span className="text-slate-100 text-right">
-                          {formatWithCommas(totalDistributed.finvesta)}{" "}
-                          <span className="text-slate-400 text-sm">
+                        <div className="text-right">
+                          <div className="text-slate-100">{formatWithCommas(totalDistributed.finvesta)}</div>
+                          <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas(
                               (Number.parseFloat(totalDistributed.finvesta) * tokenPrices.finvesta).toFixed(2),
                             )}
                             )
-                          </span>
-                        </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">WGPP:</span>
-                        <span className="text-slate-100 text-right">
-                          {formatWithCommas(totalDistributed.wgpp)}{" "}
-                          <span className="text-slate-400 text-sm">
+                        <div className="text-right">
+                          <div className="text-slate-100">{formatWithCommas(totalDistributed.wgpp)}</div>
+                          <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas((Number.parseFloat(totalDistributed.wgpp) * tokenPrices.wgpp).toFixed(2))}
                             )
-                          </span>
-                        </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -803,40 +803,40 @@ export default function Home() {
                   <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 space-y-5">
                     <h3 className="text-lg font-medium text-cyan-400 mb-4">Coda Rewards</h3>
                     <div className="space-y-5 text-left">
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">WETH:</span>
-                        <span className="text-slate-100 text-right">
-                          {formatDecimals(totalDistributed.weth, 4)}{" "}
-                          <span className="text-slate-400 text-sm">
+                        <div className="text-right">
+                          <div className="text-slate-100">{formatDecimals(totalDistributed.weth, 4)}</div>
+                          <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas((Number.parseFloat(totalDistributed.weth) * tokenPrices.weth).toFixed(2))}
                             )
-                          </span>
-                        </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">pWBTC:</span>
-                        <span className="text-slate-100 text-right">
-                          {formatDecimals(totalDistributed.Pwbtc, 4)}{" "}
-                          <span className="text-slate-400 text-sm">
+                        <div className="text-right">
+                          <div className="text-slate-100">{formatDecimals(totalDistributed.Pwbtc, 4)}</div>
+                          <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas(
                               (Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc).toFixed(2),
                             )}
                             )
-                          </span>
-                        </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">PLSX:</span>
-                        <span className="text-slate-100 text-right">
-                          {formatWithCommas(totalDistributed.plsx)}{" "}
-                          <span className="text-slate-400 text-sm">
+                        <div className="text-right">
+                          <div className="text-slate-100">{formatWithCommas(totalDistributed.plsx)}</div>
+                          <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas((Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx).toFixed(2))}
                             )
-                          </span>
-                        </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
