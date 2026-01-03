@@ -1202,14 +1202,14 @@ export default function Home() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                                  <div className="flex justify-between items-start gap-4">
                                     <span className="text-slate-300 flex-shrink-0">pWBTC:</span>
                                     <div className="text-right flex-shrink-0">
-                                      <div className="whitespace-nowrap text-slate-100">
+                                      <div className="text-slate-100 font-medium whitespace-nowrap">
                                         {formatDecimals(walletRewards.coda.Pwbtc, 4)}
                                       </div>
                                       {tokenPrices.Pwbtc > 0 && (
-                                        <div className="text-xs text-slate-400 whitespace-nowrap">
+                                        <div className="text-slate-400 text-sm whitespace-nowrap">
                                           $
                                           {formatDecimals(
                                             (
