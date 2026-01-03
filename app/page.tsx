@@ -111,6 +111,7 @@ export default function Home() {
 
   const fetchLiquidityData = async () => {
     try {
+      console.log("[v0] Fetching liquidity data...")
       const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL!)
 
       // Fetch Opus liquidity data
@@ -118,20 +119,26 @@ export default function Home() {
         to: OPUS_CONTRACT,
         data: "0x77e34bcf", // totalOpusLpAdded
       })
+      console.log("[v0] Raw Opus LP added:", opusLpAddedData)
+
       const opusPlsLpAddedData = await provider.call({
         to: OPUS_CONTRACT,
         data: "0x2f6ec43a", // totalPlsLpAdded
       })
+      console.log("[v0] Raw Opus PLS LP added:", opusPlsLpAddedData)
 
       // Fetch Coda liquidity data
       const codaLpAddedData = await provider.call({
         to: CODA_CONTRACT,
         data: "0x2af2db78", // totalCodaLpAdded
       })
+      console.log("[v0] Raw Coda LP added:", codaLpAddedData)
+
       const codaPlsLpAddedData = await provider.call({
         to: CODA_CONTRACT,
         data: "0x2f6ec43a", // totalPlsLpAdded
       })
+      console.log("[v0] Raw Coda PLS LP added:", codaPlsLpAddedData)
 
       // Baseline PLS for Opus liquidity (pre-tracking amounts)
       const opusPlsBaseline1 = BigInt("49666029536348406754405890")
@@ -143,7 +150,7 @@ export default function Home() {
       const codaPlsBaseline2 = BigInt("16191801870025447450804067")
       const totalCodaPls = BigInt(codaPlsLpAddedData) + codaPlsBaseline1 + codaPlsBaseline2
 
-      setLiquidityData({
+      const formattedData = {
         opus: {
           opusAdded: ethers.formatUnits(opusLpAddedData, 18),
           plsAdded: ethers.formatUnits(totalOpusPls.toString(), 18), // Use total with baseline
@@ -152,9 +159,12 @@ export default function Home() {
           codaAdded: ethers.formatUnits(codaLpAddedData, 18),
           plsAdded: ethers.formatUnits(totalCodaPls.toString(), 18), // Use total with baseline
         },
-      })
+      }
+
+      console.log("[v0] Formatted liquidity data:", formattedData)
+      setLiquidityData(formattedData)
     } catch (error) {
-      console.error("Failed to fetch liquidity data:", error)
+      console.error("[v0] Failed to fetch liquidity data:", error)
     }
   }
 
