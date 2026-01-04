@@ -719,11 +719,11 @@ export default function Home() {
                 <ul className="space-y-2 text-slate-300">
                   <li className="flex justify-between">
                     <span>Missor</span>
-                    <span className="text-orange-300 font-medium">3%</span>
+                    <span className="text-orange-300 font-medium">1%</span>
                   </li>
                   <li className="flex justify-between">
                     <span>Finvesta</span>
-                    <span className="text-orange-300 font-medium">1%</span>
+                    <span className="text-orange-300 font-medium">3%</span>
                   </li>
                   <li className="flex justify-between">
                     <span>World's Greatest pDAI Printer</span>
