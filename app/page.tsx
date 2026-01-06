@@ -407,7 +407,7 @@ export default function Home() {
     try {
       const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
       const opusContract = new ethers.Contract(OPUS_CONTRACT, OPUS_ABI, provider)
-      const codaContract = new ethers.Contract(CODA_CONTRACT, CODA_ABI, provider)
+      const codaContract = new ethers.Contract(CODA_ABI, CODA_ABI, provider)
 
       const opusTokenContract = new ethers.Contract(OPUS_CONTRACT, BALANCE_ABI, provider)
       const codaTokenContract = new ethers.Contract(CODA_CONTRACT, BALANCE_ABI, provider)
@@ -811,7 +811,7 @@ export default function Home() {
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">Missor:</span>
                         <div className="text-right">
-                          <div className="text-slate-100">{formatMillions(totalDistributed.missor)}</div>
+                          <div className="text-slate-100">{formatMillions(totalDistributed.missor, 2)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas(
