@@ -49,7 +49,7 @@ const SHARES_ABI = [
 ]
 
 const CODA_SHARES_ABI = [
-  "function shares(address) view returns (uint256 amount, uint256 wethTotalExcluded, uint256 wethTotalRealised, uint256 wbtcTotalExcluded, uint256 wbtcTotalRealised, uint256 plsTotalExcluded, uint256 plsxTotalRealised)", // 0xce7c2ac2 for Coda
+  "function shares(address) view returns (uint256 amount, uint256 wethTotalExcluded, uint256 wethTotalRealised, uint256 wbtcTotalExcluded, uint256 wbtcTotalRealised, uint256 plsTotalExcluded, uint256 plsTotalRealised)", // 0xce7c2ac2 for Coda
 ]
 
 const DISTRIBUTOR_ABI = [
@@ -407,7 +407,7 @@ export default function Home() {
     try {
       const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
       const opusContract = new ethers.Contract(OPUS_CONTRACT, OPUS_ABI, provider)
-      const codaContract = new ethers.Contract(CODA_ABI, CODA_ABI, provider)
+      const codaContract = new ethers.Contract(CODA_CONTRACT, CODA_ABI, provider)
 
       const opusTokenContract = new ethers.Contract(OPUS_CONTRACT, BALANCE_ABI, provider)
       const codaTokenContract = new ethers.Contract(CODA_CONTRACT, BALANCE_ABI, provider)
@@ -546,7 +546,7 @@ export default function Home() {
           const codaV1Shares = await codaV1Contract.shares(address)
           const wethV1 = BigInt(codaV1Shares[2]) // wethTotalRealised at index 2
           const wbtcV1 = BigInt(codaV1Shares[4]) // wbtcTotalRealised at index 4
-          const plsxV1 = BigInt(codaV1Shares[6]) // plsxTotalRealised at index 6
+          const plsxV1 = BigInt(codaV1Shares[6]) // plsTotalRealised at index 6
           codaWeth += wethV1
           codaPWbtc += wbtcV1
           codaPlsx += plsxV1
@@ -566,7 +566,7 @@ export default function Home() {
           const codaV2Shares = await codaV2Contract.shares(address)
           const wethV2 = BigInt(codaV2Shares[2]) // wethTotalRealised at index 2
           const wbtcV2 = BigInt(codaV2Shares[4]) // wbtcTotalRealised at index 4
-          const plsxV2 = BigInt(codaV2Shares[6]) // plsxTotalRealised at index 6
+          const plsxV2 = BigInt(codaV2Shares[6]) // plsTotalRealised at index 6
           codaWeth += wethV2
           codaPWbtc += wbtcV2
           codaPlsx += plsxV2
