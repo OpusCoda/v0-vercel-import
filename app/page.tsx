@@ -18,6 +18,14 @@ const formatWithCommas = (v: string, decimals = 0) => {
   return decimals > 0 ? `${withCommas}.${d.padEnd(decimals, "0").slice(0, decimals)}` : withCommas
 }
 
+const formatMillions = (v: string, decimals = 1) => {
+  const num = Number.parseFloat(v)
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(decimals)}M`
+  }
+  return formatWithCommas(v)
+}
+
 const OPUS_CONTRACT = "0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4"
 const CODA_CONTRACT = "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
 const OPUS_V1_CONTRACT = "0x7251d2965f165fCE18Ae5fC4c4979e01b46057d7"
@@ -738,11 +746,11 @@ export default function Home() {
                       <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
                       <div className="flex justify-between pl-2">
                         <span>Opus</span>
-                        <span>{formatWithCommas(liquidityData.opus.opusAdded, 2)}</span>
+                        <span>{formatMillions(liquidityData.opus.opusAdded)}</span>
                       </div>
                       <div className="flex justify-between pl-2">
                         <span>PLS</span>
-                        <span>{formatWithCommas(liquidityData.opus.plsAdded, 2)}</span>
+                        <span>{formatMillions(liquidityData.opus.plsAdded)}</span>
                       </div>
                     </li>
                   )}
@@ -773,11 +781,11 @@ export default function Home() {
                       <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
                       <div className="flex justify-between pl-2">
                         <span>Coda</span>
-                        <span>{formatWithCommas(liquidityData.coda.codaAdded, 2)}</span>
+                        <span>{formatMillions(liquidityData.coda.codaAdded)}</span>
                       </div>
                       <div className="flex justify-between pl-2">
                         <span>PLS</span>
-                        <span>{formatWithCommas(liquidityData.coda.plsAdded, 2)}</span>
+                        <span>{formatMillions(liquidityData.coda.plsAdded)}</span>
                       </div>
                     </li>
                   )}
@@ -803,7 +811,7 @@ export default function Home() {
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">Missor:</span>
                         <div className="text-right">
-                          <div className="text-slate-100">{formatWithCommas(totalDistributed.missor)}</div>
+                          <div className="text-slate-100">{formatMillions(totalDistributed.missor)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas(
@@ -847,7 +855,7 @@ export default function Home() {
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">WETH:</span>
                         <div className="text-right">
-                          <div className="text-slate-100">{formatDecimals(totalDistributed.weth, 4)}</div>
+                          <div className="text-slate-100">{formatDecimals(totalDistributed.weth, 2)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas((Number.parseFloat(totalDistributed.weth) * tokenPrices.weth).toFixed(2))}
@@ -858,7 +866,7 @@ export default function Home() {
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">pWBTC:</span>
                         <div className="text-right">
-                          <div className="text-slate-100">{formatDecimals(totalDistributed.Pwbtc, 4)}</div>
+                          <div className="text-slate-100">{formatDecimals(totalDistributed.Pwbtc, 2)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas(
@@ -871,7 +879,7 @@ export default function Home() {
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">PLSX:</span>
                         <div className="text-right">
-                          <div className="text-slate-100">{formatWithCommas(totalDistributed.plsx)}</div>
+                          <div className="text-slate-100">{formatMillions(totalDistributed.plsx, 2)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas((Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx).toFixed(2))}
@@ -1215,7 +1223,7 @@ export default function Home() {
                               <div className="flex justify-between items-center">
                                 <span className="text-slate-300">PLSX:</span>
                                 <span className="text-slate-100 font-medium">
-                                  {formatWithCommas(formatDecimals(totalRewards.coda.plsx, 2))}
+                                  {formatMillions(totalRewards.coda.plsx, 2)}
                                   {tokenPrices.plsx > 0 && (
                                     <span className="text-slate-400 text-sm ml-2">
                                       ($
@@ -1307,7 +1315,7 @@ export default function Home() {
                                     <span className="text-slate-300 flex-shrink-0">Missor:</span>
                                     <div className="text-right flex-shrink-0">
                                       <div className="text-slate-100 font-medium whitespace-nowrap">
-                                        {formatWithCommas(walletRewards.opus.missor)}
+                                        {formatMillions(walletRewards.opus.missor)}
                                       </div>
                                       {tokenPrices.missor > 0 && (
                                         <div className="text-slate-400 text-sm whitespace-nowrap">
@@ -1404,7 +1412,7 @@ export default function Home() {
                                     <span className="text-slate-300 flex-shrink-0">PLSX:</span>
                                     <div className="text-right flex-shrink-0">
                                       <div className="text-slate-100 font-medium whitespace-nowrap">
-                                        {formatDecimals(walletRewards.coda.plsx, 2)}
+                                        {formatMillions(walletRewards.coda.plsx, 2)}
                                       </div>
                                       {tokenPrices.plsx > 0 && (
                                         <div className="text-slate-400 text-sm whitespace-nowrap">
@@ -1530,7 +1538,7 @@ export default function Home() {
                     viewBox="0 0 24 24"
                     aria-label="YouTube"
                   >
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.016 3.016 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-5.061 3.345-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                   </svg>
                 </div>
               </Link>
