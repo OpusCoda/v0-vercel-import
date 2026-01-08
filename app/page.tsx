@@ -816,7 +816,17 @@ export default function Home() {
                 className="max-w-6xl mx-auto py-12 text-center"
               >
                 <h2 className="text-2xl md:text-3xl font-medium text-center mb-8 text-slate-200">
-                  Total distributed rewards
+                  Total distributed rewards: $
+                  {formatWithCommas(
+                    (
+                      Number.parseFloat(totalDistributed.missor) * tokenPrices.missor +
+                      Number.parseFloat(totalDistributed.finvesta) * tokenPrices.finvesta +
+                      Number.parseFloat(totalDistributed.wgpp) * tokenPrices.wgpp +
+                      Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
+                      Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
+                      Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx
+                    ).toFixed(0),
+                  )}
                 </h2>
                 <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                   {/* Opus Rewards */}
@@ -1137,9 +1147,7 @@ export default function Home() {
                                           return (
                                             <>
                                               ${formatWithCommas(formatDecimals(totalAccumulatedValue.toString(), 2))}{" "}
-                                              <span className="text-slate-500 text-sm">
-                                                ({percentage.toFixed(1)}% of total holdings value)
-                                              </span>
+                                              <span className="text-slate-500 text-sm">({percentage.toFixed(1)}%)</span>
                                             </>
                                           )
                                         })()}
@@ -1569,9 +1577,10 @@ export default function Home() {
                                                     $
                                                     {formatDecimals(
                                                       (
-                                                        Number.parseFloat(totalRewards.coda.weth) * tokenPrices.weth +
-                                                        Number.parseFloat(totalRewards.coda.Pwbtc) * tokenPrices.Pwbtc +
-                                                        Number.parseFloat(totalRewards.coda.plsx) * tokenPrices.plsx
+                                                        Number.parseFloat(walletRewards.coda.weth) * tokenPrices.weth +
+                                                        Number.parseFloat(walletRewards.coda.Pwbtc) *
+                                                          tokenPrices.Pwbtc +
+                                                        Number.parseFloat(walletRewards.coda.plsx) * tokenPrices.plsx
                                                       ).toString(),
                                                       2,
                                                     )}
