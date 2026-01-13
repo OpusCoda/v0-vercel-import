@@ -29,15 +29,25 @@ const roboto = Roboto({
 export const metadata = {
   title: "Pulsechain Portfolio Tracker",
   description: "Track your Pulsechain assets",
+  icons: {
+    icon: [
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+  },
+  manifest: "/site.webmanifest",
+  appleWebApp: {
+    title: "OpusCoda",
+  },
     generator: 'v0.app'
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={`${merriweather.variable} ${sacramento.variable} ${inter.variable} ${roboto.variable}`}
-      >
+      <body className={`${merriweather.variable} ${sacramento.variable} ${inter.variable} ${roboto.variable}`}>
         {children}
       </body>
     </html>
