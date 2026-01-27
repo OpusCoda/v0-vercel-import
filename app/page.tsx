@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { ethers } from "ethers"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
+import { Rewards24hCard } from "@/components/rewards-24h-card"
 
 const formatDecimals = (v: string, decimals = 0) => {
   const [i, d = ""] = v.split(".")
@@ -25,6 +26,14 @@ const formatMillions = (v: string | number, decimals = 1) => {
     return `${(num / 1000000).toFixed(decimals)}M`
   }
   return formatWithCommas(typeof v === "string" ? v : v.toString())
+}
+
+const formatBillions = (v: string | number, decimals = 2) => {
+  const num = typeof v === "string" ? Number.parseFloat(v) : v
+  if (num >= 1000000000) {
+    return `${(num / 1000000000).toFixed(decimals)}B`
+  }
+  return formatMillions(v, decimals)
 }
 
 const OPUS_CONTRACT = "0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4"
@@ -141,58 +150,46 @@ export default function Home() {
 
   const fetchLiquidityData = async () => {
     try {
-      console.log("[v0] Fetching liquidity data...")
       const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL!)
 
-      // Fetch Opus liquidity data
-      const opusLpAddedData = await provider.call({
-        to: OPUS_CONTRACT,
-        data: "0x77e34bcf", // totalOpusLpAdded
-      })
-      console.log("[v0] Raw Opus LP added:", opusLpAddedData)
+      // Helper to safely call contract
+      const safeCall = async (to: string, data: string): Promise<bigint> => {
+        try {
+          const result = await provider.call({ to, data })
+          return result && result !== "0x" ? BigInt(result) : 0n
+        } catch {
+          return 0n
+        }
+      }
 
-      const opusPlsLpAddedData = await provider.call({
-        to: OPUS_CONTRACT,
-        data: "0x2f6ec43a", // totalPlsLpAdded
-      })
-      console.log("[v0] Raw Opus PLS LP added:", opusPlsLpAddedData)
-
-      // Fetch Coda liquidity data
-      const codaLpAddedData = await provider.call({
-        to: CODA_CONTRACT,
-        data: "0x2af2db78", // totalCodaLpAdded
-      })
-      console.log("[v0] Raw Coda LP added:", codaLpAddedData)
-
-      const codaPlsLpAddedData = await provider.call({
-        to: CODA_CONTRACT,
-        data: "0x2f6ec43a", // totalPlsLpAdded
-      })
-      console.log("[v0] Raw Coda PLS LP added:", codaPlsLpAddedData)
+      // Fetch all liquidity data in parallel
+      const [opusLpAdded, opusPlsLpAdded, codaLpAdded, codaPlsLpAdded] = await Promise.all([
+        safeCall(OPUS_CONTRACT, "0x77e34bcf"), // totalOpusLpAdded
+        safeCall(OPUS_CONTRACT, "0x2f6ec43a"), // totalPlsLpAdded
+        safeCall(CODA_CONTRACT, "0x2af2db78"), // totalCodaLpAdded
+        safeCall(CODA_CONTRACT, "0x2f6ec43a"), // totalPlsLpAdded
+      ])
 
       // Baseline PLS for Opus liquidity (pre-tracking amounts)
       const opusPlsBaseline1 = BigInt("49666029536348406754405890")
       const opusPlsBaseline2 = BigInt("17938960181623487006781877")
-      const totalOpusPls = BigInt(opusPlsLpAddedData) + opusPlsBaseline1 + opusPlsBaseline2
+      const totalOpusPls = opusPlsLpAdded + opusPlsBaseline1 + opusPlsBaseline2
 
       // Baseline PLS for Coda liquidity (pre-tracking amounts)
       const codaPlsBaseline1 = BigInt("39551834742159002925770986")
       const codaPlsBaseline2 = BigInt("16191801870025447450804067")
-      const totalCodaPls = BigInt(codaPlsLpAddedData) + codaPlsBaseline1 + codaPlsBaseline2
+      const totalCodaPls = codaPlsLpAdded + codaPlsBaseline1 + codaPlsBaseline2
 
-      const formattedData = {
+      setLiquidityData({
         opus: {
-          opusAdded: ethers.formatUnits(opusLpAddedData, 18),
-          plsAdded: ethers.formatUnits(totalOpusPls.toString(), 18), // Use total with baseline
+          opusAdded: ethers.formatUnits(opusLpAdded, 18),
+          plsAdded: ethers.formatUnits(totalOpusPls, 18),
         },
         coda: {
-          codaAdded: ethers.formatUnits(codaLpAddedData, 18),
-          plsAdded: ethers.formatUnits(totalCodaPls.toString(), 18), // Use total with baseline
+          codaAdded: ethers.formatUnits(codaLpAdded, 18),
+          plsAdded: ethers.formatUnits(totalCodaPls, 18),
         },
-      }
-
-      console.log("[v0] Formatted liquidity data:", formattedData)
-      setLiquidityData(formattedData)
+      })
     } catch (error) {
       console.error("[v0] Failed to fetch liquidity data:", error)
     }
@@ -208,78 +205,58 @@ export default function Home() {
     try {
       const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
 
+      // Helper to safely call contract using raw provider.call
+      const safeCall = async (to: string, data: string): Promise<bigint> => {
+        try {
+          const result = await provider.call({ to, data })
+          return result && result !== "0x" ? BigInt(result) : 0n
+        } catch {
+          return 0n
+        }
+      }
+
+      // Function selectors computed from keccak256 hash of function signature
+      const SEL = {
+        missor: ethers.id("totalMissorDistributed()").slice(0, 10),
+        finvesta: ethers.id("totalFinvestaDistributed()").slice(0, 10),
+        wgpp: ethers.id("totalWgppDistributed()").slice(0, 10),
+        weth: ethers.id("totalWethDistributed()").slice(0, 10),
+        wbtc: ethers.id("totalWbtcDistributed()").slice(0, 10),
+        plsx: ethers.id("totalPlsxDistributed()").slice(0, 10),
+      }
+
       // Opus distributor contract addresses (v1, v2, v3)
-      const opusDistributors = [
-        "0x7251d2965f165fCE18Ae5fC4c4979e01b46057d7", // v1
-        "0x90501f0C51c3aaDc76c9b27E501b68Db153Dcc81", // v2
-        "0xD14594f3c736E0D742Cfe2C3A177fb813c1C04B9", // v3
+      const opus = [
+        "0x7251d2965f165fCE18Ae5fC4c4979e01b46057d7",
+        "0x90501f0C51c3aaDc76c9b27E501b68Db153Dcc81",
+        "0xD14594f3c736E0D742Cfe2C3A177fb813c1C04B9",
       ]
 
       // Coda distributor contract addresses (v1, v2, v3)
-      const codaDistributors = [
-        "0xD9857f41E67812dbDFfdD3269B550836EC131D0C", // v1
-        "0x502E10403E20D6Ff42CBBDa7fdDC4e1315Da19AF", // v2
-        "0x2924Dc56bb4eeF50d0d32D8aCD6AA7c61aFa5dfe", // v3
+      const coda = [
+        "0xD9857f41E67812dbDFfdD3269B550836EC131D0C",
+        "0x502E10403E20D6Ff42CBBDa7fdDC4e1315Da19AF",
+        "0x2924Dc56bb4eeF50d0d32D8aCD6AA7c61aFa5dfe",
       ]
 
-      let totalMissor = 0n
-      let totalFinvesta = 0n
-      let totalWgpp = 0n
+      // Fetch all values in parallel using raw provider.call
+      const results = await Promise.all([
+        // Opus: missor, finvesta, wgpp for each distributor
+        safeCall(opus[0], SEL.missor), safeCall(opus[1], SEL.missor), safeCall(opus[2], SEL.missor),
+        safeCall(opus[0], SEL.finvesta), safeCall(opus[1], SEL.finvesta), safeCall(opus[2], SEL.finvesta),
+        safeCall(opus[0], SEL.wgpp), safeCall(opus[1], SEL.wgpp), safeCall(opus[2], SEL.wgpp),
+        // Coda: weth, wbtc, plsx for each distributor
+        safeCall(coda[0], SEL.weth), safeCall(coda[1], SEL.weth), safeCall(coda[2], SEL.weth),
+        safeCall(coda[0], SEL.wbtc), safeCall(coda[1], SEL.wbtc), safeCall(coda[2], SEL.wbtc),
+        safeCall(coda[0], SEL.plsx), safeCall(coda[1], SEL.plsx), safeCall(coda[2], SEL.plsx),
+      ])
 
-      for (const address of opusDistributors) {
-        const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
-        try {
-          const missor = await contract.totalMissorDistributed()
-          totalMissor += BigInt(missor)
-        } catch (err) {
-          console.error(`[v0] Error fetching Missor from ${address}:`, err)
-        }
-        try {
-          const finvesta = await contract.totalFinvestaDistributed()
-          totalFinvesta += BigInt(finvesta)
-        } catch (err) {
-          console.error(`[v0] Error fetching Finvesta from ${address}:`, err)
-        }
-        try {
-          const wgpp = await contract.totalWgppDistributed()
-          totalWgpp += BigInt(wgpp)
-        } catch (err) {
-          console.error(`[v0] Error fetching WGPP from ${address}:`, err)
-        }
-      }
-
-      let totalWeth = 0n
-      let totalPwbtc = 0n
-      let totalPlsx = 0n
-
-      for (const address of codaDistributors) {
-        const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
-        try {
-          const weth = await contract.totalWethDistributed()
-          totalWeth += BigInt(weth)
-        } catch (err) {
-          console.error(`[v0] Error fetching WETH from ${address}:`, err)
-        }
-        try {
-          const Pwbtc = await contract.totalWbtcDistributed()
-          totalPwbtc += BigInt(Pwbtc)
-        } catch (err) {
-          console.error(`[v0] Error fetching pWBTC from ${address}:`, err)
-        }
-        try {
-          const plsx = await contract.totalPlsxDistributed()
-          totalPlsx += BigInt(plsx)
-        } catch (err) {
-          console.error(`[v0] Error fetching PLSX from ${address}:`, err)
-        }
-      }
-
-      console.log("[v0] Total Missor:", totalMissor.toString())
-      console.log("[v0] Total Finvesta:", totalFinvesta.toString())
-      console.log("[v0] Total WGPP:", totalWgpp.toString())
-      console.log("[v0] Total WETH:", totalWeth.toString())
-      console.log("[v0] Total pWBTC:", totalPwbtc.toString())
-      console.log("[v0] Total PLSX:", totalPlsx.toString())
+      const totalMissor = results[0] + results[1] + results[2]
+      const totalFinvesta = results[3] + results[4] + results[5]
+      const totalWgpp = results[6] + results[7] + results[8]
+      const totalWeth = results[9] + results[10] + results[11]
+      const totalPwbtc = results[12] + results[13] + results[14]
+      const totalPlsx = results[15] + results[16] + results[17]
 
       setTotalDistributed({
         missor: ethers.formatUnits(totalMissor, 18),
@@ -946,9 +923,9 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="flex justify-between items-start gap-8">
-                        <span className="text-slate-300">PLSX:</span>
-                        <div className="text-right">
-                          <div className="text-slate-100">{formatMillions(totalDistributed.plsx, 2)}</div>
+<span className="text-slate-300">PLSX:</span>
+  <div className="text-right">
+  <div className="text-slate-100">{formatBillions(totalDistributed.plsx, 2)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas((Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx).toFixed(2))}
@@ -961,6 +938,9 @@ export default function Home() {
                 </div>
               </motion.section>
             )}
+
+            {/* 24h Changes Card - Separate component */}
+            <Rewards24hCard tokenPrices={tokenPrices} />
 
             <motion.section
               initial={{ opacity: 0, y: 20 }}
