@@ -40,20 +40,9 @@ export function Rewards24hCard({ tokenPrices }: { tokenPrices: TokenPrices | nul
       .catch(() => setData({ available: false }))
   }, [])
 
-  if (!data) return null
-  
-  if (!data.available || !data.changes) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto mt-6 px-4"
-      >
-        <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4 text-center">
-          <p className="text-slate-500 text-sm">24h change data will be available after initial collection period</p>
-        </div>
-      </motion.div>
-    )
+  // Don't render anything until real data is available
+  if (!data || !data.available || !data.changes) {
+    return null
   }
 
   const totalUsdChange = tokenPrices
