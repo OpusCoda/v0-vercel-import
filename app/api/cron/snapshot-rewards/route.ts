@@ -2,13 +2,7 @@ import { NextResponse } from "next/server"
 import { neon } from "@neondatabase/serverless"
 import { ethers } from "ethers"
 
-export async function GET(request: Request) {
-  // Verify cron secret in production
-  const authHeader = request.headers.get("authorization")
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
+export async function GET() {
   try {
     const sql = neon(process.env.DATABASE_URL!)
     const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
