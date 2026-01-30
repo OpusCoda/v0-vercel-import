@@ -988,7 +988,7 @@ export default function Home() {
                 className="mx-auto w-64 h-64 md:w-80 md:h-80 rounded-3xl shadow-[0_0_80px_rgba(249,115,22,0.35)]"
               />
               <p className="text-slate-200 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed">
-                The reliable and transparent printer ecosystem on Pulsechain
+                The reliable and consistent ecosystem on PulseChain
               </p>
             </div>
             <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
