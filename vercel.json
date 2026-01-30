@@ -1,11 +1,5 @@
 {
   "version": 2,
-  "crons": [
-    {
-      "path": "/api/cron/snapshot-rewards",
-      "schedule": "0 * * * *"
-    }
-  ],
   "env": {
     "RPC_URL": "https://rpc.pulsechain.com"
   },
