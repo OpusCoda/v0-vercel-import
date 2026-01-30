@@ -981,8 +981,8 @@ export default function Home() {
         const incPriceData = await incPriceRes.json()
         const incPrice = incPriceData.pair?.priceUsd ? Number(incPriceData.pair.priceUsd) : 0
 
-        // WBTC price (use a major pair)
-        const wbtcPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/ethereum/0xCBCdF9626bC03E24f779434178A73a0B4bad62eD")
+        // pWBTC price on Pulsechain
+        const wbtcPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf")
         const wbtcPriceData = await wbtcPriceRes.json()
         const wbtcPrice = wbtcPriceData.pair?.priceUsd ? Number(wbtcPriceData.pair.priceUsd) : 0
 
