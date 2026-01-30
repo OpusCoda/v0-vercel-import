@@ -990,7 +990,7 @@ export default function Home() {
         className="max-w-5xl w-full mx-auto px-4 py-8"
       >
         <h1 className="text-center text-6xl md:text-8xl font-['Marcellus_SC'] font-normal tracking-tight text-slate-200 mb-12">
-          Opus and Coda
+          The Opus Ecosystem
         </h1>
         <Card className="bg-[#0f172a]/90 backdrop-blur border border-blue-900/40 shadow-[0_0_80px_rgba(56,189,248,0.08)] rounded-3xl">
           <CardContent className="py-12 flex flex-col gap-14">
