@@ -148,6 +148,19 @@ export default function Home() {
   const [hsiStakes, setHsiStakes] = useState<any[]>([])
   const [hexPricePulsechain, setHexPricePulsechain] = useState(0)
   const [hexPriceEthereum, setHexPriceEthereum] = useState(0)
+  const [expandedStakeCards, setExpandedStakeCards] = useState<Set<string>>(new Set())
+
+  const toggleStakeCard = (cardId: string) => {
+    setExpandedStakeCards((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(cardId)) {
+        newSet.delete(cardId)
+      } else {
+        newSet.add(cardId)
+      }
+      return newSet
+    })
+  }
 
   const [expandedWallets, setExpandedWallets] = useState<Set<number>>(new Set())
 
@@ -1341,58 +1354,62 @@ export default function Home() {
                           </div>
 
                           {/* Total Opus Holdings */}
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span className="text-base">Total Opus holdings:</span>
-                            <span className="text-base font-normal">
-                              {formatWithCommas(
-                                rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0).toString(),
-                                0,
-                              )}
-                              {tokenPrices.opus > 0 && (
-                                <span className="text-slate-400">
-                                  {" "}
-                                  ($
-                                  {formatWithCommas(
-                                    formatDecimals(
-                                      (
-                                        rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) *
-                                        tokenPrices.opus
-                                      ).toString(),
-                                      2,
-                                    ),
-                                  )}
-                                  )
-                                </span>
-                              )}
-                            </span>
-                          </div>
+                          {rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) > 0 && (
+                            <div className="flex justify-between items-center text-slate-300">
+                              <span className="text-base">Total Opus holdings:</span>
+                              <span className="text-base font-normal">
+                                {formatWithCommas(
+                                  rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0).toString(),
+                                  0,
+                                )}
+                                {tokenPrices.opus > 0 && (
+                                  <span className="text-slate-400">
+                                    {" "}
+                                    ($
+                                    {formatWithCommas(
+                                      formatDecimals(
+                                        (
+                                          rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) *
+                                          tokenPrices.opus
+                                        ).toString(),
+                                        2,
+                                      ),
+                                    )}
+                                    )
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          )}
 
                           {/* Total Coda Holdings */}
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span className="text-base">Total Coda holdings:</span>
-                            <span className="text-base font-normal">
-                              {formatWithCommas(
-                                rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0).toString(),
-                                0,
-                              )}
-                              {tokenPrices.coda > 0 && (
-                                <span className="text-slate-400">
-                                  {" "}
-                                  ($
-                                  {formatWithCommas(
-                                    formatDecimals(
-                                      (
-                                        rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) *
-                                        tokenPrices.coda
-                                      ).toString(),
-                                      2,
-                                    ),
+                          {rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) > 0 && (
+                            <div className="flex justify-between items-center text-slate-300">
+                              <span className="text-base">Total Coda holdings:</span>
+                              <span className="text-base font-normal">
+                                {formatWithCommas(
+                                  rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0).toString(),
+                                  0,
+                                )}
+                                {tokenPrices.coda > 0 && (
+                                  <span className="text-slate-400">
+                                    {" "}
+                                    ($
+                                    {formatWithCommas(
+                                      formatDecimals(
+                                        (
+                                          rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) *
+                                          tokenPrices.coda
+                                        ).toString(),
+                                        2,
+                                      ),
+                                    )}
+                                    )
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
                                   )}
-                                  )
-                                </span>
-                              )}
-                            </span>
-                          </div>
 
                           {/* Total accumulated rewards section */}
                           {totalRewards && rewards.length > 0 && (
@@ -1584,7 +1601,9 @@ export default function Home() {
 
                     {/* Individual wallet rewards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {rewards.map((walletRewards, index) => (
+                      {rewards
+                        .filter(w => Number.parseFloat(w.holdings.opus) > 0 || Number.parseFloat(w.holdings.coda) > 0)
+                        .map((walletRewards, index) => (
                         <div
                           key={index}
                           className="rounded-2xl bg-[#111c3a] border border-slate-700/50 overflow-hidden"
@@ -1860,37 +1879,53 @@ export default function Home() {
                 transition={{ duration: 0.5 }}
                 className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
-                <div className="flex items-center justify-between mb-4">
+                <button
+                  type="button"
+                  onClick={() => toggleStakeCard("hex-pls")}
+                  className="flex items-center justify-between w-full text-left"
+                >
                   <h3 className="text-lg font-semibold text-slate-100">HEX Stakes (Pulsechain)</h3>
-                  <div className="text-sm text-slate-400">
-                    {(() => {
-                      const stakes = hexStakes.filter(s => s.chain === "Pulsechain")
-                      const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
-                      const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
-                      const totalValue = totalHex * hexPricePulsechain
-                      const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
-                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} stake${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPricePulsechain > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
-                    })()}
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-slate-400">
+                      {(() => {
+                        const stakes = hexStakes.filter(s => s.chain === "Pulsechain")
+                        const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
+                        const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
+                        const totalValue = totalHex * hexPricePulsechain
+                        const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
+                        return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} stake${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPricePulsechain > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                      })()}
+                    </div>
+                    <svg
+                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedStakeCards.has("hex-pls") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  {hexStakes.filter(s => s.chain === "Pulsechain").map((stake, idx) => {
-                    const usdValue = stake.stakedHearts * hexPricePulsechain
-                    return (
-                      <div
-                        key={`${stake.wallet}-${stake.stakeId}-${idx}`}
-                        className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
-                      >
-                        <span className="text-sm text-slate-300">
-                          Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
-                        </span>
-                        <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
-                          {hexPricePulsechain > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
+                </button>
+                {expandedStakeCards.has("hex-pls") && (
+                  <div className="space-y-2 mt-4">
+                    {hexStakes.filter(s => s.chain === "Pulsechain").map((stake, idx) => {
+                      const usdValue = stake.stakedHearts * hexPricePulsechain
+                      return (
+                        <div
+                          key={`${stake.wallet}-${stake.stakeId}-${idx}`}
+                          className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                        >
+                          <span className="text-sm text-slate-300">
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </span>
+                          <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
+                            {hexPricePulsechain > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -1901,37 +1936,53 @@ export default function Home() {
                 transition={{ duration: 0.5 }}
                 className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
-                <div className="flex items-center justify-between mb-4">
+                <button
+                  type="button"
+                  onClick={() => toggleStakeCard("hex-eth")}
+                  className="flex items-center justify-between w-full text-left"
+                >
                   <h3 className="text-lg font-semibold text-slate-100">HEX Stakes (Ethereum)</h3>
-                  <div className="text-sm text-slate-400">
-                    {(() => {
-                      const stakes = hexStakes.filter(s => s.chain === "Ethereum")
-                      const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
-                      const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
-                      const totalValue = totalHex * hexPriceEthereum
-                      const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
-                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} stake${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPriceEthereum > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
-                    })()}
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-slate-400">
+                      {(() => {
+                        const stakes = hexStakes.filter(s => s.chain === "Ethereum")
+                        const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
+                        const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
+                        const totalValue = totalHex * hexPriceEthereum
+                        const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
+                        return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} stake${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPriceEthereum > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                      })()}
+                    </div>
+                    <svg
+                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedStakeCards.has("hex-eth") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  {hexStakes.filter(s => s.chain === "Ethereum").map((stake, idx) => {
-                    const usdValue = stake.stakedHearts * hexPriceEthereum
-                    return (
-                      <div
-                        key={`${stake.wallet}-${stake.stakeId}-${idx}`}
-                        className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
-                      >
-                        <span className="text-sm text-slate-300">
-                          Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
-                        </span>
-                        <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
-                          {hexPriceEthereum > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
+                </button>
+                {expandedStakeCards.has("hex-eth") && (
+                  <div className="space-y-2 mt-4">
+                    {hexStakes.filter(s => s.chain === "Ethereum").map((stake, idx) => {
+                      const usdValue = stake.stakedHearts * hexPriceEthereum
+                      return (
+                        <div
+                          key={`${stake.wallet}-${stake.stakeId}-${idx}`}
+                          className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                        >
+                          <span className="text-sm text-slate-300">
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </span>
+                          <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
+                            {hexPriceEthereum > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -1943,37 +1994,53 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
-                <div className="flex items-center justify-between mb-4">
+                <button
+                  type="button"
+                  onClick={() => toggleStakeCard("hsi-pls")}
+                  className="flex items-center justify-between w-full text-left"
+                >
                   <h3 className="text-lg font-semibold text-slate-100">HSI Stakes (Pulsechain)</h3>
-                  <div className="text-sm text-slate-400">
-                    {(() => {
-                      const stakes = hsiStakes.filter(s => s.chain === "Pulsechain")
-                      const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
-                      const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
-                      const totalValue = totalHex * hexPricePulsechain
-                      const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
-                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} HSI${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPricePulsechain > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
-                    })()}
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-slate-400">
+                      {(() => {
+                        const stakes = hsiStakes.filter(s => s.chain === "Pulsechain")
+                        const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
+                        const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
+                        const totalValue = totalHex * hexPricePulsechain
+                        const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
+                        return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} HSI${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPricePulsechain > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                      })()}
+                    </div>
+                    <svg
+                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedStakeCards.has("hsi-pls") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  {hsiStakes.filter(s => s.chain === "Pulsechain").map((stake, idx) => {
-                    const usdValue = stake.stakedHearts * hexPricePulsechain
-                    return (
-                      <div
-                        key={`${stake.wallet}-${stake.stakeId}-${idx}`}
-                        className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
-                      >
-                        <span className="text-sm text-slate-300">
-                          Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? " (Auto)" : ""} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
-                        </span>
-                        <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
-                          {hexPricePulsechain > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
+                </button>
+                {expandedStakeCards.has("hsi-pls") && (
+                  <div className="space-y-2 mt-4">
+                    {hsiStakes.filter(s => s.chain === "Pulsechain").map((stake, idx) => {
+                      const usdValue = stake.stakedHearts * hexPricePulsechain
+                      return (
+                        <div
+                          key={`${stake.wallet}-${stake.stakeId}-${idx}`}
+                          className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                        >
+                          <span className="text-sm text-slate-300">
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? " (Auto)" : ""} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </span>
+                          <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
+                            {hexPricePulsechain > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -1984,37 +2051,53 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
-                <div className="flex items-center justify-between mb-4">
+                <button
+                  type="button"
+                  onClick={() => toggleStakeCard("hsi-eth")}
+                  className="flex items-center justify-between w-full text-left"
+                >
                   <h3 className="text-lg font-semibold text-slate-100">HSI Stakes (Ethereum)</h3>
-                  <div className="text-sm text-slate-400">
-                    {(() => {
-                      const stakes = hsiStakes.filter(s => s.chain === "Ethereum")
-                      const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
-                      const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
-                      const totalValue = totalHex * hexPriceEthereum
-                      const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
-                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} HSI${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPriceEthereum > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
-                    })()}
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-slate-400">
+                      {(() => {
+                        const stakes = hsiStakes.filter(s => s.chain === "Ethereum")
+                        const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
+                        const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
+                        const totalValue = totalHex * hexPriceEthereum
+                        const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
+                        return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} HSI${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPriceEthereum > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                      })()}
+                    </div>
+                    <svg
+                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedStakeCards.has("hsi-eth") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  {hsiStakes.filter(s => s.chain === "Ethereum").map((stake, idx) => {
-                    const usdValue = stake.stakedHearts * hexPriceEthereum
-                    return (
-                      <div
-                        key={`${stake.wallet}-${stake.stakeId}-${idx}`}
-                        className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
-                      >
-                        <span className="text-sm text-slate-300">
-                          Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? " (Auto)" : ""} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
-                        </span>
-                        <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
-                          {hexPriceEthereum > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
+                </button>
+                {expandedStakeCards.has("hsi-eth") && (
+                  <div className="space-y-2 mt-4">
+                    {hsiStakes.filter(s => s.chain === "Ethereum").map((stake, idx) => {
+                      const usdValue = stake.stakedHearts * hexPriceEthereum
+                      return (
+                        <div
+                          key={`${stake.wallet}-${stake.stakeId}-${idx}`}
+                          className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                        >
+                          <span className="text-sm text-slate-300">
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? " (Auto)" : ""} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </span>
+                          <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
+                            {hexPriceEthereum > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </motion.div>
             )}
 
