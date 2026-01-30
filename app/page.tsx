@@ -2085,7 +2085,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex justify-center gap-6 mt-8">
-              <Link href="https://x.com/OpusCodaPrinter" target="_blank" rel="noopener noreferrer" className="group">
+              <Link href="https://x.com/OpusEco" target="_blank" rel="noopener noreferrer" className="group">
                 <div className="w-14 h-14 rounded-full bg-[#111c3a] border border-blue-900/30 flex items-center justify-center hover:bg-blue-900/30 hover:border-cyan-500/50 transition-all duration-300 shadow-lg hover:shadow-cyan-500/20">
                   <svg
                     className="w-6 h-6 text-slate-400 group-hover:text-cyan-300 transition-colors"
