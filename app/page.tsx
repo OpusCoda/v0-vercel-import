@@ -1251,7 +1251,7 @@ export default function Home() {
                       disabled={loading}
                       className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-cyan-600 hover:from-orange-500 hover:to-cyan-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? "Updating..." : rewards && rewards.length > 0 ? "Update rewards" : "Check rewards"}
+                      {loading ? "Updating..." : rewards && rewards.length > 0 ? "Update" : "Where things stand"}
                     </button>
                   </div>
                   {error && <p className="text-red-400 text-sm">{error}</p>}
