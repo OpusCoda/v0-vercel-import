@@ -89,8 +89,8 @@ const HSI_MANAGER_ABI = [
 const HSI_MANAGER_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3"
 const HSI_MANAGER_ETHEREUM_ADDRESS = "0x9b0f4bb4ca43e8e0afb0ee6b4e2e64efa52e7d7a"
 
-const ETHEREUM_RPC_URL = "https://eth.llamarpc.com"
-const ETHEREUM_TIMEOUT = 10000
+const ETHEREUM_RPC_URL = "https://cloudflare-eth.com"
+const ETHEREUM_TIMEOUT = 15000
 
 export default function Home() {
   const [rewards, setRewards] = useState<
@@ -697,10 +697,13 @@ export default function Home() {
 
         // Fetch HEX Stakes (Ethereum) with timeout
         try {
+          console.log(`[v0] Fetching Ethereum HEX stakes for ${address}`)
           const fetchEthereumHEX = async () => {
             const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
             const currentDay = await hexEthContract.currentDay()
+            console.log(`[v0] Ethereum HEX currentDay: ${currentDay}`)
             const stakeCount = await hexEthContract.stakeCount(address)
+            console.log(`[v0] Ethereum HEX stake count for ${address}: ${stakeCount}`)
             for (let i = 0; i < Number(stakeCount); i++) {
               try {
                 const stake = await hexEthContract.stakeLists(address, i)
@@ -709,6 +712,7 @@ export default function Home() {
                 const daysPassed = Number(currentDay) - Number(stake.lockedDay)
                 const daysRemaining = Number(stake.stakedDays) - daysPassed
                 const isActive = stake.unlockedDay === 0
+                console.log(`[v0] Found Ethereum HEX stake ${i}: ${stakedHearts} HEX`)
                 allHexStakes.push({
                   wallet: address,
                   chain: "Ethereum",
@@ -723,14 +727,18 @@ export default function Home() {
                   daysRemaining: Math.max(0, daysRemaining),
                   isActive,
                 })
-              } catch {}
+              } catch (stakeErr) {
+                console.error(`[v0] Error fetching Ethereum HEX stake ${i}:`, stakeErr)
+              }
             }
           }
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("timeout")), ETHEREUM_TIMEOUT)
+            setTimeout(() => reject(new Error("Ethereum timeout")), ETHEREUM_TIMEOUT)
           )
           await Promise.race([fetchEthereumHEX(), timeoutPromise])
-        } catch {}
+        } catch (ethErr) {
+          console.error(`[v0] Ethereum HEX fetch error:`, ethErr)
+        }
 
         // Fetch HSI Stakes (Pulsechain)
         try {
@@ -769,11 +777,13 @@ export default function Home() {
 
         // Fetch HSI Stakes (Ethereum) with timeout
         try {
+          console.log(`[v0] Fetching Ethereum HSI stakes for ${address}`)
           const fetchEthereumHSI = async () => {
             const hsiEthContract = new ethers.Contract(HSI_MANAGER_ETHEREUM_ADDRESS, HSI_MANAGER_ABI, ethereumProvider)
             const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
             const currentDay = await hexEthContract.currentDay()
             const hsiStakeCount = await hsiEthContract.stakeCount(address)
+            console.log(`[v0] Ethereum HSI stake count for ${address}: ${hsiStakeCount}`)
             for (let i = 0; i < Number(hsiStakeCount); i++) {
               try {
                 const stake = await hsiEthContract.stakeLists(address, i)
@@ -782,6 +792,7 @@ export default function Home() {
                 const daysPassed = Number(currentDay) - Number(stake.lockedDay)
                 const daysRemaining = Number(stake.stakedDays) - daysPassed
                 const isActive = stake.unlockedDay === 0
+                console.log(`[v0] Found Ethereum HSI stake ${i}: ${stakedHearts} HEX`)
                 allHsiStakes.push({
                   wallet: address,
                   chain: "Ethereum",
@@ -797,15 +808,22 @@ export default function Home() {
                   isAutoStake: stake.isAutoStake,
                   isActive,
                 })
-              } catch {}
+              } catch (stakeErr) {
+                console.error(`[v0] Error fetching Ethereum HSI stake ${i}:`, stakeErr)
+              }
             }
           }
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("timeout")), ETHEREUM_TIMEOUT)
+            setTimeout(() => reject(new Error("Ethereum HSI timeout")), ETHEREUM_TIMEOUT)
           )
           await Promise.race([fetchEthereumHSI(), timeoutPromise])
-        } catch {}
+        } catch (ethHsiErr) {
+          console.error(`[v0] Ethereum HSI fetch error:`, ethHsiErr)
+        }
       }
+
+      console.log(`[v0] Total HEX stakes found: ${allHexStakes.length} (PLS: ${allHexStakes.filter(s => s.chain === "Pulsechain").length}, ETH: ${allHexStakes.filter(s => s.chain === "Ethereum").length})`)
+      console.log(`[v0] Total HSI stakes found: ${allHsiStakes.length} (PLS: ${allHsiStakes.filter(s => s.chain === "Pulsechain").length}, ETH: ${allHsiStakes.filter(s => s.chain === "Ethereum").length})`)
 
       // Sort stakes by chain then days remaining
       setHexStakes(allHexStakes.sort((a, b) => {
