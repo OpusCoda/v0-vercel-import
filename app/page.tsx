@@ -1223,7 +1223,7 @@ export default function Home() {
               className="max-w-6xl mx-auto py-16 px-4 text-center"
             >
               <h2 className="text-2xl md:text-3xl font-medium text-center mb-12 text-slate-200">
-                See what has accrued by holding Opus and Coda
+                See what your wallets hold
               </h2>
 
               <div className="space-y-6 max-w-4xl mx-auto w-full">
