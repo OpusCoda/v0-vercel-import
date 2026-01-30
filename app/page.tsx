@@ -87,7 +87,6 @@ const HSI_MANAGER_ABI = [
 ]
 
 const HSI_MANAGER_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3"
-const HSI_MANAGER_ETHEREUM_ADDRESS = "0x9b0f4bb4ca43e8e0afb0ee6b4e2e64efa52e7d7a"
 
 const ETHEREUM_RPC_URL = "https://ethereum.publicnode.com"
 const ETHEREUM_TIMEOUT = 20000
@@ -775,55 +774,11 @@ export default function Home() {
           }
         } catch {}
 
-        // Fetch HSI Stakes (Ethereum) with timeout
-        try {
-          console.log(`[v0] Fetching Ethereum HSI stakes for ${address}`)
-          const fetchEthereumHSI = async () => {
-            const hsiEthContract = new ethers.Contract(HSI_MANAGER_ETHEREUM_ADDRESS, HSI_MANAGER_ABI, ethereumProvider)
-            const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
-            const currentDay = await hexEthContract.currentDay()
-            const hsiStakeCount = await hsiEthContract.stakeCount(address)
-            console.log(`[v0] Ethereum HSI stake count for ${address}: ${hsiStakeCount}`)
-            for (let i = 0; i < Number(hsiStakeCount); i++) {
-              try {
-                const stake = await hsiEthContract.stakeLists(address, i)
-                const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
-                const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
-                const daysPassed = Number(currentDay) - Number(stake.lockedDay)
-                const daysRemaining = Number(stake.stakedDays) - daysPassed
-                const isActive = stake.unlockedDay === 0
-                console.log(`[v0] Found Ethereum HSI stake ${i}: ${stakedHearts} HEX`)
-                allHsiStakes.push({
-                  wallet: address,
-                  chain: "Ethereum",
-                  stakeId: stake.stakeId.toString(),
-                  stakedHearts: Number(stakedHearts),
-                  stakeShares: Number(stakeShares),
-                  lockedDay: Number(stake.lockedDay),
-                  stakedDays: Number(stake.stakedDays),
-                  unlockedDay: Number(stake.unlockedDay),
-                  currentDay: Number(currentDay),
-                  daysPassed,
-                  daysRemaining: Math.max(0, daysRemaining),
-                  isAutoStake: stake.isAutoStake,
-                  isActive,
-                })
-              } catch (stakeErr) {
-                console.error(`[v0] Error fetching Ethereum HSI stake ${i}:`, stakeErr)
-              }
-            }
-          }
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Ethereum HSI timeout")), ETHEREUM_TIMEOUT)
-          )
-          await Promise.race([fetchEthereumHSI(), timeoutPromise])
-        } catch (ethHsiErr) {
-          console.error(`[v0] Ethereum HSI fetch error:`, ethHsiErr)
-        }
+        // Note: HSI (Hedron Staking Instances) only exists on Pulsechain, not Ethereum
       }
 
       console.log(`[v0] Total HEX stakes found: ${allHexStakes.length} (PLS: ${allHexStakes.filter(s => s.chain === "Pulsechain").length}, ETH: ${allHexStakes.filter(s => s.chain === "Ethereum").length})`)
-      console.log(`[v0] Total HSI stakes found: ${allHsiStakes.length} (PLS: ${allHsiStakes.filter(s => s.chain === "Pulsechain").length}, ETH: ${allHsiStakes.filter(s => s.chain === "Ethereum").length})`)
+      console.log(`[v0] Total HSI stakes found: ${allHsiStakes.length} (Pulsechain only)`)
 
       // Sort stakes by chain then days remaining
       setHexStakes(allHexStakes.sort((a, b) => {
@@ -1925,7 +1880,7 @@ export default function Home() {
                 className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-100">HSI Stakes (Pulsechain)</h3>
+                  <h3 className="text-lg font-semibold text-slate-100">HSI Stakes</h3>
                   <div className="text-sm text-slate-400">
                     {(() => {
                       const stakes = hsiStakes.filter(s => s.chain === "Pulsechain")
@@ -1939,47 +1894,6 @@ export default function Home() {
                 </div>
                 <div className="space-y-2">
                   {hsiStakes.filter(s => s.chain === "Pulsechain").map((stake, idx) => {
-                    const usdValue = stake.stakedHearts * hexPrice
-                    return (
-                      <div
-                        key={`${stake.wallet}-${stake.stakeId}-${idx}`}
-                        className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
-                      >
-                        <span className="text-sm text-slate-300">
-                          Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? " (Auto)" : ""} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
-                        </span>
-                        <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
-                          {hexPrice > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </motion.div>
-            )}
-
-            {hsiStakes.filter(s => s.chain === "Ethereum").length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-100">HSI Stakes (Ethereum)</h3>
-                  <div className="text-sm text-slate-400">
-                    {(() => {
-                      const stakes = hsiStakes.filter(s => s.chain === "Ethereum")
-                      const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
-                      const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
-                      const totalValue = totalHex * hexPrice
-                      const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
-                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} HSI${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPrice > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
-                    })()}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  {hsiStakes.filter(s => s.chain === "Ethereum").map((stake, idx) => {
                     const usdValue = stake.stakedHearts * hexPrice
                     return (
                       <div
