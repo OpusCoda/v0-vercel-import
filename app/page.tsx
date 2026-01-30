@@ -89,7 +89,7 @@ const HSI_MANAGER_ABI = [
 const HSI_MANAGER_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3"
 const HSI_MANAGER_ETHEREUM_ADDRESS = "0x9b0f4bb4ca43e8e0afb0ee6b4e2e64efa52e7d7a"
 
-const ETHEREUM_RPC_URL = "https://eth.public-rpc.com"
+const ETHEREUM_RPC_URL = "https://ethereum.publicnode.com"
 const ETHEREUM_TIMEOUT = 20000
 
 export default function Home() {
