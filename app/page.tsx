@@ -87,6 +87,7 @@ const HSI_MANAGER_ABI = [
 ]
 
 const HSI_MANAGER_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3"
+const HSI_MANAGER_ETHEREUM_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3"
 
 const ETHEREUM_RPC_URL = "https://ethereum.publicnode.com"
 const ETHEREUM_TIMEOUT = 20000
@@ -145,7 +146,8 @@ export default function Home() {
 
   const [hexStakes, setHexStakes] = useState<any[]>([])
   const [hsiStakes, setHsiStakes] = useState<any[]>([])
-  const [hexPrice, setHexPrice] = useState(0)
+  const [hexPricePulsechain, setHexPricePulsechain] = useState(0)
+  const [hexPriceEthereum, setHexPriceEthereum] = useState(0)
 
   const [expandedWallets, setExpandedWallets] = useState<Set<number>>(new Set())
 
@@ -774,11 +776,55 @@ export default function Home() {
           }
         } catch {}
 
-        // Note: HSI (Hedron Staking Instances) only exists on Pulsechain, not Ethereum
+        // Fetch HSI Stakes (Ethereum) with timeout
+        try {
+          console.log(`[v0] Fetching Ethereum HSI stakes for ${address}`)
+          const fetchEthereumHSI = async () => {
+            const hsiEthContract = new ethers.Contract(HSI_MANAGER_ETHEREUM_ADDRESS, HSI_MANAGER_ABI, ethereumProvider)
+            const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+            const currentDay = await hexEthContract.currentDay()
+            const hsiStakeCount = await hsiEthContract.stakeCount(address)
+            console.log(`[v0] Ethereum HSI stake count for ${address}: ${hsiStakeCount}`)
+            for (let i = 0; i < Number(hsiStakeCount); i++) {
+              try {
+                const stake = await hsiEthContract.stakeLists(address, i)
+                const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
+                const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
+                const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+                const daysRemaining = Number(stake.stakedDays) - daysPassed
+                const isActive = stake.unlockedDay === 0
+                console.log(`[v0] Found Ethereum HSI stake ${i}: ${stakedHearts} HEX`)
+                allHsiStakes.push({
+                  wallet: address,
+                  chain: "Ethereum",
+                  stakeId: stake.stakeId.toString(),
+                  stakedHearts: Number(stakedHearts),
+                  stakeShares: Number(stakeShares),
+                  lockedDay: Number(stake.lockedDay),
+                  stakedDays: Number(stake.stakedDays),
+                  unlockedDay: Number(stake.unlockedDay),
+                  currentDay: Number(currentDay),
+                  daysPassed,
+                  daysRemaining: Math.max(0, daysRemaining),
+                  isAutoStake: stake.isAutoStake,
+                  isActive,
+                })
+              } catch (stakeErr) {
+                console.error(`[v0] Error fetching Ethereum HSI stake ${i}:`, stakeErr)
+              }
+            }
+          }
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Ethereum HSI timeout")), ETHEREUM_TIMEOUT)
+          )
+          await Promise.race([fetchEthereumHSI(), timeoutPromise])
+        } catch (ethHsiErr) {
+          console.error(`[v0] Ethereum HSI fetch error:`, ethHsiErr)
+        }
       }
 
       console.log(`[v0] Total HEX stakes found: ${allHexStakes.length} (PLS: ${allHexStakes.filter(s => s.chain === "Pulsechain").length}, ETH: ${allHexStakes.filter(s => s.chain === "Ethereum").length})`)
-      console.log(`[v0] Total HSI stakes found: ${allHsiStakes.length} (Pulsechain only)`)
+      console.log(`[v0] Total HSI stakes found: ${allHsiStakes.length} (PLS: ${allHsiStakes.filter(s => s.chain === "Pulsechain").length}, ETH: ${allHsiStakes.filter(s => s.chain === "Ethereum").length})`)
 
       // Sort stakes by chain then days remaining
       setHexStakes(allHexStakes.sort((a, b) => {
@@ -790,16 +836,34 @@ export default function Home() {
         return a.daysRemaining - b.daysRemaining
       }))
 
-      // Fetch HEX price
+      // Fetch HEX prices for both chains
       try {
-        const hexPriceResponse = await fetch(
-          `https://api.dexscreener.com/latest/dex/tokens/${HEX_PULSECHAIN_ADDRESS}`
+        // Pulsechain HEX price
+        const plsHexResponse = await fetch(
+          "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xf1f4ee610b2babb05c635f726ef8b0c568c8dc65"
         )
-        const hexPriceData = await hexPriceResponse.json()
-        if (hexPriceData.pairs && hexPriceData.pairs.length > 0) {
-          setHexPrice(Number(hexPriceData.pairs[0].priceUsd) || 0)
+        const plsHexData = await plsHexResponse.json()
+        if (plsHexData.pair) {
+          setHexPricePulsechain(Number(plsHexData.pair.priceUsd) || 0)
+          console.log(`[v0] Pulsechain HEX price: $${plsHexData.pair.priceUsd}`)
         }
-      } catch {}
+      } catch (err) {
+        console.error("[v0] Error fetching Pulsechain HEX price:", err)
+      }
+
+      try {
+        // Ethereum HEX price
+        const ethHexResponse = await fetch(
+          "https://api.dexscreener.com/latest/dex/pairs/ethereum/0x55d5c232d921b9eaa6b37b5845e439acd04b4dba"
+        )
+        const ethHexData = await ethHexResponse.json()
+        if (ethHexData.pair) {
+          setHexPriceEthereum(Number(ethHexData.pair.priceUsd) || 0)
+          console.log(`[v0] Ethereum HEX price: $${ethHexData.pair.priceUsd}`)
+        }
+      } catch (err) {
+        console.error("[v0] Error fetching Ethereum HEX price:", err)
+      }
 
       setRewards(allRewards)
 
@@ -1803,15 +1867,15 @@ export default function Home() {
                       const stakes = hexStakes.filter(s => s.chain === "Pulsechain")
                       const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
                       const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
-                      const totalValue = totalHex * hexPrice
+                      const totalValue = totalHex * hexPricePulsechain
                       const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
-                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} stake${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPrice > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} stake${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPricePulsechain > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
                     })()}
                   </div>
                 </div>
                 <div className="space-y-2">
                   {hexStakes.filter(s => s.chain === "Pulsechain").map((stake, idx) => {
-                    const usdValue = stake.stakedHearts * hexPrice
+                    const usdValue = stake.stakedHearts * hexPricePulsechain
                     return (
                       <div
                         key={`${stake.wallet}-${stake.stakeId}-${idx}`}
@@ -1821,7 +1885,7 @@ export default function Home() {
                           Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
                         </span>
                         <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
-                          {hexPrice > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                          {hexPricePulsechain > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
                         </span>
                       </div>
                     )
@@ -1844,15 +1908,15 @@ export default function Home() {
                       const stakes = hexStakes.filter(s => s.chain === "Ethereum")
                       const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
                       const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
-                      const totalValue = totalHex * hexPrice
+                      const totalValue = totalHex * hexPriceEthereum
                       const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
-                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} stake${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPrice > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} stake${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPriceEthereum > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
                     })()}
                   </div>
                 </div>
                 <div className="space-y-2">
                   {hexStakes.filter(s => s.chain === "Ethereum").map((stake, idx) => {
-                    const usdValue = stake.stakedHearts * hexPrice
+                    const usdValue = stake.stakedHearts * hexPriceEthereum
                     return (
                       <div
                         key={`${stake.wallet}-${stake.stakeId}-${idx}`}
@@ -1862,7 +1926,7 @@ export default function Home() {
                           Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
                         </span>
                         <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
-                          {hexPrice > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                          {hexPriceEthereum > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
                         </span>
                       </div>
                     )
@@ -1880,21 +1944,21 @@ export default function Home() {
                 className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-100">HSI Stakes</h3>
+                  <h3 className="text-lg font-semibold text-slate-100">HSI Stakes (Pulsechain)</h3>
                   <div className="text-sm text-slate-400">
                     {(() => {
                       const stakes = hsiStakes.filter(s => s.chain === "Pulsechain")
                       const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
                       const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
-                      const totalValue = totalHex * hexPrice
+                      const totalValue = totalHex * hexPricePulsechain
                       const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
-                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} HSI${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPrice > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} HSI${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPricePulsechain > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
                     })()}
                   </div>
                 </div>
                 <div className="space-y-2">
                   {hsiStakes.filter(s => s.chain === "Pulsechain").map((stake, idx) => {
-                    const usdValue = stake.stakedHearts * hexPrice
+                    const usdValue = stake.stakedHearts * hexPricePulsechain
                     return (
                       <div
                         key={`${stake.wallet}-${stake.stakeId}-${idx}`}
@@ -1904,7 +1968,48 @@ export default function Home() {
                           Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? " (Auto)" : ""} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
                         </span>
                         <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
-                          {hexPrice > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                          {hexPricePulsechain > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {hsiStakes.filter(s => s.chain === "Ethereum").length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-100">HSI Stakes (Ethereum)</h3>
+                  <div className="text-sm text-slate-400">
+                    {(() => {
+                      const stakes = hsiStakes.filter(s => s.chain === "Ethereum")
+                      const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
+                      const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
+                      const totalValue = totalHex * hexPriceEthereum
+                      const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
+                      return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} HSI${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPriceEthereum > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                    })()}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {hsiStakes.filter(s => s.chain === "Ethereum").map((stake, idx) => {
+                    const usdValue = stake.stakedHearts * hexPriceEthereum
+                    return (
+                      <div
+                        key={`${stake.wallet}-${stake.stakeId}-${idx}`}
+                        className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                      >
+                        <span className="text-sm text-slate-300">
+                          Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? " (Auto)" : ""} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                        </span>
+                        <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
+                          {hexPriceEthereum > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
                         </span>
                       </div>
                     )
