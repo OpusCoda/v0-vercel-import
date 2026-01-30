@@ -92,6 +92,12 @@ const HSI_MANAGER_ETHEREUM_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3
 const ETHEREUM_RPC_URL = "https://ethereum.publicnode.com"
 const ETHEREUM_TIMEOUT = 20000
 
+// Token addresses for balance display
+const PLSX_ADDRESS = "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab"
+const INC_ADDRESS = "0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d"
+const EHEX_FROM_ETHEREUM_ADDRESS = "0x57fde0a71132198BBeC939B98976993d8D89D225" // eHEX bridged to Pulsechain
+const PWBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" // WBTC on Pulsechain
+
 export default function Home() {
   const [rewards, setRewards] = useState<
     Array<{
@@ -148,6 +154,23 @@ export default function Home() {
   const [hsiStakes, setHsiStakes] = useState<any[]>([])
   const [hexPricePulsechain, setHexPricePulsechain] = useState(0)
   const [hexPriceEthereum, setHexPriceEthereum] = useState(0)
+  const [tokenBalances, setTokenBalances] = useState<{
+    pls: number
+    plsx: number
+    inc: number
+    pHex: number
+    eHexFromEthereum: number
+    eHex: number
+    pWbtc: number
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0 })
+  const [tokenPricesAll, setTokenPricesAll] = useState<{
+    pls: number
+    plsx: number
+    inc: number
+    pHex: number
+    eHex: number
+    wbtc: number
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHex: 0, wbtc: 0 })
   const [expandedStakeCards, setExpandedStakeCards] = useState<Set<string>>(new Set())
 
   const toggleStakeCard = (cardId: string) => {
@@ -876,6 +899,103 @@ export default function Home() {
         }
       } catch (err) {
         console.error("[v0] Error fetching Ethereum HEX price:", err)
+      }
+
+      // Fetch token balances for all addresses
+      let totalPls = 0
+      let totalPlsx = 0
+      let totalInc = 0
+      let totalPHex = 0
+      let totalEHexFromEthereum = 0
+      let totalEHex = 0
+      let totalPWbtc = 0
+
+      for (const address of addresses) {
+        try {
+          // PLS (native token)
+          const plsBalance = await provider.getBalance(address)
+          totalPls += Number(ethers.formatEther(plsBalance))
+
+          // PLSX
+          const plsxContract = new ethers.Contract(PLSX_ADDRESS, BALANCE_ABI, provider)
+          const plsxBalance = await plsxContract.balanceOf(address)
+          totalPlsx += Number(ethers.formatEther(plsxBalance))
+
+          // INC
+          const incContract = new ethers.Contract(INC_ADDRESS, BALANCE_ABI, provider)
+          const incBalance = await incContract.balanceOf(address)
+          totalInc += Number(ethers.formatEther(incBalance))
+
+          // pHEX (HEX on Pulsechain)
+          const pHexContract = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, BALANCE_ABI, provider)
+          const pHexBalance = await pHexContract.balanceOf(address)
+          totalPHex += Number(ethers.formatUnits(pHexBalance, 8))
+
+          // eHEX from Ethereum (bridged to Pulsechain)
+          const eHexFromEthContract = new ethers.Contract(EHEX_FROM_ETHEREUM_ADDRESS, BALANCE_ABI, provider)
+          const eHexFromEthBalance = await eHexFromEthContract.balanceOf(address)
+          totalEHexFromEthereum += Number(ethers.formatUnits(eHexFromEthBalance, 8))
+
+          // pWBTC on Pulsechain
+          const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
+          const pWbtcBalance = await pWbtcContract.balanceOf(address)
+          totalPWbtc += Number(ethers.formatUnits(pWbtcBalance, 8))
+        } catch (err) {
+          console.error(`[v0] Error fetching Pulsechain token balances for ${address}:`, err)
+        }
+
+        // Fetch eHEX on Ethereum
+        try {
+          const eHexContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, BALANCE_ABI, ethereumProvider)
+          const eHexBalance = await eHexContract.balanceOf(address)
+          totalEHex += Number(ethers.formatUnits(eHexBalance, 8))
+        } catch (err) {
+          console.error(`[v0] Error fetching Ethereum HEX balance for ${address}:`, err)
+        }
+      }
+
+      setTokenBalances({
+        pls: totalPls,
+        plsx: totalPlsx,
+        inc: totalInc,
+        pHex: totalPHex,
+        eHexFromEthereum: totalEHexFromEthereum,
+        eHex: totalEHex,
+        pWbtc: totalPWbtc,
+      })
+
+      // Fetch token prices
+      try {
+        // PLS price
+        const plsPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe56043671df55de5cdf8459710433c10324de0ae")
+        const plsPriceData = await plsPriceRes.json()
+        const plsPrice = plsPriceData.pair?.priceUsd ? Number(plsPriceData.pair.priceUsd) : 0
+
+        // PLSX price
+        const plsxPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9")
+        const plsxPriceData = await plsxPriceRes.json()
+        const plsxPrice = plsxPriceData.pair?.priceUsd ? Number(plsxPriceData.pair.priceUsd) : 0
+
+        // INC price
+        const incPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xf808bb6265e9ca27002c0a04562bf50d4fe37eaa")
+        const incPriceData = await incPriceRes.json()
+        const incPrice = incPriceData.pair?.priceUsd ? Number(incPriceData.pair.priceUsd) : 0
+
+        // WBTC price (use a major pair)
+        const wbtcPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/ethereum/0xCBCdF9626bC03E24f779434178A73a0B4bad62eD")
+        const wbtcPriceData = await wbtcPriceRes.json()
+        const wbtcPrice = wbtcPriceData.pair?.priceUsd ? Number(wbtcPriceData.pair.priceUsd) : 0
+
+        setTokenPricesAll({
+          pls: plsPrice,
+          plsx: plsxPrice,
+          inc: incPrice,
+          pHex: hexPricePulsechain,
+          eHex: hexPriceEthereum,
+          wbtc: wbtcPrice,
+        })
+      } catch (err) {
+        console.error("[v0] Error fetching token prices:", err)
       }
 
       setRewards(allRewards)
@@ -1870,6 +1990,90 @@ export default function Home() {
                 )}
               </div>
             </motion.section>
+
+            {/* Token Balances Display */}
+            {(tokenBalances.pls > 0 || tokenBalances.plsx > 0 || tokenBalances.inc > 0 || tokenBalances.pHex > 0 || tokenBalances.eHexFromEthereum > 0 || tokenBalances.eHex > 0 || tokenBalances.pWbtc > 0) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+              >
+                <h3 className="text-lg font-semibold text-slate-100 mb-4">Token Balances</h3>
+                <div className="space-y-2">
+                  {tokenBalances.pls > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        PLS — {tokenBalances.pls.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.pls > 0 ? `$${(tokenBalances.pls * tokenPricesAll.pls).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.plsx > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        PLSX — {tokenBalances.plsx.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.plsx > 0 ? `$${(tokenBalances.plsx * tokenPricesAll.plsx).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.inc > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        INC — {tokenBalances.inc.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.inc > 0 ? `$${(tokenBalances.inc * tokenPricesAll.inc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.pHex > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        pHEX — {tokenBalances.pHex.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {hexPricePulsechain > 0 ? `$${(tokenBalances.pHex * hexPricePulsechain).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.eHexFromEthereum > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        HEX from Ethereum — {tokenBalances.eHexFromEthereum.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {hexPriceEthereum > 0 ? `$${(tokenBalances.eHexFromEthereum * hexPriceEthereum).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.eHex > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        eHEX — {tokenBalances.eHex.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {hexPriceEthereum > 0 ? `$${(tokenBalances.eHex * hexPriceEthereum).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.pWbtc > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        pWBTC — {tokenBalances.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 8 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.wbtc > 0 ? `$${(tokenBalances.pWbtc * tokenPricesAll.wbtc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
 
             {/* HEX Stakes Cards - Separated by Chain */}
             {hexStakes.filter(s => s.chain === "Pulsechain").length > 0 && (
