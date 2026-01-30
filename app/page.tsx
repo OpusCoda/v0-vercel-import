@@ -954,9 +954,9 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="flex justify-between items-start gap-8">
-<span className="text-slate-300">PLSX:</span>
-  <div className="text-right">
-  <div className="text-slate-100">{formatBillions(totalDistributed.plsx, 2)}</div>
+                        <span className="text-slate-300">PLSX:</span>
+                        <div className="text-right">
+                          <div className="text-slate-100">{formatBillions(totalDistributed.plsx, 2)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas((Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx).toFixed(2))}
