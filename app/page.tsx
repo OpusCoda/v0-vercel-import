@@ -2350,7 +2350,7 @@ export default function Home() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-slate-100">Liquid Loans vaults</h3>
                   <div className="text-sm text-slate-400">
-                    Total Locked: {liquidLoansVaults.reduce((sum, v) => sum + v.lockedPLS, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS | Total Debt: {liquidLoansVaults.reduce((sum, v) => sum + v.debt, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
+                    Total collateral: {liquidLoansVaults.reduce((sum, v) => sum + v.lockedPLS, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS | Total Debt: {liquidLoansVaults.reduce((sum, v) => sum + v.debt, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -2360,7 +2360,7 @@ export default function Home() {
                       className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
                     >
                       <span className="text-sm text-slate-300">
-                        {vault.wallet.slice(0, 6)}...{vault.wallet.slice(-4)} — Locked: {vault.lockedPLS.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
+                        {vault.wallet.slice(0, 6)}...{vault.wallet.slice(-4)} — Collateral: {vault.lockedPLS.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
                       </span>
                       <span className="text-sm font-medium text-green-400">
                         Debt: {vault.debt.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
