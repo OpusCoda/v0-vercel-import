@@ -2354,7 +2354,7 @@ export default function Home() {
                   onClick={() => toggleStakeCard("liquid-loans")}
                   className="flex items-center justify-between w-full text-left"
                 >
-                  <h3 className="text-lg font-semibold text-slate-100">Liquid Loans</h3>
+                  <h3 className="text-lg font-semibold text-slate-100">Liquid Loans vaults</h3>
                   <div className="flex items-center gap-3">
                     <div className="text-sm text-slate-400">
                       Total Locked: {liquidLoansVaults.reduce((sum, v) => sum + v.lockedPLS, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS | Total Debt: {liquidLoansVaults.reduce((sum, v) => sum + v.debt, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
