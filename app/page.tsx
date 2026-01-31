@@ -1753,122 +1753,6 @@ export default function Home() {
                       </motion.div>
                     )}
 
-                    {/* Token Balances Display */}
-                    {(tokenBalances.pls > 0 || tokenBalances.plsx > 0 || tokenBalances.inc > 0 || tokenBalances.pHex > 0 || tokenBalances.eHexFromEthereum > 0 || tokenBalances.eHex > 0 || tokenBalances.pWbtc > 0) && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
-                      >
-                        <h3 className="text-lg font-semibold text-slate-100 mb-4">Token Balances</h3>
-                        <div className="space-y-2">
-                          {tokenBalances.pls > 0 && (
-                            <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
-                              <span className="text-sm text-slate-300">
-                                PLS — {tokenBalances.pls.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                              </span>
-                              <span className="text-sm font-medium text-green-400">
-                                {tokenPricesAll.pls > 0 ? `$${(tokenBalances.pls * tokenPricesAll.pls).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                              </span>
-                            </div>
-                          )}
-                          {tokenBalances.plsx > 0 && (
-                            <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
-                              <span className="text-sm text-slate-300">
-                                PLSX — {tokenBalances.plsx.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                              </span>
-                              <span className="text-sm font-medium text-green-400">
-                                {tokenPricesAll.plsx > 0 ? `$${(tokenBalances.plsx * tokenPricesAll.plsx).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                              </span>
-                            </div>
-                          )}
-                          {tokenBalances.inc > 0 && (
-                            <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
-                              <span className="text-sm text-slate-300">
-                                INC — {tokenBalances.inc.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                              </span>
-                              <span className="text-sm font-medium text-green-400">
-                                {tokenPricesAll.inc > 0 ? `$${(tokenBalances.inc * tokenPricesAll.inc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                              </span>
-                            </div>
-                          )}
-                          {tokenBalances.pHex > 0 && (
-                            <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
-                              <span className="text-sm text-slate-300">
-                                pHEX — {tokenBalances.pHex.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                              </span>
-                              <span className="text-sm font-medium text-green-400">
-                                {hexPricePulsechain > 0 ? `$${(tokenBalances.pHex * hexPricePulsechain).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                              </span>
-                            </div>
-                          )}
-                          {tokenBalances.eHexFromEthereum > 0 && (
-                            <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
-                              <span className="text-sm text-slate-300">
-                                HEX from Ethereum — {tokenBalances.eHexFromEthereum.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                              </span>
-                              <span className="text-sm font-medium text-green-400">
-                                {hexPriceEthereum > 0 ? `$${(tokenBalances.eHexFromEthereum * hexPriceEthereum).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                              </span>
-                            </div>
-                          )}
-                          {tokenBalances.eHex > 0 && (
-                            <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
-                              <span className="text-sm text-slate-300">
-                                eHEX — {tokenBalances.eHex.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                              </span>
-                              <span className="text-sm font-medium text-green-400">
-                                {hexPriceEthereum > 0 ? `$${(tokenBalances.eHex * hexPriceEthereum).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                              </span>
-                            </div>
-                          )}
-                          {tokenBalances.pWbtc > 0 && (
-                            <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
-                              <span className="text-sm text-slate-300">
-                                pWBTC — {tokenBalances.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 8 })}
-                              </span>
-                              <span className="text-sm font-medium text-green-400">
-                                {tokenPricesAll.wbtc > 0 ? `$${(tokenBalances.pWbtc * tokenPricesAll.wbtc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Liquid Loans Display */}
-                    {liquidLoansVaults.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-semibold text-slate-100">Liquid Loans</h3>
-                          <div className="text-sm text-slate-400">
-                            Total Locked: {liquidLoansVaults.reduce((sum, v) => sum + v.lockedPLS, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS | Total Debt: {liquidLoansVaults.reduce((sum, v) => sum + v.debt, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          {liquidLoansVaults.map((vault, idx) => (
-                            <div
-                              key={`${vault.wallet}-${idx}`}
-                              className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
-                            >
-                              <span className="text-sm text-slate-300">
-                                {vault.wallet.slice(0, 6)}...{vault.wallet.slice(-4)} — Locked: {vault.lockedPLS.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
-                              </span>
-                              <span className="text-sm font-medium text-green-400">
-                                Debt: {vault.debt.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-
                     {/* Individual wallet rewards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {rewards
@@ -2141,6 +2025,90 @@ export default function Home() {
               </div>
             </motion.section>
 
+            {/* Token Balances Display */}
+            {(tokenBalances.pls > 0 || tokenBalances.plsx > 0 || tokenBalances.inc > 0 || tokenBalances.pHex > 0 || tokenBalances.eHexFromEthereum > 0 || tokenBalances.eHex > 0 || tokenBalances.pWbtc > 0) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+              >
+                <h3 className="text-lg font-semibold text-slate-100 mb-4">Token Balances</h3>
+                <div className="space-y-2">
+                  {tokenBalances.pls > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        PLS — {tokenBalances.pls.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.pls > 0 ? `$${(tokenBalances.pls * tokenPricesAll.pls).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.plsx > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        PLSX — {tokenBalances.plsx.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.plsx > 0 ? `$${(tokenBalances.plsx * tokenPricesAll.plsx).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.inc > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        INC — {tokenBalances.inc.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.inc > 0 ? `$${(tokenBalances.inc * tokenPricesAll.inc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.pHex > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        pHEX — {tokenBalances.pHex.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {hexPricePulsechain > 0 ? `$${(tokenBalances.pHex * hexPricePulsechain).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.eHexFromEthereum > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        HEX from Ethereum — {tokenBalances.eHexFromEthereum.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {hexPriceEthereum > 0 ? `$${(tokenBalances.eHexFromEthereum * hexPriceEthereum).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.eHex > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        eHEX — {tokenBalances.eHex.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {hexPriceEthereum > 0 ? `$${(tokenBalances.eHex * hexPriceEthereum).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.pWbtc > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        pWBTC — {tokenBalances.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 8 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.wbtc > 0 ? `$${(tokenBalances.pWbtc * tokenPricesAll.wbtc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
             {/* HEX Stakes Cards - Separated by Chain */}
             {hexStakes.filter(s => s.chain === "Pulsechain").length > 0 && (
               <motion.div
@@ -2368,6 +2336,38 @@ export default function Home() {
                     })}
                   </div>
                 )}
+              </motion.div>
+            )}
+
+            {/* Liquid Loans Display */}
+            {liquidLoansVaults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-100">Liquid Loans</h3>
+                  <div className="text-sm text-slate-400">
+                    Total Locked: {liquidLoansVaults.reduce((sum, v) => sum + v.lockedPLS, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS | Total Debt: {liquidLoansVaults.reduce((sum, v) => sum + v.debt, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {liquidLoansVaults.map((vault, idx) => (
+                    <div
+                      key={`${vault.wallet}-${idx}`}
+                      className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                    >
+                      <span className="text-sm text-slate-300">
+                        {vault.wallet.slice(0, 6)}...{vault.wallet.slice(-4)} — Locked: {vault.lockedPLS.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        Debt: {vault.debt.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </motion.div>
             )}
 
