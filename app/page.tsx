@@ -2348,7 +2348,7 @@ export default function Home() {
                 className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-100">Liquid Loans</h3>
+                  <h3 className="text-lg font-semibold text-slate-100">Liquid Loans vaults</h3>
                   <div className="text-sm text-slate-400">
                     Total Locked: {liquidLoansVaults.reduce((sum, v) => sum + v.lockedPLS, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS | Total Debt: {liquidLoansVaults.reduce((sum, v) => sum + v.debt, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
                   </div>
