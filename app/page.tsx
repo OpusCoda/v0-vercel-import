@@ -2102,7 +2102,7 @@ export default function Home() {
                   {tokenBalances.pWbtc > 0 && (
                     <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
                       <span className="text-sm text-slate-300">
-                        pWBTC — {tokenBalances.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 8 })}
+                        pWBTC — {tokenBalances.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 3 })}
                       </span>
                       <span className="text-sm font-medium text-green-400">
                         {tokenPricesAll.wbtc > 0 ? `$${(tokenBalances.pWbtc * tokenPricesAll.wbtc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
