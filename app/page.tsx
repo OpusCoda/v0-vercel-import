@@ -2025,7 +2025,7 @@ export default function Home() {
               </div>
             </motion.section>
 
-            {/* Token Balances Display */}
+            {/* Main tokens Display */}
             {(tokenBalances.pls > 0 || tokenBalances.plsx > 0 || tokenBalances.inc > 0 || tokenBalances.pHex > 0 || tokenBalances.eHexFromEthereum > 0 || tokenBalances.eHex > 0 || tokenBalances.pWbtc > 0) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -2033,7 +2033,7 @@ export default function Home() {
                 transition={{ duration: 0.5 }}
                 className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
-                <h3 className="text-lg font-semibold text-slate-100 mb-4">Token Balances</h3>
+                <h3 className="text-lg font-semibold text-slate-100 mb-4">Main tokens</h3>
                 <div className="space-y-2">
                   {tokenBalances.pls > 0 && (
                     <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
@@ -2339,7 +2339,7 @@ export default function Home() {
               </motion.div>
             )}
 
-            {/* Liquid Loans Display */}
+{/* Liquid Loans Display */}
             {liquidLoansVaults.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -2347,27 +2347,43 @@ export default function Home() {
                 transition={{ duration: 0.5 }}
                 className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-100">Liquid Loans vaults</h3>
-                  <div className="text-sm text-slate-400">
-                    Total collateral: {liquidLoansVaults.reduce((sum, v) => sum + v.lockedPLS, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS | Total Debt: {liquidLoansVaults.reduce((sum, v) => sum + v.debt, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  {liquidLoansVaults.map((vault, idx) => (
-                    <div
-                      key={`${vault.wallet}-${idx}`}
-                      className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
-                    >
-                      <span className="text-sm text-slate-300">
-                        {vault.wallet.slice(0, 6)}...{vault.wallet.slice(-4)} — Collateral: {vault.lockedPLS.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
-                      </span>
-                      <span className="text-sm font-medium text-green-400">
-                        Debt: {vault.debt.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
-                      </span>
+                <button
+                  type="button"
+                  onClick={() => toggleStakeCard("liquid-loans")}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-semibold text-slate-100">Liquid Loans</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-slate-400">
+                      Total Locked: {liquidLoansVaults.reduce((sum, v) => sum + v.lockedPLS, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS | Total Debt: {liquidLoansVaults.reduce((sum, v) => sum + v.debt, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
                     </div>
-                  ))}
-                </div>
+                    <svg
+                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedStakeCards.has("liquid-loans") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+                {expandedStakeCards.has("liquid-loans") && (
+                  <div className="space-y-2 mt-4">
+                    {liquidLoansVaults.map((vault, idx) => (
+                      <div
+                        key={`${vault.wallet}-${idx}`}
+                        className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                      >
+                        <span className="text-sm text-slate-300">
+                          {vault.wallet.slice(0, 6)}...{vault.wallet.slice(-4)} — Locked: {vault.lockedPLS.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
+                        </span>
+                        <span className="text-sm font-medium text-green-400">
+                          Debt: {vault.debt.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
 
