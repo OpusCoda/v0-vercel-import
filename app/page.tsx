@@ -1566,7 +1566,9 @@ export default function Home() {
                                   )}
 
                           {/* Total accumulated rewards section */}
-                          {totalRewards && rewards.length > 0 && (
+                          {totalRewards && rewards.length > 0 && 
+                           (rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) > 0 || 
+                            rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) > 0) && (
                             <div className="border-t border-slate-700/50 pt-4 mt-4 space-y-4">
                               {/* Total accumulated rewards */}
                               <div className="flex justify-between items-center text-slate-300">
