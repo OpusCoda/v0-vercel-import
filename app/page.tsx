@@ -1475,11 +1475,13 @@ export default function Home() {
                 {/* Rewards Display */}
                 {rewards && rewards.length > 0 && (
                   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                    {rewards.length > 0 && (
+                    {rewards.length > 0 && 
+                     (rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) > 0 || 
+                      rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) > 0) && (
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 mb-6"
+                        className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 mb-4"
                       >
                         <div className="space-y-3">
                           {/* Total Value */}
