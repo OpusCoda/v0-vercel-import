@@ -27,6 +27,14 @@ const formatMillions = (v: string | number, decimals = 1) => {
   return formatWithCommas(typeof v === "string" ? v : v.toString())
 }
 
+const formatBillions = (v: string | number, decimals = 2) => {
+  const num = typeof v === "string" ? Number.parseFloat(v) : v
+  if (num >= 1000000000) {
+    return `${(num / 1000000000).toFixed(decimals)}B`
+  }
+  return formatMillions(v, decimals)
+}
+
 const OPUS_CONTRACT = "0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4"
 const CODA_CONTRACT = "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
 const OPUS_V1_CONTRACT = "0x7251d2965f165fCE18Ae5fC4c4979e01b46057d7"
@@ -63,6 +71,39 @@ const DISTRIBUTOR_ABI = [
 ]
 
 const BALANCE_ABI = ["function balanceOf(address) view returns (uint256)"] // 0x70a08231
+
+const HEX_PULSECHAIN_ADDRESS = "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39"
+const HEX_ETHEREUM_ADDRESS = "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39"
+
+const HEX_STAKING_ABI = [
+  "function stakeCount(address) view returns (uint256)",
+  "function stakeLists(address, uint256) view returns (uint40 stakeId, uint72 stakedHearts, uint72 stakeShares, uint16 lockedDay, uint16 stakedDays, uint16 unlockedDay, bool isAutoStake)",
+  "function currentDay() view returns (uint256)",
+]
+
+const HSI_MANAGER_ABI = [
+  "function stakeCount(address) view returns (uint256)",
+  "function stakeLists(address, uint256) view returns (uint40 stakeId, uint72 stakedHearts, uint72 stakeShares, uint16 lockedDay, uint16 stakedDays, uint16 unlockedDay, bool isAutoStake)",
+]
+
+const HSI_MANAGER_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3"
+const HSI_MANAGER_ETHEREUM_ADDRESS = "0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3"
+
+const ETHEREUM_RPC_URL = "https://ethereum.publicnode.com"
+const ETHEREUM_TIMEOUT = 20000
+
+// Liquid Loans contract
+const LIQUID_LOANS_VAULT_MANAGER = "0xD79bfb86fA06e8782b401bC0197d92563602D2Ab"
+const LIQUID_LOANS_ABI = [
+  "function getVaultColl(address) view returns (uint256)",
+  "function getVaultDebt(address) view returns (uint256)",
+]
+
+// Token addresses for balance display
+const PLSX_ADDRESS = "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab"
+const INC_ADDRESS = "0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d"
+const EHEX_FROM_ETHEREUM_ADDRESS = "0x57fde0a71132198BBeC939B98976993d8D89D225" // eHEX bridged to Pulsechain
+const PWBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" // WBTC on Pulsechain
 
 export default function Home() {
   const [rewards, setRewards] = useState<
@@ -115,6 +156,46 @@ export default function Home() {
     plsx: string
   } | null>(null)
   const [duplicateWarning, setDuplicateWarning] = useState("")
+
+  const [hexStakes, setHexStakes] = useState<any[]>([])
+  const [hsiStakes, setHsiStakes] = useState<any[]>([])
+  const [hexPricePulsechain, setHexPricePulsechain] = useState(0)
+  const [hexPriceEthereum, setHexPriceEthereum] = useState(0)
+  const [tokenBalances, setTokenBalances] = useState<{
+    pls: number
+    plsx: number
+    inc: number
+    pHex: number
+    eHexFromEthereum: number
+    eHex: number
+    pWbtc: number
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0 })
+  const [tokenPricesAll, setTokenPricesAll] = useState<{
+    pls: number
+    plsx: number
+    inc: number
+    pHex: number
+    eHex: number
+    wbtc: number
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHex: 0, wbtc: 0 })
+  const [liquidLoansVaults, setLiquidLoansVaults] = useState<Array<{
+    wallet: string
+    lockedPLS: number
+    debt: number
+  }>>([])
+  const [expandedStakeCards, setExpandedStakeCards] = useState<Set<string>>(new Set())
+
+  const toggleStakeCard = (cardId: string) => {
+    setExpandedStakeCards((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(cardId)) {
+        newSet.delete(cardId)
+      } else {
+        newSet.add(cardId)
+      }
+      return newSet
+    })
+  }
 
   const [expandedWallets, setExpandedWallets] = useState<Set<number>>(new Set())
 
@@ -624,6 +705,333 @@ export default function Home() {
         })
       }
 
+      // Fetch HEX and HSI stakes for all addresses
+      const allHexStakes: any[] = []
+      const allHsiStakes: any[] = []
+      const ethereumProvider = new ethers.JsonRpcProvider(ETHEREUM_RPC_URL)
+
+      for (const address of addresses) {
+        // Fetch HEX Stakes (Pulsechain)
+        try {
+          const hexContract = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, provider)
+          const currentDay = await hexContract.currentDay()
+          const stakeCount = await hexContract.stakeCount(address)
+          
+          for (let i = 0; i < Number(stakeCount); i++) {
+            try {
+              const stake = await hexContract.stakeLists(address, i)
+              const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
+              const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
+              const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+              const daysRemaining = Number(stake.stakedDays) - daysPassed
+              const isActive = stake.unlockedDay === 0
+              
+              allHexStakes.push({
+                wallet: address,
+                chain: "Pulsechain",
+                stakeId: stake.stakeId.toString(),
+                stakedHearts: Number(stakedHearts),
+                stakeShares: Number(stakeShares),
+                lockedDay: Number(stake.lockedDay),
+                stakedDays: Number(stake.stakedDays),
+                unlockedDay: Number(stake.unlockedDay),
+                currentDay: Number(currentDay),
+                daysPassed,
+                daysRemaining: Math.max(0, daysRemaining),
+                isActive,
+              })
+            } catch {}
+          }
+        } catch {}
+
+        // Fetch HEX Stakes (Ethereum) with timeout
+        try {
+          console.log(`[v0] Fetching Ethereum HEX stakes for ${address}`)
+          const fetchEthereumHEX = async () => {
+            const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+            const currentDay = await hexEthContract.currentDay()
+            console.log(`[v0] Ethereum HEX currentDay: ${currentDay}`)
+            const stakeCount = await hexEthContract.stakeCount(address)
+            console.log(`[v0] Ethereum HEX stake count for ${address}: ${stakeCount}`)
+            for (let i = 0; i < Number(stakeCount); i++) {
+              try {
+                const stake = await hexEthContract.stakeLists(address, i)
+                const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
+                const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
+                const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+                const daysRemaining = Number(stake.stakedDays) - daysPassed
+                const isActive = stake.unlockedDay === 0
+                console.log(`[v0] Found Ethereum HEX stake ${i}: ${stakedHearts} HEX`)
+                allHexStakes.push({
+                  wallet: address,
+                  chain: "Ethereum",
+                  stakeId: stake.stakeId.toString(),
+                  stakedHearts: Number(stakedHearts),
+                  stakeShares: Number(stakeShares),
+                  lockedDay: Number(stake.lockedDay),
+                  stakedDays: Number(stake.stakedDays),
+                  unlockedDay: Number(stake.unlockedDay),
+                  currentDay: Number(currentDay),
+                  daysPassed,
+                  daysRemaining: Math.max(0, daysRemaining),
+                  isActive,
+                })
+              } catch (stakeErr) {
+                console.error(`[v0] Error fetching Ethereum HEX stake ${i}:`, stakeErr)
+              }
+            }
+          }
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Ethereum timeout")), ETHEREUM_TIMEOUT)
+          )
+          await Promise.race([fetchEthereumHEX(), timeoutPromise])
+        } catch (ethErr) {
+          console.error(`[v0] Ethereum HEX fetch error:`, ethErr)
+        }
+
+        // Fetch HSI Stakes (Pulsechain)
+        try {
+          const hsiContract = new ethers.Contract(HSI_MANAGER_ADDRESS, HSI_MANAGER_ABI, provider)
+          const hexContract = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, provider)
+          const currentDay = await hexContract.currentDay()
+          const hsiStakeCount = await hsiContract.stakeCount(address)
+          
+          for (let i = 0; i < Number(hsiStakeCount); i++) {
+            try {
+              const stake = await hsiContract.stakeLists(address, i)
+              const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
+              const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
+              const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+              const daysRemaining = Number(stake.stakedDays) - daysPassed
+              const isActive = stake.unlockedDay === 0
+              
+              allHsiStakes.push({
+                wallet: address,
+                chain: "Pulsechain",
+                stakeId: stake.stakeId.toString(),
+                stakedHearts: Number(stakedHearts),
+                stakeShares: Number(stakeShares),
+                lockedDay: Number(stake.lockedDay),
+                stakedDays: Number(stake.stakedDays),
+                unlockedDay: Number(stake.unlockedDay),
+                currentDay: Number(currentDay),
+                daysPassed,
+                daysRemaining: Math.max(0, daysRemaining),
+                isAutoStake: stake.isAutoStake,
+                isActive,
+              })
+            } catch {}
+          }
+        } catch {}
+
+        // Fetch HSI Stakes (Ethereum) with timeout
+        try {
+          console.log(`[v0] Fetching Ethereum HSI stakes for ${address}`)
+          const fetchEthereumHSI = async () => {
+            const hsiEthContract = new ethers.Contract(HSI_MANAGER_ETHEREUM_ADDRESS, HSI_MANAGER_ABI, ethereumProvider)
+            const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+            const currentDay = await hexEthContract.currentDay()
+            const hsiStakeCount = await hsiEthContract.stakeCount(address)
+            console.log(`[v0] Ethereum HSI stake count for ${address}: ${hsiStakeCount}`)
+            for (let i = 0; i < Number(hsiStakeCount); i++) {
+              try {
+                const stake = await hsiEthContract.stakeLists(address, i)
+                const stakedHearts = ethers.formatUnits(stake.stakedHearts, 8)
+                const stakeShares = ethers.formatUnits(stake.stakeShares, 12)
+                const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+                const daysRemaining = Number(stake.stakedDays) - daysPassed
+                const isActive = stake.unlockedDay === 0
+                console.log(`[v0] Found Ethereum HSI stake ${i}: ${stakedHearts} HEX`)
+                allHsiStakes.push({
+                  wallet: address,
+                  chain: "Ethereum",
+                  stakeId: stake.stakeId.toString(),
+                  stakedHearts: Number(stakedHearts),
+                  stakeShares: Number(stakeShares),
+                  lockedDay: Number(stake.lockedDay),
+                  stakedDays: Number(stake.stakedDays),
+                  unlockedDay: Number(stake.unlockedDay),
+                  currentDay: Number(currentDay),
+                  daysPassed,
+                  daysRemaining: Math.max(0, daysRemaining),
+                  isAutoStake: stake.isAutoStake,
+                  isActive,
+                })
+              } catch (stakeErr) {
+                console.error(`[v0] Error fetching Ethereum HSI stake ${i}:`, stakeErr)
+              }
+            }
+          }
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Ethereum HSI timeout")), ETHEREUM_TIMEOUT)
+          )
+          await Promise.race([fetchEthereumHSI(), timeoutPromise])
+        } catch (ethHsiErr) {
+          console.error(`[v0] Ethereum HSI fetch error:`, ethHsiErr)
+        }
+      }
+
+      console.log(`[v0] Total HEX stakes found: ${allHexStakes.length} (PLS: ${allHexStakes.filter(s => s.chain === "Pulsechain").length}, ETH: ${allHexStakes.filter(s => s.chain === "Ethereum").length})`)
+      console.log(`[v0] Total HSI stakes found: ${allHsiStakes.length} (PLS: ${allHsiStakes.filter(s => s.chain === "Pulsechain").length}, ETH: ${allHsiStakes.filter(s => s.chain === "Ethereum").length})`)
+
+      // Sort stakes by chain then days remaining
+      setHexStakes(allHexStakes.sort((a, b) => {
+        if (a.chain !== b.chain) return a.chain === "Pulsechain" ? -1 : 1
+        return a.daysRemaining - b.daysRemaining
+      }))
+      setHsiStakes(allHsiStakes.sort((a, b) => {
+        if (a.chain !== b.chain) return a.chain === "Pulsechain" ? -1 : 1
+        return a.daysRemaining - b.daysRemaining
+      }))
+
+      // Fetch HEX prices for both chains
+      try {
+        // Pulsechain HEX price
+        const plsHexResponse = await fetch(
+          "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xf1f4ee610b2babb05c635f726ef8b0c568c8dc65"
+        )
+        const plsHexData = await plsHexResponse.json()
+        if (plsHexData.pair) {
+          setHexPricePulsechain(Number(plsHexData.pair.priceUsd) || 0)
+          console.log(`[v0] Pulsechain HEX price: $${plsHexData.pair.priceUsd}`)
+        }
+      } catch (err) {
+        console.error("[v0] Error fetching Pulsechain HEX price:", err)
+      }
+
+      try {
+        // Ethereum HEX price
+        const ethHexResponse = await fetch(
+          "https://api.dexscreener.com/latest/dex/pairs/ethereum/0x55d5c232d921b9eaa6b37b5845e439acd04b4dba"
+        )
+        const ethHexData = await ethHexResponse.json()
+        if (ethHexData.pair) {
+          setHexPriceEthereum(Number(ethHexData.pair.priceUsd) || 0)
+          console.log(`[v0] Ethereum HEX price: $${ethHexData.pair.priceUsd}`)
+        }
+      } catch (err) {
+        console.error("[v0] Error fetching Ethereum HEX price:", err)
+      }
+
+      // Fetch token balances for all addresses
+      let totalPls = 0
+      let totalPlsx = 0
+      let totalInc = 0
+      let totalPHex = 0
+      let totalEHexFromEthereum = 0
+      let totalEHex = 0
+      let totalPWbtc = 0
+
+      for (const address of addresses) {
+        try {
+          // PLS (native token)
+          const plsBalance = await provider.getBalance(address)
+          totalPls += Number(ethers.formatEther(plsBalance))
+
+          // PLSX
+          const plsxContract = new ethers.Contract(PLSX_ADDRESS, BALANCE_ABI, provider)
+          const plsxBalance = await plsxContract.balanceOf(address)
+          totalPlsx += Number(ethers.formatEther(plsxBalance))
+
+          // INC
+          const incContract = new ethers.Contract(INC_ADDRESS, BALANCE_ABI, provider)
+          const incBalance = await incContract.balanceOf(address)
+          totalInc += Number(ethers.formatEther(incBalance))
+
+          // pHEX (HEX on Pulsechain)
+          const pHexContract = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, BALANCE_ABI, provider)
+          const pHexBalance = await pHexContract.balanceOf(address)
+          totalPHex += Number(ethers.formatUnits(pHexBalance, 8))
+
+          // eHEX from Ethereum (bridged to Pulsechain)
+          const eHexFromEthContract = new ethers.Contract(EHEX_FROM_ETHEREUM_ADDRESS, BALANCE_ABI, provider)
+          const eHexFromEthBalance = await eHexFromEthContract.balanceOf(address)
+          totalEHexFromEthereum += Number(ethers.formatUnits(eHexFromEthBalance, 8))
+
+          // pWBTC on Pulsechain
+          const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
+          const pWbtcBalance = await pWbtcContract.balanceOf(address)
+          totalPWbtc += Number(ethers.formatUnits(pWbtcBalance, 8))
+        } catch (err) {
+          console.error(`[v0] Error fetching Pulsechain token balances for ${address}:`, err)
+        }
+
+        // Fetch eHEX on Ethereum
+        try {
+          const eHexContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, BALANCE_ABI, ethereumProvider)
+          const eHexBalance = await eHexContract.balanceOf(address)
+          totalEHex += Number(ethers.formatUnits(eHexBalance, 8))
+        } catch (err) {
+          console.error(`[v0] Error fetching Ethereum HEX balance for ${address}:`, err)
+        }
+      }
+
+      setTokenBalances({
+        pls: totalPls,
+        plsx: totalPlsx,
+        inc: totalInc,
+        pHex: totalPHex,
+        eHexFromEthereum: totalEHexFromEthereum,
+        eHex: totalEHex,
+        pWbtc: totalPWbtc,
+      })
+
+      // Fetch token prices
+      try {
+        // PLS price
+        const plsPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe56043671df55de5cdf8459710433c10324de0ae")
+        const plsPriceData = await plsPriceRes.json()
+        const plsPrice = plsPriceData.pair?.priceUsd ? Number(plsPriceData.pair.priceUsd) : 0
+
+        // PLSX price
+        const plsxPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9")
+        const plsxPriceData = await plsxPriceRes.json()
+        const plsxPrice = plsxPriceData.pair?.priceUsd ? Number(plsxPriceData.pair.priceUsd) : 0
+
+        // INC price
+        const incPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xf808bb6265e9ca27002c0a04562bf50d4fe37eaa")
+        const incPriceData = await incPriceRes.json()
+        const incPrice = incPriceData.pair?.priceUsd ? Number(incPriceData.pair.priceUsd) : 0
+
+        // pWBTC price on Pulsechain
+        const wbtcPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf")
+        const wbtcPriceData = await wbtcPriceRes.json()
+        const wbtcPrice = wbtcPriceData.pair?.priceUsd ? Number(wbtcPriceData.pair.priceUsd) : 0
+
+        setTokenPricesAll({
+          pls: plsPrice,
+          plsx: plsxPrice,
+          inc: incPrice,
+          pHex: hexPricePulsechain,
+          eHex: hexPriceEthereum,
+          wbtc: wbtcPrice,
+        })
+      } catch (err) {
+        console.error("[v0] Error fetching token prices:", err)
+      }
+
+      // Fetch Liquid Loans vaults
+      const allLiquidLoansVaults: Array<{ wallet: string; lockedPLS: number; debt: number }> = []
+      const vaultManager = new ethers.Contract(LIQUID_LOANS_VAULT_MANAGER, LIQUID_LOANS_ABI, provider)
+      
+      for (const address of addresses) {
+        try {
+          const lockedPLS = await vaultManager.getVaultColl(address)
+          const debtUSDL = await vaultManager.getVaultDebt(address)
+          if (lockedPLS > 0 || debtUSDL > 0) {
+            allLiquidLoansVaults.push({
+              wallet: address,
+              lockedPLS: Number(ethers.formatEther(lockedPLS)),
+              debt: Number(ethers.formatEther(debtUSDL)),
+            })
+          }
+        } catch (vaultErr) {
+          console.error(`[v0] Liquid Loans error for ${address}:`, vaultErr)
+        }
+      }
+      
+      setLiquidLoansVaults(allLiquidLoansVaults)
+
       setRewards(allRewards)
 
       const totals = allRewards.reduce(
@@ -736,7 +1144,7 @@ export default function Home() {
         className="max-w-5xl w-full mx-auto px-4 py-8"
       >
         <h1 className="text-center text-6xl md:text-8xl font-['Marcellus_SC'] font-normal tracking-tight text-slate-200 mb-12">
-          Opus and Coda
+          The Opus Ecosystem
         </h1>
         <Card className="bg-[#0f172a]/90 backdrop-blur border border-blue-900/40 shadow-[0_0_80px_rgba(56,189,248,0.08)] rounded-3xl">
           <CardContent className="py-12 flex flex-col gap-14">
@@ -747,7 +1155,7 @@ export default function Home() {
                 className="mx-auto w-64 h-64 md:w-80 md:h-80 rounded-3xl shadow-[0_0_80px_rgba(249,115,22,0.35)]"
               />
               <p className="text-slate-200 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed">
-                The reliable and transparent printer ecosystem on Pulsechain
+                The reliable and consistent ecosystem on PulseChain
               </p>
             </div>
             <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
@@ -948,7 +1356,7 @@ export default function Home() {
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">PLSX:</span>
                         <div className="text-right">
-                          <div className="text-slate-100">{formatMillions(totalDistributed.plsx, 2)}</div>
+                          <div className="text-slate-100">{formatBillions(totalDistributed.plsx, 2)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas((Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx).toFixed(2))}
@@ -969,7 +1377,7 @@ export default function Home() {
               className="max-w-6xl mx-auto py-16 px-4 text-center"
             >
               <h2 className="text-2xl md:text-3xl font-medium text-center mb-12 text-slate-200">
-                See what has accrued by holding Opus and Coda
+                See what your wallets hold
               </h2>
 
               <div className="space-y-6 max-w-4xl mx-auto w-full">
@@ -1010,7 +1418,7 @@ export default function Home() {
                       disabled={loading}
                       className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-cyan-600 hover:from-orange-500 hover:to-cyan-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? "Updating..." : rewards && rewards.length > 0 ? "Update rewards" : "Check rewards"}
+                      {loading ? "Updating..." : rewards && rewards.length > 0 ? "Update" : "Where things stand"}
                     </button>
                   </div>
                   {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -1067,11 +1475,13 @@ export default function Home() {
                 {/* Rewards Display */}
                 {rewards && rewards.length > 0 && (
                   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                    {rewards.length > 0 && (
+                    {rewards.length > 0 && 
+                     (rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) > 0 || 
+                      rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) > 0) && (
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 mb-6"
+                        className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 mb-4"
                       >
                         <div className="space-y-3">
                           {/* Total Value */}
@@ -1100,61 +1510,67 @@ export default function Home() {
                           </div>
 
                           {/* Total Opus Holdings */}
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span className="text-base">Total Opus holdings:</span>
-                            <span className="text-base font-normal">
-                              {formatWithCommas(
-                                rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0).toString(),
-                                0,
-                              )}
-                              {tokenPrices.opus > 0 && (
-                                <span className="text-slate-400">
-                                  {" "}
-                                  ($
-                                  {formatWithCommas(
-                                    formatDecimals(
-                                      (
-                                        rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) *
-                                        tokenPrices.opus
-                                      ).toString(),
-                                      2,
-                                    ),
-                                  )}
-                                  )
-                                </span>
-                              )}
-                            </span>
-                          </div>
+                          {rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) > 0 && (
+                            <div className="flex justify-between items-center text-slate-300">
+                              <span className="text-base">Total Opus holdings:</span>
+                              <span className="text-base font-normal">
+                                {formatWithCommas(
+                                  rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0).toString(),
+                                  0,
+                                )}
+                                {tokenPrices.opus > 0 && (
+                                  <span className="text-slate-400">
+                                    {" "}
+                                    ($
+                                    {formatWithCommas(
+                                      formatDecimals(
+                                        (
+                                          rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) *
+                                          tokenPrices.opus
+                                        ).toString(),
+                                        2,
+                                      ),
+                                    )}
+                                    )
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          )}
 
                           {/* Total Coda Holdings */}
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span className="text-base">Total Coda holdings:</span>
-                            <span className="text-base font-normal">
-                              {formatWithCommas(
-                                rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0).toString(),
-                                0,
-                              )}
-                              {tokenPrices.coda > 0 && (
-                                <span className="text-slate-400">
-                                  {" "}
-                                  ($
-                                  {formatWithCommas(
-                                    formatDecimals(
-                                      (
-                                        rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) *
-                                        tokenPrices.coda
-                                      ).toString(),
-                                      2,
-                                    ),
+                          {rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) > 0 && (
+                            <div className="flex justify-between items-center text-slate-300">
+                              <span className="text-base">Total Coda holdings:</span>
+                              <span className="text-base font-normal">
+                                {formatWithCommas(
+                                  rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0).toString(),
+                                  0,
+                                )}
+                                {tokenPrices.coda > 0 && (
+                                  <span className="text-slate-400">
+                                    {" "}
+                                    ($
+                                    {formatWithCommas(
+                                      formatDecimals(
+                                        (
+                                          rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) *
+                                          tokenPrices.coda
+                                        ).toString(),
+                                        2,
+                                      ),
+                                    )}
+                                    )
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
                                   )}
-                                  )
-                                </span>
-                              )}
-                            </span>
-                          </div>
 
                           {/* Total accumulated rewards section */}
-                          {totalRewards && rewards.length > 0 && (
+                          {totalRewards && rewards.length > 0 && 
+                           (rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) > 0 || 
+                            rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) > 0) && (
                             <div className="border-t border-slate-700/50 pt-4 mt-4 space-y-4">
                               {/* Total accumulated rewards */}
                               <div className="flex justify-between items-center text-slate-300">
@@ -1343,7 +1759,9 @@ export default function Home() {
 
                     {/* Individual wallet rewards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {rewards.map((walletRewards, index) => (
+                      {rewards
+                        .filter(w => Number.parseFloat(w.holdings.opus) > 0 || Number.parseFloat(w.holdings.coda) > 0)
+                        .map((walletRewards, index) => (
                         <div
                           key={index}
                           className="rounded-2xl bg-[#111c3a] border border-slate-700/50 overflow-hidden"
@@ -1610,6 +2028,389 @@ export default function Home() {
                 )}
               </div>
             </motion.section>
+
+            {/* Main tokens Display */}
+            {(tokenBalances.pls > 0 || tokenBalances.plsx > 0 || tokenBalances.inc > 0 || tokenBalances.pHex > 0 || tokenBalances.eHexFromEthereum > 0 || tokenBalances.eHex > 0 || tokenBalances.pWbtc > 0) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+              >
+                <h3 className="text-lg font-semibold text-slate-100 mb-4">Main tokens</h3>
+                <div className="space-y-2">
+                  {tokenBalances.pls > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        PLS — {tokenBalances.pls.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.pls > 0 ? `$${(tokenBalances.pls * tokenPricesAll.pls).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.plsx > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        PLSX — {tokenBalances.plsx.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.plsx > 0 ? `$${(tokenBalances.plsx * tokenPricesAll.plsx).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.inc > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        INC — {tokenBalances.inc.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.inc > 0 ? `$${(tokenBalances.inc * tokenPricesAll.inc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.pHex > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        pHEX — {tokenBalances.pHex.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {hexPricePulsechain > 0 ? `$${(tokenBalances.pHex * hexPricePulsechain).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.eHexFromEthereum > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        HEX from Ethereum — {tokenBalances.eHexFromEthereum.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {hexPriceEthereum > 0 ? `$${(tokenBalances.eHexFromEthereum * hexPriceEthereum).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.eHex > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        eHEX — {tokenBalances.eHex.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {hexPriceEthereum > 0 ? `$${(tokenBalances.eHex * hexPriceEthereum).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.pWbtc > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        pWBTC — {tokenBalances.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 3 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.wbtc > 0 ? `$${(tokenBalances.pWbtc * tokenPricesAll.wbtc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        Opus — {rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPrices.opus > 0 ? `$${(rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.opus), 0) * tokenPrices.opus).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        Coda — {rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPrices.coda > 0 ? `$${(rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) * tokenPrices.coda).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* HEX Stakes Cards - Separated by Chain */}
+            {hexStakes.filter(s => s.chain === "Pulsechain").length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleStakeCard("hex-pls")}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-semibold text-slate-100">HEX Stakes (Pulsechain)</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-slate-400">
+                      {(() => {
+                        const stakes = hexStakes.filter(s => s.chain === "Pulsechain")
+                        const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
+                        const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
+                        const totalValue = totalHex * hexPricePulsechain
+                        const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
+                        return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} stake${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPricePulsechain > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                      })()}
+                    </div>
+                    <svg
+                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedStakeCards.has("hex-pls") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+                {expandedStakeCards.has("hex-pls") && (
+                  <div className="space-y-2 mt-4">
+                    {hexStakes.filter(s => s.chain === "Pulsechain").map((stake, idx) => {
+                      const usdValue = stake.stakedHearts * hexPricePulsechain
+                      return (
+                        <div
+                          key={`${stake.wallet}-${stake.stakeId}-${idx}`}
+                          className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                        >
+                          <span className="text-sm text-slate-300">
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </span>
+                          <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
+                            {hexPricePulsechain > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {hexStakes.filter(s => s.chain === "Ethereum").length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleStakeCard("hex-eth")}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-semibold text-slate-100">HEX Stakes (Ethereum)</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-slate-400">
+                      {(() => {
+                        const stakes = hexStakes.filter(s => s.chain === "Ethereum")
+                        const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
+                        const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
+                        const totalValue = totalHex * hexPriceEthereum
+                        const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
+                        return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} stake${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPriceEthereum > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                      })()}
+                    </div>
+                    <svg
+                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedStakeCards.has("hex-eth") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+                {expandedStakeCards.has("hex-eth") && (
+                  <div className="space-y-2 mt-4">
+                    {hexStakes.filter(s => s.chain === "Ethereum").map((stake, idx) => {
+                      const usdValue = stake.stakedHearts * hexPriceEthereum
+                      return (
+                        <div
+                          key={`${stake.wallet}-${stake.stakeId}-${idx}`}
+                          className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                        >
+                          <span className="text-sm text-slate-300">
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </span>
+                          <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
+                            {hexPriceEthereum > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* HSI Stakes Cards - Separated by Chain */}
+            {hsiStakes.filter(s => s.chain === "Pulsechain").length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleStakeCard("hsi-pls")}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-semibold text-slate-100">HSI Stakes (Pulsechain)</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-slate-400">
+                      {(() => {
+                        const stakes = hsiStakes.filter(s => s.chain === "Pulsechain")
+                        const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
+                        const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
+                        const totalValue = totalHex * hexPricePulsechain
+                        const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
+                        return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} HSI${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPricePulsechain > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                      })()}
+                    </div>
+                    <svg
+                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedStakeCards.has("hsi-pls") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+                {expandedStakeCards.has("hsi-pls") && (
+                  <div className="space-y-2 mt-4">
+                    {hsiStakes.filter(s => s.chain === "Pulsechain").map((stake, idx) => {
+                      const usdValue = stake.stakedHearts * hexPricePulsechain
+                      return (
+                        <div
+                          key={`${stake.wallet}-${stake.stakeId}-${idx}`}
+                          className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                        >
+                          <span className="text-sm text-slate-300">
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? " (Auto)" : ""} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </span>
+                          <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
+                            {hexPricePulsechain > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {hsiStakes.filter(s => s.chain === "Ethereum").length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleStakeCard("hsi-eth")}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-semibold text-slate-100">HSI Stakes (Ethereum)</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-slate-400">
+                      {(() => {
+                        const stakes = hsiStakes.filter(s => s.chain === "Ethereum")
+                        const totalHex = stakes.reduce((sum, s) => sum + s.stakedHearts, 0)
+                        const totalTShares = stakes.reduce((sum, s) => sum + s.stakeShares, 0)
+                        const totalValue = totalHex * hexPriceEthereum
+                        const avgLength = Math.round(stakes.reduce((sum, s) => sum + s.stakedDays, 0) / stakes.length)
+                        return `${totalTShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares | ${stakes.length} HSI${stakes.length > 1 ? "s" : ""} | Avg: ${avgLength} days | ${totalHex.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX${hexPriceEthereum > 0 ? ` / $${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`
+                      })()}
+                    </div>
+                    <svg
+                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedStakeCards.has("hsi-eth") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+                {expandedStakeCards.has("hsi-eth") && (
+                  <div className="space-y-2 mt-4">
+                    {hsiStakes.filter(s => s.chain === "Ethereum").map((stake, idx) => {
+                      const usdValue = stake.stakedHearts * hexPriceEthereum
+                      return (
+                        <div
+                          key={`${stake.wallet}-${stake.stakeId}-${idx}`}
+                          className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                        >
+                          <span className="text-sm text-slate-300">
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {stake.stakedHearts.toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {stake.stakeShares.toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? " (Auto)" : ""} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </span>
+                          <span className={`text-sm font-medium ${stake.isActive ? "text-green-400" : "text-slate-400"}`}>
+                            {hexPriceEthereum > 0 ? `$${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+{/* Liquid Loans Display */}
+            {liquidLoansVaults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleStakeCard("liquid-loans")}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h3 className="text-lg font-semibold text-slate-100">Liquid Loans vaults</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-slate-400">
+                      Total collateral: {liquidLoansVaults.reduce((sum, v) => sum + v.lockedPLS, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS | Total Debt: {liquidLoansVaults.reduce((sum, v) => sum + v.debt, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
+                    </div>
+                    <svg
+                      className={`w-5 h-5 text-slate-400 transition-transform ${expandedStakeCards.has("liquid-loans") ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+                {expandedStakeCards.has("liquid-loans") && (
+                  <div className="space-y-2 mt-4">
+                    {liquidLoansVaults.map((vault, idx) => (
+                      <div
+                        key={`${vault.wallet}-${idx}`}
+                        className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                      >
+                        <span className="text-sm text-slate-300">
+                          {vault.wallet.slice(0, 6)}...{vault.wallet.slice(-4)} — Collateral: {vault.lockedPLS.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
+                        </span>
+                        <span className="text-sm font-medium text-green-400">
+                          Debt: {vault.debt.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             <div className="text-center space-y-8 mt-8">
               <h2 className="text-2xl md:text-3xl text-slate-200 font-medium">
                 Have you decided how many of each to own?
@@ -1677,7 +2478,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex justify-center gap-6 mt-8">
-              <Link href="https://x.com/OpusCodaPrinter" target="_blank" rel="noopener noreferrer" className="group">
+              <Link href="https://x.com/OpusEco" target="_blank" rel="noopener noreferrer" className="group">
                 <div className="w-14 h-14 rounded-full bg-[#111c3a] border border-blue-900/30 flex items-center justify-center hover:bg-blue-900/30 hover:border-cyan-500/50 transition-all duration-300 shadow-lg hover:shadow-cyan-500/20">
                   <svg
                     className="w-6 h-6 text-slate-400 group-hover:text-cyan-300 transition-colors"
