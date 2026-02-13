@@ -2450,6 +2450,23 @@ export default function Home() {
                     Buy Coda
                   </span>
                 </Link>
+                <Link
+                  href="https://ipfs.app.pulsex.com/?inputCurrency=0xA1077a294dDE1B09bB078844df40758a5D0f9a27&outputCurrency=0xf4754Aa585caBf38537A68660469A17E203D8632"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
+                >
+                  <Image
+                    src="/smaug.jpg"
+                    alt="Smaug logo"
+                    width={192}
+                    height={192}
+                    className="w-48 h-48 rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
+                  />
+                  <span className="text-xl font-medium text-cyan-300 group-hover:text-cyan-200 transition-colors">
+                    Buy Smaug
+                  </span>
+                </Link>
               </div>
             </div>
             <div>
@@ -2473,6 +2490,16 @@ export default function Home() {
                     className="hover:underline hover:text-cyan-200 transition"
                   >
                     Coda: 0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7
+                  </Link>
+                </div>
+                <div>
+                  <Link
+                    href="https://otter.pulsechain.com/address/0xf4754Aa585caBf38537A68660469A17E203D8632"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline hover:text-cyan-200 transition"
+                  >
+                    Smaug: 0xf4754Aa585caBf38537A68660469A17E203D8632
                   </Link>
                 </div>
               </div>
