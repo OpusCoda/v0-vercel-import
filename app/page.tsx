@@ -184,6 +184,7 @@ export default function Home() {
     debt: number
   }>>([])
   const [expandedStakeCards, setExpandedStakeCards] = useState<Set<string>>(new Set())
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
 
   const toggleStakeCard = (cardId: string) => {
     setExpandedStakeCards((prev) => {
@@ -2450,31 +2451,64 @@ export default function Home() {
                     Buy Coda
                   </span>
                 </Link>
+                <Link
+                  href="https://ipfs.app.pulsex.com/?inputCurrency=0xA1077a294dDE1B09bB078844df40758a5D0f9a27&outputCurrency=0xf4754Aa585caBf38537A68660469A17E203D8632"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
+                >
+                  <Image
+                    src="/smaug.jpg"
+                    alt="Smaug logo"
+                    width={192}
+                    height={192}
+                    className="w-48 h-48 rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
+                  />
+                  <span className="text-xl font-medium text-cyan-300 group-hover:text-cyan-200 transition-colors">
+                    Buy Smaug
+                  </span>
+                </Link>
               </div>
             </div>
             <div>
               <p className="text-slate-200 text-sm mb-4 text-center">Contract addresses</p>
               <div className="space-y-3 text-cyan-300 text-base text-center">
-                <div>
-                  <Link
-                    href="https://otter.pulsechain.com/address/0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline hover:text-cyan-200 transition"
-                  >
-                    Opus: 0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4
-                  </Link>
-                </div>
-                <div>
-                  <Link
-                    href="https://otter.pulsechain.com/address/0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline hover:text-cyan-200 transition"
-                  >
-                    Coda: 0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7
-                  </Link>
-                </div>
+                {[
+                  { name: "Opus", address: "0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4" },
+                  { name: "Coda", address: "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7" },
+                  { name: "Smaug", address: "0xf4754Aa585caBf38537A68660469A17E203D8632" },
+                ].map((token) => (
+                  <div key={token.name} className="flex items-center justify-center gap-2">
+                    <Link
+                      href={`https://otter.pulsechain.com/address/${token.address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline hover:text-cyan-200 transition"
+                    >
+                      {token.name}: {token.address}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(token.address)
+                        setCopiedAddress(token.address)
+                        setTimeout(() => setCopiedAddress(null), 2000)
+                      }}
+                      className="p-1 rounded hover:bg-slate-700/50 transition-colors"
+                      title={`Copy ${token.name} address`}
+                    >
+                      {copiedAddress === token.address ? (
+                        <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4 text-slate-400 hover:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="flex justify-center gap-6 mt-8">
