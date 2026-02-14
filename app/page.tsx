@@ -1473,7 +1473,7 @@ export default function Home() {
                     </div>
                     <p className="text-slate-400 text-sm text-center mb-5">
                       Smaug's hoard of assorted yield-generating printer tokens.
-All yield is used to buy and burn Smaug.
+All yield is used multiple times a day to buy and burn Smaug.
                     </p>
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li>
