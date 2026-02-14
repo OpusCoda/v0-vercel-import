@@ -1316,6 +1316,7 @@ export default function Home() {
                 </div>
 
                 {/* Token Mechanics & Metrics */}
+                <h3 className="text-2xl font-['Marcellus_SC'] text-green-300 mb-4 text-center">Anatomy of Smaug:</h3>
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
                     <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics — 6.50%</h4>
@@ -1589,6 +1590,7 @@ All yield is used multiple times a day to buy and burn Smaug.
               </div>
             </div>
 
+            <h3 className="text-2xl font-['Marcellus_SC'] text-sky-300 mb-4 text-center">What are Opus and Coda?</h3>
             <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
               <iframe
                 className="w-full aspect-video"
