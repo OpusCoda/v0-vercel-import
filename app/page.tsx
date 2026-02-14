@@ -322,7 +322,7 @@ export default function Home() {
       const fetchedPlsPrice = plsPriceData.pair?.priceUsd ? Number(plsPriceData.pair.priceUsd) : 0
       setPlsPrice(fetchedPlsPrice)
 
-      // Fetch PLS balance of Smaug Vault
+      // Fetch PLS balance of Smaug's Vault
       const vaultBalance = await provider.getBalance("0xd6B7f6F0559459354391ae1055E3A6768f465483")
       setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
 
@@ -415,7 +415,7 @@ export default function Home() {
         dominancePrice: domPrice,
       })
     } catch (err) {
-      console.error("[v0] Error fetching Smaug vault data:", err)
+      console.error("[v0] Error fetching Smaug's vault data:", err)
     }
   }
 
@@ -1315,7 +1315,7 @@ export default function Home() {
                 {/* Token Mechanics & Metrics */}
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
-                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Token Mechanics</h4>
+                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics</h4>
                     <ul className="space-y-2 text-slate-300">
                       <li className="flex justify-between">
                         <span>Reflections</span>
@@ -1377,11 +1377,11 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Smaug Vault & The Hoard */}
+                {/* Smaug's Vault & The Hoard wallet */}
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <h4 className="text-xl font-medium text-green-300">Smaug Vault</h4>
+                      <h4 className="text-xl font-medium text-green-300">Smaug's Vault</h4>
                       <button
                         type="button"
                         onClick={() => {
@@ -1390,7 +1390,7 @@ export default function Home() {
                           setTimeout(() => setCopiedAddress(null), 2000)
                         }}
                         className="p-1 rounded hover:bg-green-900/30 transition-colors"
-                        title="Copy Smaug Vault address"
+                        title="Copy the address"
                       >
                         {copiedAddress === "smaugVault" ? (
                           <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1444,7 +1444,7 @@ export default function Home() {
                   </div>
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <h4 className="text-xl font-medium text-green-300">The Hoard</h4>
+                      <h4 className="text-xl font-medium text-green-300">The Hoard wallet</h4>
                       <button
                         type="button"
                         onClick={() => {
@@ -1453,7 +1453,7 @@ export default function Home() {
                           setTimeout(() => setCopiedAddress(null), 2000)
                         }}
                         className="p-1 rounded hover:bg-green-900/30 transition-colors"
-                        title="Copy The Hoard address"
+                        title="Copy the address"
                       >
                         {copiedAddress === "theHoard" ? (
                           <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
