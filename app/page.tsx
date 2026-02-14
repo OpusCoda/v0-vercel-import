@@ -1404,7 +1404,7 @@ export default function Home() {
                       </button>
                     </div>
                     <p className="text-slate-400 text-sm text-center mb-5">
-                      Strategic capital reserve funded by protocol fees. Deploys capital into market buybacks during strength phases.
+                      Strategic buybacks activated on 10–25% drawdowns.
                     </p>
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li>
