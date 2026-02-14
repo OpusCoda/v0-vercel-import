@@ -1306,15 +1306,14 @@ export default function Home() {
                   />
                   <div className="text-center md:text-left">
                     <h3 className="text-3xl md:text-4xl font-['Marcellus_SC'] text-green-300 mb-3">Smaug — The final pillar</h3>
-                    <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl">
+                    <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl mb-4">
                       The Opus ecosystem on PulseChain now stands grounded on its three final pillars:
-                      
-                      Smaug — The sole deflationary token with reflections and four separate buy and burns
-                      
-                      Opus — The first core printer token that consistently distributes Finvesta, Missor, and WGPP
-                      
-                      Coda — The second printer token that consistently distributes WETH, pWBTC and PLSX
                     </p>
+                    <ul className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl space-y-2">
+                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Smaug</strong> — The sole deflationary token with reflections and four separate buy and burns</span></li>
+                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Opus</strong> — The first core printer token that consistently distributes Finvesta, Missor, and WGPP</span></li>
+                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Coda</strong> — The second printer token that consistently distributes WETH, pWBTC and PLSX</span></li>
+                    </ul>
                   </div>
                 </div>
 
