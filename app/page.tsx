@@ -1467,7 +1467,8 @@ export default function Home() {
                       </button>
                     </div>
                     <p className="text-slate-400 text-sm text-center mb-5">
-                      Yield-generating reserve wallet holding printer tokens. All yield is systematically converted into ecosystem buybacks and burns.
+                      A reserve of yield-generating printer tokens.
+All yield is systematically used for additional buybacks and burns.
                     </p>
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li>
