@@ -1318,15 +1318,6 @@ export default function Home() {
                     <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics — 6.50%</h4>
                     <ul className="space-y-2 text-slate-300">
                       <li className="flex justify-between">
-                        <span>Buy/Sell Tax</span>
-                        <span className="text-green-300 font-medium">6.50%</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span>Transfer Tax</span>
-                        <span className="text-green-300 font-medium">0%</span>
-                      </li>
-                      <li className="border-t border-green-900/20 my-1"></li>
-                      <li className="flex justify-between">
                         <span>Buy & Burn</span>
                         <span className="text-green-300 font-medium">3.5%</span>
                       </li>
@@ -1343,6 +1334,7 @@ export default function Home() {
                         <span className="text-green-300 font-medium">0.5%</span>
                       </li>
                     </ul>
+                    <p className="text-xs text-slate-400 mt-4 text-center">Transfer tax: 0%</p>
                   </div>
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
                     <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Smaug Metrics</h4>
