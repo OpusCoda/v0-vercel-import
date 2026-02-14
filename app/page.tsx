@@ -1506,11 +1506,18 @@ export default function Home() {
                             : "--"}
                         </span>
                       </li>
-                      <li className="flex justify-between">
-                        <span>SMAUG Bought & Burned</span>
-                        <span className="text-green-300 font-medium">
-                          {smaugVaultBurned > 0 ? smaugVaultBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
-                        </span>
+                      <li>
+                        <div className="flex justify-between">
+                          <span>SMAUG Bought & Burned</span>
+                          <span className="text-green-300 font-medium">
+                            {smaugVaultBurned > 0 ? smaugVaultBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                          </span>
+                        </div>
+                        {smaugVaultBurned > 0 && (
+                          <div className="text-right text-xs text-slate-400 mt-0.5">
+                            ({((smaugVaultBurned / 1_000_000_000) * 100).toFixed(4)}% of total supply)
+                          </div>
+                        )}
                       </li>
                     </ul>
                   </div>
@@ -1599,11 +1606,18 @@ export default function Home() {
                           </div>
                         </div>
                       </li>
-                      <li className="flex justify-between border-t border-green-900/20 pt-3">
-                        <span>SMAUG Bought & Burned</span>
-                        <span className="text-green-300 font-medium">
-                          {smaugHoardBurned > 0 ? smaugHoardBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
-                        </span>
+                      <li className="border-t border-green-900/20 pt-3">
+                        <div className="flex justify-between">
+                          <span>SMAUG Bought & Burned</span>
+                          <span className="text-green-300 font-medium">
+                            {smaugHoardBurned > 0 ? smaugHoardBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                          </span>
+                        </div>
+                        {smaugHoardBurned > 0 && (
+                          <div className="text-right text-xs text-slate-400 mt-0.5">
+                            ({((smaugHoardBurned / 1_000_000_000) * 100).toFixed(4)}% of total supply)
+                          </div>
+                        )}
                       </li>
                     </ul>
                   </div>
