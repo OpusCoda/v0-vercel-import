@@ -1434,7 +1434,7 @@ export default function Home() {
                         </div>
                         {smaugVaultBurned > 0 && (
                           <div className="text-right text-xs text-slate-400 mt-0.5">
-                            ({((smaugVaultBurned / 1_000_000_000) * 100).toFixed(4)}% of total supply)
+                            ({((smaugVaultBurned / 1_000_000_000) * 100).toFixed(3)}% of total supply)
                           </div>
                         )}
                       </li>
@@ -1557,7 +1557,7 @@ All yield is systematically used for additional buybacks and burns.
                         </div>
                         {smaugHoardBurned > 0 && (
                           <div className="text-right text-xs text-slate-400 mt-0.5">
-                            ({((smaugHoardBurned / 1_000_000_000) * 100).toFixed(4)}% of total supply)
+                            ({((smaugHoardBurned / 1_000_000_000) * 100).toFixed(3)}% of total supply)
                           </div>
                         )}
                       </li>
