@@ -70,6 +70,12 @@ const DISTRIBUTOR_ABI = [
   "function totalPlsxDistributed() view returns (uint256)",
 ]
 
+const SMAUG_ABI = [
+  "function balanceOf(address) view returns (uint256)",
+  "function totalBurned() view returns (uint256)",
+  "event Transfer(address indexed from, address indexed to, uint256 value)",
+]
+
 const BALANCE_ABI = ["function balanceOf(address) view returns (uint256)"] // 0x70a08231
 
 const HEX_PULSECHAIN_ADDRESS = "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39"
@@ -104,6 +110,7 @@ const PLSX_ADDRESS = "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab"
 const INC_ADDRESS = "0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d"
 const EHEX_FROM_ETHEREUM_ADDRESS = "0x57fde0a71132198BBeC939B98976993d8D89D225" // eHEX bridged to Pulsechain
 const PWBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" // WBTC on Pulsechain
+const SMAUG_ADDRESS = "0xf4754Aa585caBf38537A68660469A17E203D8632"
 
 export default function Home() {
   const [rewards, setRewards] = useState<
@@ -169,7 +176,8 @@ export default function Home() {
     eHexFromEthereum: number
     eHex: number
     pWbtc: number
-  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0 })
+    smaug: number
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0, smaug: 0 })
   const [tokenPricesAll, setTokenPricesAll] = useState<{
     pls: number
     plsx: number
@@ -185,6 +193,23 @@ export default function Home() {
   }>>([])
   const [expandedStakeCards, setExpandedStakeCards] = useState<Set<string>>(new Set())
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
+  const [smaugVaultPLS, setSmaugVaultPLS] = useState(0)
+  const [smaugPrice, setSmaugPrice] = useState(0)
+  const [plsPrice, setPlsPrice] = useState(0)
+  const [smaugTotalBurned, setSmaugTotalBurned] = useState(0)
+  const [smaugMarketCap, setSmaugMarketCap] = useState(0)
+  const [smaugLiquidity, setSmaugLiquidity] = useState(0)
+  const [smaugVaultBurned, setSmaugVaultBurned] = useState(0)
+  const [smaugHoardBurned, setSmaugHoardBurned] = useState(0)
+  const [hoardData, setHoardData] = useState<{
+    pls: number
+    pWbtc: number
+    pWbtcPrice: number
+    gasMoney: number
+    gasMoneyPrice: number
+    dominance: number
+    dominancePrice: number
+  }>({ pls: 0, pWbtc: 0, pWbtcPrice: 0, gasMoney: 0, gasMoneyPrice: 0, dominance: 0, dominancePrice: 0 })
 
   const toggleStakeCard = (cardId: string) => {
     setExpandedStakeCards((prev) => {
@@ -281,10 +306,118 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetchLiquidityData()
-    fetchTotalDistributed()
-    fetchTokenPrices()
+  fetchLiquidityData()
+> fetchTotalDistributed()
+  fetchTokenPrices()
+  fetchSmaugVaultData()
   }, [])
+
+  const fetchSmaugVaultData = async () => {
+    try {
+      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
+      
+      // Fetch PLS price independently
+      const plsPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe56043671df55de5cdf8459710433c10324de0ae")
+      const plsPriceData = await plsPriceRes.json()
+      const fetchedPlsPrice = plsPriceData.pair?.priceUsd ? Number(plsPriceData.pair.priceUsd) : 0
+      setPlsPrice(fetchedPlsPrice)
+
+      // Fetch PLS balance of Smaug's Vault
+      const vaultBalance = await provider.getBalance("0xd6B7f6F0559459354391ae1055E3A6768f465483")
+      setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
+
+      // Fetch Smaug price from DexScreener
+      const smaugPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x151e583badb57138d41aa964ac3ff38d4bb1145f")
+      const smaugPriceData = await smaugPriceRes.json()
+      if (smaugPriceData.pair?.priceUsd) {
+        setSmaugPrice(Number(smaugPriceData.pair.priceUsd))
+      }
+      if (smaugPriceData.pair?.marketCap) {
+        setSmaugMarketCap(Number(smaugPriceData.pair.marketCap))
+      } else if (smaugPriceData.pair?.fdv) {
+        setSmaugMarketCap(Number(smaugPriceData.pair.fdv))
+      }
+      if (smaugPriceData.pair?.liquidity?.usd) {
+        setSmaugLiquidity(Number(smaugPriceData.pair.liquidity.usd))
+      }
+
+      // Fetch total Smaug burned from contract's totalBurned() function
+      const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
+      try {
+        const totalBurned = await smaugContract.totalBurned()
+        setSmaugTotalBurned(Number(ethers.formatEther(totalBurned)))
+      } catch {
+        // Fallback: read burn wallet balance
+        const burnBalance = await smaugContract.balanceOf("0x0000000000000000000000000000000000000369")
+        setSmaugTotalBurned(Number(ethers.formatEther(burnBalance)))
+      }
+
+      // Fetch per-wallet burns by querying Transfer events to burn address
+      const burnAddress = "0x0000000000000000000000000000000000000369"
+      const vaultAddress = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
+      const hoardAddr = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
+      const transferFilter = smaugContract.filters.Transfer
+      
+      try {
+        const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
+          smaugContract.queryFilter(transferFilter(vaultAddress, burnAddress)),
+          smaugContract.queryFilter(transferFilter(hoardAddr, burnAddress)),
+        ])
+        const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => {
+          const log = e as ethers.EventLog
+          return sum + Number(ethers.formatEther(log.args[2]))
+        }, 0)
+        const hoardBurnTotal = hoardBurnEvents.reduce((sum, e) => {
+          const log = e as ethers.EventLog
+          return sum + Number(ethers.formatEther(log.args[2]))
+        }, 0)
+        setSmaugVaultBurned(vaultBurnTotal)
+        setSmaugHoardBurned(hoardBurnTotal)
+      } catch (evtErr) {
+        console.error("[v0] Error fetching burn events:", evtErr)
+      }
+
+      // Fetch The Hoard wallet data (0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a)
+      const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
+      const hoardPlsBalance = await provider.getBalance(hoardAddress)
+      
+      const gasMoneyContract = new ethers.Contract("0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106", BALANCE_ABI, provider)
+      const dominanceContract = new ethers.Contract("0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA", BALANCE_ABI, provider)
+      const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
+      
+      const [gasMoneyBal, dominanceBal, pWbtcBal] = await Promise.all([
+        gasMoneyContract.balanceOf(hoardAddress),
+        dominanceContract.balanceOf(hoardAddress),
+        pWbtcContract.balanceOf(hoardAddress),
+      ])
+
+      // Fetch Gas Money, Dominance, and pWBTC prices
+      const [gasMoneyPriceRes, dominancePriceRes, pWbtcPriceRes] = await Promise.all([
+        fetch("https://api.dexscreener.com/latest/dex/tokens/0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106"),
+        fetch("https://api.dexscreener.com/latest/dex/tokens/0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA"),
+        fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf"),
+      ])
+      const gasMoneyPriceData = await gasMoneyPriceRes.json()
+      const dominancePriceData = await dominancePriceRes.json()
+      const pWbtcPriceData = await pWbtcPriceRes.json()
+      
+      const gmPrice = gasMoneyPriceData.pairs?.[0]?.priceUsd ? Number(gasMoneyPriceData.pairs[0].priceUsd) : 0
+      const domPrice = dominancePriceData.pairs?.[0]?.priceUsd ? Number(dominancePriceData.pairs[0].priceUsd) : 0
+      const wbtcPrice = pWbtcPriceData.pair?.priceUsd ? Number(pWbtcPriceData.pair.priceUsd) : 0
+
+      setHoardData({
+        pls: Number(ethers.formatEther(hoardPlsBalance)),
+        pWbtc: Number(ethers.formatUnits(pWbtcBal, 8)),
+        pWbtcPrice: wbtcPrice,
+        gasMoney: Number(ethers.formatEther(gasMoneyBal)),
+        gasMoneyPrice: gmPrice,
+        dominance: Number(ethers.formatEther(dominanceBal)),
+        dominancePrice: domPrice,
+      })
+    } catch (err) {
+      console.error("[v0] Error fetching Smaug's vault data:", err)
+    }
+  }
 
   const fetchTotalDistributed = async () => {
     try {
@@ -922,6 +1055,7 @@ export default function Home() {
       let totalEHexFromEthereum = 0
       let totalEHex = 0
       let totalPWbtc = 0
+      let totalSmaug = 0
 
       for (const address of addresses) {
         try {
@@ -953,6 +1087,11 @@ export default function Home() {
           const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
           const pWbtcBalance = await pWbtcContract.balanceOf(address)
           totalPWbtc += Number(ethers.formatUnits(pWbtcBalance, 8))
+
+          // Smaug
+          const smaugContract = new ethers.Contract(SMAUG_ADDRESS, BALANCE_ABI, provider)
+          const smaugBalance = await smaugContract.balanceOf(address)
+          totalSmaug += Number(ethers.formatEther(smaugBalance))
         } catch (err) {
           console.error(`[v0] Error fetching Pulsechain token balances for ${address}:`, err)
         }
@@ -975,6 +1114,7 @@ export default function Home() {
         eHexFromEthereum: totalEHexFromEthereum,
         eHex: totalEHex,
         pWbtc: totalPWbtc,
+        smaug: totalSmaug,
       })
 
       // Fetch token prices
@@ -1150,15 +1290,307 @@ export default function Home() {
         <Card className="bg-[#0f172a]/90 backdrop-blur border border-blue-900/40 shadow-[0_0_80px_rgba(56,189,248,0.08)] rounded-3xl">
           <CardContent className="py-12 flex flex-col gap-14">
             <div className="text-center space-y-8">
-              <img
-                src="/opuscoda.jpg"
-                alt="Opus & Coda logo"
-                className="mx-auto w-64 h-64 md:w-80 md:h-80 rounded-3xl shadow-[0_0_80px_rgba(249,115,22,0.35)]"
-              />
-              <p className="text-slate-200 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed">
-                The reliable and consistent ecosystem on PulseChain
-              </p>
+              
             </div>
+
+            {/* Smaug Section */}
+            <div>
+              <div className="rounded-2xl bg-gradient-to-br from-[#0a1a0a] to-[#111c3a] border border-green-900/40 p-8">
+                <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
+                  <img
+                    src="/images/dragon-dore.png"
+                    alt="Dragon illustration by Gustave Doré"
+                    className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-[0_0_60px_rgba(34,197,94,0.3)] object-cover"
+                  />
+                  <div className="text-center md:text-left">
+                    <h3 className="text-3xl md:text-4xl font-['Marcellus_SC'] text-green-300 mb-3">Smaug — The last of the three pillars</h3>
+                    <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl mb-4">
+                      
+                    </p>
+                    <ul className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl space-y-2">
+                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Opus</strong> — The first core printer token that consistently distributes Finvesta, Missor, and WGPP</span></li>
+                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Coda</strong> — The second printer token that consistently distributes WETH, pWBTC and PLSX</span></li>
+                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Smaug</strong> — The sole deflationary token with reflections and four separate buy and burns</span></li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Token Mechanics & Metrics */}
+                <h3 className="text-2xl font-['Marcellus_SC'] text-green-300 mb-4 text-center">Anatomy of Smaug:</h3>
+                <div className="grid md:grid-cols-2 gap-8 mb-8">
+                  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
+                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics — 6.50%</h4>
+                    <ul className="space-y-2 text-slate-300">
+                      <li className="flex justify-between">
+                        <span>Buy & burn</span>
+                        <span className="text-green-300 font-medium">3.5%</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Reflections to holders</span>
+                        <span className="text-green-300 font-medium">1.5%</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Added to Smaug's Vault</span>
+                        <span className="text-green-300 font-medium">1.0%</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Added to locked LP</span>
+                        <span className="text-green-300 font-medium">0.5%</span>
+                      </li>
+                    </ul>
+                    <p className="text-xs text-slate-400 mt-4 text-center">Transfer tax: 0%</p>
+                  </div>
+                  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
+                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Smaug's Ledger</h4>
+                    <ul className="space-y-3 text-sm text-slate-300">
+                      <li className="flex justify-between">
+                        <span>Total Supply</span>
+                        <span className="text-green-300 font-medium">1,000,000,000</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Smaug Burned</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugTotalBurned > 0
+                            ? `${smaugTotalBurned.toLocaleString(undefined, { maximumFractionDigits: 0 })} (${((smaugTotalBurned / 1_000_000_000) * 100).toFixed(2)}%)`
+                            : "--"}
+                        </span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Circulating Supply</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugTotalBurned > 0
+                            ? (1_000_000_000 - smaugTotalBurned).toLocaleString(undefined, { maximumFractionDigits: 0 })
+                            : "--"}
+                        </span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Market Cap</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugMarketCap > 0 ? `$${smaugMarketCap.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "--"}
+                        </span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Liquidity</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugLiquidity > 0 ? `$${smaugLiquidity.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "--"}
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Smaug's Vault & The Hoard wallet */}
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <h4 className="text-xl font-medium text-green-300">Smaug's Vault</h4>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText("0xd6B7f6F0559459354391ae1055E3A6768f465483")
+                          setCopiedAddress("smaugVault")
+                          setTimeout(() => setCopiedAddress(null), 2000)
+                        }}
+                        className="p-1 rounded hover:bg-green-900/30 transition-colors"
+                        title="Copy the address"
+                      >
+                        {copiedAddress === "smaugVault" ? (
+                          <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4 text-slate-400 hover:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-slate-400 text-sm text-center mb-5">
+                      PLS in Smaug's vault is exclusively used to buy Smaug on 10–25% drawdowns and permanently burn them.
+                    </p>
+                    <ul className="space-y-3 text-sm text-slate-300">
+                      <li>
+                        <div className="flex justify-between">
+                          <span>Ready-to-deploy buy & burn</span>
+                          <span className="text-green-300 font-medium">
+                            {smaugVaultPLS > 0 && plsPrice > 0 && smaugPrice > 0
+                              ? `${((smaugVaultPLS * plsPrice) / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} Smaug`
+                              : "--"}
+                          </span>
+                        </div>
+                        {smaugVaultPLS > 0 && plsPrice > 0 && smaugPrice > 0 && (
+                          <div className="text-right text-xs text-slate-400 mt-0.5">
+                            ({(((smaugVaultPLS * plsPrice) / smaugPrice / 1_000_000_000) * 100).toFixed(3)}% of total supply)
+                          </div>
+                        )}
+                      </li>
+                      <li className="border-t border-green-900/20 pt-3">
+                        <div className="flex justify-between mb-1">
+                          <span>PLS balance</span>
+                          <span className="text-green-300 font-medium">
+                            {smaugVaultPLS > 0 ? smaugVaultPLS.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-400">
+                          <span>Value</span>
+                          <span>{smaugVaultPLS > 0 && plsPrice > 0 ? `$${(smaugVaultPLS * plsPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
+                        </div>
+                      </li>
+                      <li>
+                        <div className="flex justify-between">
+                          <span>Bought & burned to date</span>
+                          <span className="text-green-300 font-medium">
+                            {smaugVaultBurned > 0 ? smaugVaultBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                          </span>
+                        </div>
+                        {smaugVaultBurned > 0 && (
+                          <div className="text-right text-xs text-slate-400 mt-0.5">
+                            ({((smaugVaultBurned / 1_000_000_000) * 100).toFixed(3)}% of total supply)
+                          </div>
+                        )}
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <h4 className="text-xl font-medium text-green-300">The Hoard Wallet</h4>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText("0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a")
+                          setCopiedAddress("theHoard")
+                          setTimeout(() => setCopiedAddress(null), 2000)
+                        }}
+                        className="p-1 rounded hover:bg-green-900/30 transition-colors"
+                        title="Copy the address"
+                      >
+                        {copiedAddress === "theHoard" ? (
+                          <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4 text-slate-400 hover:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-slate-400 text-sm text-center mb-5">
+                      Smaug's hoard of assorted yield-generating printer tokens.
+All yield is used multiple times a day to buy and burn Smaug.
+                    </p>
+                    <ul className="space-y-3 text-sm text-slate-300">
+                      <li>
+                        <div className="flex justify-between">
+                          <span>Ready-to-deploy buy & burn</span>
+                          <span className="text-green-300 font-medium">
+                            {(() => {
+                              const plsVal = hoardData.pls * plsPrice
+                              const wbtcVal = hoardData.pWbtc * hoardData.pWbtcPrice
+                              const totalUsd = plsVal + wbtcVal
+                              if (totalUsd > 0 && smaugPrice > 0) {
+                                return `${(totalUsd / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} Smaug`
+                              }
+                              return "--"
+                            })()}
+                          </span>
+                        </div>
+                        {(() => {
+                          const plsVal = hoardData.pls * plsPrice
+                          const wbtcVal = hoardData.pWbtc * hoardData.pWbtcPrice
+                          const totalUsd = plsVal + wbtcVal
+                          const smaugEquiv = totalUsd > 0 && smaugPrice > 0 ? totalUsd / smaugPrice : 0
+                          return smaugEquiv > 0 ? (
+                            <div className="text-right text-xs text-slate-400 mt-0.5">
+                              ({((smaugEquiv / 1_000_000_000) * 100).toFixed(3)}% of total supply)
+                            </div>
+                          ) : null
+                        })()}
+                      </li>
+                      <li className="border-t border-green-900/20 pt-3">
+                        <div className="flex justify-between mb-1">
+                          <span>PLS balance</span>
+                          <span className="text-green-300 font-medium">
+                            {hoardData.pls > 0 ? hoardData.pls.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-400">
+                          <span>Value</span>
+                          <span>{hoardData.pls > 0 && plsPrice > 0 ? `$${(hoardData.pls * plsPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
+                        </div>
+                      </li>
+                      <li className="border-t border-green-900/20 pt-3">
+                        <div className="flex justify-between mb-1">
+                          <span>pWBTC</span>
+                          <span className="text-green-300 font-medium">
+                            {hoardData.pWbtc > 0 ? hoardData.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 8 }) : "--"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-400">
+                          <span>Value</span>
+                          <span>{hoardData.pWbtc > 0 && hoardData.pWbtcPrice > 0 ? `$${(hoardData.pWbtc * hoardData.pWbtcPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
+                        </div>
+                      </li>
+                      <li className="border-t border-green-900/20 pt-3 mt-1">
+                        <div className="flex justify-between mb-2">
+                          <span>Total printer value</span>
+                          <span className="text-green-300 font-medium">
+                            {(() => {
+                              const gmVal = hoardData.gasMoney * hoardData.gasMoneyPrice
+                              const domVal = hoardData.dominance * hoardData.dominancePrice
+                              const total = gmVal + domVal
+                              return total > 0 ? `$${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"
+                            })()}
+                          </span>
+                        </div>
+                        <div className="ml-4 space-y-2">
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-slate-400">Gas Money</span>
+                              <span className="text-green-300 font-medium">
+                                {hoardData.gasMoney > 0 ? hoardData.gasMoney.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-xs text-slate-500">
+                              <span>Value</span>
+                              <span>{hoardData.gasMoney > 0 && hoardData.gasMoneyPrice > 0 ? `$${(hoardData.gasMoney * hoardData.gasMoneyPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-slate-400">Dominance</span>
+                              <span className="text-green-300 font-medium">
+                                {hoardData.dominance > 0 ? hoardData.dominance.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-xs text-slate-500">
+                              <span>Value</span>
+                              <span>{hoardData.dominance > 0 && hoardData.dominancePrice > 0 ? `$${(hoardData.dominance * hoardData.dominancePrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                      <li className="border-t border-green-900/20 pt-3">
+                        <div className="flex justify-between">
+                          <span>Bought & burned to date</span>
+                          <span className="text-green-300 font-medium">
+                            {smaugHoardBurned > 0 ? smaugHoardBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                          </span>
+                        </div>
+                        {smaugHoardBurned > 0 && (
+                          <div className="text-right text-xs text-slate-400 mt-0.5">
+                            ({((smaugHoardBurned / 1_000_000_000) * 100).toFixed(3)}% of total supply)
+                          </div>
+                        )}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <h3 className="text-2xl font-['Marcellus_SC'] text-sky-300 mb-4 text-center">What are Opus and Coda?</h3>
             <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
               <iframe
                 className="w-full aspect-video"
@@ -2031,7 +2463,7 @@ export default function Home() {
             </motion.section>
 
             {/* Main tokens Display */}
-            {(tokenBalances.pls > 0 || tokenBalances.plsx > 0 || tokenBalances.inc > 0 || tokenBalances.pHex > 0 || tokenBalances.eHexFromEthereum > 0 || tokenBalances.eHex > 0 || tokenBalances.pWbtc > 0) && (
+            {(tokenBalances.pls > 0 || tokenBalances.plsx > 0 || tokenBalances.inc > 0 || tokenBalances.pHex > 0 || tokenBalances.eHexFromEthereum > 0 || tokenBalances.eHex > 0 || tokenBalances.pWbtc > 0 || tokenBalances.smaug > 0) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -2127,6 +2559,16 @@ export default function Home() {
                       </span>
                       <span className="text-sm font-medium text-green-400">
                         {tokenPrices.coda > 0 ? `$${(rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) * tokenPrices.coda).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.smaug > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        Smaug — {tokenBalances.smaug.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {smaugPrice > 0 ? `$${(tokenBalances.smaug * smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
                       </span>
                     </div>
                   )}
