@@ -1284,7 +1284,7 @@ export default function Home() {
         transition={{ duration: 0.7, ease: "easeOut" }}
         className="max-w-5xl w-full mx-auto px-4 py-8"
       >
-        <h1 className="text-center text-6xl md:text-8xl font-['Marcellus_SC'] font-normal tracking-tight text-slate-200 mb-12">
+        <h1 className="text-center text-6xl md:text-8xl font-marcellus font-normal tracking-tight text-slate-200 mb-12">
           The Opus Ecosystem
         </h1>
         <Card className="bg-[#0f172a]/90 backdrop-blur border border-blue-900/40 shadow-[0_0_80px_rgba(56,189,248,0.08)] rounded-3xl">
@@ -1303,7 +1303,7 @@ export default function Home() {
                     className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-[0_0_60px_rgba(34,197,94,0.3)] object-cover"
                   />
                   <div className="text-center md:text-left">
-                    <h3 className="text-3xl md:text-4xl font-['Marcellus_SC'] text-green-300 mb-3">Smaug — The last of the three pillars</h3>
+                    <h3 className="text-3xl md:text-4xl font-marcellus text-green-300 mb-3">Smaug — The last of the three pillars</h3>
                     <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl mb-4">
                       
                     </p>
@@ -1316,7 +1316,7 @@ export default function Home() {
                 </div>
 
                 {/* Token Mechanics & Metrics */}
-                <h3 className="text-2xl font-['Marcellus_SC'] text-green-300 mb-4 text-center">Anatomy of Smaug:</h3>
+                <h3 className="text-2xl font-marcellus text-green-300 mb-4 text-center">Anatomy of Smaug:</h3>
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
                     <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics — 6.50%</h4>
@@ -1590,7 +1590,7 @@ All yield is used multiple times a day to buy and burn Smaug.
               </div>
             </div>
 
-            <h3 className="text-2xl font-['Marcellus_SC'] text-sky-300 mb-4 text-center">What are Opus and Coda?</h3>
+            <h3 className="text-2xl font-marcellus text-sky-300 mb-4 text-center">What are Opus and Coda?</h3>
             <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
               <iframe
                 className="w-full aspect-video"
