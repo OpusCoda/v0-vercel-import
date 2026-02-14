@@ -1291,7 +1291,7 @@ export default function Home() {
           <CardContent className="py-12 flex flex-col gap-14">
             <div className="text-center space-y-8">
               <p className="text-slate-200 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed">
-                The reliable and consistent ecosystem on PulseChain
+                The deliberate ecosystem on PulseChain — Consistent by design
               </p>
             </div>
 
