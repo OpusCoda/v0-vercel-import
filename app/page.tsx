@@ -345,21 +345,21 @@ export default function Home() {
         const totalBurned = await smaugContract.totalBurned()
         setSmaugTotalBurned(Number(ethers.formatEther(totalBurned)))
       } catch {
-        // Fallback: read dead address balance
-        const deadBalance = await smaugContract.balanceOf("0x000000000000000000000000000000000000dEaD")
-        setSmaugTotalBurned(Number(ethers.formatEther(deadBalance)))
+        // Fallback: read burn wallet balance
+        const burnBalance = await smaugContract.balanceOf("0x0000000000000000000000000000000000000369")
+        setSmaugTotalBurned(Number(ethers.formatEther(burnBalance)))
       }
 
-      // Fetch per-wallet burns by querying Transfer events to dead address
-      const deadAddress = "0x000000000000000000000000000000000000dEaD"
+      // Fetch per-wallet burns by querying Transfer events to burn address
+      const burnAddress = "0x0000000000000000000000000000000000000369"
       const vaultAddress = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
       const hoardAddr = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
       const transferFilter = smaugContract.filters.Transfer
       
       try {
         const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
-          smaugContract.queryFilter(transferFilter(vaultAddress, deadAddress)),
-          smaugContract.queryFilter(transferFilter(hoardAddr, deadAddress)),
+          smaugContract.queryFilter(transferFilter(vaultAddress, burnAddress)),
+          smaugContract.queryFilter(transferFilter(hoardAddr, burnAddress)),
         ])
         const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => {
           const log = e as ethers.EventLog
