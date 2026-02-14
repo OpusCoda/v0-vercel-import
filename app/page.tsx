@@ -1453,7 +1453,7 @@ export default function Home() {
                   </div>
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <h4 className="text-xl font-medium text-green-300">The Hoard Wallet</h4>
+                      <h4 className="text-xl font-medium text-green-300">Smaug's Hoard Wallet</h4>
                       <button
                         type="button"
                         onClick={() => {
