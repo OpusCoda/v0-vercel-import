@@ -1485,7 +1485,7 @@ All yield is used to buy Smaug tokens and permanently burn them.
                               const wbtcVal = hoardData.pWbtc * hoardData.pWbtcPrice
                               const totalUsd = plsVal + wbtcVal
                               if (totalUsd > 0 && smaugPrice > 0) {
-                                return `${(totalUsd / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} SMAUG`
+                                return `${(totalUsd / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} Smaug`
                               }
                               return "--"
                             })()}
