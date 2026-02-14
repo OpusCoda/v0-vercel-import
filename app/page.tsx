@@ -1529,7 +1529,7 @@ All yield is used to buy Smaug tokens and permanently burn them.
                       </li>
                       <li className="border-t border-green-900/20 pt-3 mt-1">
                         <div className="flex justify-between mb-2">
-                          <span>Total Printer Asset Value</span>
+                          <span>Total printer value</span>
                           <span className="text-green-300 font-medium">
                             {(() => {
                               const gmVal = hoardData.gasMoney * hoardData.gasMoneyPrice
