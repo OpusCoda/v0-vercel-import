@@ -190,6 +190,7 @@ export default function Home() {
   const [smaugVaultPLS, setSmaugVaultPLS] = useState(0)
   const [smaugPrice, setSmaugPrice] = useState(0)
   const [plsPrice, setPlsPrice] = useState(0)
+  const [smaugBurned, setSmaugBurned] = useState(0)
   const [hoardData, setHoardData] = useState<{
     pls: number
     gasMoney: number
@@ -319,6 +320,11 @@ export default function Home() {
       if (smaugPriceData.pair?.priceUsd) {
         setSmaugPrice(Number(smaugPriceData.pair.priceUsd))
       }
+
+      // Fetch Smaug burned (dead address balance)
+      const smaugContract = new ethers.Contract(SMAUG_ADDRESS, BALANCE_ABI, provider)
+      const deadBalance = await smaugContract.balanceOf("0x000000000000000000000000000000000000dEaD")
+      setSmaugBurned(Number(ethers.formatEther(deadBalance)))
 
       // Fetch The Hoard wallet data (0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a)
       const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
@@ -1385,11 +1391,17 @@ export default function Home() {
                       Strategic capital reserve funded by protocol fees. Deploys capital into market buybacks during strength phases.
                     </p>
                     <ul className="space-y-3 text-sm text-slate-300">
-                      <li className="flex justify-between">
-                        <span>PLS in Vault</span>
-                        <span className="text-green-300 font-medium">
-                          {smaugVaultPLS > 0 ? smaugVaultPLS.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
-                        </span>
+                      <li>
+                        <div className="flex justify-between mb-1">
+                          <span>PLS in Vault</span>
+                          <span className="text-green-300 font-medium">
+                            {smaugVaultPLS > 0 ? smaugVaultPLS.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-400">
+                          <span>Value</span>
+                          <span>{smaugVaultPLS > 0 && plsPrice > 0 ? `$${(smaugVaultPLS * plsPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
+                        </div>
                       </li>
                       <li className="flex justify-between">
                         <span>Current Buying Power</span>
@@ -1401,7 +1413,9 @@ export default function Home() {
                       </li>
                       <li className="flex justify-between">
                         <span>Total SMAUG Bought & Burned</span>
-                        <span className="text-green-300 font-medium">--</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugBurned > 0 ? smaugBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                        </span>
                       </li>
                     </ul>
                   </div>
@@ -1464,7 +1478,9 @@ export default function Home() {
                       </li>
                       <li className="flex justify-between border-t border-green-900/20 pt-3">
                         <span>Total Tokens Bought & Burned</span>
-                        <span className="text-green-300 font-medium">--</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugBurned > 0 ? `${smaugBurned.toLocaleString(undefined, { maximumFractionDigits: 0 })} SMAUG` : "--"}
+                        </span>
                       </li>
                     </ul>
                   </div>
