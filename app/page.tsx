@@ -1422,7 +1422,7 @@ export default function Home() {
                       </li>
                       <li className="border-t border-green-900/20 pt-3">
                         <div className="flex justify-between mb-1">
-                          <span>PLS in vault</span>
+                          <span>PLS balance</span>
                           <span className="text-green-300 font-medium">
                             {smaugVaultPLS > 0 ? smaugVaultPLS.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                           </span>
@@ -1505,7 +1505,7 @@ All yield is used to buy Smaug tokens and permanently burn them.
                       </li>
                       <li className="border-t border-green-900/20 pt-3">
                         <div className="flex justify-between mb-1">
-                          <span>PLS</span>
+                          <span>PLS balance</span>
                           <span className="text-green-300 font-medium">
                             {hoardData.pls > 0 ? hoardData.pls.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                           </span>
