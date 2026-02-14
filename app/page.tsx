@@ -1300,9 +1300,9 @@ export default function Home() {
               <div className="rounded-2xl bg-gradient-to-br from-[#0a1a0a] to-[#111c3a] border border-green-900/40 p-8">
                 <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
                   <img
-                    src="/smaug.jpg"
-                    alt="Smaug token logo"
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-[0_0_60px_rgba(34,197,94,0.3)]"
+                    src="/dragon-dore.avif"
+                    alt="Dragon illustration by Gustave Doré"
+                    className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-[0_0_60px_rgba(34,197,94,0.3)] object-cover"
                   />
                   <div className="text-center md:text-left">
                     <h3 className="text-3xl md:text-4xl font-['Marcellus_SC'] text-green-300 mb-3">Smaug — The final pillar</h3>
