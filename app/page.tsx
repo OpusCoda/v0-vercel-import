@@ -70,6 +70,12 @@ const DISTRIBUTOR_ABI = [
   "function totalPlsxDistributed() view returns (uint256)",
 ]
 
+const SMAUG_ABI = [
+  "function balanceOf(address) view returns (uint256)",
+  "function totalBurned() view returns (uint256)",
+  "event Transfer(address indexed from, address indexed to, uint256 value)",
+]
+
 const BALANCE_ABI = ["function balanceOf(address) view returns (uint256)"] // 0x70a08231
 
 const HEX_PULSECHAIN_ADDRESS = "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39"
@@ -190,7 +196,9 @@ export default function Home() {
   const [smaugVaultPLS, setSmaugVaultPLS] = useState(0)
   const [smaugPrice, setSmaugPrice] = useState(0)
   const [plsPrice, setPlsPrice] = useState(0)
-  const [smaugBurned, setSmaugBurned] = useState(0)
+  const [smaugTotalBurned, setSmaugTotalBurned] = useState(0)
+  const [smaugVaultBurned, setSmaugVaultBurned] = useState(0)
+  const [smaugHoardBurned, setSmaugHoardBurned] = useState(0)
   const [hoardData, setHoardData] = useState<{
     pls: number
     gasMoney: number
@@ -321,10 +329,41 @@ export default function Home() {
         setSmaugPrice(Number(smaugPriceData.pair.priceUsd))
       }
 
-      // Fetch Smaug burned (dead address balance)
-      const smaugContract = new ethers.Contract(SMAUG_ADDRESS, BALANCE_ABI, provider)
-      const deadBalance = await smaugContract.balanceOf("0x000000000000000000000000000000000000dEaD")
-      setSmaugBurned(Number(ethers.formatEther(deadBalance)))
+      // Fetch total Smaug burned from contract's totalBurned() function
+      const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
+      try {
+        const totalBurned = await smaugContract.totalBurned()
+        setSmaugTotalBurned(Number(ethers.formatEther(totalBurned)))
+      } catch {
+        // Fallback: read dead address balance
+        const deadBalance = await smaugContract.balanceOf("0x000000000000000000000000000000000000dEaD")
+        setSmaugTotalBurned(Number(ethers.formatEther(deadBalance)))
+      }
+
+      // Fetch per-wallet burns by querying Transfer events to dead address
+      const deadAddress = "0x000000000000000000000000000000000000dEaD"
+      const vaultAddress = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
+      const hoardAddr = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
+      const transferFilter = smaugContract.filters.Transfer
+      
+      try {
+        const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
+          smaugContract.queryFilter(transferFilter(vaultAddress, deadAddress)),
+          smaugContract.queryFilter(transferFilter(hoardAddr, deadAddress)),
+        ])
+        const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => {
+          const log = e as ethers.EventLog
+          return sum + Number(ethers.formatEther(log.args[2]))
+        }, 0)
+        const hoardBurnTotal = hoardBurnEvents.reduce((sum, e) => {
+          const log = e as ethers.EventLog
+          return sum + Number(ethers.formatEther(log.args[2]))
+        }, 0)
+        setSmaugVaultBurned(vaultBurnTotal)
+        setSmaugHoardBurned(hoardBurnTotal)
+      } catch (evtErr) {
+        console.error("[v0] Error fetching burn events:", evtErr)
+      }
 
       // Fetch The Hoard wallet data (0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a)
       const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
@@ -1412,9 +1451,9 @@ export default function Home() {
                         </span>
                       </li>
                       <li className="flex justify-between">
-                        <span>Total SMAUG Bought & Burned</span>
+                        <span>SMAUG Bought & Burned</span>
                         <span className="text-green-300 font-medium">
-                          {smaugBurned > 0 ? smaugBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                          {smaugVaultBurned > 0 ? smaugVaultBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                         </span>
                       </li>
                     </ul>
@@ -1477,13 +1516,40 @@ export default function Home() {
                         </div>
                       </li>
                       <li className="flex justify-between border-t border-green-900/20 pt-3">
-                        <span>Total Tokens Bought & Burned</span>
+                        <span>SMAUG Bought & Burned</span>
                         <span className="text-green-300 font-medium">
-                          {smaugBurned > 0 ? `${smaugBurned.toLocaleString(undefined, { maximumFractionDigits: 0 })} SMAUG` : "--"}
+                          {smaugHoardBurned > 0 ? smaugHoardBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                         </span>
                       </li>
                     </ul>
                   </div>
+                </div>
+
+                {/* Metrics */}
+                <div className="mt-8 rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner max-w-md mx-auto">
+                  <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Smaug Metrics</h4>
+                  <ul className="space-y-3 text-sm text-slate-300">
+                    <li className="flex justify-between">
+                      <span>Total Supply</span>
+                      <span className="text-green-300 font-medium">1,000,000,000</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span>Smaug Burned</span>
+                      <span className="text-green-300 font-medium">
+                        {smaugTotalBurned > 0
+                          ? `${smaugTotalBurned.toLocaleString(undefined, { maximumFractionDigits: 0 })} (${((smaugTotalBurned / 1_000_000_000) * 100).toFixed(2)}%)`
+                          : "--"}
+                      </span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span>Circulating Supply</span>
+                      <span className="text-green-300 font-medium">
+                        {smaugTotalBurned > 0
+                          ? (1_000_000_000 - smaugTotalBurned).toLocaleString(undefined, { maximumFractionDigits: 0 })
+                          : "--"}
+                      </span>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
