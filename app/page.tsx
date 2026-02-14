@@ -1326,7 +1326,7 @@ export default function Home() {
                         <span className="text-green-300 font-medium">1.5%</span>
                       </li>
                       <li className="flex justify-between">
-                        <span>Smaug's Vault</span>
+                        <span>Added to Smaug's Vault</span>
                         <span className="text-green-300 font-medium">1.0%</span>
                       </li>
                       <li className="flex justify-between">
