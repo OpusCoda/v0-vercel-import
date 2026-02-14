@@ -1410,12 +1410,12 @@ export default function Home() {
                       </button>
                     </div>
                     <p className="text-slate-400 text-sm text-center mb-5">
-                      Strategic buybacks activated on 10–25% drawdowns.
+                      All PLS in Smaug's vault is used to buy Smaug on 10–25% drawdowns and permanently burn them.
                     </p>
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li>
                         <div className="flex justify-between mb-1">
-                          <span>PLS in Vault</span>
+                          <span>PLS in vault</span>
                           <span className="text-green-300 font-medium">
                             {smaugVaultPLS > 0 ? smaugVaultPLS.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                           </span>
@@ -1435,7 +1435,7 @@ export default function Home() {
                       </li>
                       <li>
                         <div className="flex justify-between">
-                          <span>SMAUG Bought & Burned</span>
+                          <span>Bought & burned Smaug</span>
                           <span className="text-green-300 font-medium">
                             {smaugVaultBurned > 0 ? smaugVaultBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                           </span>
@@ -1558,7 +1558,7 @@ All yield is systematically used for additional buybacks and burns.
                       </li>
                       <li className="border-t border-green-900/20 pt-3">
                         <div className="flex justify-between">
-                          <span>SMAUG Bought & Burned</span>
+                          <span>Bought & burned Smaug</span>
                           <span className="text-green-300 font-medium">
                             {smaugHoardBurned > 0 ? smaugHoardBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                           </span>
