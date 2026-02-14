@@ -1407,7 +1407,7 @@ export default function Home() {
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li>
                         <div className="flex justify-between">
-                          <span>Ready for buy & burn</span>
+                          <span>Queued and ready buy & burn</span>
                           <span className="text-green-300 font-medium">
                             {smaugVaultPLS > 0 && plsPrice > 0 && smaugPrice > 0
                               ? `${((smaugVaultPLS * plsPrice) / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} SMAUG`
@@ -1478,7 +1478,7 @@ All yield is used to buy Smaug tokens and permanently burn them.
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li>
                         <div className="flex justify-between">
-                          <span>Ready for buy & burn</span>
+                          <span>Queued and ready buy & burn</span>
                           <span className="text-green-300 font-medium">
                             {(() => {
                               const plsVal = hoardData.pls * plsPrice
