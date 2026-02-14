@@ -1337,7 +1337,7 @@ export default function Home() {
                     <p className="text-xs text-slate-400 mt-4 text-center">Transfer tax: 0%</p>
                   </div>
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
-                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Smaug Metrics</h4>
+                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Smaug's Ledger</h4>
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li className="flex justify-between">
                         <span>Total Supply</span>
