@@ -203,11 +203,13 @@ export default function Home() {
   const [smaugHoardBurned, setSmaugHoardBurned] = useState(0)
   const [hoardData, setHoardData] = useState<{
     pls: number
+    pWbtc: number
+    pWbtcPrice: number
     gasMoney: number
     gasMoneyPrice: number
     dominance: number
     dominancePrice: number
-  }>({ pls: 0, gasMoney: 0, gasMoneyPrice: 0, dominance: 0, dominancePrice: 0 })
+  }>({ pls: 0, pWbtc: 0, pWbtcPrice: 0, gasMoney: 0, gasMoneyPrice: 0, dominance: 0, dominancePrice: 0 })
 
   const toggleStakeCard = (cardId: string) => {
     setExpandedStakeCards((prev) => {
@@ -350,48 +352,29 @@ export default function Home() {
         setSmaugTotalBurned(Number(ethers.formatEther(burnBalance)))
       }
 
-      // Fetch per-wallet burns via Otter block explorer API (token transfers to burn address)
+      // Fetch per-wallet burns by querying Transfer events to burn address
       const burnAddress = "0x0000000000000000000000000000000000000369"
-      const vaultAddr = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
+      const vaultAddress = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
       const hoardAddr = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
-      const smaugAddr = SMAUG_ADDRESS.toLowerCase()
+      const transferFilter = smaugContract.filters.Transfer
       
-      const fetchBurnTotal = async (walletAddress: string) => {
-        let total = 0
-        let page = 1
-        let hasMore = true
-        while (hasMore) {
-          const res = await fetch(
-            `https://otter.pulsechain.com/api?module=account&action=tokentx&address=${walletAddress}&contractaddress=${SMAUG_ADDRESS}&page=${page}&offset=1000&sort=asc`
-          )
-          const data = await res.json()
-          if (data.status === "1" && Array.isArray(data.result) && data.result.length > 0) {
-            for (const tx of data.result) {
-              if (tx.from?.toLowerCase() === walletAddress.toLowerCase() && tx.to?.toLowerCase() === burnAddress.toLowerCase()) {
-                total += Number(ethers.formatEther(tx.value))
-              }
-            }
-            if (data.result.length < 1000) {
-              hasMore = false
-            } else {
-              page++
-            }
-          } else {
-            hasMore = false
-          }
-        }
-        return total
-      }
-
       try {
-        const [vaultBurnTotal, hoardBurnTotal] = await Promise.all([
-          fetchBurnTotal(vaultAddr),
-          fetchBurnTotal(hoardAddr),
+        const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
+          smaugContract.queryFilter(transferFilter(vaultAddress, burnAddress)),
+          smaugContract.queryFilter(transferFilter(hoardAddr, burnAddress)),
         ])
+        const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => {
+          const log = e as ethers.EventLog
+          return sum + Number(ethers.formatEther(log.args[2]))
+        }, 0)
+        const hoardBurnTotal = hoardBurnEvents.reduce((sum, e) => {
+          const log = e as ethers.EventLog
+          return sum + Number(ethers.formatEther(log.args[2]))
+        }, 0)
         setSmaugVaultBurned(vaultBurnTotal)
         setSmaugHoardBurned(hoardBurnTotal)
       } catch (evtErr) {
-        console.error("[v0] Error fetching burn transfers:", evtErr)
+        console.error("[v0] Error fetching burn events:", evtErr)
       }
 
       // Fetch The Hoard wallet data (0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a)
@@ -400,25 +383,32 @@ export default function Home() {
       
       const gasMoneyContract = new ethers.Contract("0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106", BALANCE_ABI, provider)
       const dominanceContract = new ethers.Contract("0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA", BALANCE_ABI, provider)
+      const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
       
-      const [gasMoneyBal, dominanceBal] = await Promise.all([
+      const [gasMoneyBal, dominanceBal, pWbtcBal] = await Promise.all([
         gasMoneyContract.balanceOf(hoardAddress),
         dominanceContract.balanceOf(hoardAddress),
+        pWbtcContract.balanceOf(hoardAddress),
       ])
 
-      // Fetch Gas Money and Dominance prices
-      const [gasMoneyPriceRes, dominancePriceRes] = await Promise.all([
+      // Fetch Gas Money, Dominance, and pWBTC prices
+      const [gasMoneyPriceRes, dominancePriceRes, pWbtcPriceRes] = await Promise.all([
         fetch("https://api.dexscreener.com/latest/dex/tokens/0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106"),
         fetch("https://api.dexscreener.com/latest/dex/tokens/0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA"),
+        fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf"),
       ])
       const gasMoneyPriceData = await gasMoneyPriceRes.json()
       const dominancePriceData = await dominancePriceRes.json()
+      const pWbtcPriceData = await pWbtcPriceRes.json()
       
       const gmPrice = gasMoneyPriceData.pairs?.[0]?.priceUsd ? Number(gasMoneyPriceData.pairs[0].priceUsd) : 0
       const domPrice = dominancePriceData.pairs?.[0]?.priceUsd ? Number(dominancePriceData.pairs[0].priceUsd) : 0
+      const wbtcPrice = pWbtcPriceData.pair?.priceUsd ? Number(pWbtcPriceData.pair.priceUsd) : 0
 
       setHoardData({
         pls: Number(ethers.formatEther(hoardPlsBalance)),
+        pWbtc: Number(ethers.formatUnits(pWbtcBal, 8)),
+        pWbtcPrice: wbtcPrice,
         gasMoney: Number(ethers.formatEther(gasMoneyBal)),
         gasMoneyPrice: gmPrice,
         dominance: Number(ethers.formatEther(dominanceBal)),
@@ -1540,6 +1530,34 @@ export default function Home() {
                         <div className="flex justify-between text-xs text-slate-400">
                           <span>Value</span>
                           <span>{hoardData.pls > 0 && plsPrice > 0 ? `$${(hoardData.pls * plsPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
+                        </div>
+                      </li>
+                      <li className="border-t border-green-900/20 pt-3">
+                        <div className="flex justify-between mb-1">
+                          <span>pWBTC</span>
+                          <span className="text-green-300 font-medium">
+                            {hoardData.pWbtc > 0 ? hoardData.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 8 }) : "--"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-400">
+                          <span>Value</span>
+                          <span>{hoardData.pWbtc > 0 && hoardData.pWbtcPrice > 0 ? `$${(hoardData.pWbtc * hoardData.pWbtcPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
+                        </div>
+                      </li>
+                      <li className="border-t border-green-900/20 pt-3">
+                        <div className="flex justify-between">
+                          <span>Current Buying Power</span>
+                          <span className="text-green-300 font-medium">
+                            {(() => {
+                              const plsVal = hoardData.pls * plsPrice
+                              const wbtcVal = hoardData.pWbtc * hoardData.pWbtcPrice
+                              const totalUsd = plsVal + wbtcVal
+                              if (totalUsd > 0 && smaugPrice > 0) {
+                                return `${(totalUsd / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} SMAUG`
+                              }
+                              return "--"
+                            })()}
+                          </span>
                         </div>
                       </li>
                       <li className="border-t border-green-900/20 pt-3 mt-1">
