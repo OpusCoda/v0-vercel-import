@@ -350,29 +350,48 @@ export default function Home() {
         setSmaugTotalBurned(Number(ethers.formatEther(burnBalance)))
       }
 
-      // Fetch per-wallet burns by querying Transfer events to burn address
+      // Fetch per-wallet burns via Otter block explorer API (token transfers to burn address)
       const burnAddress = "0x0000000000000000000000000000000000000369"
-      const vaultAddress = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
+      const vaultAddr = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
       const hoardAddr = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
-      const transferFilter = smaugContract.filters.Transfer
+      const smaugAddr = SMAUG_ADDRESS.toLowerCase()
       
+      const fetchBurnTotal = async (walletAddress: string) => {
+        let total = 0
+        let page = 1
+        let hasMore = true
+        while (hasMore) {
+          const res = await fetch(
+            `https://otter.pulsechain.com/api?module=account&action=tokentx&address=${walletAddress}&contractaddress=${SMAUG_ADDRESS}&page=${page}&offset=1000&sort=asc`
+          )
+          const data = await res.json()
+          if (data.status === "1" && Array.isArray(data.result) && data.result.length > 0) {
+            for (const tx of data.result) {
+              if (tx.from?.toLowerCase() === walletAddress.toLowerCase() && tx.to?.toLowerCase() === burnAddress.toLowerCase()) {
+                total += Number(ethers.formatEther(tx.value))
+              }
+            }
+            if (data.result.length < 1000) {
+              hasMore = false
+            } else {
+              page++
+            }
+          } else {
+            hasMore = false
+          }
+        }
+        return total
+      }
+
       try {
-        const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
-          smaugContract.queryFilter(transferFilter(vaultAddress, burnAddress)),
-          smaugContract.queryFilter(transferFilter(hoardAddr, burnAddress)),
+        const [vaultBurnTotal, hoardBurnTotal] = await Promise.all([
+          fetchBurnTotal(vaultAddr),
+          fetchBurnTotal(hoardAddr),
         ])
-        const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => {
-          const log = e as ethers.EventLog
-          return sum + Number(ethers.formatEther(log.args[2]))
-        }, 0)
-        const hoardBurnTotal = hoardBurnEvents.reduce((sum, e) => {
-          const log = e as ethers.EventLog
-          return sum + Number(ethers.formatEther(log.args[2]))
-        }, 0)
         setSmaugVaultBurned(vaultBurnTotal)
         setSmaugHoardBurned(hoardBurnTotal)
       } catch (evtErr) {
-        console.error("[v0] Error fetching burn events:", evtErr)
+        console.error("[v0] Error fetching burn transfers:", evtErr)
       }
 
       // Fetch The Hoard wallet data (0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a)
