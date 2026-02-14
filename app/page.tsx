@@ -1410,7 +1410,7 @@ export default function Home() {
                           <span>Ready-to-deploy buy & burn</span>
                           <span className="text-green-300 font-medium">
                             {smaugVaultPLS > 0 && plsPrice > 0 && smaugPrice > 0
-                              ? `${((smaugVaultPLS * plsPrice) / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} SMAUG`
+                              ? `${((smaugVaultPLS * plsPrice) / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} Smaug`
                               : "--"}
                           </span>
                         </div>
