@@ -1294,110 +1294,9 @@ export default function Home() {
                 The reliable and consistent ecosystem on PulseChain
               </p>
             </div>
-            <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
-              <iframe
-                className="w-full aspect-video"
-                src="https://www.youtube-nocookie.com/embed/gYR8UD9RlWg?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&loop=1&playlist=gYR8UD9RlWg"
-                title="Opus and Coda explainer video"
-                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen={false}
-              />
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
-                <h3 className="text-xl font-medium mb-3 text-cyan-300">Reliable printing</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  Our printers deliver a steady minimum 1% daily ROI.
-                </p>
-              </div>
-              <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
-                <h3 className="text-xl font-medium mb-3 text-cyan-300">No extraction paths</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  No privileged wallets. No silent drains. No broken promises.
-                </p>
-              </div>
-              <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
-                <h3 className="text-xl font-medium mb-3 text-cyan-300">Automatic payouts</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  Simply hold Opus or Coda and your rewards arrive automatically.
-                </p>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-2 gap-8 mt-8">
-              <div className="rounded-2xl bg-[#111c3a] border border-orange-900/30 p-7 shadow-inner">
-                <h3 className="text-2xl font-medium mb-4 text-orange-300 text-center">Opus</h3>
-                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">6% Tax</p>
-                <ul className="space-y-2 text-slate-300">
-                  <li className="flex justify-between">
-                    <span>Missor</span>
-                    <span className="text-orange-300 font-medium">1%</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>Finvesta</span>
-                    <span className="text-orange-300 font-medium">3%</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>World's Greatest pDAI Printer</span>
-                    <span className="text-orange-300 font-medium">1%</span>
-                  </li>
-                  <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
-                    <span>Added to liquidity</span>
-                    <span className="text-orange-300 font-medium">1%</span>
-                  </li>
-                  {liquidityData.opus && (
-                    <li className="text-xs text-slate-400 mt-3 space-y-1">
-                      <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
-                      <div className="flex justify-between pl-2">
-                        <span>Opus</span>
-                        <span>{formatMillions(liquidityData.opus.opusAdded)}</span>
-                      </div>
-                      <div className="flex justify-between pl-2">
-                        <span>PLS</span>
-                        <span>{formatMillions(liquidityData.opus.plsAdded)}</span>
-                      </div>
-                    </li>
-                  )}
-                </ul>
-              </div>
-              <div className="rounded-2xl bg-[#111c3a] border border-cyan-900/30 p-7 shadow-inner">
-                <h3 className="text-2xl font-medium mb-4 text-cyan-300 text-center">Coda</h3>
-                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">7% Tax</p>
-                <ul className="space-y-2 text-slate-300">
-                  <li className="flex justify-between">
-                    <span>WETH</span>
-                    <span className="text-cyan-300 font-medium">2%</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>pWBTC</span>
-                    <span className="text-cyan-300 font-medium">2%</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>PLSX</span>
-                    <span className="text-cyan-300 font-medium">2%</span>
-                  </li>
-                  <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
-                    <span>Added to liquidity</span>
-                    <span className="text-cyan-300 font-medium">1%</span>
-                  </li>
-                  {liquidityData.coda && (
-                    <li className="text-xs text-slate-400 mt-3 space-y-1">
-                      <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
-                      <div className="flex justify-between pl-2">
-                        <span>Coda</span>
-                        <span>{formatMillions(liquidityData.coda.codaAdded)}</span>
-                      </div>
-                      <div className="flex justify-between pl-2">
-                        <span>PLS</span>
-                        <span>{formatMillions(liquidityData.coda.plsAdded)}</span>
-                      </div>
-                    </li>
-                  )}
-                </ul>
-              </div>
-            </div>
 
             {/* Smaug Section */}
-            <div className="mt-8">
+            <div>
               <div className="rounded-2xl bg-gradient-to-br from-[#0a1a0a] to-[#111c3a] border border-green-900/40 p-8">
                 <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
                   <img
@@ -1667,7 +1566,108 @@ export default function Home() {
                   </div>
                 </div>
 
+              </div>
+            </div>
 
+            <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
+              <iframe
+                className="w-full aspect-video"
+                src="https://www.youtube-nocookie.com/embed/gYR8UD9RlWg?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&loop=1&playlist=gYR8UD9RlWg"
+                title="Opus and Coda explainer video"
+                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen={false}
+              />
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
+                <h3 className="text-xl font-medium mb-3 text-cyan-300">Reliable printing</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Our printers deliver a steady minimum 1% daily ROI.
+                </p>
+              </div>
+              <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
+                <h3 className="text-xl font-medium mb-3 text-cyan-300">No extraction paths</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  No privileged wallets. No silent drains. No broken promises.
+                </p>
+              </div>
+              <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
+                <h3 className="text-xl font-medium mb-3 text-cyan-300">Automatic payouts</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Simply hold Opus or Coda and your rewards arrive automatically.
+                </p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8 mt-8">
+              <div className="rounded-2xl bg-[#111c3a] border border-orange-900/30 p-7 shadow-inner">
+                <h3 className="text-2xl font-medium mb-4 text-orange-300 text-center">Opus</h3>
+                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">6% Tax</p>
+                <ul className="space-y-2 text-slate-300">
+                  <li className="flex justify-between">
+                    <span>Missor</span>
+                    <span className="text-orange-300 font-medium">1%</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Finvesta</span>
+                    <span className="text-orange-300 font-medium">3%</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>World's Greatest pDAI Printer</span>
+                    <span className="text-orange-300 font-medium">1%</span>
+                  </li>
+                  <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
+                    <span>Added to liquidity</span>
+                    <span className="text-orange-300 font-medium">1%</span>
+                  </li>
+                  {liquidityData.opus && (
+                    <li className="text-xs text-slate-400 mt-3 space-y-1">
+                      <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
+                      <div className="flex justify-between pl-2">
+                        <span>Opus</span>
+                        <span>{formatMillions(liquidityData.opus.opusAdded)}</span>
+                      </div>
+                      <div className="flex justify-between pl-2">
+                        <span>PLS</span>
+                        <span>{formatMillions(liquidityData.opus.plsAdded)}</span>
+                      </div>
+                    </li>
+                  )}
+                </ul>
+              </div>
+              <div className="rounded-2xl bg-[#111c3a] border border-cyan-900/30 p-7 shadow-inner">
+                <h3 className="text-2xl font-medium mb-4 text-cyan-300 text-center">Coda</h3>
+                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">7% Tax</p>
+                <ul className="space-y-2 text-slate-300">
+                  <li className="flex justify-between">
+                    <span>WETH</span>
+                    <span className="text-cyan-300 font-medium">2%</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>pWBTC</span>
+                    <span className="text-cyan-300 font-medium">2%</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>PLSX</span>
+                    <span className="text-cyan-300 font-medium">2%</span>
+                  </li>
+                  <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
+                    <span>Added to liquidity</span>
+                    <span className="text-cyan-300 font-medium">1%</span>
+                  </li>
+                  {liquidityData.coda && (
+                    <li className="text-xs text-slate-400 mt-3 space-y-1">
+                      <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
+                      <div className="flex justify-between pl-2">
+                        <span>Coda</span>
+                        <span>{formatMillions(liquidityData.coda.codaAdded)}</span>
+                      </div>
+                      <div className="flex justify-between pl-2">
+                        <span>PLS</span>
+                        <span>{formatMillions(liquidityData.coda.plsAdded)}</span>
+                      </div>
+                    </li>
+                  )}
+                </ul>
               </div>
             </div>
 
