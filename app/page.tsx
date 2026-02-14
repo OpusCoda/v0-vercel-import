@@ -1305,9 +1305,15 @@ export default function Home() {
                     className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-[0_0_60px_rgba(34,197,94,0.3)]"
                   />
                   <div className="text-center md:text-left">
-                    <h3 className="text-3xl md:text-4xl font-['Marcellus_SC'] text-green-300 mb-3">Smaug — The final pillar</h3>
+                    <h3 className="text-3xl md:text-4xl font-['Marcellus_SC'] text-green-300 mb-3">Introducing Smaug — The final pillar</h3>
                     <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl">
-                      Smaug completes the Opus ecosystem as the volatility-absorbing and acceleration layer. It converts market activity into structural buy pressure through automated burns, vault accumulation, and liquidity reinforcement.
+                      The Opus ecosystem on PulseChain now stands grounded on its three final pillars:
+                      
+                      Smaug — The sole deflationary token with reflections and four separate buy and burns
+                      
+                      Opus — The first core printer token that consistently distributes Finvesta, Missor, and WGPP
+                      
+                      Coda — The second printer token that consistently distributes WETH, pWBTC and PLSX
                     </p>
                   </div>
                 </div>
