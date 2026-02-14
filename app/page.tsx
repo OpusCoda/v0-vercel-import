@@ -104,6 +104,7 @@ const PLSX_ADDRESS = "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab"
 const INC_ADDRESS = "0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d"
 const EHEX_FROM_ETHEREUM_ADDRESS = "0x57fde0a71132198BBeC939B98976993d8D89D225" // eHEX bridged to Pulsechain
 const PWBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" // WBTC on Pulsechain
+const SMAUG_ADDRESS = "0xf4754Aa585caBf38537A68660469A17E203D8632"
 
 export default function Home() {
   const [rewards, setRewards] = useState<
@@ -169,7 +170,8 @@ export default function Home() {
     eHexFromEthereum: number
     eHex: number
     pWbtc: number
-  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0 })
+    smaug: number
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0, smaug: 0 })
   const [tokenPricesAll, setTokenPricesAll] = useState<{
     pls: number
     plsx: number
@@ -302,7 +304,7 @@ export default function Home() {
       const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
       
       // Fetch PLS price independently
-      const plsPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe56043066d3c46a35159271bf1c1e3d1059bcf6a")
+      const plsPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe56043671df55de5cdf8459710433c10324de0ae")
       const plsPriceData = await plsPriceRes.json()
       const fetchedPlsPrice = plsPriceData.pair?.priceUsd ? Number(plsPriceData.pair.priceUsd) : 0
       setPlsPrice(fetchedPlsPrice)
@@ -989,6 +991,7 @@ export default function Home() {
       let totalEHexFromEthereum = 0
       let totalEHex = 0
       let totalPWbtc = 0
+      let totalSmaug = 0
 
       for (const address of addresses) {
         try {
@@ -1020,6 +1023,11 @@ export default function Home() {
           const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
           const pWbtcBalance = await pWbtcContract.balanceOf(address)
           totalPWbtc += Number(ethers.formatUnits(pWbtcBalance, 8))
+
+          // Smaug
+          const smaugContract = new ethers.Contract(SMAUG_ADDRESS, BALANCE_ABI, provider)
+          const smaugBalance = await smaugContract.balanceOf(address)
+          totalSmaug += Number(ethers.formatEther(smaugBalance))
         } catch (err) {
           console.error(`[v0] Error fetching Pulsechain token balances for ${address}:`, err)
         }
@@ -1042,6 +1050,7 @@ export default function Home() {
         eHexFromEthereum: totalEHexFromEthereum,
         eHex: totalEHex,
         pWbtc: totalPWbtc,
+        smaug: totalSmaug,
       })
 
       // Fetch token prices
@@ -1402,19 +1411,7 @@ export default function Home() {
                       Yield-generating reserve wallet holding printer tokens. All yield is systematically converted into ecosystem buybacks and burns.
                     </p>
                     <ul className="space-y-3 text-sm text-slate-300">
-                      <li className="flex justify-between">
-                        <span>Total Printer Asset Value</span>
-                        <span className="text-green-300 font-medium">
-                          {(() => {
-                            const plsVal = hoardData.pls * plsPrice
-                            const gmVal = hoardData.gasMoney * hoardData.gasMoneyPrice
-                            const domVal = hoardData.dominance * hoardData.dominancePrice
-                            const total = plsVal + gmVal + domVal
-                            return total > 0 ? `$${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"
-                          })()}
-                        </span>
-                      </li>
-                      <li className="border-t border-green-900/20 pt-3 mt-1">
+                      <li>
                         <div className="flex justify-between mb-1">
                           <span>PLS</span>
                           <span className="text-green-300 font-medium">
@@ -1426,28 +1423,43 @@ export default function Home() {
                           <span>{hoardData.pls > 0 && plsPrice > 0 ? `$${(hoardData.pls * plsPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
                         </div>
                       </li>
-                      <li className="border-t border-green-900/20 pt-3">
-                        <div className="flex justify-between mb-1">
-                          <span>Gas Money</span>
+                      <li className="border-t border-green-900/20 pt-3 mt-1">
+                        <div className="flex justify-between mb-2">
+                          <span>Total Printer Asset Value</span>
                           <span className="text-green-300 font-medium">
-                            {hoardData.gasMoney > 0 ? hoardData.gasMoney.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                            {(() => {
+                              const gmVal = hoardData.gasMoney * hoardData.gasMoneyPrice
+                              const domVal = hoardData.dominance * hoardData.dominancePrice
+                              const total = gmVal + domVal
+                              return total > 0 ? `$${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"
+                            })()}
                           </span>
                         </div>
-                        <div className="flex justify-between text-xs text-slate-400">
-                          <span>Value</span>
-                          <span>{hoardData.gasMoney > 0 && hoardData.gasMoneyPrice > 0 ? `$${(hoardData.gasMoney * hoardData.gasMoneyPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
-                        </div>
-                      </li>
-                      <li className="border-t border-green-900/20 pt-3">
-                        <div className="flex justify-between mb-1">
-                          <span>Dominance</span>
-                          <span className="text-green-300 font-medium">
-                            {hoardData.dominance > 0 ? hoardData.dominance.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-xs text-slate-400">
-                          <span>Value</span>
-                          <span>{hoardData.dominance > 0 && hoardData.dominancePrice > 0 ? `$${(hoardData.dominance * hoardData.dominancePrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
+                        <div className="ml-4 space-y-2">
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-slate-400">Gas Money</span>
+                              <span className="text-green-300 font-medium">
+                                {hoardData.gasMoney > 0 ? hoardData.gasMoney.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-xs text-slate-500">
+                              <span>Value</span>
+                              <span>{hoardData.gasMoney > 0 && hoardData.gasMoneyPrice > 0 ? `$${(hoardData.gasMoney * hoardData.gasMoneyPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-slate-400">Dominance</span>
+                              <span className="text-green-300 font-medium">
+                                {hoardData.dominance > 0 ? hoardData.dominance.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-xs text-slate-500">
+                              <span>Value</span>
+                              <span>{hoardData.dominance > 0 && hoardData.dominancePrice > 0 ? `$${(hoardData.dominance * hoardData.dominancePrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
+                            </div>
+                          </div>
                         </div>
                       </li>
                       <li className="flex justify-between border-t border-green-900/20 pt-3">
@@ -2230,7 +2242,7 @@ export default function Home() {
             </motion.section>
 
             {/* Main tokens Display */}
-            {(tokenBalances.pls > 0 || tokenBalances.plsx > 0 || tokenBalances.inc > 0 || tokenBalances.pHex > 0 || tokenBalances.eHexFromEthereum > 0 || tokenBalances.eHex > 0 || tokenBalances.pWbtc > 0) && (
+            {(tokenBalances.pls > 0 || tokenBalances.plsx > 0 || tokenBalances.inc > 0 || tokenBalances.pHex > 0 || tokenBalances.eHexFromEthereum > 0 || tokenBalances.eHex > 0 || tokenBalances.pWbtc > 0 || tokenBalances.smaug > 0) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -2326,6 +2338,16 @@ export default function Home() {
                       </span>
                       <span className="text-sm font-medium text-green-400">
                         {tokenPrices.coda > 0 ? `$${(rewards.reduce((sum, w) => sum + Number.parseFloat(w.holdings.coda), 0) * tokenPrices.coda).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.smaug > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        Smaug — {tokenBalances.smaug.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {smaugPrice > 0 ? `$${(tokenBalances.smaug * smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
                       </span>
                     </div>
                   )}
