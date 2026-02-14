@@ -185,6 +185,8 @@ export default function Home() {
   }>>([])
   const [expandedStakeCards, setExpandedStakeCards] = useState<Set<string>>(new Set())
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
+  const [smaugVaultPLS, setSmaugVaultPLS] = useState(0)
+  const [smaugPrice, setSmaugPrice] = useState(0)
 
   const toggleStakeCard = (cardId: string) => {
     setExpandedStakeCards((prev) => {
@@ -281,10 +283,29 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetchLiquidityData()
-    fetchTotalDistributed()
-    fetchTokenPrices()
+  fetchLiquidityData()
+> fetchTotalDistributed()
+  fetchTokenPrices()
+  fetchSmaugVaultData()
   }, [])
+
+  const fetchSmaugVaultData = async () => {
+    try {
+      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
+      // Fetch PLS balance of Smaug Vault
+      const vaultBalance = await provider.getBalance("0xd6B7f6F0559459354391ae1055E3A6768f465483")
+      setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
+
+      // Fetch Smaug price from DexScreener
+      const smaugPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x151e583badb57138d41aa964ac3ff38d4bb1145f")
+      const smaugPriceData = await smaugPriceRes.json()
+      if (smaugPriceData.pair?.priceUsd) {
+        setSmaugPrice(Number(smaugPriceData.pair.priceUsd))
+      }
+    } catch (err) {
+      console.error("[v0] Error fetching Smaug vault data:", err)
+    }
+  }
 
   const fetchTotalDistributed = async () => {
     try {
@@ -1311,11 +1332,17 @@ export default function Home() {
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li className="flex justify-between">
                         <span>PLS in Vault</span>
-                        <span className="text-green-300 font-medium">--</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugVaultPLS > 0 ? smaugVaultPLS.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                        </span>
                       </li>
                       <li className="flex justify-between">
                         <span>Current Buying Power</span>
-                        <span className="text-green-300 font-medium">--</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugVaultPLS > 0 && tokenPricesAll.pls > 0 && smaugPrice > 0
+                            ? `${((smaugVaultPLS * tokenPricesAll.pls) / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} SMAUG`
+                            : "--"}
+                        </span>
                       </li>
                       <li className="flex justify-between">
                         <span>Total SMAUG Bought & Burned</span>
