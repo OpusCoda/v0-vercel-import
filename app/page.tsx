@@ -1402,7 +1402,7 @@ export default function Home() {
                       </button>
                     </div>
                     <p className="text-slate-400 text-sm text-center mb-5">
-                      All PLS in Smaug's vault is used to buy Smaug on 10–25% drawdowns and permanently burn them.
+                      PLS in Smaug's vault is exclusively used to buy Smaug on 10–25% drawdowns and permanently burn them.
                     </p>
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li>
