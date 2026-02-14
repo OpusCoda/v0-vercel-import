@@ -1315,7 +1315,7 @@ export default function Home() {
                 {/* Token Mechanics & Metrics */}
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
-                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics</h4>
+                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics — 6.50%</h4>
                     <ul className="space-y-2 text-slate-300">
                       <li className="flex justify-between">
                         <span>Buy/Sell Tax</span>
