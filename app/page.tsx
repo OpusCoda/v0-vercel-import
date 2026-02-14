@@ -1405,7 +1405,15 @@ export default function Home() {
                       All PLS in Smaug's vault is used to buy Smaug on 10–25% drawdowns and permanently burn them.
                     </p>
                     <ul className="space-y-3 text-sm text-slate-300">
-                      <li>
+                      <li className="flex justify-between">
+                        <span>Available buy & burn firepower</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugVaultPLS > 0 && plsPrice > 0 && smaugPrice > 0
+                            ? `${((smaugVaultPLS * plsPrice) / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} SMAUG`
+                            : "--"}
+                        </span>
+                      </li>
+                      <li className="border-t border-green-900/20 pt-3">
                         <div className="flex justify-between mb-1">
                           <span>PLS in vault</span>
                           <span className="text-green-300 font-medium">
@@ -1416,14 +1424,6 @@ export default function Home() {
                           <span>Value</span>
                           <span>{smaugVaultPLS > 0 && plsPrice > 0 ? `$${(smaugVaultPLS * plsPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
                         </div>
-                      </li>
-                      <li className="flex justify-between">
-                        <span>Current Buying Power</span>
-                        <span className="text-green-300 font-medium">
-                          {smaugVaultPLS > 0 && plsPrice > 0 && smaugPrice > 0
-                            ? `${((smaugVaultPLS * plsPrice) / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} SMAUG`
-                            : "--"}
-                        </span>
                       </li>
                       <li>
                         <div className="flex justify-between">
@@ -1470,6 +1470,22 @@ All yield is used to buy Smaug tokens and permanently burn them.
                     </p>
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li>
+                        <div className="flex justify-between">
+                          <span>Available buy & burn firepower</span>
+                          <span className="text-green-300 font-medium">
+                            {(() => {
+                              const plsVal = hoardData.pls * plsPrice
+                              const wbtcVal = hoardData.pWbtc * hoardData.pWbtcPrice
+                              const totalUsd = plsVal + wbtcVal
+                              if (totalUsd > 0 && smaugPrice > 0) {
+                                return `${(totalUsd / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} SMAUG`
+                              }
+                              return "--"
+                            })()}
+                          </span>
+                        </div>
+                      </li>
+                      <li className="border-t border-green-900/20 pt-3">
                         <div className="flex justify-between mb-1">
                           <span>PLS</span>
                           <span className="text-green-300 font-medium">
@@ -1491,22 +1507,6 @@ All yield is used to buy Smaug tokens and permanently burn them.
                         <div className="flex justify-between text-xs text-slate-400">
                           <span>Value</span>
                           <span>{hoardData.pWbtc > 0 && hoardData.pWbtcPrice > 0 ? `$${(hoardData.pWbtc * hoardData.pWbtcPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
-                        </div>
-                      </li>
-                      <li className="border-t border-green-900/20 pt-3">
-                        <div className="flex justify-between">
-                          <span>Current Buying Power</span>
-                          <span className="text-green-300 font-medium">
-                            {(() => {
-                              const plsVal = hoardData.pls * plsPrice
-                              const wbtcVal = hoardData.pWbtc * hoardData.pWbtcPrice
-                              const totalUsd = plsVal + wbtcVal
-                              if (totalUsd > 0 && smaugPrice > 0) {
-                                return `${(totalUsd / smaugPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })} SMAUG`
-                              }
-                              return "--"
-                            })()}
-                          </span>
                         </div>
                       </li>
                       <li className="border-t border-green-900/20 pt-3 mt-1">
