@@ -1300,7 +1300,7 @@ export default function Home() {
               <div className="rounded-2xl bg-gradient-to-br from-[#0a1a0a] to-[#111c3a] border border-green-900/40 p-8">
                 <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
                   <img
-                    src="/dragon-dore.avif"
+                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Dragon-Dore%CC%81-C3nc1Imr2mB34lH8d1Way3xDKLqyOd.avif"
                     alt="Dragon illustration by Gustave Doré"
                     className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-[0_0_60px_rgba(34,197,94,0.3)] object-cover"
                   />
