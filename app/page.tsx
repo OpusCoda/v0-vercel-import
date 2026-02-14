@@ -1290,9 +1290,7 @@ export default function Home() {
         <Card className="bg-[#0f172a]/90 backdrop-blur border border-blue-900/40 shadow-[0_0_80px_rgba(56,189,248,0.08)] rounded-3xl">
           <CardContent className="py-12 flex flex-col gap-14">
             <div className="text-center space-y-8">
-              <p className="text-slate-200 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed">
-                
-              </p>
+              
             </div>
 
             {/* Smaug Section */}
