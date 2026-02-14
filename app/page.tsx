@@ -1150,11 +1150,6 @@ export default function Home() {
         <Card className="bg-[#0f172a]/90 backdrop-blur border border-blue-900/40 shadow-[0_0_80px_rgba(56,189,248,0.08)] rounded-3xl">
           <CardContent className="py-12 flex flex-col gap-14">
             <div className="text-center space-y-8">
-              <img
-                src="/opuscoda.jpg"
-                alt="Opus & Coda logo"
-                className="mx-auto w-64 h-64 md:w-80 md:h-80 rounded-3xl shadow-[0_0_80px_rgba(249,115,22,0.35)]"
-              />
               <p className="text-slate-200 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed">
                 The reliable and consistent ecosystem on PulseChain
               </p>
@@ -1258,6 +1253,97 @@ export default function Home() {
                     </li>
                   )}
                 </ul>
+              </div>
+            </div>
+
+            {/* Smaug Section */}
+            <div className="mt-8">
+              <div className="rounded-2xl bg-gradient-to-br from-[#0a1a0a] to-[#111c3a] border border-green-900/40 p-8">
+                <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
+                  <img
+                    src="/smaug.jpg"
+                    alt="Smaug token logo"
+                    className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-[0_0_60px_rgba(34,197,94,0.3)]"
+                  />
+                  <div className="text-center md:text-left">
+                    <h3 className="text-3xl md:text-4xl font-['Marcellus_SC'] text-green-300 mb-3">Smaug — The Final Pillar</h3>
+                    <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl">
+                      Smaug completes the Opus ecosystem as the volatility-absorbing and acceleration layer. It converts market activity into structural buy pressure through automated burns, vault accumulation, and liquidity reinforcement.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Token Mechanics */}
+                <div className="mb-8">
+                  <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Token Mechanics</h4>
+                  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner max-w-md mx-auto">
+                    <ul className="space-y-2 text-slate-300">
+                      <li className="flex justify-between">
+                        <span>Reflections</span>
+                        <span className="text-green-300 font-medium">1.5%</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Buyback & Burn</span>
+                        <span className="text-green-300 font-medium">3.5%</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Vault Allocation</span>
+                        <span className="text-green-300 font-medium">1.0%</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>LP Reinforcement</span>
+                        <span className="text-green-300 font-medium">0.5%</span>
+                      </li>
+                    </ul>
+                    <p className="text-xs text-slate-400 mt-4 text-center">
+                      Threshold-based contract clearing. Designed to compress supply while strengthening liquidity depth.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Smaug Vault & The Hoard */}
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
+                    <h4 className="text-xl font-medium text-green-300 mb-2 text-center">Smaug Vault</h4>
+                    <p className="text-slate-400 text-sm text-center mb-5">
+                      Strategic capital reserve funded by protocol fees. Deploys capital into market buybacks during strength phases.
+                    </p>
+                    <ul className="space-y-3 text-sm text-slate-300">
+                      <li className="flex justify-between">
+                        <span>PLS in Vault</span>
+                        <span className="text-green-300 font-medium">--</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Current Buying Power</span>
+                        <span className="text-green-300 font-medium">--</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Total SMAUG Bought & Burned</span>
+                        <span className="text-green-300 font-medium">--</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
+                    <h4 className="text-xl font-medium text-green-300 mb-2 text-center">The Hoard</h4>
+                    <p className="text-slate-400 text-sm text-center mb-5">
+                      Yield-generating reserve wallet holding printer tokens. All yield is systematically converted into ecosystem buybacks and burns.
+                    </p>
+                    <ul className="space-y-3 text-sm text-slate-300">
+                      <li className="flex justify-between">
+                        <span>Printer Asset Value</span>
+                        <span className="text-green-300 font-medium">--</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Current Buying Power</span>
+                        <span className="text-green-300 font-medium">--</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Total Tokens Bought & Burned</span>
+                        <span className="text-green-300 font-medium">--</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
 
