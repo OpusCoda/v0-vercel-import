@@ -27,8 +27,8 @@ const roboto = Roboto({
 })
 
 export const metadata = {
-  title: "Pulsechain Portfolio Tracker",
-  description: "Track your Pulsechain assets",
+  title: "The Opus Ecosystem",
+  description: "The Opus Ecosystem on PulseChain",
   icons: {
     icon: [
       { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
