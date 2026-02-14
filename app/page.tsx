@@ -1318,7 +1318,7 @@ export default function Home() {
                     <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics — 6.50%</h4>
                     <ul className="space-y-2 text-slate-300">
                       <li className="flex justify-between">
-                        <span>Buy & Burn</span>
+                        <span>Buy & burn</span>
                         <span className="text-green-300 font-medium">3.5%</span>
                       </li>
                       <li className="flex justify-between">
@@ -1330,7 +1330,7 @@ export default function Home() {
                         <span className="text-green-300 font-medium">1.0%</span>
                       </li>
                       <li className="flex justify-between">
-                        <span>LP Reinforcement</span>
+                        <span>Added to locked LP</span>
                         <span className="text-green-300 font-medium">0.5%</span>
                       </li>
                     </ul>
