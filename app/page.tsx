@@ -1318,12 +1318,12 @@ export default function Home() {
                     <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics</h4>
                     <ul className="space-y-2 text-slate-300">
                       <li className="flex justify-between">
-                        <span>Reflections</span>
-                        <span className="text-green-300 font-medium">1.5%</span>
+                        <span>Buy & Burn</span>
+                        <span className="text-green-300 font-medium">3.5%</span>
                       </li>
                       <li className="flex justify-between">
-                        <span>Buyback & Burn</span>
-                        <span className="text-green-300 font-medium">3.5%</span>
+                        <span>Reflections</span>
+                        <span className="text-green-300 font-medium">1.5%</span>
                       </li>
                       <li className="flex justify-between">
                         <span>Vault Allocation</span>
