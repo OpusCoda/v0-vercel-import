@@ -1,6 +1,6 @@
 import type React from "react"
 import "./globals.css"
-import { Sacramento, Inter, Merriweather, Roboto } from "next/font/google"
+import { Sacramento, Inter, Merriweather, Roboto, Marcellus_SC } from "next/font/google"
 
 const sacramento = Sacramento({
   subsets: ["latin"],
@@ -26,6 +26,12 @@ const roboto = Roboto({
   variable: "--font-roboto",
 })
 
+const marcellusSC = Marcellus_SC({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-marcellus-sc",
+})
+
 export const metadata = {
   title: "The Opus Ecosystem",
   description: "The Opus Ecosystem on PulseChain",
@@ -47,7 +53,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${merriweather.variable} ${sacramento.variable} ${inter.variable} ${roboto.variable}`}>
+      <body className={`${merriweather.variable} ${sacramento.variable} ${inter.variable} ${roboto.variable} ${marcellusSC.variable}`}>
         {children}
       </body>
     </html>

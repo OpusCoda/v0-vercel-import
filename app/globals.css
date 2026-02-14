@@ -1,7 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import url('https://fonts.googleapis.com/css2?family=Marcellus+SC&display=swap');
-
 @custom-variant dark (&:is(.dark *));
 
 /* -------------------------------------------------
@@ -63,6 +61,7 @@
   --font-ui: var(--font-inter), system-ui, sans-serif;   /* Inter */
   --font-decorative: var(--font-sacramento), cursive;    /* Sacramento */
   --font-strong: var(--font-roboto), system-ui, sans-serif;
+  --font-marcellus: var(--font-marcellus-sc), Georgia, serif;
 
   --font-sans: var(--font-ui);
   --font-mono: ui-monospace, SFMono-Regular, monospace;
