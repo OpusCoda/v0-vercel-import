@@ -197,6 +197,8 @@ export default function Home() {
   const [smaugPrice, setSmaugPrice] = useState(0)
   const [plsPrice, setPlsPrice] = useState(0)
   const [smaugTotalBurned, setSmaugTotalBurned] = useState(0)
+  const [smaugMarketCap, setSmaugMarketCap] = useState(0)
+  const [smaugLiquidity, setSmaugLiquidity] = useState(0)
   const [smaugVaultBurned, setSmaugVaultBurned] = useState(0)
   const [smaugHoardBurned, setSmaugHoardBurned] = useState(0)
   const [hoardData, setHoardData] = useState<{
@@ -327,6 +329,14 @@ export default function Home() {
       const smaugPriceData = await smaugPriceRes.json()
       if (smaugPriceData.pair?.priceUsd) {
         setSmaugPrice(Number(smaugPriceData.pair.priceUsd))
+      }
+      if (smaugPriceData.pair?.marketCap) {
+        setSmaugMarketCap(Number(smaugPriceData.pair.marketCap))
+      } else if (smaugPriceData.pair?.fdv) {
+        setSmaugMarketCap(Number(smaugPriceData.pair.fdv))
+      }
+      if (smaugPriceData.pair?.liquidity?.usd) {
+        setSmaugLiquidity(Number(smaugPriceData.pair.liquidity.usd))
       }
 
       // Fetch total Smaug burned from contract's totalBurned() function
@@ -1394,10 +1404,10 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Token Mechanics */}
-                <div className="mb-8">
-                  <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Token Mechanics</h4>
-                  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner max-w-md mx-auto">
+                {/* Token Mechanics & Metrics */}
+                <div className="grid md:grid-cols-2 gap-8 mb-8">
+                  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
+                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Token Mechanics</h4>
                     <ul className="space-y-2 text-slate-300">
                       <li className="flex justify-between">
                         <span>Reflections</span>
@@ -1419,6 +1429,43 @@ export default function Home() {
                     <p className="text-xs text-slate-400 mt-4 text-center">
                       Threshold-based contract clearing. Designed to compress supply while strengthening liquidity depth.
                     </p>
+                  </div>
+                  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
+                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Smaug Metrics</h4>
+                    <ul className="space-y-3 text-sm text-slate-300">
+                      <li className="flex justify-between">
+                        <span>Total Supply</span>
+                        <span className="text-green-300 font-medium">1,000,000,000</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Smaug Burned</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugTotalBurned > 0
+                            ? `${smaugTotalBurned.toLocaleString(undefined, { maximumFractionDigits: 0 })} (${((smaugTotalBurned / 1_000_000_000) * 100).toFixed(2)}%)`
+                            : "--"}
+                        </span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Circulating Supply</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugTotalBurned > 0
+                            ? (1_000_000_000 - smaugTotalBurned).toLocaleString(undefined, { maximumFractionDigits: 0 })
+                            : "--"}
+                        </span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Market Cap</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugMarketCap > 0 ? `$${smaugMarketCap.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "--"}
+                        </span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Liquidity</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugLiquidity > 0 ? `$${smaugLiquidity.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "--"}
+                        </span>
+                      </li>
+                    </ul>
                   </div>
                 </div>
 
@@ -1525,32 +1572,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Metrics */}
-                <div className="mt-8 rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner max-w-md mx-auto">
-                  <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Smaug Metrics</h4>
-                  <ul className="space-y-3 text-sm text-slate-300">
-                    <li className="flex justify-between">
-                      <span>Total Supply</span>
-                      <span className="text-green-300 font-medium">1,000,000,000</span>
-                    </li>
-                    <li className="flex justify-between">
-                      <span>Smaug Burned</span>
-                      <span className="text-green-300 font-medium">
-                        {smaugTotalBurned > 0
-                          ? `${smaugTotalBurned.toLocaleString(undefined, { maximumFractionDigits: 0 })} (${((smaugTotalBurned / 1_000_000_000) * 100).toFixed(2)}%)`
-                          : "--"}
-                      </span>
-                    </li>
-                    <li className="flex justify-between">
-                      <span>Circulating Supply</span>
-                      <span className="text-green-300 font-medium">
-                        {smaugTotalBurned > 0
-                          ? (1_000_000_000 - smaugTotalBurned).toLocaleString(undefined, { maximumFractionDigits: 0 })
-                          : "--"}
-                      </span>
-                    </li>
-                  </ul>
-                </div>
+
               </div>
             </div>
 
