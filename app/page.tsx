@@ -1305,9 +1305,9 @@ export default function Home() {
                     className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-[0_0_60px_rgba(34,197,94,0.3)] object-cover"
                   />
                   <div className="text-center md:text-left">
-                    <h3 className="text-3xl md:text-4xl font-['Marcellus_SC'] text-green-300 mb-3">Smaug — The final pillar</h3>
+                    <h3 className="text-3xl md:text-4xl font-['Marcellus_SC'] text-green-300 mb-3">Smaug — The last of the three pillars</h3>
                     <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl mb-4">
-                      Smaug completes the last of the three pillars:
+                      
                     </p>
                     <ul className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl space-y-2">
                       <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Opus</strong> — The first core printer token that consistently distributes Finvesta, Missor, and WGPP</span></li>
