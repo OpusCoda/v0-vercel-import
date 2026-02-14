@@ -1481,7 +1481,29 @@ export default function Home() {
                 {/* Smaug Vault & The Hoard */}
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
-                    <h4 className="text-xl font-medium text-green-300 mb-2 text-center">Smaug Vault</h4>
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <h4 className="text-xl font-medium text-green-300">Smaug Vault</h4>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText("0xd6B7f6F0559459354391ae1055E3A6768f465483")
+                          setCopiedAddress("smaugVault")
+                          setTimeout(() => setCopiedAddress(null), 2000)
+                        }}
+                        className="p-1 rounded hover:bg-green-900/30 transition-colors"
+                        title="Copy Smaug Vault address"
+                      >
+                        {copiedAddress === "smaugVault" ? (
+                          <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4 text-slate-400 hover:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                     <p className="text-slate-400 text-sm text-center mb-5">
                       Strategic capital reserve funded by protocol fees. Deploys capital into market buybacks during strength phases.
                     </p>
@@ -1522,7 +1544,29 @@ export default function Home() {
                     </ul>
                   </div>
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
-                    <h4 className="text-xl font-medium text-green-300 mb-2 text-center">The Hoard</h4>
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <h4 className="text-xl font-medium text-green-300">The Hoard</h4>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText("0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a")
+                          setCopiedAddress("theHoard")
+                          setTimeout(() => setCopiedAddress(null), 2000)
+                        }}
+                        className="p-1 rounded hover:bg-green-900/30 transition-colors"
+                        title="Copy The Hoard address"
+                      >
+                        {copiedAddress === "theHoard" ? (
+                          <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4 text-slate-400 hover:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                     <p className="text-slate-400 text-sm text-center mb-5">
                       Yield-generating reserve wallet holding printer tokens. All yield is systematically converted into ecosystem buybacks and burns.
                     </p>
