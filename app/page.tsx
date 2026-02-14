@@ -1434,7 +1434,7 @@ export default function Home() {
                       </li>
                       <li>
                         <div className="flex justify-between">
-                          <span>Smaug bought & burned</span>
+                          <span>Bought & burned to date</span>
                           <span className="text-green-300 font-medium">
                             {smaugVaultBurned > 0 ? smaugVaultBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                           </span>
@@ -1568,7 +1568,7 @@ All yield is used multiple times a day to buy and burn Smaug.
                       </li>
                       <li className="border-t border-green-900/20 pt-3">
                         <div className="flex justify-between">
-                          <span>Smaug bought & burned</span>
+                          <span>Bought & burned to date</span>
                           <span className="text-green-300 font-medium">
                             {smaugHoardBurned > 0 ? smaugHoardBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                           </span>
