@@ -1472,8 +1472,8 @@ export default function Home() {
                       </button>
                     </div>
                     <p className="text-slate-400 text-sm text-center mb-5">
-                      A reserve of yield-generating printer tokens.
-All yield is used to buy Smaug tokens and permanently burn them.
+                      Smaug's hoard of assorted yield-generating printer tokens.
+All yield is used to buy Smaug and permanently burn them.
                     </p>
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li>
