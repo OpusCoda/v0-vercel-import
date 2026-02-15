@@ -246,7 +246,7 @@ export default function Home() {
     }
     
     // Subtract initial LP (469M PLS + 500M Smaug)
-    const initialPLS = BigInt("469000000000000000000000000") // 469M PLS in wei
+    const initialPLS = BigInt("467500000000000000000000000") // 467.5M PLS in wei
     const initialSmaug = BigInt("500000000000000000000000000") // 500M Smaug in wei
     
     const taxOnlyPLS = totalPLS > initialPLS ? totalPLS - initialPLS : 0n
