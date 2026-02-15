@@ -1321,7 +1321,7 @@ export default function Home() {
   </ul>
   {smaugLpAddedData && (
     <div className="text-xs text-slate-400 mt-4 text-center">
-      Total PLS added to LP: {formatMillions(smaugLpAddedData.totalPLS)}
+      Total locked PLS added to date: {formatMillions(smaugLpAddedData.totalPLS)}
     </div>
   )}
 </div>
