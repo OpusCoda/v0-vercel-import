@@ -246,12 +246,21 @@ export default function Home() {
     // Fetch saved lists from database here if needed
   }, [])
 
+  // Single shared RPC provider to avoid multiple competing connections
+  const providerRef = useRef<ethers.JsonRpcProvider | null>(null)
+  const getProvider = () => {
+    if (!providerRef.current) {
+      providerRef.current = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL!)
+    }
+    return providerRef.current
+  }
+
   // Helper to retry RPC calls with timeout
-  const rpcRetry = async <T,>(fn: () => Promise<T>, retries = 2, delayMs = 1500): Promise<T> => {
+  const rpcRetry = async <T,>(fn: () => Promise<T>, retries = 1, delayMs = 2000): Promise<T> => {
     for (let i = 0; i <= retries; i++) {
       try {
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("RPC timeout")), 10000)
+          setTimeout(() => reject(new Error("RPC timeout")), 15000)
         )
         return await Promise.race([fn(), timeoutPromise])
       } catch (err) {
@@ -265,29 +274,15 @@ export default function Home() {
   const fetchLiquidityData = async () => {
     try {
       console.log("[v0] Fetching liquidity data...")
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL!)
+      const provider = getProvider()
 
-      // Fetch Opus liquidity data with retry
-      const opusLpAddedData = await rpcRetry(() => provider.call({
-        to: OPUS_CONTRACT,
-        data: "0x77e34bcf", // totalOpusLpAdded
-      }))
-
-      const opusPlsLpAddedData = await rpcRetry(() => provider.call({
-        to: OPUS_CONTRACT,
-        data: "0x2f6ec43a", // totalPlsLpAdded
-      }))
-
-      // Fetch Coda liquidity data with retry
-      const codaLpAddedData = await rpcRetry(() => provider.call({
-        to: CODA_CONTRACT,
-        data: "0x2af2db78", // totalCodaLpAdded
-      }))
-
-      const codaPlsLpAddedData = await rpcRetry(() => provider.call({
-        to: CODA_CONTRACT,
-        data: "0x2f6ec43a", // totalPlsLpAdded
-      }))
+      // Fetch all 4 liquidity calls in parallel
+      const [opusLpAddedData, opusPlsLpAddedData, codaLpAddedData, codaPlsLpAddedData] = await Promise.all([
+        rpcRetry(() => provider.call({ to: OPUS_CONTRACT, data: "0x77e34bcf" })),
+        rpcRetry(() => provider.call({ to: OPUS_CONTRACT, data: "0x2f6ec43a" })),
+        rpcRetry(() => provider.call({ to: CODA_CONTRACT, data: "0x2af2db78" })),
+        rpcRetry(() => provider.call({ to: CODA_CONTRACT, data: "0x2f6ec43a" })),
+      ])
 
       // Baseline PLS for Opus liquidity (pre-tracking amounts)
       const opusPlsBaseline1 = BigInt("49666029536348406754405890")
@@ -341,12 +336,11 @@ export default function Home() {
       console.log("[v0] Cached prices result:", prices ? "success" : "failed", prices ? `smaug=${prices.smaug}, pls=${prices.pls}, missor=${prices.missor}` : "")
       applyTokenPrices(prices)
       
-      // Step 2: Run RPC-dependent fetches in parallel (each handles its own errors)
-      await Promise.allSettled([
-        fetchLiquidityData(),
-        fetchSmaugVaultData(prices),
-        fetchTotalDistributed(),
-      ])
+      // Step 2: Run RPC-dependent fetches sequentially to avoid overwhelming the PulseChain RPC
+      // Each function handles its own errors internally so one failing won't block the next
+      try { await fetchTotalDistributed() } catch {}
+      try { await fetchSmaugVaultData(prices) } catch {}
+      try { await fetchLiquidityData() } catch {}
     }
     init()
   }, [])
@@ -377,7 +371,7 @@ export default function Home() {
       setSmaugLiquidity(p.smaugLiquidity || 0)
     }
 
-    const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
+    const provider = getProvider()
 
     // Each RPC section is independent - one failing won't block others
     try {
@@ -459,7 +453,7 @@ export default function Home() {
   const fetchTotalDistributed = async () => {
     console.log("[v0] Starting fetchTotalDistributed...")
     try {
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
+      const provider = getProvider()
 
       // Opus distributor contract addresses (v1, v2, v3)
       const opusDistributors = [
@@ -634,7 +628,7 @@ export default function Home() {
     await fetchTokenPrices()
 
     try {
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
+      const provider = getProvider()
       const opusContract = new ethers.Contract(OPUS_CONTRACT, OPUS_ABI, provider)
       // </CHANGE> Fixed CODA contract initialization - was passing CODA_ABI twice instead of CODA_CONTRACT address
       const codaContract = new ethers.Contract(CODA_CONTRACT, CODA_ABI, provider)
