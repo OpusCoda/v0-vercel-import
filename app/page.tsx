@@ -1364,22 +1364,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Smaug LP Tracking */}
-{/* Smaug LP Tracking */}
-{smaugLpAddedData && (
-  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner mb-8">
-    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Total LP Added</h4>
-    <div className="space-y-3 text-sm text-slate-300">
-      <div className="flex justify-between items-center">
-        <span>PLS added to locked LP</span>
-        <span className="text-green-300 font-medium">
-          {formatMillions(smaugLpAddedData.totalPLS)}
-        </span>
-      </div>
-    </div>
-  </div>
-)}
-
                 {/* Smaug's Vault & The Hoard wallet */}
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
