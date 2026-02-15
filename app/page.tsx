@@ -2,7 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ethers } from "ethers"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
@@ -307,11 +307,14 @@ export default function Home() {
 
   useEffect(() => {
   fetchLiquidityData()
-> fetchTotalDistributed()
+  fetchTotalDistributed()
   fetchTokenPrices()
-  fetchSmaugVaultData()
+  // Stagger Smaug vault fetch to avoid DexScreener rate limiting
+  const smaugTimeout = setTimeout(() => fetchSmaugVaultData(), 2000)
+  return () => clearTimeout(smaugTimeout)
   }, [])
 
+  const smaugRetryCount = useRef(0)
   const fetchSmaugVaultData = async () => {
     try {
       const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
@@ -416,6 +419,11 @@ export default function Home() {
       })
     } catch (err) {
       console.error("[v0] Error fetching Smaug's vault data:", err)
+      // Retry up to 2 times after a delay
+      if (smaugRetryCount.current < 2) {
+        smaugRetryCount.current++
+        setTimeout(() => fetchSmaugVaultData(), 5000)
+      }
     }
   }
 
