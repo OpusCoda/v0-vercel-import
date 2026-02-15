@@ -1300,27 +1300,31 @@ export default function Home() {
                 <h3 className="text-2xl font-marcellus text-green-300 mb-4 text-center">Anatomy of Smaug:</h3>
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
-                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics — 6.50%</h4>
-                    <ul className="space-y-2 text-slate-300">
-                      <li className="flex justify-between">
-                        <span>Buy & burn</span>
-                        <span className="text-green-300 font-medium">3.5%</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span>Reflections to holders</span>
-                        <span className="text-green-300 font-medium">1.5%</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span>Added to Smaug's Vault</span>
-                        <span className="text-green-300 font-medium">1.0%</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span>Added to locked LP</span>
-                        <span className="text-green-300 font-medium">0.5%</span>
-                      </li>
-                    </ul>
-                    <p className="text-xs text-slate-400 mt-4 text-center">Transfer tax: 0%</p>
-                  </div>
+  <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics — 6.50%</h4>
+  <ul className="space-y-2 text-slate-300">
+    <li className="flex justify-between">
+      <span>Buy & burn</span>
+      <span className="text-green-300 font-medium">3.5%</span>
+    </li>
+    <li className="flex justify-between">
+      <span>Reflections to holders</span>
+      <span className="text-green-300 font-medium">1.5%</span>
+    </li>
+    <li className="flex justify-between">
+      <span>Added to Smaug's Vault</span>
+      <span className="text-green-300 font-medium">1.0%</span>
+    </li>
+    <li className="flex justify-between">
+      <span>Added to locked LP</span>
+      <span className="text-green-300 font-medium">0.5%</span>
+    </li>
+  </ul>
+  {smaugLpAddedData && (
+    <div className="text-xs text-slate-400 mt-4 text-center">
+      Total PLS added to LP: {formatMillions(smaugLpAddedData.totalPLS)}
+    </div>
+  )}
+</div>
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
                     <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Smaug's Ledger</h4>
                     <ul className="space-y-3 text-sm text-slate-300">
