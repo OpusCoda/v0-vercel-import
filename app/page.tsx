@@ -241,20 +241,14 @@ export default function Home() {
     let totalToken = 0n
     for (const event of lpEvents) {
       const log = event as ethers.EventLog
-      totalPLS += BigInt(log.args[0])  // amountPLS
-      totalToken += BigInt(log.args[1]) // amountSMAUG
+      totalToken += BigInt(log.args[0]) // amountSMAUG is first
+      totalPLS += BigInt(log.args[1])   // amountPLS is second
     }
     
-    // Subtract initial LP (469M PLS + 500M Smaug)
-    const initialPLS = BigInt("467500000000000000000000000") // 467.5M PLS in wei
-    const initialSmaug = BigInt("500000000000000000000000000") // 500M Smaug in wei
-    
-    const taxOnlyPLS = totalPLS > initialPLS ? totalPLS - initialPLS : 0n
-    const taxOnlySmaug = totalToken > initialSmaug ? totalToken - initialSmaug : 0n
-    
+    // No baseline subtraction needed - initial LP was not burned
     setSmaugLpAddedData({
-      totalPLS: ethers.formatUnits(taxOnlyPLS, 18),
-      totalToken: ethers.formatUnits(taxOnlySmaug, 18),
+      totalPLS: ethers.formatUnits(totalPLS, 18),
+      totalToken: ethers.formatUnits(totalToken, 18),
     })
     
     console.log("[v0] Smaug LP events fetched (tax-only)")
