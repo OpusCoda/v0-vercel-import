@@ -305,44 +305,66 @@ export default function Home() {
     }
   }
 
+  // Cached prices ref so dependent functions can access them
+  const cachedPricesRef = useRef<any>(null)
+
+  const fetchCachedPrices = async () => {
+    try {
+      const res = await fetch("/api/prices")
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      cachedPricesRef.current = data
+      return data
+    } catch (err) {
+      console.error("[v0] Error fetching cached prices:", err)
+      return null
+    }
+  }
+
   useEffect(() => {
-  fetchLiquidityData()
-  fetchTotalDistributed()
-  fetchTokenPrices()
-  // Stagger Smaug vault fetch to avoid DexScreener rate limiting
-  const smaugTimeout = setTimeout(() => fetchSmaugVaultData(), 2000)
-  return () => clearTimeout(smaugTimeout)
+    const init = async () => {
+      // Fetch all prices from server cache first (1 request instead of ~15)
+      const prices = await fetchCachedPrices()
+      
+      // Then use prices for everything else in parallel
+      fetchSmaugVaultData(prices)
+      applyTokenPrices(prices)
+      fetchLiquidityData()
+      fetchTotalDistributed()
+    }
+    init()
   }, [])
 
-  const smaugRetryCount = useRef(0)
-  const fetchSmaugVaultData = async () => {
+  const applyTokenPrices = (prices: any) => {
+    if (!prices) return
+    setTokenPrices({
+      missor: prices.missor || 0,
+      finvesta: prices.finvesta || 0,
+      wgpp: prices.wgpp || 0,
+      weth: prices.weth || 0,
+      Pwbtc: prices.pwbtc || 0,
+      plsx: prices.plsx || 0,
+      opus: prices.opus || 0,
+      coda: prices.coda || 0,
+    })
+  }
+
+  const fetchSmaugVaultData = async (prices?: any) => {
     try {
+      const p = prices || cachedPricesRef.current
       const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
       
-      // Fetch PLS price independently
-      const plsPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe56043671df55de5cdf8459710433c10324de0ae")
-      const plsPriceData = await plsPriceRes.json()
-      const fetchedPlsPrice = plsPriceData.pair?.priceUsd ? Number(plsPriceData.pair.priceUsd) : 0
-      setPlsPrice(fetchedPlsPrice)
+      // Use cached prices instead of DexScreener calls
+      if (p) {
+        setPlsPrice(p.pls || 0)
+        setSmaugPrice(p.smaug || 0)
+        setSmaugMarketCap(p.smaugMarketCap || 0)
+        setSmaugLiquidity(p.smaugLiquidity || 0)
+      }
 
-      // Fetch PLS balance of Smaug's Vault
+      // Fetch PLS balance of Smaug's Vault (RPC call - stays client-side)
       const vaultBalance = await provider.getBalance("0xd6B7f6F0559459354391ae1055E3A6768f465483")
       setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
-
-      // Fetch Smaug price from DexScreener
-      const smaugPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x151e583badb57138d41aa964ac3ff38d4bb1145f")
-      const smaugPriceData = await smaugPriceRes.json()
-      if (smaugPriceData.pair?.priceUsd) {
-        setSmaugPrice(Number(smaugPriceData.pair.priceUsd))
-      }
-      if (smaugPriceData.pair?.marketCap) {
-        setSmaugMarketCap(Number(smaugPriceData.pair.marketCap))
-      } else if (smaugPriceData.pair?.fdv) {
-        setSmaugMarketCap(Number(smaugPriceData.pair.fdv))
-      }
-      if (smaugPriceData.pair?.liquidity?.usd) {
-        setSmaugLiquidity(Number(smaugPriceData.pair.liquidity.usd))
-      }
 
       // Fetch total Smaug burned from contract's totalBurned() function
       const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
@@ -380,7 +402,7 @@ export default function Home() {
         console.error("[v0] Error fetching burn events:", evtErr)
       }
 
-      // Fetch The Hoard wallet data (0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a)
+      // Fetch The Hoard wallet data (RPC calls - stay client-side)
       const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
       const hoardPlsBalance = await provider.getBalance(hoardAddress)
       
@@ -394,36 +416,18 @@ export default function Home() {
         pWbtcContract.balanceOf(hoardAddress),
       ])
 
-      // Fetch Gas Money, Dominance, and pWBTC prices
-      const [gasMoneyPriceRes, dominancePriceRes, pWbtcPriceRes] = await Promise.all([
-        fetch("https://api.dexscreener.com/latest/dex/tokens/0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106"),
-        fetch("https://api.dexscreener.com/latest/dex/tokens/0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA"),
-        fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf"),
-      ])
-      const gasMoneyPriceData = await gasMoneyPriceRes.json()
-      const dominancePriceData = await dominancePriceRes.json()
-      const pWbtcPriceData = await pWbtcPriceRes.json()
-      
-      const gmPrice = gasMoneyPriceData.pairs?.[0]?.priceUsd ? Number(gasMoneyPriceData.pairs[0].priceUsd) : 0
-      const domPrice = dominancePriceData.pairs?.[0]?.priceUsd ? Number(dominancePriceData.pairs[0].priceUsd) : 0
-      const wbtcPrice = pWbtcPriceData.pair?.priceUsd ? Number(pWbtcPriceData.pair.priceUsd) : 0
-
+      // Use cached prices for Gas Money, Dominance, pWBTC
       setHoardData({
         pls: Number(ethers.formatEther(hoardPlsBalance)),
         pWbtc: Number(ethers.formatUnits(pWbtcBal, 8)),
-        pWbtcPrice: wbtcPrice,
+        pWbtcPrice: p?.pwbtc || 0,
         gasMoney: Number(ethers.formatEther(gasMoneyBal)),
-        gasMoneyPrice: gmPrice,
+        gasMoneyPrice: p?.gasMoney || 0,
         dominance: Number(ethers.formatEther(dominanceBal)),
-        dominancePrice: domPrice,
+        dominancePrice: p?.dominance || 0,
       })
     } catch (err) {
       console.error("[v0] Error fetching Smaug's vault data:", err)
-      // Retry up to 2 times after a delay
-      if (smaugRetryCount.current < 2) {
-        smaugRetryCount.current++
-        setTimeout(() => fetchSmaugVaultData(), 5000)
-      }
     }
   }
 
@@ -585,44 +589,9 @@ export default function Home() {
   }
 
   const fetchTokenPrices = async () => {
-    const tokens = [
-      { name: "missor", address: "0xf3a8541894e4d789e6257a63440094d698d82bad" },
-      { name: "finvesta", address: "0x615cfd552e98eb97e5557b03aa41d0e85e98167b" },
-      { name: "wgpp", address: "0xf13ca5c98d9aae6294edb9e7299b0bbe1e71265d" },
-      { name: "weth", address: "0x42abdfdb63f3282033c766e72cc4810738571609" },
-      { name: "Pwbtc", address: "0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf" },
-      { name: "plsx", address: "0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9" },
-      { name: "opus", address: "0x14495adf3e689221655fdc950cd0133051ec61f9" },
-      { name: "coda", address: "0x13b62b75cfa35814d30fbeec0682047aa6287dfb" },
-    ]
-
-    const prices = await Promise.all(
-      tokens.map(async (token) => {
-        try {
-          const response = await fetch(`https://api.dexscreener.com/latest/dex/pairs/pulsechain/${token.address}`)
-          const data = await response.json()
-          const price = data?.pairs?.[0]?.priceUsd
-          if (token.name === "finvesta" || token.name === "opus" || token.name === "coda") {
-            console.log(`[v0] ${token.name} price data:`, data)
-            console.log(`[v0] ${token.name} price:`, price)
-          }
-          return { name: token.name, price: Number.parseFloat(price || "0") }
-        } catch (err) {
-          console.error(`[v0] Error fetching price for ${token.name}:`, err)
-          return { name: token.name, price: 0 }
-        }
-      }),
-    )
-    setTokenPrices({
-      missor: prices.find((p) => p.name === "missor")?.price || 0,
-      finvesta: prices.find((p) => p.name === "finvesta")?.price || 0,
-      wgpp: prices.find((p) => p.name === "wgpp")?.price || 0,
-      weth: prices.find((p) => p.name === "weth")?.price || 0,
-      Pwbtc: prices.find((p) => p.name === "Pwbtc")?.price || 0,
-      plsx: prices.find((p) => p.name === "plsx")?.price || 0,
-      opus: prices.find((p) => p.name === "opus")?.price || 0,
-      coda: prices.find((p) => p.name === "coda")?.price || 0,
-    })
+    // Re-fetch from server cache (will be instant if already cached)
+    const prices = await fetchCachedPrices()
+    applyTokenPrices(prices)
   }
 
   const fetchRewards = async (addressesToFetch?: string[]) => {
@@ -1026,33 +995,11 @@ export default function Home() {
         return a.daysRemaining - b.daysRemaining
       }))
 
-      // Fetch HEX prices for both chains
-      try {
-        // Pulsechain HEX price
-        const plsHexResponse = await fetch(
-          "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xf1f4ee610b2babb05c635f726ef8b0c568c8dc65"
-        )
-        const plsHexData = await plsHexResponse.json()
-        if (plsHexData.pair) {
-          setHexPricePulsechain(Number(plsHexData.pair.priceUsd) || 0)
-          console.log(`[v0] Pulsechain HEX price: $${plsHexData.pair.priceUsd}`)
-        }
-      } catch (err) {
-        console.error("[v0] Error fetching Pulsechain HEX price:", err)
-      }
-
-      try {
-        // Ethereum HEX price
-        const ethHexResponse = await fetch(
-          "https://api.dexscreener.com/latest/dex/pairs/ethereum/0x55d5c232d921b9eaa6b37b5845e439acd04b4dba"
-        )
-        const ethHexData = await ethHexResponse.json()
-        if (ethHexData.pair) {
-          setHexPriceEthereum(Number(ethHexData.pair.priceUsd) || 0)
-          console.log(`[v0] Ethereum HEX price: $${ethHexData.pair.priceUsd}`)
-        }
-      } catch (err) {
-        console.error("[v0] Error fetching Ethereum HEX price:", err)
+      // Use cached HEX prices
+      const cp = cachedPricesRef.current
+      if (cp) {
+        setHexPricePulsechain(cp.hexPulsechain || 0)
+        setHexPriceEthereum(cp.hexEthereum || 0)
       }
 
       // Fetch token balances for all addresses
@@ -1125,38 +1072,17 @@ export default function Home() {
         smaug: totalSmaug,
       })
 
-      // Fetch token prices
-      try {
-        // PLS price
-        const plsPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe56043671df55de5cdf8459710433c10324de0ae")
-        const plsPriceData = await plsPriceRes.json()
-        const plsPrice = plsPriceData.pair?.priceUsd ? Number(plsPriceData.pair.priceUsd) : 0
-
-        // PLSX price
-        const plsxPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9")
-        const plsxPriceData = await plsxPriceRes.json()
-        const plsxPrice = plsxPriceData.pair?.priceUsd ? Number(plsxPriceData.pair.priceUsd) : 0
-
-        // INC price
-        const incPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xf808bb6265e9ca27002c0a04562bf50d4fe37eaa")
-        const incPriceData = await incPriceRes.json()
-        const incPrice = incPriceData.pair?.priceUsd ? Number(incPriceData.pair.priceUsd) : 0
-
-        // pWBTC price on Pulsechain
-        const wbtcPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf")
-        const wbtcPriceData = await wbtcPriceRes.json()
-        const wbtcPrice = wbtcPriceData.pair?.priceUsd ? Number(wbtcPriceData.pair.priceUsd) : 0
-
+      // Use cached token prices
+      const cachedP = cachedPricesRef.current
+      if (cachedP) {
         setTokenPricesAll({
-          pls: plsPrice,
-          plsx: plsxPrice,
-          inc: incPrice,
-          pHex: hexPricePulsechain,
-          eHex: hexPriceEthereum,
-          wbtc: wbtcPrice,
+          pls: cachedP.pls || 0,
+          plsx: cachedP.plsx || 0,
+          inc: cachedP.inc || 0,
+          pHex: cachedP.hexPulsechain || 0,
+          eHex: cachedP.hexEthereum || 0,
+          wbtc: cachedP.pwbtc || 0,
         })
-      } catch (err) {
-        console.error("[v0] Error fetching token prices:", err)
       }
 
       // Fetch Liquid Loans vaults
