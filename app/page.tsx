@@ -366,75 +366,81 @@ export default function Home() {
   }
 
   const fetchSmaugVaultData = async (prices?: any) => {
+    console.log("[v0] Starting fetchSmaugVaultData...")
+    const p = prices || cachedPricesRef.current
+    
+    // Set cached prices immediately (no RPC needed)
+    if (p) {
+      setPlsPrice(p.pls || 0)
+      setSmaugPrice(p.smaug || 0)
+      setSmaugMarketCap(p.smaugMarketCap || 0)
+      setSmaugLiquidity(p.smaugLiquidity || 0)
+    }
+
+    const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
+
+    // Each RPC section is independent - one failing won't block others
     try {
-      console.log("[v0] Starting fetchSmaugVaultData...")
-      const p = prices || cachedPricesRef.current
-      console.log("[v0] Cached prices available:", !!p, p ? `pls=${p.pls}, smaug=${p.smaug}` : "none")
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
-      
-      // Use cached prices instead of DexScreener calls
-      if (p) {
-        setPlsPrice(p.pls || 0)
-        setSmaugPrice(p.smaug || 0)
-        setSmaugMarketCap(p.smaugMarketCap || 0)
-        setSmaugLiquidity(p.smaugLiquidity || 0)
-      }
-
-      // Fetch PLS balance of Smaug's Vault (RPC call - stays client-side)
-      const vaultBalance = await provider.getBalance("0xd6B7f6F0559459354391ae1055E3A6768f465483")
+      const vaultBalance = await rpcRetry(() => provider.getBalance("0xd6B7f6F0559459354391ae1055E3A6768f465483"))
       setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
+      console.log("[v0] Vault PLS balance fetched")
+    } catch (err) {
+      console.error("[v0] Error fetching vault PLS balance:", err)
+    }
 
-      // Fetch total Smaug burned from contract's totalBurned() function
-      const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
+    const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
+
+    try {
+      let burned
       try {
-        const totalBurned = await smaugContract.totalBurned()
-        setSmaugTotalBurned(Number(ethers.formatEther(totalBurned)))
+        burned = await rpcRetry(() => smaugContract.totalBurned())
       } catch {
-        // Fallback: read burn wallet balance
-        const burnBalance = await smaugContract.balanceOf("0x0000000000000000000000000000000000000369")
-        setSmaugTotalBurned(Number(ethers.formatEther(burnBalance)))
+        burned = await rpcRetry(() => smaugContract.balanceOf("0x0000000000000000000000000000000000000369"))
       }
+      setSmaugTotalBurned(Number(ethers.formatEther(burned)))
+      console.log("[v0] Total burned fetched")
+    } catch (err) {
+      console.error("[v0] Error fetching total burned:", err)
+    }
 
-      // Fetch per-wallet burns by querying Transfer events to burn address
+    try {
       const burnAddress = "0x0000000000000000000000000000000000000369"
       const vaultAddress = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
       const hoardAddr = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
       const transferFilter = smaugContract.filters.Transfer
-      
-      try {
-        const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
-          smaugContract.queryFilter(transferFilter(vaultAddress, burnAddress)),
-          smaugContract.queryFilter(transferFilter(hoardAddr, burnAddress)),
-        ])
-        const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => {
-          const log = e as ethers.EventLog
-          return sum + Number(ethers.formatEther(log.args[2]))
-        }, 0)
-        const hoardBurnTotal = hoardBurnEvents.reduce((sum, e) => {
-          const log = e as ethers.EventLog
-          return sum + Number(ethers.formatEther(log.args[2]))
-        }, 0)
-        setSmaugVaultBurned(vaultBurnTotal)
-        setSmaugHoardBurned(hoardBurnTotal)
-      } catch (evtErr) {
-        console.error("[v0] Error fetching burn events:", evtErr)
-      }
+      const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
+        rpcRetry(() => smaugContract.queryFilter(transferFilter(vaultAddress, burnAddress))),
+        rpcRetry(() => smaugContract.queryFilter(transferFilter(hoardAddr, burnAddress))),
+      ])
+      const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => {
+        const log = e as ethers.EventLog
+        return sum + Number(ethers.formatEther(log.args[2]))
+      }, 0)
+      const hoardBurnTotal = hoardBurnEvents.reduce((sum, e) => {
+        const log = e as ethers.EventLog
+        return sum + Number(ethers.formatEther(log.args[2]))
+      }, 0)
+      setSmaugVaultBurned(vaultBurnTotal)
+      setSmaugHoardBurned(hoardBurnTotal)
+      console.log("[v0] Burn events fetched")
+    } catch (err) {
+      console.error("[v0] Error fetching burn events:", err)
+    }
 
-      // Fetch The Hoard wallet data (RPC calls - stay client-side)
+    try {
       const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
-      const hoardPlsBalance = await provider.getBalance(hoardAddress)
+      const hoardPlsBalance = await rpcRetry(() => provider.getBalance(hoardAddress))
       
       const gasMoneyContract = new ethers.Contract("0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106", BALANCE_ABI, provider)
       const dominanceContract = new ethers.Contract("0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA", BALANCE_ABI, provider)
       const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
       
       const [gasMoneyBal, dominanceBal, pWbtcBal] = await Promise.all([
-        gasMoneyContract.balanceOf(hoardAddress),
-        dominanceContract.balanceOf(hoardAddress),
-        pWbtcContract.balanceOf(hoardAddress),
+        rpcRetry(() => gasMoneyContract.balanceOf(hoardAddress)),
+        rpcRetry(() => dominanceContract.balanceOf(hoardAddress)),
+        rpcRetry(() => pWbtcContract.balanceOf(hoardAddress)),
       ])
 
-      // Use cached prices for Gas Money, Dominance, pWBTC
       setHoardData({
         pls: Number(ethers.formatEther(hoardPlsBalance)),
         pWbtc: Number(ethers.formatUnits(pWbtcBal, 8)),
@@ -444,8 +450,9 @@ export default function Home() {
         dominance: Number(ethers.formatEther(dominanceBal)),
         dominancePrice: p?.dominance || 0,
       })
+      console.log("[v0] Hoard data fetched")
     } catch (err) {
-      console.error("[v0] Error fetching Smaug's vault data:", err)
+      console.error("[v0] Error fetching hoard data:", err)
     }
   }
 
@@ -472,53 +479,49 @@ export default function Home() {
       let totalFinvesta = 0n
       let totalWgpp = 0n
 
-      for (const address of opusDistributors) {
-        const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
-        try {
-          const missor = await rpcRetry(() => contract.totalMissorDistributed())
-          totalMissor += BigInt(missor)
-        } catch (err) {
-          console.error(`[v0] Error fetching Missor from ${address}:`, err)
-        }
-        try {
-          const finvesta = await rpcRetry(() => contract.totalFinvestaDistributed())
-          totalFinvesta += BigInt(finvesta)
-        } catch (err) {
-          console.error(`[v0] Error fetching Finvesta from ${address}:`, err)
-        }
-        try {
-          const wgpp = await rpcRetry(() => contract.totalWgppDistributed())
-          totalWgpp += BigInt(wgpp)
-        } catch (err) {
-          console.error(`[v0] Error fetching WGPP from ${address}:`, err)
+      // Fetch all Opus distributor data in parallel
+      const opusResults = await Promise.allSettled(
+        opusDistributors.flatMap(address => {
+          const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
+          return [
+            rpcRetry(() => contract.totalMissorDistributed(), 1, 2000).then(v => ({ type: "missor" as const, value: BigInt(v) })),
+            rpcRetry(() => contract.totalFinvestaDistributed(), 1, 2000).then(v => ({ type: "finvesta" as const, value: BigInt(v) })),
+            rpcRetry(() => contract.totalWgppDistributed(), 1, 2000).then(v => ({ type: "wgpp" as const, value: BigInt(v) })),
+          ]
+        })
+      )
+      for (const r of opusResults) {
+        if (r.status === "fulfilled") {
+          if (r.value.type === "missor") totalMissor += r.value.value
+          else if (r.value.type === "finvesta") totalFinvesta += r.value.value
+          else if (r.value.type === "wgpp") totalWgpp += r.value.value
         }
       }
+      console.log("[v0] Opus distributors fetched")
 
       let totalWeth = 0n
       let totalPwbtc = 0n
       let totalPlsx = 0n
 
-      for (const address of codaDistributors) {
-        const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
-        try {
-          const weth = await rpcRetry(() => contract.totalWethDistributed())
-          totalWeth += BigInt(weth)
-        } catch (err) {
-          console.error(`[v0] Error fetching WETH from ${address}:`, err)
-        }
-        try {
-          const Pwbtc = await rpcRetry(() => contract.totalWbtcDistributed())
-          totalPwbtc += BigInt(Pwbtc)
-        } catch (err) {
-          console.error(`[v0] Error fetching pWBTC from ${address}:`, err)
-        }
-        try {
-          const plsx = await rpcRetry(() => contract.totalPlsxDistributed())
-          totalPlsx += BigInt(plsx)
-        } catch (err) {
-          console.error(`[v0] Error fetching PLSX from ${address}:`, err)
+      // Fetch all Coda distributor data in parallel
+      const codaResults = await Promise.allSettled(
+        codaDistributors.flatMap(address => {
+          const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
+          return [
+            rpcRetry(() => contract.totalWethDistributed(), 1, 2000).then(v => ({ type: "weth" as const, value: BigInt(v) })),
+            rpcRetry(() => contract.totalWbtcDistributed(), 1, 2000).then(v => ({ type: "pwbtc" as const, value: BigInt(v) })),
+            rpcRetry(() => contract.totalPlsxDistributed(), 1, 2000).then(v => ({ type: "plsx" as const, value: BigInt(v) })),
+          ]
+        })
+      )
+      for (const r of codaResults) {
+        if (r.status === "fulfilled") {
+          if (r.value.type === "weth") totalWeth += r.value.value
+          else if (r.value.type === "pwbtc") totalPwbtc += r.value.value
+          else if (r.value.type === "plsx") totalPlsx += r.value.value
         }
       }
+      console.log("[v0] Coda distributors fetched")
 
       console.log("[v0] Total Missor:", totalMissor.toString())
       console.log("[v0] Total Finvesta:", totalFinvesta.toString())
