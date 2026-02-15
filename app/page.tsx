@@ -74,12 +74,6 @@ const SMAUG_ABI = [
   "function balanceOf(address) view returns (uint256)",
   "function totalBurned() view returns (uint256)",
   "event Transfer(address indexed from, address indexed to, uint256 value)",
-]
-
-const SMAUG_ABI = [
-  "function balanceOf(address) view returns (uint256)",
-  "function totalBurned() view returns (uint256)",
-  "event Transfer(address indexed from, address indexed to, uint256 value)",
   "event LPAdded(uint256 plsAmount, uint256 tokenAmount)",
 ]
 
