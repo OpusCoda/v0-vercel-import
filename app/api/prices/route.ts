@@ -97,21 +97,17 @@ async function fetchAllPrices(): Promise<PriceData> {
       }
 
       const data = res.value
-      if (endpoint.type === "pair") {
-        // .pair response format
-        const price = data?.pair?.priceUsd
-        if (price) result[endpoint.key] = Number(price)
-        // Extract extra Smaug data
-        if (endpoint.extra && endpoint.key === "smaug") {
-          const mc = data?.pair?.marketCap || data?.pair?.fdv
-          if (mc) result.smaugMarketCap = Number(mc)
-          const liq = data?.pair?.liquidity?.usd
-          if (liq) result.smaugLiquidity = Number(liq)
-        }
-      } else {
-        // .pairs[] response format
-        const price = data?.pairs?.[0]?.priceUsd
-        if (price) result[endpoint.key] = Number(price)
+      // Handle both response formats: { pair: {...} } and { pairs: [...] }
+      const pairData = data?.pair || data?.pairs?.[0]
+      if (pairData?.priceUsd) {
+        result[endpoint.key] = Number(pairData.priceUsd)
+      }
+      // Extract extra Smaug data
+      if (endpoint.key === "smaug" && pairData) {
+        const mc = pairData.marketCap || pairData.fdv
+        if (mc) result.smaugMarketCap = Number(mc)
+        const liq = pairData.liquidity?.usd
+        if (liq) result.smaugLiquidity = Number(liq)
       }
     }
 
@@ -137,7 +133,9 @@ export async function GET() {
   }
 
   try {
+    console.log("[prices] Fetching fresh prices from DexScreener...")
     const data = await fetchAllPrices()
+    console.log("[prices] Fetched prices:", JSON.stringify({ smaug: data.smaug, pls: data.pls, missor: data.missor, finvesta: data.finvesta, opus: data.opus, coda: data.coda }))
     cache.data = data
     cache.timestamp = now
 

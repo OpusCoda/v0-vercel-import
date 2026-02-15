@@ -246,11 +246,14 @@ export default function Home() {
     // Fetch saved lists from database here if needed
   }, [])
 
-  // Helper to retry RPC calls
-  const rpcRetry = async <T,>(fn: () => Promise<T>, retries = 2, delayMs = 1000): Promise<T> => {
+  // Helper to retry RPC calls with timeout
+  const rpcRetry = async <T,>(fn: () => Promise<T>, retries = 2, delayMs = 1500): Promise<T> => {
     for (let i = 0; i <= retries; i++) {
       try {
-        return await fn()
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("RPC timeout")), 10000)
+        )
+        return await Promise.race([fn(), timeoutPromise])
       } catch (err) {
         if (i === retries) throw err
         await new Promise(r => setTimeout(r, delayMs * (i + 1)))
@@ -333,17 +336,17 @@ export default function Home() {
   useEffect(() => {
     const init = async () => {
       // Step 1: Fetch all DexScreener prices from server cache (1 request)
+      console.log("[v0] Fetching cached prices from /api/prices...")
       const prices = await fetchCachedPrices()
+      console.log("[v0] Cached prices result:", prices ? "success" : "failed", prices ? `smaug=${prices.smaug}, pls=${prices.pls}, missor=${prices.missor}` : "")
       applyTokenPrices(prices)
       
-      // Step 2: Fetch liquidity data (4 RPC calls)
-      await fetchLiquidityData()
-      
-      // Step 3: Fetch Smaug vault data (several RPC calls)
-      await fetchSmaugVaultData(prices)
-      
-      // Step 4: Fetch total distributed (18 RPC calls - heaviest)
-      await fetchTotalDistributed()
+      // Step 2: Run RPC-dependent fetches in parallel (each handles its own errors)
+      await Promise.allSettled([
+        fetchLiquidityData(),
+        fetchSmaugVaultData(prices),
+        fetchTotalDistributed(),
+      ])
     }
     init()
   }, [])
@@ -364,7 +367,9 @@ export default function Home() {
 
   const fetchSmaugVaultData = async (prices?: any) => {
     try {
+      console.log("[v0] Starting fetchSmaugVaultData...")
       const p = prices || cachedPricesRef.current
+      console.log("[v0] Cached prices available:", !!p, p ? `pls=${p.pls}, smaug=${p.smaug}` : "none")
       const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
       
       // Use cached prices instead of DexScreener calls
@@ -445,6 +450,7 @@ export default function Home() {
   }
 
   const fetchTotalDistributed = async () => {
+    console.log("[v0] Starting fetchTotalDistributed...")
     try {
       const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
 
