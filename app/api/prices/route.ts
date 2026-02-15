@@ -26,6 +26,11 @@ interface PriceData {
   // Token prices (tokens endpoint returns .pairs[])
   gasMoney: number
   dominance: number
+  // Liquidity data (from RPC)
+  liquidityOpusAdded: string
+  liquidityOpusPlsAdded: string
+  liquidityCodaAdded: string
+  liquidityCodaPlsAdded: string
 }
 
 const CACHE_TTL = 60_000 // 60 seconds
@@ -76,6 +81,8 @@ async function fetchAllPrices(): Promise<PriceData> {
     missor: 0, finvesta: 0, wgpp: 0, weth: 0, pwbtc: 0,
     plsx: 0, opus: 0, coda: 0, hexPulsechain: 0, hexEthereum: 0,
     inc: 0, gasMoney: 0, dominance: 0,
+    liquidityOpusAdded: "0", liquidityOpusPlsAdded: "0",
+    liquidityCodaAdded: "0", liquidityCodaPlsAdded: "0",
   }
 
   // Fetch in batches of 4 to avoid rate limiting
@@ -114,6 +121,38 @@ async function fetchAllPrices(): Promise<PriceData> {
     // Small delay between batches
     if (i + 4 < allEndpoints.length) {
       await new Promise((r) => setTimeout(r, 300))
+    }
+  }
+
+  // Also fetch liquidity data from PulseChain RPC (server-side, cached)
+  const rpcUrl = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_URL
+  if (rpcUrl) {
+    const OPUS_CONTRACT = "0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4"
+    const CODA_CONTRACT = "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
+    try {
+      const rpcCall = async (to: string, data: string) => {
+        const res = await fetch(rpcUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jsonrpc: "2.0", method: "eth_call", params: [{ to, data }, "latest"], id: 1 }),
+          cache: "no-store",
+        })
+        const json = await res.json()
+        return json.result || "0x0"
+      }
+      const [opusLp, opusPlsLp, codaLp, codaPlsLp] = await Promise.all([
+        rpcCall(OPUS_CONTRACT, "0x77e34bcf"),
+        rpcCall(OPUS_CONTRACT, "0x2f6ec43a"),
+        rpcCall(CODA_CONTRACT, "0x2af2db78"),
+        rpcCall(CODA_CONTRACT, "0x2f6ec43a"),
+      ])
+      result.liquidityOpusAdded = opusLp
+      result.liquidityOpusPlsAdded = opusPlsLp
+      result.liquidityCodaAdded = codaLp
+      result.liquidityCodaPlsAdded = codaPlsLp
+      console.log("[prices] Liquidity data fetched from RPC")
+    } catch (err) {
+      console.error("[prices] Failed to fetch liquidity data from RPC:", err)
     }
   }
 

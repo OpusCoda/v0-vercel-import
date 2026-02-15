@@ -271,18 +271,13 @@ export default function Home() {
     throw new Error("rpcRetry exhausted")
   }
 
-  const fetchLiquidityData = async () => {
+  const applyLiquidityData = (prices: any) => {
+    if (!prices?.liquidityOpusAdded || prices.liquidityOpusAdded === "0") return
     try {
-      console.log("[v0] Fetching liquidity data...")
-      const provider = getProvider()
-
-      // Fetch all 4 liquidity calls in parallel
-      const [opusLpAddedData, opusPlsLpAddedData, codaLpAddedData, codaPlsLpAddedData] = await Promise.all([
-        rpcRetry(() => provider.call({ to: OPUS_CONTRACT, data: "0x77e34bcf" })),
-        rpcRetry(() => provider.call({ to: OPUS_CONTRACT, data: "0x2f6ec43a" })),
-        rpcRetry(() => provider.call({ to: CODA_CONTRACT, data: "0x2af2db78" })),
-        rpcRetry(() => provider.call({ to: CODA_CONTRACT, data: "0x2f6ec43a" })),
-      ])
+      const opusLpAddedData = prices.liquidityOpusAdded
+      const opusPlsLpAddedData = prices.liquidityOpusPlsAdded
+      const codaLpAddedData = prices.liquidityCodaAdded
+      const codaPlsLpAddedData = prices.liquidityCodaPlsAdded
 
       // Baseline PLS for Opus liquidity (pre-tracking amounts)
       const opusPlsBaseline1 = BigInt("49666029536348406754405890")
@@ -297,18 +292,17 @@ export default function Home() {
       const formattedData = {
         opus: {
           opusAdded: ethers.formatUnits(opusLpAddedData, 18),
-          plsAdded: ethers.formatUnits(totalOpusPls.toString(), 18), // Use total with baseline
+          plsAdded: ethers.formatUnits(totalOpusPls.toString(), 18),
         },
         coda: {
           codaAdded: ethers.formatUnits(codaLpAddedData, 18),
-          plsAdded: ethers.formatUnits(totalCodaPls.toString(), 18), // Use total with baseline
+          plsAdded: ethers.formatUnits(totalCodaPls.toString(), 18),
         },
       }
-
-      console.log("[v0] Formatted liquidity data:", formattedData)
       setLiquidityData(formattedData)
+      console.log("[v0] Liquidity data applied from cache")
     } catch (error) {
-      console.error("[v0] Failed to fetch liquidity data:", error)
+      console.error("[v0] Failed to apply liquidity data:", error)
     }
   }
 
@@ -335,12 +329,13 @@ export default function Home() {
       const prices = await fetchCachedPrices()
       console.log("[v0] Cached prices result:", prices ? "success" : "failed", prices ? `smaug=${prices.smaug}, pls=${prices.pls}, missor=${prices.missor}` : "")
       applyTokenPrices(prices)
+      applyLiquidityData(prices)
       
       // Step 2: Run RPC-dependent fetches sequentially to avoid overwhelming the PulseChain RPC
-      // Each function handles its own errors internally so one failing won't block the next
-      try { await fetchTotalDistributed() } catch {}
+      // Smaug vault first (lightest: balance reads), then distributors (heaviest: 18 calls)
+      // Liquidity data now comes from server cache above, no client RPC needed
       try { await fetchSmaugVaultData(prices) } catch {}
-      try { await fetchLiquidityData() } catch {}
+      try { await fetchTotalDistributed() } catch {}
     }
     init()
   }, [])
