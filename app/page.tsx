@@ -74,6 +74,7 @@ const SMAUG_ABI = [
   "function balanceOf(address) view returns (uint256)",
   "function totalBurned() view returns (uint256)",
   "event Transfer(address indexed from, address indexed to, uint256 value)",
+  "event LPAdded(uint256 plsAmount, uint256 tokenAmount)",
 ]
 
 const BALANCE_ABI = ["function balanceOf(address) view returns (uint256)"] // 0x70a08231
@@ -128,6 +129,9 @@ export default function Home() {
     coda: { weth: string; Pwbtc: string; plsx: string }
   } | null>(null)
   const [error, setError] = useState("")
+  const [smaugLpAddedData, setSmaugLpAddedData] = useState<{
+  totalPLS: string
+} | null>(null)
   const [totalRewards, setTotalRewards] = useState<{
     opus: { missor: string; finvesta: string; wgpp: string }
     coda: { weth: string; Pwbtc: string; plsx: string }
@@ -222,6 +226,31 @@ export default function Home() {
       return newSet
     })
   }
+
+  const fetchSmaugLPEvents = async () => {
+  try {
+    console.log("[v0] Fetching Smaug LP added events...")
+    const provider = getProvider()
+    
+    const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
+    const lpFilter = smaugContract.filters.LPAdded()
+    const lpEvents = await rpcRetry(() => smaugContract.queryFilter(lpFilter, 0, 'latest'), 2, 3000)
+    
+    let totalPLS = 0n
+    for (const event of lpEvents) {
+      const log = event as ethers.EventLog
+      totalPLS += BigInt(log.args[1])   // amountPLS is second
+    }
+    
+    setSmaugLpAddedData({
+      totalPLS: ethers.formatUnits(totalPLS, 18),
+    })
+    
+    console.log("[v0] Smaug LP events fetched (PLS only)")
+  } catch (error) {
+    console.error("[v0] Failed to fetch Smaug LP events:", error)
+  }
+}
 
   const [expandedWallets, setExpandedWallets] = useState<Set<number>>(new Set())
 
@@ -336,6 +365,7 @@ export default function Home() {
       // Step 2: Run RPC-dependent fetches sequentially to avoid overwhelming the PulseChain RPC
       // Each function handles its own errors so one failing won't block the next
       try { await fetchSmaugVaultData(prices) } catch {}
+      try { await fetchSmaugLPEvents() } catch {}
       try { await fetchTotalDistributed() } catch {}
       try { await fetchLiquidityData() } catch {}
     }
@@ -1270,27 +1300,31 @@ export default function Home() {
                 <h3 className="text-2xl font-marcellus text-green-300 mb-4 text-center">Anatomy of Smaug:</h3>
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
-                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics — 6.50%</h4>
-                    <ul className="space-y-2 text-slate-300">
-                      <li className="flex justify-between">
-                        <span>Buy & burn</span>
-                        <span className="text-green-300 font-medium">3.5%</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span>Reflections to holders</span>
-                        <span className="text-green-300 font-medium">1.5%</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span>Added to Smaug's Vault</span>
-                        <span className="text-green-300 font-medium">1.0%</span>
-                      </li>
-                      <li className="flex justify-between">
-                        <span>Added to locked LP</span>
-                        <span className="text-green-300 font-medium">0.5%</span>
-                      </li>
-                    </ul>
-                    <p className="text-xs text-slate-400 mt-4 text-center">Transfer tax: 0%</p>
-                  </div>
+  <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Tokenomics — 6.50%</h4>
+  <ul className="space-y-2 text-slate-300">
+    <li className="flex justify-between">
+      <span>Buy & burn</span>
+      <span className="text-green-300 font-medium">3.5%</span>
+    </li>
+    <li className="flex justify-between">
+      <span>Reflections to holders</span>
+      <span className="text-green-300 font-medium">1.5%</span>
+    </li>
+    <li className="flex justify-between">
+      <span>Added to Smaug's Vault</span>
+      <span className="text-green-300 font-medium">1.0%</span>
+    </li>
+    <li className="flex justify-between">
+      <span>Added to locked LP</span>
+      <span className="text-green-300 font-medium">0.5%</span>
+    </li>
+  </ul>
+  {smaugLpAddedData && (
+    <div className="text-xs text-slate-400 mt-4 text-center">
+      Locked PLS added: {formatMillions(smaugLpAddedData.totalPLS)}
+    </div>
+  )}
+</div>
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
                     <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Smaug's Ledger</h4>
                     <ul className="space-y-3 text-sm text-slate-300">
