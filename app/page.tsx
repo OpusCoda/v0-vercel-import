@@ -246,36 +246,45 @@ export default function Home() {
     // Fetch saved lists from database here if needed
   }, [])
 
+  // Helper to retry RPC calls
+  const rpcRetry = async <T,>(fn: () => Promise<T>, retries = 2, delayMs = 1000): Promise<T> => {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        return await fn()
+      } catch (err) {
+        if (i === retries) throw err
+        await new Promise(r => setTimeout(r, delayMs * (i + 1)))
+      }
+    }
+    throw new Error("rpcRetry exhausted")
+  }
+
   const fetchLiquidityData = async () => {
     try {
       console.log("[v0] Fetching liquidity data...")
       const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL!)
 
-      // Fetch Opus liquidity data
-      const opusLpAddedData = await provider.call({
+      // Fetch Opus liquidity data with retry
+      const opusLpAddedData = await rpcRetry(() => provider.call({
         to: OPUS_CONTRACT,
         data: "0x77e34bcf", // totalOpusLpAdded
-      })
-      console.log("[v0] Raw Opus LP added:", opusLpAddedData)
+      }))
 
-      const opusPlsLpAddedData = await provider.call({
+      const opusPlsLpAddedData = await rpcRetry(() => provider.call({
         to: OPUS_CONTRACT,
         data: "0x2f6ec43a", // totalPlsLpAdded
-      })
-      console.log("[v0] Raw Opus PLS LP added:", opusPlsLpAddedData)
+      }))
 
-      // Fetch Coda liquidity data
-      const codaLpAddedData = await provider.call({
+      // Fetch Coda liquidity data with retry
+      const codaLpAddedData = await rpcRetry(() => provider.call({
         to: CODA_CONTRACT,
         data: "0x2af2db78", // totalCodaLpAdded
-      })
-      console.log("[v0] Raw Coda LP added:", codaLpAddedData)
+      }))
 
-      const codaPlsLpAddedData = await provider.call({
+      const codaPlsLpAddedData = await rpcRetry(() => provider.call({
         to: CODA_CONTRACT,
         data: "0x2f6ec43a", // totalPlsLpAdded
-      })
-      console.log("[v0] Raw Coda PLS LP added:", codaPlsLpAddedData)
+      }))
 
       // Baseline PLS for Opus liquidity (pre-tracking amounts)
       const opusPlsBaseline1 = BigInt("49666029536348406754405890")
@@ -323,14 +332,18 @@ export default function Home() {
 
   useEffect(() => {
     const init = async () => {
-      // Fetch all prices from server cache first (1 request instead of ~15)
+      // Step 1: Fetch all DexScreener prices from server cache (1 request)
       const prices = await fetchCachedPrices()
-      
-      // Then use prices for everything else in parallel
-      fetchSmaugVaultData(prices)
       applyTokenPrices(prices)
-      fetchLiquidityData()
-      fetchTotalDistributed()
+      
+      // Step 2: Fetch liquidity data (4 RPC calls)
+      await fetchLiquidityData()
+      
+      // Step 3: Fetch Smaug vault data (several RPC calls)
+      await fetchSmaugVaultData(prices)
+      
+      // Step 4: Fetch total distributed (18 RPC calls - heaviest)
+      await fetchTotalDistributed()
     }
     init()
   }, [])
@@ -456,19 +469,19 @@ export default function Home() {
       for (const address of opusDistributors) {
         const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
         try {
-          const missor = await contract.totalMissorDistributed()
+          const missor = await rpcRetry(() => contract.totalMissorDistributed())
           totalMissor += BigInt(missor)
         } catch (err) {
           console.error(`[v0] Error fetching Missor from ${address}:`, err)
         }
         try {
-          const finvesta = await contract.totalFinvestaDistributed()
+          const finvesta = await rpcRetry(() => contract.totalFinvestaDistributed())
           totalFinvesta += BigInt(finvesta)
         } catch (err) {
           console.error(`[v0] Error fetching Finvesta from ${address}:`, err)
         }
         try {
-          const wgpp = await contract.totalWgppDistributed()
+          const wgpp = await rpcRetry(() => contract.totalWgppDistributed())
           totalWgpp += BigInt(wgpp)
         } catch (err) {
           console.error(`[v0] Error fetching WGPP from ${address}:`, err)
@@ -482,19 +495,19 @@ export default function Home() {
       for (const address of codaDistributors) {
         const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
         try {
-          const weth = await contract.totalWethDistributed()
+          const weth = await rpcRetry(() => contract.totalWethDistributed())
           totalWeth += BigInt(weth)
         } catch (err) {
           console.error(`[v0] Error fetching WETH from ${address}:`, err)
         }
         try {
-          const Pwbtc = await contract.totalWbtcDistributed()
+          const Pwbtc = await rpcRetry(() => contract.totalWbtcDistributed())
           totalPwbtc += BigInt(Pwbtc)
         } catch (err) {
           console.error(`[v0] Error fetching pWBTC from ${address}:`, err)
         }
         try {
-          const plsx = await contract.totalPlsxDistributed()
+          const plsx = await rpcRetry(() => contract.totalPlsxDistributed())
           totalPlsx += BigInt(plsx)
         } catch (err) {
           console.error(`[v0] Error fetching PLSX from ${address}:`, err)
