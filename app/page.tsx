@@ -76,6 +76,13 @@ const SMAUG_ABI = [
   "event Transfer(address indexed from, address indexed to, uint256 value)",
 ]
 
+const SMAUG_ABI = [
+  "function balanceOf(address) view returns (uint256)",
+  "function totalBurned() view returns (uint256)",
+  "event Transfer(address indexed from, address indexed to, uint256 value)",
+  "event LPAdded(uint256 plsAmount, uint256 tokenAmount)",
+]
+
 const BALANCE_ABI = ["function balanceOf(address) view returns (uint256)"] // 0x70a08231
 
 const HEX_PULSECHAIN_ADDRESS = "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39"
@@ -128,6 +135,10 @@ export default function Home() {
     coda: { weth: string; Pwbtc: string; plsx: string }
   } | null>(null)
   const [error, setError] = useState("")
+  const [smaugLpAddedData, setSmaugLpAddedData] = useState<{
+  totalPLS: string
+  totalToken: string
+} | null>(null)
   const [totalRewards, setTotalRewards] = useState<{
     opus: { missor: string; finvesta: string; wgpp: string }
     coda: { weth: string; Pwbtc: string; plsx: string }
@@ -222,6 +233,34 @@ export default function Home() {
       return newSet
     })
   }
+
+  const fetchSmaugLPEvents = async () => {
+  try {
+    console.log("[v0] Fetching Smaug LP added events...")
+    const provider = getProvider()
+    
+    const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
+    const lpFilter = smaugContract.filters.LPAdded()
+    const lpEvents = await rpcRetry(() => smaugContract.queryFilter(lpFilter, 0, 'latest'), 2, 3000)
+    
+    let totalPLS = 0n
+    let totalToken = 0n
+    for (const event of lpEvents) {
+      const log = event as ethers.EventLog
+      totalPLS += BigInt(log.args[0])
+      totalToken += BigInt(log.args[1])
+    }
+    
+    setSmaugLpAddedData({
+      totalPLS: ethers.formatUnits(totalPLS, 18),
+      totalToken: ethers.formatUnits(totalToken, 18),
+    })
+    
+    console.log("[v0] Smaug LP events fetched")
+  } catch (error) {
+    console.error("[v0] Failed to fetch Smaug LP events:", error)
+  }
+}
 
   const [expandedWallets, setExpandedWallets] = useState<Set<number>>(new Set())
 
@@ -336,6 +375,7 @@ export default function Home() {
       // Step 2: Run RPC-dependent fetches sequentially to avoid overwhelming the PulseChain RPC
       // Each function handles its own errors so one failing won't block the next
       try { await fetchSmaugVaultData(prices) } catch {}
+      try { await fetchSmaugLPEvents() } catch {}
       try { await fetchTotalDistributed() } catch {}
       try { await fetchLiquidityData() } catch {}
     }
@@ -1329,6 +1369,27 @@ export default function Home() {
                     </ul>
                   </div>
                 </div>
+
+                {/* Smaug LP Tracking */}
+{smaugLpAddedData && (
+  <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner mb-8">
+    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Total LP Added</h4>
+    <div className="space-y-3 text-sm text-slate-300">
+      <div className="flex justify-between items-center">
+        <span>Smaug</span>
+        <span className="text-green-300 font-medium">
+          {formatMillions(smaugLpAddedData.totalToken)}
+        </span>
+      </div>
+      <div className="flex justify-between items-center">
+        <span>PLS</span>
+        <span className="text-green-300 font-medium">
+          {formatMillions(smaugLpAddedData.totalPLS)}
+        </span>
+      </div>
+    </div>
+  </div>
+)}
 
                 {/* Smaug's Vault & The Hoard wallet */}
                 <div className="grid md:grid-cols-2 gap-8">
