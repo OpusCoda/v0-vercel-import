@@ -131,7 +131,6 @@ export default function Home() {
   const [error, setError] = useState("")
   const [smaugLpAddedData, setSmaugLpAddedData] = useState<{
   totalPLS: string
-  totalToken: string
 } | null>(null)
   const [totalRewards, setTotalRewards] = useState<{
     opus: { missor: string; finvesta: string; wgpp: string }
@@ -238,20 +237,16 @@ export default function Home() {
     const lpEvents = await rpcRetry(() => smaugContract.queryFilter(lpFilter, 0, 'latest'), 2, 3000)
     
     let totalPLS = 0n
-    let totalToken = 0n
     for (const event of lpEvents) {
       const log = event as ethers.EventLog
-      totalToken += BigInt(log.args[0]) // amountSMAUG is first
       totalPLS += BigInt(log.args[1])   // amountPLS is second
     }
     
-    // No baseline subtraction needed - initial LP was not burned
     setSmaugLpAddedData({
       totalPLS: ethers.formatUnits(totalPLS, 18),
-      totalToken: ethers.formatUnits(totalToken, 18),
     })
     
-    console.log("[v0] Smaug LP events fetched (tax-only)")
+    console.log("[v0] Smaug LP events fetched (PLS only)")
   } catch (error) {
     console.error("[v0] Failed to fetch Smaug LP events:", error)
   }
@@ -1366,18 +1361,13 @@ export default function Home() {
                 </div>
 
                 {/* Smaug LP Tracking */}
+{/* Smaug LP Tracking */}
 {smaugLpAddedData && (
   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner mb-8">
     <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Total LP Added</h4>
     <div className="space-y-3 text-sm text-slate-300">
       <div className="flex justify-between items-center">
-        <span>Smaug</span>
-        <span className="text-green-300 font-medium">
-          {formatMillions(smaugLpAddedData.totalToken)}
-        </span>
-      </div>
-      <div className="flex justify-between items-center">
-        <span>PLS</span>
+        <span>PLS added to locked LP</span>
         <span className="text-green-300 font-medium">
           {formatMillions(smaugLpAddedData.totalPLS)}
         </span>
