@@ -2,7 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ethers } from "ethers"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
@@ -246,36 +246,42 @@ export default function Home() {
     // Fetch saved lists from database here if needed
   }, [])
 
+  // Single shared RPC provider to avoid multiple competing connections
+  const providerRef = useRef<ethers.JsonRpcProvider | null>(null)
+  const getProvider = () => {
+    if (!providerRef.current) {
+      providerRef.current = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL!)
+    }
+    return providerRef.current
+  }
+
+  // Helper to retry RPC calls with timeout
+  const rpcRetry = async <T,>(fn: () => Promise<T>, retries = 1, delayMs = 2000): Promise<T> => {
+    for (let i = 0; i <= retries; i++) {
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("RPC timeout")), 15000)
+        )
+        return await Promise.race([fn(), timeoutPromise])
+      } catch (err) {
+        if (i === retries) throw err
+        await new Promise(r => setTimeout(r, delayMs * (i + 1)))
+      }
+    }
+    throw new Error("rpcRetry exhausted")
+  }
+
   const fetchLiquidityData = async () => {
     try {
       console.log("[v0] Fetching liquidity data...")
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL!)
+      const provider = getProvider()
 
-      // Fetch Opus liquidity data
-      const opusLpAddedData = await provider.call({
-        to: OPUS_CONTRACT,
-        data: "0x77e34bcf", // totalOpusLpAdded
-      })
-      console.log("[v0] Raw Opus LP added:", opusLpAddedData)
-
-      const opusPlsLpAddedData = await provider.call({
-        to: OPUS_CONTRACT,
-        data: "0x2f6ec43a", // totalPlsLpAdded
-      })
-      console.log("[v0] Raw Opus PLS LP added:", opusPlsLpAddedData)
-
-      // Fetch Coda liquidity data
-      const codaLpAddedData = await provider.call({
-        to: CODA_CONTRACT,
-        data: "0x2af2db78", // totalCodaLpAdded
-      })
-      console.log("[v0] Raw Coda LP added:", codaLpAddedData)
-
-      const codaPlsLpAddedData = await provider.call({
-        to: CODA_CONTRACT,
-        data: "0x2f6ec43a", // totalPlsLpAdded
-      })
-      console.log("[v0] Raw Coda PLS LP added:", codaPlsLpAddedData)
+      const [opusLpAddedData, opusPlsLpAddedData, codaLpAddedData, codaPlsLpAddedData] = await Promise.all([
+        rpcRetry(() => provider.call({ to: OPUS_CONTRACT, data: "0x77e34bcf" })),
+        rpcRetry(() => provider.call({ to: OPUS_CONTRACT, data: "0x2f6ec43a" })),
+        rpcRetry(() => provider.call({ to: CODA_CONTRACT, data: "0x2af2db78" })),
+        rpcRetry(() => provider.call({ to: CODA_CONTRACT, data: "0x2f6ec43a" })),
+      ])
 
       // Baseline PLS for Opus liquidity (pre-tracking amounts)
       const opusPlsBaseline1 = BigInt("49666029536348406754405890")
@@ -287,141 +293,168 @@ export default function Home() {
       const codaPlsBaseline2 = BigInt("16191801870025447450804067")
       const totalCodaPls = BigInt(codaPlsLpAddedData) + codaPlsBaseline1 + codaPlsBaseline2
 
-      const formattedData = {
+      setLiquidityData({
         opus: {
           opusAdded: ethers.formatUnits(opusLpAddedData, 18),
-          plsAdded: ethers.formatUnits(totalOpusPls.toString(), 18), // Use total with baseline
+          plsAdded: ethers.formatUnits(totalOpusPls.toString(), 18),
         },
         coda: {
           codaAdded: ethers.formatUnits(codaLpAddedData, 18),
-          plsAdded: ethers.formatUnits(totalCodaPls.toString(), 18), // Use total with baseline
+          plsAdded: ethers.formatUnits(totalCodaPls.toString(), 18),
         },
-      }
-
-      console.log("[v0] Formatted liquidity data:", formattedData)
-      setLiquidityData(formattedData)
+      })
+      console.log("[v0] Liquidity data fetched")
     } catch (error) {
       console.error("[v0] Failed to fetch liquidity data:", error)
     }
   }
 
+  // Cached prices ref so dependent functions can access them
+  const cachedPricesRef = useRef<any>(null)
+
+  const fetchCachedPrices = async () => {
+    try {
+      const res = await fetch("/api/prices")
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      cachedPricesRef.current = data
+      return data
+    } catch (err) {
+      console.error("[v0] Error fetching cached prices:", err)
+      return null
+    }
+  }
+
   useEffect(() => {
-  fetchLiquidityData()
-> fetchTotalDistributed()
-  fetchTokenPrices()
-  fetchSmaugVaultData()
+    const init = async () => {
+      // Step 1: Fetch all DexScreener prices from server cache (1 request)
+      console.log("[v0] Fetching cached prices from /api/prices...")
+      const prices = await fetchCachedPrices()
+      console.log("[v0] Cached prices result:", prices ? "success" : "failed", prices ? `smaug=${prices.smaug}, pls=${prices.pls}, missor=${prices.missor}` : "")
+      applyTokenPrices(prices)
+      
+      // Step 2: Run RPC-dependent fetches sequentially to avoid overwhelming the PulseChain RPC
+      // Each function handles its own errors so one failing won't block the next
+      try { await fetchSmaugVaultData(prices) } catch {}
+      try { await fetchTotalDistributed() } catch {}
+      try { await fetchLiquidityData() } catch {}
+    }
+    init()
   }, [])
 
-  const fetchSmaugVaultData = async () => {
+  const applyTokenPrices = (prices: any) => {
+    if (!prices) return
+    setTokenPrices({
+      missor: prices.missor || 0,
+      finvesta: prices.finvesta || 0,
+      wgpp: prices.wgpp || 0,
+      weth: prices.weth || 0,
+      Pwbtc: prices.pwbtc || 0,
+      plsx: prices.plsx || 0,
+      opus: prices.opus || 0,
+      coda: prices.coda || 0,
+    })
+  }
+
+  const fetchSmaugVaultData = async (prices?: any) => {
+    console.log("[v0] Starting fetchSmaugVaultData...")
+    const p = prices || cachedPricesRef.current
+    
+    // Set cached prices immediately (no RPC needed)
+    if (p) {
+      setPlsPrice(p.pls || 0)
+      setSmaugPrice(p.smaug || 0)
+      setSmaugMarketCap(p.smaugMarketCap || 0)
+      setSmaugLiquidity(p.smaugLiquidity || 0)
+    }
+
+    const provider = getProvider()
+    const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
+
+    // Batch 1: Simple balance reads (light RPC calls)
     try {
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
-      
-      // Fetch PLS price independently
-      const plsPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe56043671df55de5cdf8459710433c10324de0ae")
-      const plsPriceData = await plsPriceRes.json()
-      const fetchedPlsPrice = plsPriceData.pair?.priceUsd ? Number(plsPriceData.pair.priceUsd) : 0
-      setPlsPrice(fetchedPlsPrice)
-
-      // Fetch PLS balance of Smaug's Vault
-      const vaultBalance = await provider.getBalance("0xd6B7f6F0559459354391ae1055E3A6768f465483")
+      const [vaultBalance, hoardPlsBalance] = await Promise.all([
+        rpcRetry(() => provider.getBalance("0xd6B7f6F0559459354391ae1055E3A6768f465483")),
+        rpcRetry(() => provider.getBalance("0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a")),
+      ])
       setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
-
-      // Fetch Smaug price from DexScreener
-      const smaugPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x151e583badb57138d41aa964ac3ff38d4bb1145f")
-      const smaugPriceData = await smaugPriceRes.json()
-      if (smaugPriceData.pair?.priceUsd) {
-        setSmaugPrice(Number(smaugPriceData.pair.priceUsd))
-      }
-      if (smaugPriceData.pair?.marketCap) {
-        setSmaugMarketCap(Number(smaugPriceData.pair.marketCap))
-      } else if (smaugPriceData.pair?.fdv) {
-        setSmaugMarketCap(Number(smaugPriceData.pair.fdv))
-      }
-      if (smaugPriceData.pair?.liquidity?.usd) {
-        setSmaugLiquidity(Number(smaugPriceData.pair.liquidity.usd))
-      }
-
-      // Fetch total Smaug burned from contract's totalBurned() function
-      const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
-      try {
-        const totalBurned = await smaugContract.totalBurned()
-        setSmaugTotalBurned(Number(ethers.formatEther(totalBurned)))
-      } catch {
-        // Fallback: read burn wallet balance
-        const burnBalance = await smaugContract.balanceOf("0x0000000000000000000000000000000000000369")
-        setSmaugTotalBurned(Number(ethers.formatEther(burnBalance)))
-      }
-
-      // Fetch per-wallet burns by querying Transfer events to burn address
-      const burnAddress = "0x0000000000000000000000000000000000000369"
-      const vaultAddress = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
-      const hoardAddr = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
-      const transferFilter = smaugContract.filters.Transfer
       
-      try {
-        const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
-          smaugContract.queryFilter(transferFilter(vaultAddress, burnAddress)),
-          smaugContract.queryFilter(transferFilter(hoardAddr, burnAddress)),
-        ])
-        const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => {
-          const log = e as ethers.EventLog
-          return sum + Number(ethers.formatEther(log.args[2]))
-        }, 0)
-        const hoardBurnTotal = hoardBurnEvents.reduce((sum, e) => {
-          const log = e as ethers.EventLog
-          return sum + Number(ethers.formatEther(log.args[2]))
-        }, 0)
-        setSmaugVaultBurned(vaultBurnTotal)
-        setSmaugHoardBurned(hoardBurnTotal)
-      } catch (evtErr) {
-        console.error("[v0] Error fetching burn events:", evtErr)
-      }
-
-      // Fetch The Hoard wallet data (0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a)
-      const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
-      const hoardPlsBalance = await provider.getBalance(hoardAddress)
-      
+      // Also fetch hoard token balances
       const gasMoneyContract = new ethers.Contract("0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106", BALANCE_ABI, provider)
       const dominanceContract = new ethers.Contract("0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA", BALANCE_ABI, provider)
       const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
+      const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
       
       const [gasMoneyBal, dominanceBal, pWbtcBal] = await Promise.all([
-        gasMoneyContract.balanceOf(hoardAddress),
-        dominanceContract.balanceOf(hoardAddress),
-        pWbtcContract.balanceOf(hoardAddress),
+        rpcRetry(() => gasMoneyContract.balanceOf(hoardAddress)),
+        rpcRetry(() => dominanceContract.balanceOf(hoardAddress)),
+        rpcRetry(() => pWbtcContract.balanceOf(hoardAddress)),
       ])
-
-      // Fetch Gas Money, Dominance, and pWBTC prices
-      const [gasMoneyPriceRes, dominancePriceRes, pWbtcPriceRes] = await Promise.all([
-        fetch("https://api.dexscreener.com/latest/dex/tokens/0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106"),
-        fetch("https://api.dexscreener.com/latest/dex/tokens/0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA"),
-        fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf"),
-      ])
-      const gasMoneyPriceData = await gasMoneyPriceRes.json()
-      const dominancePriceData = await dominancePriceRes.json()
-      const pWbtcPriceData = await pWbtcPriceRes.json()
-      
-      const gmPrice = gasMoneyPriceData.pairs?.[0]?.priceUsd ? Number(gasMoneyPriceData.pairs[0].priceUsd) : 0
-      const domPrice = dominancePriceData.pairs?.[0]?.priceUsd ? Number(dominancePriceData.pairs[0].priceUsd) : 0
-      const wbtcPrice = pWbtcPriceData.pair?.priceUsd ? Number(pWbtcPriceData.pair.priceUsd) : 0
 
       setHoardData({
         pls: Number(ethers.formatEther(hoardPlsBalance)),
         pWbtc: Number(ethers.formatUnits(pWbtcBal, 8)),
-        pWbtcPrice: wbtcPrice,
+        pWbtcPrice: p?.pwbtc || 0,
         gasMoney: Number(ethers.formatEther(gasMoneyBal)),
-        gasMoneyPrice: gmPrice,
+        gasMoneyPrice: p?.gasMoney || 0,
         dominance: Number(ethers.formatEther(dominanceBal)),
-        dominancePrice: domPrice,
+        dominancePrice: p?.dominance || 0,
       })
+      console.log("[v0] Vault + hoard balances fetched")
     } catch (err) {
-      console.error("[v0] Error fetching Smaug's vault data:", err)
+      console.error("[v0] Error fetching vault/hoard balances:", err)
+    }
+
+    // Small delay to let RPC recover
+    await new Promise(r => setTimeout(r, 1000))
+
+    // Batch 2: Contract reads (totalBurned)
+    try {
+      let burned
+      try {
+        burned = await rpcRetry(() => smaugContract.totalBurned())
+      } catch {
+        burned = await rpcRetry(() => smaugContract.balanceOf("0x0000000000000000000000000000000000000369"))
+      }
+      setSmaugTotalBurned(Number(ethers.formatEther(burned)))
+      console.log("[v0] Total burned fetched")
+    } catch (err) {
+      console.error("[v0] Error fetching total burned:", err)
+    }
+
+    // Small delay before heavy event query
+    await new Promise(r => setTimeout(r, 1000))
+
+    // Batch 3: Event log queries (heaviest - uses longer timeout)
+    try {
+      const burnAddress = "0x0000000000000000000000000000000000000369"
+      const vaultAddress = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
+      const hoardAddr = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
+      const transferFilter = smaugContract.filters.Transfer
+      const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
+        rpcRetry(() => smaugContract.queryFilter(transferFilter(vaultAddress, burnAddress)), 2, 3000),
+        rpcRetry(() => smaugContract.queryFilter(transferFilter(hoardAddr, burnAddress)), 2, 3000),
+      ])
+      const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => {
+        const log = e as ethers.EventLog
+        return sum + Number(ethers.formatEther(log.args[2]))
+      }, 0)
+      const hoardBurnTotal = hoardBurnEvents.reduce((sum, e) => {
+        const log = e as ethers.EventLog
+        return sum + Number(ethers.formatEther(log.args[2]))
+      }, 0)
+      setSmaugVaultBurned(vaultBurnTotal)
+      setSmaugHoardBurned(hoardBurnTotal)
+      console.log("[v0] Burn events fetched")
+    } catch (err) {
+      console.error("[v0] Error fetching burn events:", err)
     }
   }
 
   const fetchTotalDistributed = async () => {
+    console.log("[v0] Starting fetchTotalDistributed...")
     try {
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
+      const provider = getProvider()
 
       // Opus distributor contract addresses (v1, v2, v3)
       const opusDistributors = [
@@ -441,53 +474,49 @@ export default function Home() {
       let totalFinvesta = 0n
       let totalWgpp = 0n
 
-      for (const address of opusDistributors) {
-        const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
-        try {
-          const missor = await contract.totalMissorDistributed()
-          totalMissor += BigInt(missor)
-        } catch (err) {
-          console.error(`[v0] Error fetching Missor from ${address}:`, err)
-        }
-        try {
-          const finvesta = await contract.totalFinvestaDistributed()
-          totalFinvesta += BigInt(finvesta)
-        } catch (err) {
-          console.error(`[v0] Error fetching Finvesta from ${address}:`, err)
-        }
-        try {
-          const wgpp = await contract.totalWgppDistributed()
-          totalWgpp += BigInt(wgpp)
-        } catch (err) {
-          console.error(`[v0] Error fetching WGPP from ${address}:`, err)
+      // Fetch all Opus distributor data in parallel
+      const opusResults = await Promise.allSettled(
+        opusDistributors.flatMap(address => {
+          const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
+          return [
+            rpcRetry(() => contract.totalMissorDistributed(), 1, 2000).then(v => ({ type: "missor" as const, value: BigInt(v) })),
+            rpcRetry(() => contract.totalFinvestaDistributed(), 1, 2000).then(v => ({ type: "finvesta" as const, value: BigInt(v) })),
+            rpcRetry(() => contract.totalWgppDistributed(), 1, 2000).then(v => ({ type: "wgpp" as const, value: BigInt(v) })),
+          ]
+        })
+      )
+      for (const r of opusResults) {
+        if (r.status === "fulfilled") {
+          if (r.value.type === "missor") totalMissor += r.value.value
+          else if (r.value.type === "finvesta") totalFinvesta += r.value.value
+          else if (r.value.type === "wgpp") totalWgpp += r.value.value
         }
       }
+      console.log("[v0] Opus distributors fetched")
 
       let totalWeth = 0n
       let totalPwbtc = 0n
       let totalPlsx = 0n
 
-      for (const address of codaDistributors) {
-        const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
-        try {
-          const weth = await contract.totalWethDistributed()
-          totalWeth += BigInt(weth)
-        } catch (err) {
-          console.error(`[v0] Error fetching WETH from ${address}:`, err)
-        }
-        try {
-          const Pwbtc = await contract.totalWbtcDistributed()
-          totalPwbtc += BigInt(Pwbtc)
-        } catch (err) {
-          console.error(`[v0] Error fetching pWBTC from ${address}:`, err)
-        }
-        try {
-          const plsx = await contract.totalPlsxDistributed()
-          totalPlsx += BigInt(plsx)
-        } catch (err) {
-          console.error(`[v0] Error fetching PLSX from ${address}:`, err)
+      // Fetch all Coda distributor data in parallel
+      const codaResults = await Promise.allSettled(
+        codaDistributors.flatMap(address => {
+          const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
+          return [
+            rpcRetry(() => contract.totalWethDistributed(), 1, 2000).then(v => ({ type: "weth" as const, value: BigInt(v) })),
+            rpcRetry(() => contract.totalWbtcDistributed(), 1, 2000).then(v => ({ type: "pwbtc" as const, value: BigInt(v) })),
+            rpcRetry(() => contract.totalPlsxDistributed(), 1, 2000).then(v => ({ type: "plsx" as const, value: BigInt(v) })),
+          ]
+        })
+      )
+      for (const r of codaResults) {
+        if (r.status === "fulfilled") {
+          if (r.value.type === "weth") totalWeth += r.value.value
+          else if (r.value.type === "pwbtc") totalPwbtc += r.value.value
+          else if (r.value.type === "plsx") totalPlsx += r.value.value
         }
       }
+      console.log("[v0] Coda distributors fetched")
 
       console.log("[v0] Total Missor:", totalMissor.toString())
       console.log("[v0] Total Finvesta:", totalFinvesta.toString())
@@ -577,44 +606,9 @@ export default function Home() {
   }
 
   const fetchTokenPrices = async () => {
-    const tokens = [
-      { name: "missor", address: "0xf3a8541894e4d789e6257a63440094d698d82bad" },
-      { name: "finvesta", address: "0x615cfd552e98eb97e5557b03aa41d0e85e98167b" },
-      { name: "wgpp", address: "0xf13ca5c98d9aae6294edb9e7299b0bbe1e71265d" },
-      { name: "weth", address: "0x42abdfdb63f3282033c766e72cc4810738571609" },
-      { name: "Pwbtc", address: "0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf" },
-      { name: "plsx", address: "0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9" },
-      { name: "opus", address: "0x14495adf3e689221655fdc950cd0133051ec61f9" },
-      { name: "coda", address: "0x13b62b75cfa35814d30fbeec0682047aa6287dfb" },
-    ]
-
-    const prices = await Promise.all(
-      tokens.map(async (token) => {
-        try {
-          const response = await fetch(`https://api.dexscreener.com/latest/dex/pairs/pulsechain/${token.address}`)
-          const data = await response.json()
-          const price = data?.pairs?.[0]?.priceUsd
-          if (token.name === "finvesta" || token.name === "opus" || token.name === "coda") {
-            console.log(`[v0] ${token.name} price data:`, data)
-            console.log(`[v0] ${token.name} price:`, price)
-          }
-          return { name: token.name, price: Number.parseFloat(price || "0") }
-        } catch (err) {
-          console.error(`[v0] Error fetching price for ${token.name}:`, err)
-          return { name: token.name, price: 0 }
-        }
-      }),
-    )
-    setTokenPrices({
-      missor: prices.find((p) => p.name === "missor")?.price || 0,
-      finvesta: prices.find((p) => p.name === "finvesta")?.price || 0,
-      wgpp: prices.find((p) => p.name === "wgpp")?.price || 0,
-      weth: prices.find((p) => p.name === "weth")?.price || 0,
-      Pwbtc: prices.find((p) => p.name === "Pwbtc")?.price || 0,
-      plsx: prices.find((p) => p.name === "plsx")?.price || 0,
-      opus: prices.find((p) => p.name === "opus")?.price || 0,
-      coda: prices.find((p) => p.name === "coda")?.price || 0,
-    })
+    // Re-fetch from server cache (will be instant if already cached)
+    const prices = await fetchCachedPrices()
+    applyTokenPrices(prices)
   }
 
   const fetchRewards = async (addressesToFetch?: string[]) => {
@@ -635,7 +629,7 @@ export default function Home() {
     await fetchTokenPrices()
 
     try {
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
+      const provider = getProvider()
       const opusContract = new ethers.Contract(OPUS_CONTRACT, OPUS_ABI, provider)
       // </CHANGE> Fixed CODA contract initialization - was passing CODA_ABI twice instead of CODA_CONTRACT address
       const codaContract = new ethers.Contract(CODA_CONTRACT, CODA_ABI, provider)
@@ -1018,33 +1012,11 @@ export default function Home() {
         return a.daysRemaining - b.daysRemaining
       }))
 
-      // Fetch HEX prices for both chains
-      try {
-        // Pulsechain HEX price
-        const plsHexResponse = await fetch(
-          "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xf1f4ee610b2babb05c635f726ef8b0c568c8dc65"
-        )
-        const plsHexData = await plsHexResponse.json()
-        if (plsHexData.pair) {
-          setHexPricePulsechain(Number(plsHexData.pair.priceUsd) || 0)
-          console.log(`[v0] Pulsechain HEX price: $${plsHexData.pair.priceUsd}`)
-        }
-      } catch (err) {
-        console.error("[v0] Error fetching Pulsechain HEX price:", err)
-      }
-
-      try {
-        // Ethereum HEX price
-        const ethHexResponse = await fetch(
-          "https://api.dexscreener.com/latest/dex/pairs/ethereum/0x55d5c232d921b9eaa6b37b5845e439acd04b4dba"
-        )
-        const ethHexData = await ethHexResponse.json()
-        if (ethHexData.pair) {
-          setHexPriceEthereum(Number(ethHexData.pair.priceUsd) || 0)
-          console.log(`[v0] Ethereum HEX price: $${ethHexData.pair.priceUsd}`)
-        }
-      } catch (err) {
-        console.error("[v0] Error fetching Ethereum HEX price:", err)
+      // Use cached HEX prices
+      const cp = cachedPricesRef.current
+      if (cp) {
+        setHexPricePulsechain(cp.hexPulsechain || 0)
+        setHexPriceEthereum(cp.hexEthereum || 0)
       }
 
       // Fetch token balances for all addresses
@@ -1117,38 +1089,17 @@ export default function Home() {
         smaug: totalSmaug,
       })
 
-      // Fetch token prices
-      try {
-        // PLS price
-        const plsPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe56043671df55de5cdf8459710433c10324de0ae")
-        const plsPriceData = await plsPriceRes.json()
-        const plsPrice = plsPriceData.pair?.priceUsd ? Number(plsPriceData.pair.priceUsd) : 0
-
-        // PLSX price
-        const plsxPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9")
-        const plsxPriceData = await plsxPriceRes.json()
-        const plsxPrice = plsxPriceData.pair?.priceUsd ? Number(plsxPriceData.pair.priceUsd) : 0
-
-        // INC price
-        const incPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xf808bb6265e9ca27002c0a04562bf50d4fe37eaa")
-        const incPriceData = await incPriceRes.json()
-        const incPrice = incPriceData.pair?.priceUsd ? Number(incPriceData.pair.priceUsd) : 0
-
-        // pWBTC price on Pulsechain
-        const wbtcPriceRes = await fetch("https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf")
-        const wbtcPriceData = await wbtcPriceRes.json()
-        const wbtcPrice = wbtcPriceData.pair?.priceUsd ? Number(wbtcPriceData.pair.priceUsd) : 0
-
+      // Use cached token prices
+      const cachedP = cachedPricesRef.current
+      if (cachedP) {
         setTokenPricesAll({
-          pls: plsPrice,
-          plsx: plsxPrice,
-          inc: incPrice,
-          pHex: hexPricePulsechain,
-          eHex: hexPriceEthereum,
-          wbtc: wbtcPrice,
+          pls: cachedP.pls || 0,
+          plsx: cachedP.plsx || 0,
+          inc: cachedP.inc || 0,
+          pHex: cachedP.hexPulsechain || 0,
+          eHex: cachedP.hexEthereum || 0,
+          wbtc: cachedP.pwbtc || 0,
         })
-      } catch (err) {
-        console.error("[v0] Error fetching token prices:", err)
       }
 
       // Fetch Liquid Loans vaults
@@ -1453,7 +1404,7 @@ export default function Home() {
                   </div>
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <h4 className="text-xl font-medium text-green-300">The Hoard Wallet</h4>
+                      <h4 className="text-xl font-medium text-green-300">Smaug's Hoard Wallet</h4>
                       <button
                         type="button"
                         onClick={() => {
