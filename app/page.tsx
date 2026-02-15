@@ -372,62 +372,21 @@ export default function Home() {
     }
 
     const provider = getProvider()
-
-    // Each RPC section is independent - one failing won't block others
-    try {
-      const vaultBalance = await rpcRetry(() => provider.getBalance("0xd6B7f6F0559459354391ae1055E3A6768f465483"))
-      setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
-      console.log("[v0] Vault PLS balance fetched")
-    } catch (err) {
-      console.error("[v0] Error fetching vault PLS balance:", err)
-    }
-
     const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
 
+    // Batch 1: Simple balance reads (light RPC calls)
     try {
-      let burned
-      try {
-        burned = await rpcRetry(() => smaugContract.totalBurned())
-      } catch {
-        burned = await rpcRetry(() => smaugContract.balanceOf("0x0000000000000000000000000000000000000369"))
-      }
-      setSmaugTotalBurned(Number(ethers.formatEther(burned)))
-      console.log("[v0] Total burned fetched")
-    } catch (err) {
-      console.error("[v0] Error fetching total burned:", err)
-    }
-
-    try {
-      const burnAddress = "0x0000000000000000000000000000000000000369"
-      const vaultAddress = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
-      const hoardAddr = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
-      const transferFilter = smaugContract.filters.Transfer
-      const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
-        rpcRetry(() => smaugContract.queryFilter(transferFilter(vaultAddress, burnAddress))),
-        rpcRetry(() => smaugContract.queryFilter(transferFilter(hoardAddr, burnAddress))),
+      const [vaultBalance, hoardPlsBalance] = await Promise.all([
+        rpcRetry(() => provider.getBalance("0xd6B7f6F0559459354391ae1055E3A6768f465483")),
+        rpcRetry(() => provider.getBalance("0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a")),
       ])
-      const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => {
-        const log = e as ethers.EventLog
-        return sum + Number(ethers.formatEther(log.args[2]))
-      }, 0)
-      const hoardBurnTotal = hoardBurnEvents.reduce((sum, e) => {
-        const log = e as ethers.EventLog
-        return sum + Number(ethers.formatEther(log.args[2]))
-      }, 0)
-      setSmaugVaultBurned(vaultBurnTotal)
-      setSmaugHoardBurned(hoardBurnTotal)
-      console.log("[v0] Burn events fetched")
-    } catch (err) {
-      console.error("[v0] Error fetching burn events:", err)
-    }
-
-    try {
-      const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
-      const hoardPlsBalance = await rpcRetry(() => provider.getBalance(hoardAddress))
+      setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
       
+      // Also fetch hoard token balances
       const gasMoneyContract = new ethers.Contract("0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106", BALANCE_ABI, provider)
       const dominanceContract = new ethers.Contract("0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA", BALANCE_ABI, provider)
       const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
+      const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
       
       const [gasMoneyBal, dominanceBal, pWbtcBal] = await Promise.all([
         rpcRetry(() => gasMoneyContract.balanceOf(hoardAddress)),
@@ -444,9 +403,54 @@ export default function Home() {
         dominance: Number(ethers.formatEther(dominanceBal)),
         dominancePrice: p?.dominance || 0,
       })
-      console.log("[v0] Hoard data fetched")
+      console.log("[v0] Vault + hoard balances fetched")
     } catch (err) {
-      console.error("[v0] Error fetching hoard data:", err)
+      console.error("[v0] Error fetching vault/hoard balances:", err)
+    }
+
+    // Small delay to let RPC recover
+    await new Promise(r => setTimeout(r, 1000))
+
+    // Batch 2: Contract reads (totalBurned)
+    try {
+      let burned
+      try {
+        burned = await rpcRetry(() => smaugContract.totalBurned())
+      } catch {
+        burned = await rpcRetry(() => smaugContract.balanceOf("0x0000000000000000000000000000000000000369"))
+      }
+      setSmaugTotalBurned(Number(ethers.formatEther(burned)))
+      console.log("[v0] Total burned fetched")
+    } catch (err) {
+      console.error("[v0] Error fetching total burned:", err)
+    }
+
+    // Small delay before heavy event query
+    await new Promise(r => setTimeout(r, 1000))
+
+    // Batch 3: Event log queries (heaviest - uses longer timeout)
+    try {
+      const burnAddress = "0x0000000000000000000000000000000000000369"
+      const vaultAddress = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
+      const hoardAddr = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
+      const transferFilter = smaugContract.filters.Transfer
+      const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
+        rpcRetry(() => smaugContract.queryFilter(transferFilter(vaultAddress, burnAddress)), 2, 3000),
+        rpcRetry(() => smaugContract.queryFilter(transferFilter(hoardAddr, burnAddress)), 2, 3000),
+      ])
+      const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => {
+        const log = e as ethers.EventLog
+        return sum + Number(ethers.formatEther(log.args[2]))
+      }, 0)
+      const hoardBurnTotal = hoardBurnEvents.reduce((sum, e) => {
+        const log = e as ethers.EventLog
+        return sum + Number(ethers.formatEther(log.args[2]))
+      }, 0)
+      setSmaugVaultBurned(vaultBurnTotal)
+      setSmaugHoardBurned(hoardBurnTotal)
+      console.log("[v0] Burn events fetched")
+    } catch (err) {
+      console.error("[v0] Error fetching burn events:", err)
     }
   }
 
