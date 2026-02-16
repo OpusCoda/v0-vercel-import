@@ -404,7 +404,7 @@ export default function Home() {
     // Batch 1: Simple balance reads (light RPC calls)
     try {
       const [vaultBalance, hoardPlsBalance] = await Promise.all([
-        rpcRetry(() => provider.getBalance("0xd6B7f6F0559459354391ae1055E3A6768f465483")),
+        rpcRetry(() => provider.getBalance("0xD1fB678aB14429140c06AfFFCC878F9c41F48787")),
         rpcRetry(() => provider.getBalance("0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a")),
       ])
       setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
@@ -458,7 +458,7 @@ export default function Home() {
     // Batch 3: Event log queries (heaviest - uses longer timeout)
     try {
       const burnAddress = "0x0000000000000000000000000000000000000369"
-      const vaultAddress = "0xd6B7f6F0559459354391ae1055E3A6768f465483"
+      const vaultAddress = "0xD1fB678aB14429140c06AfFFCC878F9c41F48787"
       const hoardAddr = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
       const transferFilter = smaugContract.filters.Transfer
       const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
@@ -1372,7 +1372,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => {
-                          navigator.clipboard.writeText("0xd6B7f6F0559459354391ae1055E3A6768f465483")
+                          navigator.clipboard.writeText("0xD1fB678aB14429140c06AfFFCC878F9c41F48787")
                           setCopiedAddress("smaugVault")
                           setTimeout(() => setCopiedAddress(null), 2000)
                         }}
