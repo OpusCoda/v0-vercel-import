@@ -1425,12 +1425,12 @@ export default function Home() {
                         <div className="flex justify-between">
                           <span>Bought & burned to date</span>
                           <span className="text-green-300 font-medium">
-                            {smaugVaultBurned > 0 ? smaugVaultBurned.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
+                            {smaugVaultBurned > 0 ? (smaugVaultBurned + 2_495_267).toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                           </span>
                         </div>
                         {smaugVaultBurned > 0 && (
                           <div className="text-right text-xs text-slate-400 mt-0.5">
-                            ({((smaugVaultBurned / 1_000_000_000) * 100).toFixed(3)}% of total supply)
+                            ({(((smaugVaultBurned + 2_495_267) / 1_000_000_000) * 100).toFixed(3)}% of total supply)
                           </div>
                         )}
                       </li>
