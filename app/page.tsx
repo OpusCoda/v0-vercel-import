@@ -1573,7 +1573,7 @@ All yield is used multiple times a day to buy and burn Smaug.
                 </div>
 
                 {/* The Lonely Mountain Reserve */}
-                <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
+                <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner mt-4">
                   <h4 className="text-xl font-medium text-green-300 text-center mb-3">The Lonely Mountain Reserve</h4>
                   <p className="text-slate-300 text-sm leading-relaxed text-center max-w-3xl mx-auto">
                     This reserve holds 100 Finvesta and 100K Missor. When Finvesta surpasses $100 and/or Missor surpasses $0.10, these reserves will be used to slowly buy Smaug—creating upward price movement—and burn them—removing even more Smaug from circulation.
