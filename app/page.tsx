@@ -289,7 +289,7 @@ export default function Home() {
     for (let i = 0; i <= retries; i++) {
       try {
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("RPC timeout")), 15000)
+          setTimeout(() => reject(new Error("RPC timeout")), 20000)
         )
         return await Promise.race([fn(), timeoutPromise])
       } catch (err) {
@@ -401,19 +401,25 @@ export default function Home() {
     const provider = getProvider()
     const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
 
-    // Batch 1: Simple balance reads (light RPC calls)
+    // Batch 1a: Vault PLS balance
     try {
-      const [vaultBalance, hoardPlsBalance] = await Promise.all([
-        rpcRetry(() => provider.getBalance("0xD1fB678aB14429140c06AfFFCC878F9c41F48787")),
-        rpcRetry(() => provider.getBalance("0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a")),
-      ])
+      console.log("[v0] Fetching vault PLS balance...")
+      const vaultBalance = await rpcRetry(() => provider.getBalance("0xD1fB678aB14429140c06AfFFCC878F9c41F48787"))
       setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
+      console.log("[v0] Vault PLS balance fetched")
+    } catch (err) {
+      console.error("[v0] Error fetching vault PLS balance:", err)
+    }
+
+    // Batch 1b: Hoard wallet balances
+    try {
+      console.log("[v0] Fetching hoard balances...")
+      const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
+      const hoardPlsBalance = await rpcRetry(() => provider.getBalance(hoardAddress))
       
-      // Also fetch hoard token balances
       const gasMoneyContract = new ethers.Contract("0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106", BALANCE_ABI, provider)
       const dominanceContract = new ethers.Contract("0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA", BALANCE_ABI, provider)
       const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
-      const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
       
       const [gasMoneyBal, dominanceBal, pWbtcBal] = await Promise.all([
         rpcRetry(() => gasMoneyContract.balanceOf(hoardAddress)),
@@ -430,9 +436,9 @@ export default function Home() {
         dominance: Number(ethers.formatEther(dominanceBal)),
         dominancePrice: p?.dominance || 0,
       })
-      console.log("[v0] Vault + hoard balances fetched")
+      console.log("[v0] Hoard balances fetched")
     } catch (err) {
-      console.error("[v0] Error fetching vault/hoard balances:", err)
+      console.error("[v0] Error fetching hoard balances:", err)
     }
 
     // Small delay to let RPC recover
