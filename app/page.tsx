@@ -197,6 +197,7 @@ export default function Home() {
   }>>([])
   const [expandedStakeCards, setExpandedStakeCards] = useState<Set<string>>(new Set())
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
+  const [isRefreshingVault, setIsRefreshingVault] = useState(false)
   const [smaugVaultPLS, setSmaugVaultPLS] = useState(0)
   const [smaugPrice, setSmaugPrice] = useState(0)
   const [plsPrice, setPlsPrice] = useState(0)
@@ -289,7 +290,7 @@ export default function Home() {
     for (let i = 0; i <= retries; i++) {
       try {
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("RPC timeout")), 15000)
+          setTimeout(() => reject(new Error("RPC timeout")), 20000)
         )
         return await Promise.race([fn(), timeoutPromise])
       } catch (err) {
@@ -401,19 +402,25 @@ export default function Home() {
     const provider = getProvider()
     const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
 
-    // Batch 1: Simple balance reads (light RPC calls)
+    // Batch 1a: Vault PLS balance
     try {
-      const [vaultBalance, hoardPlsBalance] = await Promise.all([
-        rpcRetry(() => provider.getBalance("0xD1fB678aB14429140c06AfFFCC878F9c41F48787")),
-        rpcRetry(() => provider.getBalance("0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a")),
-      ])
+      console.log("[v0] Fetching vault PLS balance...")
+      const vaultBalance = await rpcRetry(() => provider.getBalance("0xD1fB678aB14429140c06AfFFCC878F9c41F48787"))
       setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
+      console.log("[v0] Vault PLS balance fetched")
+    } catch (err) {
+      console.error("[v0] Error fetching vault PLS balance:", err)
+    }
+
+    // Batch 1b: Hoard wallet balances
+    try {
+      console.log("[v0] Fetching hoard balances...")
+      const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
+      const hoardPlsBalance = await rpcRetry(() => provider.getBalance(hoardAddress))
       
-      // Also fetch hoard token balances
       const gasMoneyContract = new ethers.Contract("0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106", BALANCE_ABI, provider)
       const dominanceContract = new ethers.Contract("0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA", BALANCE_ABI, provider)
       const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
-      const hoardAddress = "0x1FEe39A78Bd2cf20C11B99Bd1dF08d5b2fCc0b9a"
       
       const [gasMoneyBal, dominanceBal, pWbtcBal] = await Promise.all([
         rpcRetry(() => gasMoneyContract.balanceOf(hoardAddress)),
@@ -430,9 +437,9 @@ export default function Home() {
         dominance: Number(ethers.formatEther(dominanceBal)),
         dominancePrice: p?.dominance || 0,
       })
-      console.log("[v0] Vault + hoard balances fetched")
+      console.log("[v0] Hoard balances fetched")
     } catch (err) {
-      console.error("[v0] Error fetching vault/hoard balances:", err)
+      console.error("[v0] Error fetching hoard balances:", err)
     }
 
     // Small delay to let RPC recover
@@ -1349,6 +1356,12 @@ export default function Home() {
                         </span>
                       </li>
                       <li className="flex justify-between">
+                        <span>Smaug Price</span>
+                        <span className="text-green-300 font-medium">
+                          {smaugPrice > 0 ? `$${smaugPrice.toFixed(8)}` : "--"}
+                        </span>
+                      </li>
+                      <li className="flex justify-between">
                         <span>Market Cap</span>
                         <span className="text-green-300 font-medium">
                           {smaugMarketCap > 0 ? `$${smaugMarketCap.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "--"}
@@ -1369,6 +1382,20 @@ export default function Home() {
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <h4 className="text-xl font-medium text-green-300">Smaug's Vault</h4>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setIsRefreshingVault(true)
+                          try { await fetchSmaugVaultData() } catch {}
+                          setIsRefreshingVault(false)
+                        }}
+                        title="Refresh data"
+                        className="cursor-pointer"
+                      >
+                        <svg className={`w-3.5 h-3.5 text-slate-400 hover:text-green-300 transition-colors ${isRefreshingVault ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      </button>
                       <button
                         type="button"
                         onClick={() => {
@@ -1439,6 +1466,20 @@ export default function Home() {
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <h4 className="text-xl font-medium text-green-300">Smaug's Hoard Wallet</h4>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setIsRefreshingVault(true)
+                          try { await fetchSmaugVaultData() } catch {}
+                          setIsRefreshingVault(false)
+                        }}
+                        title="Refresh data"
+                        className="cursor-pointer"
+                      >
+                        <svg className={`w-3.5 h-3.5 text-slate-400 hover:text-green-300 transition-colors ${isRefreshingVault ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      </button>
                       <button
                         type="button"
                         onClick={() => {
