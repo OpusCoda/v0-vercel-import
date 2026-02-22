@@ -1549,7 +1549,7 @@ All yield is used multiple times a day to buy and burn Smaug.
                         <div className="flex justify-between mb-1">
                           <span>pWBTC</span>
                           <span className="text-green-300 font-medium">
-                            {hoardData.pWbtc > 0 ? hoardData.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 8 }) : "--"}
+                            {hoardData.pWbtc > 0 ? hoardData.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 3 }) : "--"}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs text-slate-400">
@@ -1565,7 +1565,7 @@ All yield is used multiple times a day to buy and burn Smaug.
                               const gmVal = hoardData.gasMoney * hoardData.gasMoneyPrice
                               const domVal = hoardData.dominance * hoardData.dominancePrice
                               const total = gmVal + domVal
-                              return total > 0 ? `$${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"
+                              return total > 0 ? `$${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "--"
                             })()}
                           </span>
                         </div>
