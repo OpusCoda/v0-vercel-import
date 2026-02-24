@@ -1695,10 +1695,6 @@ All yield is used multiple times a day to buy and burn Smaug.
                     <li className="text-xs text-slate-400 mt-3 space-y-1">
                       <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
                       <div className="flex justify-between pl-2">
-                        <span>Opus</span>
-                        <span>{formatMillions(liquidityData.opus.opusAdded)}</span>
-                      </div>
-                      <div className="flex justify-between pl-2">
                         <span>PLS</span>
                         <span>{formatMillions(liquidityData.opus.plsAdded)}</span>
                       </div>
@@ -1729,10 +1725,6 @@ All yield is used multiple times a day to buy and burn Smaug.
                   {liquidityData.coda && (
                     <li className="text-xs text-slate-400 mt-3 space-y-1">
                       <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
-                      <div className="flex justify-between pl-2">
-                        <span>Coda</span>
-                        <span>{formatMillions(liquidityData.coda.codaAdded)}</span>
-                      </div>
                       <div className="flex justify-between pl-2">
                         <span>PLS</span>
                         <span>{formatMillions(liquidityData.coda.plsAdded)}</span>
