@@ -1333,7 +1333,23 @@ export default function Home() {
   )}
 </div>
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
-                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Smaug's Ledger</h4>
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      <h4 className="text-xl font-medium text-green-300">Smaug's Ledger</h4>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setIsRefreshingVault(true)
+                          try { await fetchSmaugVaultData() } catch {}
+                          setIsRefreshingVault(false)
+                        }}
+                        title="Refresh data"
+                        className="cursor-pointer"
+                      >
+                        <svg className={`w-3.5 h-3.5 text-slate-400 hover:text-green-300 transition-colors ${isRefreshingVault ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      </button>
+                    </div>
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li className="flex justify-between">
                         <span>Total Supply</span>
@@ -1549,7 +1565,7 @@ All yield is used multiple times a day to buy and burn Smaug.
                         <div className="flex justify-between mb-1">
                           <span>pWBTC</span>
                           <span className="text-green-300 font-medium">
-                            {hoardData.pWbtc > 0 ? hoardData.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 8 }) : "--"}
+                            {hoardData.pWbtc > 0 ? hoardData.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 3 }) : "--"}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs text-slate-400">
@@ -1565,7 +1581,7 @@ All yield is used multiple times a day to buy and burn Smaug.
                               const gmVal = hoardData.gasMoney * hoardData.gasMoneyPrice
                               const domVal = hoardData.dominance * hoardData.dominancePrice
                               const total = gmVal + domVal
-                              return total > 0 ? `$${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"
+                              return total > 0 ? `$${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "--"
                             })()}
                           </span>
                         </div>
@@ -1679,10 +1695,6 @@ All yield is used multiple times a day to buy and burn Smaug.
                     <li className="text-xs text-slate-400 mt-3 space-y-1">
                       <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
                       <div className="flex justify-between pl-2">
-                        <span>Opus</span>
-                        <span>{formatMillions(liquidityData.opus.opusAdded)}</span>
-                      </div>
-                      <div className="flex justify-between pl-2">
                         <span>PLS</span>
                         <span>{formatMillions(liquidityData.opus.plsAdded)}</span>
                       </div>
@@ -1713,10 +1725,6 @@ All yield is used multiple times a day to buy and burn Smaug.
                   {liquidityData.coda && (
                     <li className="text-xs text-slate-400 mt-3 space-y-1">
                       <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
-                      <div className="flex justify-between pl-2">
-                        <span>Coda</span>
-                        <span>{formatMillions(liquidityData.coda.codaAdded)}</span>
-                      </div>
                       <div className="flex justify-between pl-2">
                         <span>PLS</span>
                         <span>{formatMillions(liquidityData.coda.plsAdded)}</span>
