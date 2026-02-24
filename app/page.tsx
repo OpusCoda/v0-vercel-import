@@ -1333,7 +1333,23 @@ export default function Home() {
   )}
 </div>
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
-                    <h4 className="text-xl font-medium text-green-300 mb-4 text-center">Smaug's Ledger</h4>
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      <h4 className="text-xl font-medium text-green-300">Smaug's Ledger</h4>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setIsRefreshingVault(true)
+                          try { await fetchSmaugVaultData() } catch {}
+                          setIsRefreshingVault(false)
+                        }}
+                        title="Refresh data"
+                        className="cursor-pointer"
+                      >
+                        <svg className={`w-3.5 h-3.5 text-slate-400 hover:text-green-300 transition-colors ${isRefreshingVault ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      </button>
+                    </div>
                     <ul className="space-y-3 text-sm text-slate-300">
                       <li className="flex justify-between">
                         <span>Total Supply</span>
