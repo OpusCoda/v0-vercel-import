@@ -1339,7 +1339,11 @@ export default function Home() {
                         type="button"
                         onClick={async () => {
                           setIsRefreshingVault(true)
-                          try { await fetchSmaugVaultData() } catch {}
+                          try {
+                            const prices = await fetchCachedPrices()
+                            if (prices) applyTokenPrices(prices)
+                            await fetchSmaugVaultData()
+                          } catch {}
                           setIsRefreshingVault(false)
                         }}
                         title="Refresh data"
@@ -1551,7 +1555,7 @@ All yield is used multiple times a day to buy and burn Smaug.
                       </li>
                       <li className="border-t border-green-900/20 pt-3">
                         <div className="flex justify-between mb-1">
-                          <span>PLS balance</span>
+                          <span>PLS</span>
                           <span className="text-green-300 font-medium">
                             {hoardData.pls > 0 ? hoardData.pls.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                           </span>
@@ -1631,7 +1635,7 @@ All yield is used multiple times a day to buy and burn Smaug.
 
                 {/* The Lonely Mountain Reserve */}
                 <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner mt-4">
-                  <h4 className="text-xl font-medium text-green-300 text-center mb-3">The Lonely Mountain Reserve</h4>
+                  <h4 className="text-xl font-medium text-green-300 text-center mb-3">🏔️ The Lonely Mountain Reserve</h4>
                   <p className="text-slate-300 text-sm leading-relaxed text-center max-w-3xl mx-auto">
                     This reserve holds 100 Finvesta and 100,000 Missor. When Finvesta crosses $100 and/or Missor crosses $0.10, these reserves will be deployed to incrementally buy Smaug and burn them — removing even more from circulation.
                   </p>
