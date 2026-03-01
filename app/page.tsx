@@ -1339,7 +1339,11 @@ export default function Home() {
                         type="button"
                         onClick={async () => {
                           setIsRefreshingVault(true)
-                          try { await fetchSmaugVaultData() } catch {}
+                          try {
+                            const prices = await fetchCachedPrices()
+                            if (prices) applyTokenPrices(prices)
+                            await fetchSmaugVaultData()
+                          } catch {}
                           setIsRefreshingVault(false)
                         }}
                         title="Refresh data"
