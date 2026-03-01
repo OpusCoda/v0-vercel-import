@@ -1555,7 +1555,7 @@ All yield is used multiple times a day to buy and burn Smaug.
                       </li>
                       <li className="border-t border-green-900/20 pt-3">
                         <div className="flex justify-between mb-1">
-                          <span>PLS balance</span>
+                          <span>PLS</span>
                           <span className="text-green-300 font-medium">
                             {hoardData.pls > 0 ? hoardData.pls.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
                           </span>
