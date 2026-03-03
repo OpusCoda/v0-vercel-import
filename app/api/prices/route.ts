@@ -17,6 +17,7 @@ interface PriceData {
   wgpp: number
   weth: number
   pwbtc: number
+  ewbtc: number
   plsx: number
   opus: number
   coda: number
@@ -44,6 +45,7 @@ const PAIR_ENDPOINTS: Array<{ key: keyof PriceData; url: string; extra?: string[
   { key: "wgpp", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xf13ca5c98d9aae6294edb9e7299b0bbe1e71265d" },
   { key: "weth", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x42abdfdb63f3282033c766e72cc4810738571609" },
   { key: "pwbtc", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf" },
+  { key: "ewbtc", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xFf1eFdf60A84268cB5CDB310f05ff47b242EBc20" },
   { key: "plsx", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9" },
   { key: "opus", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x14495adf3e689221655fdc950cd0133051ec61f9" },
   { key: "coda", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x13b62b75cfa35814d30fbeec0682047aa6287dfb" },
@@ -73,7 +75,7 @@ async function fetchWithRetry(url: string, retries = 2): Promise<any> {
 async function fetchAllPrices(): Promise<PriceData> {
   const result: PriceData = {
     pls: 0, smaug: 0, smaugMarketCap: 0, smaugLiquidity: 0,
-    missor: 0, finvesta: 0, wgpp: 0, weth: 0, pwbtc: 0,
+    missor: 0, finvesta: 0, wgpp: 0, weth: 0, pwbtc: 0, ewbtc: 0,
     plsx: 0, opus: 0, coda: 0, hexPulsechain: 0, hexEthereum: 0,
     inc: 0, gasMoney: 0, dominance: 0,
   }

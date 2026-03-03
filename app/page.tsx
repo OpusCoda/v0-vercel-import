@@ -111,7 +111,8 @@ const PLSX_ADDRESS = "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab"
 const INC_ADDRESS = "0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d"
 const EHEX_FROM_ETHEREUM_ADDRESS = "0x57fde0a71132198BBeC939B98976993d8D89D225" // eHEX bridged to Pulsechain
 const PWBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" // WBTC on Pulsechain
-const SMAUG_ADDRESS = "0xf4754Aa585caBf38537A68660469A17E203D8632"
+  const EWBTC_ADDRESS = "0xb17D901469B9208B17d916112988A3FeD19b5cA1" // eWBTC (WBTC from Ethereum) on Pulsechain
+  const SMAUG_ADDRESS = "0xf4754Aa585caBf38537A68660469A17E203D8632"
 
 export default function Home() {
   const [rewards, setRewards] = useState<
@@ -180,8 +181,9 @@ export default function Home() {
     eHexFromEthereum: number
     eHex: number
     pWbtc: number
+    eWbtc: number
     smaug: number
-  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0, smaug: 0 })
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0, eWbtc: 0, smaug: 0 })
   const [tokenPricesAll, setTokenPricesAll] = useState<{
     pls: number
     plsx: number
@@ -189,7 +191,8 @@ export default function Home() {
     pHex: number
     eHex: number
     wbtc: number
-  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHex: 0, wbtc: 0 })
+    ewbtc: number
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHex: 0, wbtc: 0, ewbtc: 0 })
   const [liquidLoansVaults, setLiquidLoansVaults] = useState<Array<{
     wallet: string
     lockedPLS: number
@@ -1063,8 +1066,9 @@ export default function Home() {
       let totalPHex = 0
       let totalEHexFromEthereum = 0
       let totalEHex = 0
-      let totalPWbtc = 0
-      let totalSmaug = 0
+let totalPWbtc = 0
+  let totalEWbtc = 0
+  let totalSmaug = 0
 
       for (const address of addresses) {
         try {
@@ -1097,6 +1101,11 @@ export default function Home() {
           const pWbtcBalance = await pWbtcContract.balanceOf(address)
           totalPWbtc += Number(ethers.formatUnits(pWbtcBalance, 8))
 
+          // eWBTC (WBTC from Ethereum) on Pulsechain
+          const eWbtcContract = new ethers.Contract(EWBTC_ADDRESS, BALANCE_ABI, provider)
+          const eWbtcBalance = await eWbtcContract.balanceOf(address)
+          totalEWbtc += Number(ethers.formatUnits(eWbtcBalance, 8))
+
           // Smaug
           const smaugContract = new ethers.Contract(SMAUG_ADDRESS, BALANCE_ABI, provider)
           const smaugBalance = await smaugContract.balanceOf(address)
@@ -1123,6 +1132,7 @@ export default function Home() {
         eHexFromEthereum: totalEHexFromEthereum,
         eHex: totalEHex,
         pWbtc: totalPWbtc,
+        eWbtc: totalEWbtc,
         smaug: totalSmaug,
       })
 
@@ -1136,6 +1146,7 @@ export default function Home() {
           pHex: cachedP.hexPulsechain || 0,
           eHex: cachedP.hexEthereum || 0,
           wbtc: cachedP.pwbtc || 0,
+          ewbtc: cachedP.ewbtc || 0,
         })
       }
 
@@ -1378,7 +1389,7 @@ export default function Home() {
                       <li className="flex justify-between">
                         <span>Smaug Price</span>
                         <span className="text-green-300 font-medium">
-                          {smaugPrice > 0 ? `$${smaugPrice.toFixed(8)}` : "--"}
+                          {smaugPrice > 0 ? `$${smaugPrice.toFixed(6)}` : "--"}
                         </span>
                       </li>
                       <li className="flex justify-between">
@@ -2585,6 +2596,16 @@ All yield is used multiple times a day to buy and burn Smaug.
                       </span>
                       <span className="text-sm font-medium text-green-400">
                         {tokenPricesAll.wbtc > 0 ? `$${(tokenBalances.pWbtc * tokenPricesAll.wbtc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.eWbtc > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        eWBTC — {tokenBalances.eWbtc.toLocaleString(undefined, { maximumFractionDigits: 3 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.ewbtc > 0 ? `$${(tokenBalances.eWbtc * tokenPricesAll.ewbtc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
                       </span>
                     </div>
                   )}
