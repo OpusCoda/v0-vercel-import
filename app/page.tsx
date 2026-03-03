@@ -1389,7 +1389,7 @@ let totalPWbtc = 0
                       <li className="flex justify-between">
                         <span>Smaug Price</span>
                         <span className="text-green-300 font-medium">
-                          {smaugPrice > 0 ? `$${smaugPrice.toFixed(8)}` : "--"}
+                          {smaugPrice > 0 ? `$${smaugPrice.toFixed(6)}` : "--"}
                         </span>
                       </li>
                       <li className="flex justify-between">
