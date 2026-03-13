@@ -1151,17 +1151,23 @@ let totalPWbtc = 0
           // Finvesta on Pulsechain
           const finvestaContract = new ethers.Contract(FINVESTA_ADDRESS, BALANCE_ABI, provider)
           const finvestaBalance = await finvestaContract.balanceOf(address)
-          totalFinvesta += Number(ethers.formatEther(finvestaBalance))
+          const finvestaFormatted = Number(ethers.formatEther(finvestaBalance))
+          totalFinvesta += finvestaFormatted
+          console.log("[v0] Finvesta balance for", address.slice(0, 6), ":", finvestaBalance.toString(), "->", finvestaFormatted)
 
           // Missor on Pulsechain
           const missorContract = new ethers.Contract(MISSOR_ADDRESS, BALANCE_ABI, provider)
           const missorBalance = await missorContract.balanceOf(address)
-          totalMissor += Number(ethers.formatEther(missorBalance))
+          const missorFormatted = Number(ethers.formatEther(missorBalance))
+          totalMissor += missorFormatted
+          console.log("[v0] Missor balance for", address.slice(0, 6), ":", missorBalance.toString(), "->", missorFormatted)
 
           // WGPP on Pulsechain
           const wgppContract = new ethers.Contract(WGPP_ADDRESS, BALANCE_ABI, provider)
           const wgppBalance = await wgppContract.balanceOf(address)
-          totalWgpp += Number(ethers.formatEther(wgppBalance))
+          const wgppFormatted = Number(ethers.formatEther(wgppBalance))
+          totalWgpp += wgppFormatted
+          console.log("[v0] WGPP balance for", address.slice(0, 6), ":", wgppBalance.toString(), "->", wgppFormatted)
 
           // Smaug
           const smaugContract = new ethers.Contract(SMAUG_ADDRESS, BALANCE_ABI, provider)
