@@ -1739,10 +1739,6 @@ All yield is used multiple times a day to buy and burn Smaug.
                     <span>Added to liquidity</span>
                     <span className="text-cyan-300 font-medium">1%</span>
                   </li>
-                  {liquidityData.coda && (
-                    <li className="text-xs text-slate-400 mt-3">
-                      <div className="text-green-400">{formatMillions(liquidityData.coda.plsAdded)}</div>
-                    </li>
                 </ul>
               </div>
             </div>
