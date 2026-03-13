@@ -114,6 +114,9 @@ const EHEX_FROM_ETHEREUM_ADDRESS = "0x57fde0a71132198BBeC939B98976993d8D89D225" 
 const PWBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" // WBTC on Pulsechain
   const EWBTC_ADDRESS = "0xb17D901469B9208B17d916112988A3FeD19b5cA1" // eBTC (WBTC from Ethereum) on Pulsechain
   const WETH_ADDRESS = "0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C" // WETH on Pulsechain
+  const FINVESTA_ADDRESS = "0x1C81b4358246d3088Ab4361aB755F3D8D4dd62d2" // Finvesta on Pulsechain
+  const MISSOR_ADDRESS = "0x063E79CF6A555dac9033EAa3c61A8f02F1020759" // Missor on Pulsechain
+  const WGPP_ADDRESS = "0x770CFA2FB975E7bCAEDDe234D92c3858C517AdcA" // WGPP on Pulsechain
   const SMAUG_ADDRESS = "0xf4754Aa585caBf38537A68660469A17E203D8632"
 
 export default function Home() {
@@ -185,8 +188,11 @@ export default function Home() {
     pWbtc: number
     eWbtc: number
     weth: number
+    finvesta: number
+    missor: number
+    wgpp: number
     smaug: number
-  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0, eWbtc: 0, weth: 0, smaug: 0 })
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0, eWbtc: 0, weth: 0, finvesta: 0, missor: 0, wgpp: 0, smaug: 0 })
   const [tokenPricesAll, setTokenPricesAll] = useState<{
     pls: number
     plsx: number
@@ -196,7 +202,10 @@ export default function Home() {
     wbtc: number
     ewbtc: number
     weth: number
-  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHex: 0, wbtc: 0, ewbtc: 0, weth: 0 })
+    finvesta: number
+    missor: number
+    wgpp: number
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHex: 0, wbtc: 0, ewbtc: 0, weth: 0, finvesta: 0, missor: 0, wgpp: 0 })
   const [liquidLoansVaults, setLiquidLoansVaults] = useState<Array<{
     wallet: string
     lockedPLS: number
@@ -1093,6 +1102,9 @@ export default function Home() {
 let totalPWbtc = 0
   let totalEWbtc = 0
   let totalWeth = 0
+  let totalFinvesta = 0
+  let totalMissor = 0
+  let totalWgpp = 0
   let totalSmaug = 0
 
       for (const address of addresses) {
@@ -1136,6 +1148,21 @@ let totalPWbtc = 0
           const wethBalance = await wethContract.balanceOf(address)
           totalWeth += Number(ethers.formatEther(wethBalance))
 
+          // Finvesta on Pulsechain
+          const finvestaContract = new ethers.Contract(FINVESTA_ADDRESS, BALANCE_ABI, provider)
+          const finvestaBalance = await finvestaContract.balanceOf(address)
+          totalFinvesta += Number(ethers.formatEther(finvestaBalance))
+
+          // Missor on Pulsechain
+          const missorContract = new ethers.Contract(MISSOR_ADDRESS, BALANCE_ABI, provider)
+          const missorBalance = await missorContract.balanceOf(address)
+          totalMissor += Number(ethers.formatEther(missorBalance))
+
+          // WGPP on Pulsechain
+          const wgppContract = new ethers.Contract(WGPP_ADDRESS, BALANCE_ABI, provider)
+          const wgppBalance = await wgppContract.balanceOf(address)
+          totalWgpp += Number(ethers.formatEther(wgppBalance))
+
           // Smaug
           const smaugContract = new ethers.Contract(SMAUG_ADDRESS, BALANCE_ABI, provider)
           const smaugBalance = await smaugContract.balanceOf(address)
@@ -1164,6 +1191,9 @@ let totalPWbtc = 0
         pWbtc: totalPWbtc,
         eWbtc: totalEWbtc,
         weth: totalWeth,
+        finvesta: totalFinvesta,
+        missor: totalMissor,
+        wgpp: totalWgpp,
         smaug: totalSmaug,
       })
 
@@ -1179,6 +1209,9 @@ let totalPWbtc = 0
           wbtc: cachedP.pwbtc || 0,
           ewbtc: cachedP.ewbtc || 0,
           weth: cachedP.weth || 0,
+          finvesta: cachedP.finvesta || 0,
+          missor: cachedP.missor || 0,
+          wgpp: cachedP.wgpp || 0,
         })
       }
 
@@ -2636,6 +2669,36 @@ All yield is used multiple times a day to buy and burn Smaug.
                       </span>
                       <span className="text-sm font-medium text-green-400">
                         {tokenPricesAll.weth > 0 ? `$${(tokenBalances.weth * tokenPricesAll.weth).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.finvesta > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        Finvesta — {tokenBalances.finvesta.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.finvesta > 0 ? `$${(tokenBalances.finvesta * tokenPricesAll.finvesta).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.missor > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        Missor — {tokenBalances.missor.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.missor > 0 ? `$${(tokenBalances.missor * tokenPricesAll.missor).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.wgpp > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        WGPP — {tokenBalances.wgpp.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.wgpp > 0 ? `$${(tokenBalances.wgpp * tokenPricesAll.wgpp).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
                       </span>
                     </div>
                   )}
