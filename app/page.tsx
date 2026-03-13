@@ -1148,10 +1148,10 @@ let totalPWbtc = 0
           const wethBalance = await wethContract.balanceOf(address)
           totalWeth += Number(ethers.formatEther(wethBalance))
 
-          // Finvesta on Pulsechain (9 decimals)
+          // Finvesta on Pulsechain (8 decimals)
           const finvestaContract = new ethers.Contract(FINVESTA_ADDRESS, BALANCE_ABI, provider)
           const finvestaBalance = await finvestaContract.balanceOf(address)
-          const finvestaFormatted = Number(ethers.formatUnits(finvestaBalance, 9))
+          const finvestaFormatted = Number(ethers.formatUnits(finvestaBalance, 8))
           totalFinvesta += finvestaFormatted
 
           // Missor on Pulsechain
