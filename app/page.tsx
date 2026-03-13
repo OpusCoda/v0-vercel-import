@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { ethers } from "ethers"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
+import { storeSmaugRoiSnapshot, getSmaugRoi24h } from "@/app/actions"
 
 const formatDecimals = (v: string, decimals = 0) => {
   const [i, d = ""] = v.split(".")
@@ -221,6 +222,7 @@ export default function Home() {
     dominance: number
     dominancePrice: number
   }>({ pls: 0, pWbtc: 0, pWbtcPrice: 0, gasMoney: 0, gasMoneyPrice: 0, dominance: 0, dominancePrice: 0 })
+  const [smaugRoi24h, setSmaugRoi24h] = useState(0)
 
   const toggleStakeCard = (cardId: string) => {
     setExpandedStakeCards((prev) => {
@@ -491,6 +493,25 @@ export default function Home() {
       console.log("[v0] Burn events fetched")
     } catch (err) {
       console.error("[v0] Error fetching burn events:", err)
+    }
+
+    // Fetch and store ROI data
+    try {
+      console.log("[v0] Fetching SMAUG ROI data...")
+      const roiRes = await fetch("/api/smaug-roi")
+      if (roiRes.ok) {
+        const roiData = await roiRes.json()
+        // Store current snapshot
+        await storeSmaugRoiSnapshot(roiData.currentBalance)
+        // Get 24h ROI
+        const roi24hRes = await getSmaugRoi24h()
+        if (roi24hRes.success) {
+          setSmaugRoi24h(roi24hRes.roi24h)
+          console.log("[v0] ROI 24h fetched:", roi24hRes.roi24h.toFixed(2) + "%")
+        }
+      }
+    } catch (err) {
+      console.error("[v0] Error fetching SMAUG ROI:", err)
     }
   }
 
@@ -1413,6 +1434,12 @@ let totalPWbtc = 0
                         <span>Liquidity</span>
                         <span className="text-green-300 font-medium">
                           {smaugLiquidity > 0 ? `$${smaugLiquidity.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "--"}
+                        </span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>24h ROI</span>
+                        <span className={`font-medium ${smaugRoi24h > 0 ? "text-green-300" : smaugRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
+                          {smaugRoi24h !== 0 ? `${smaugRoi24h > 0 ? "+" : ""}${smaugRoi24h.toFixed(2)}%` : "--"}
                         </span>
                       </li>
                     </ul>

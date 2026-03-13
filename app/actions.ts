@@ -68,3 +68,56 @@ export async function loadPortfolio(portfolioId: string) {
     return { success: false, error: "Failed to load portfolio" }
   }
 }
+
+export async function storeSmaugRoiSnapshot(balance: number) {
+  try {
+    await sql`
+      INSERT INTO smaug_roi_snapshots (balance, timestamp)
+      VALUES (${balance}, NOW())
+    `
+    return { success: true }
+  } catch (error) {
+    console.error("Error storing SMAUG ROI snapshot:", error)
+    return { success: false, error: "Failed to store snapshot" }
+  }
+}
+
+export async function getSmaugRoi24h() {
+  try {
+    const result = await sql`
+      SELECT balance, timestamp FROM smaug_roi_snapshots
+      WHERE timestamp > NOW() - INTERVAL '24 hours'
+      ORDER BY timestamp ASC
+      LIMIT 1
+    `
+
+    if (result.length === 0) {
+      return { success: false, roi24h: 0, message: "No snapshot from 24h ago yet" }
+    }
+
+    const snapshot24hAgo = result[0] as { balance: number; timestamp: string }
+
+    const currentResult = await sql`
+      SELECT balance FROM smaug_roi_snapshots
+      ORDER BY timestamp DESC
+      LIMIT 1
+    `
+
+    if (currentResult.length === 0) {
+      return { success: false, roi24h: 0, message: "No current snapshot" }
+    }
+
+    const currentBalance = (currentResult[0] as { balance: number }).balance
+    const roi24h = ((currentBalance - snapshot24hAgo.balance) / snapshot24hAgo.balance) * 100
+
+    return {
+      success: true,
+      roi24h,
+      currentBalance,
+      balanceYesterdayAgo: snapshot24hAgo.balance,
+    }
+  } catch (error) {
+    console.error("Error fetching SMAUG ROI:", error)
+    return { success: false, roi24h: 0, message: "Failed to fetch ROI" }
+  }
+}
