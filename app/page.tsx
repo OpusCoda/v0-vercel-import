@@ -116,7 +116,7 @@ const PWBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" // WBTC on Pu
   const WETH_ADDRESS = "0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C" // WETH on Pulsechain
   const FINVESTA_ADDRESS = "0x1C81b4358246d3088Ab4361aB755F3D8D4dd62d2" // Finvesta on Pulsechain
   const MISSOR_ADDRESS = "0x063E79CF6A555dac9033EAa3c61A8f02F1020759" // Missor on Pulsechain
-  const WGPP_ADDRESS = "0x770CFA2FB975E7bCAEDDe234D92c3858C517AdcA" // WGPP on Pulsechain
+  const WGPP_ADDRESS = "0x770CFA2FB975E7bCAEDDe234D92c3858C517AdCa" // WGPP on Pulsechain
   const SMAUG_ADDRESS = "0xf4754Aa585caBf38537A68660469A17E203D8632"
 
 export default function Home() {
@@ -1148,26 +1148,23 @@ let totalPWbtc = 0
           const wethBalance = await wethContract.balanceOf(address)
           totalWeth += Number(ethers.formatEther(wethBalance))
 
-          // Finvesta on Pulsechain
+          // Finvesta on Pulsechain (9 decimals)
           const finvestaContract = new ethers.Contract(FINVESTA_ADDRESS, BALANCE_ABI, provider)
           const finvestaBalance = await finvestaContract.balanceOf(address)
-          const finvestaFormatted = Number(ethers.formatEther(finvestaBalance))
+          const finvestaFormatted = Number(ethers.formatUnits(finvestaBalance, 9))
           totalFinvesta += finvestaFormatted
-          console.log("[v0] Finvesta balance for", address.slice(0, 6), ":", finvestaBalance.toString(), "->", finvestaFormatted)
 
           // Missor on Pulsechain
           const missorContract = new ethers.Contract(MISSOR_ADDRESS, BALANCE_ABI, provider)
           const missorBalance = await missorContract.balanceOf(address)
           const missorFormatted = Number(ethers.formatEther(missorBalance))
           totalMissor += missorFormatted
-          console.log("[v0] Missor balance for", address.slice(0, 6), ":", missorBalance.toString(), "->", missorFormatted)
 
           // WGPP on Pulsechain
           const wgppContract = new ethers.Contract(WGPP_ADDRESS, BALANCE_ABI, provider)
           const wgppBalance = await wgppContract.balanceOf(address)
           const wgppFormatted = Number(ethers.formatEther(wgppBalance))
           totalWgpp += wgppFormatted
-          console.log("[v0] WGPP balance for", address.slice(0, 6), ":", wgppBalance.toString(), "->", wgppFormatted)
 
           // Smaug
           const smaugContract = new ethers.Contract(SMAUG_ADDRESS, BALANCE_ABI, provider)
