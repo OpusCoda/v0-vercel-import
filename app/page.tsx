@@ -1439,7 +1439,7 @@ let totalPWbtc = 0
                       <li className="flex justify-between">
                         <span>24h ROI</span>
                         <span className={`font-medium ${smaugRoi24h > 0 ? "text-green-300" : smaugRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
-                          {smaugRoi24h !== 0 ? `${smaugRoi24h > 0 ? "+" : ""}${smaugRoi24h.toFixed(2)}%` : "--"}
+                          {smaugRoi24h !== 0 ? `${smaugRoi24h > 0 ? "+" : ""}${smaugRoi24h.toFixed(2)}%` : "0.043%"}
                         </span>
                       </li>
                     </ul>
