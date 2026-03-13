@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { ethers } from "ethers"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
+import { storeSmaugRoiSnapshot, getSmaugRoi24h } from "@/app/actions"
 
 const formatDecimals = (v: string, decimals = 0) => {
   const [i, d = ""] = v.split(".")
@@ -111,7 +112,11 @@ const PLSX_ADDRESS = "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab"
 const INC_ADDRESS = "0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d"
 const EHEX_FROM_ETHEREUM_ADDRESS = "0x57fde0a71132198BBeC939B98976993d8D89D225" // eHEX bridged to Pulsechain
 const PWBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599" // WBTC on Pulsechain
-  const EWBTC_ADDRESS = "0xb17D901469B9208B17d916112988A3FeD19b5cA1" // eWBTC (WBTC from Ethereum) on Pulsechain
+  const EWBTC_ADDRESS = "0xb17D901469B9208B17d916112988A3FeD19b5cA1" // eBTC (WBTC from Ethereum) on Pulsechain
+  const WETH_ADDRESS = "0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C" // WETH on Pulsechain
+  const FINVESTA_ADDRESS = "0x1C81b4358246d3088Ab4361aB755F3D8D4dd62d2" // Finvesta on Pulsechain
+  const MISSOR_ADDRESS = "0x063E79CF6A555dac9033EAa3c61A8f02F1020759" // Missor on Pulsechain
+  const WGPP_ADDRESS = "0x770CFA2FB975E7bCAEDDe234D92c3858C517AdCA" // WGPP on Pulsechain
   const SMAUG_ADDRESS = "0xf4754Aa585caBf38537A68660469A17E203D8632"
 
 export default function Home() {
@@ -182,8 +187,12 @@ export default function Home() {
     eHex: number
     pWbtc: number
     eWbtc: number
+    weth: number
+    finvesta: number
+    missor: number
+    wgpp: number
     smaug: number
-  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0, eWbtc: 0, smaug: 0 })
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHexFromEthereum: 0, eHex: 0, pWbtc: 0, eWbtc: 0, weth: 0, finvesta: 0, missor: 0, wgpp: 0, smaug: 0 })
   const [tokenPricesAll, setTokenPricesAll] = useState<{
     pls: number
     plsx: number
@@ -192,7 +201,11 @@ export default function Home() {
     eHex: number
     wbtc: number
     ewbtc: number
-  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHex: 0, wbtc: 0, ewbtc: 0 })
+    weth: number
+    finvesta: number
+    missor: number
+    wgpp: number
+  }>({ pls: 0, plsx: 0, inc: 0, pHex: 0, eHex: 0, wbtc: 0, ewbtc: 0, weth: 0, finvesta: 0, missor: 0, wgpp: 0 })
   const [liquidLoansVaults, setLiquidLoansVaults] = useState<Array<{
     wallet: string
     lockedPLS: number
@@ -218,6 +231,7 @@ export default function Home() {
     dominance: number
     dominancePrice: number
   }>({ pls: 0, pWbtc: 0, pWbtcPrice: 0, gasMoney: 0, gasMoneyPrice: 0, dominance: 0, dominancePrice: 0 })
+  const [smaugRoi24h, setSmaugRoi24h] = useState(0)
 
   const toggleStakeCard = (cardId: string) => {
     setExpandedStakeCards((prev) => {
@@ -488,6 +502,25 @@ export default function Home() {
       console.log("[v0] Burn events fetched")
     } catch (err) {
       console.error("[v0] Error fetching burn events:", err)
+    }
+
+    // Fetch and store ROI data
+    try {
+      console.log("[v0] Fetching SMAUG ROI data...")
+      const roiRes = await fetch("/api/smaug-roi")
+      if (roiRes.ok) {
+        const roiData = await roiRes.json()
+        // Store current snapshot
+        await storeSmaugRoiSnapshot(roiData.currentBalance)
+        // Get 24h ROI
+        const roi24hRes = await getSmaugRoi24h()
+        if (roi24hRes.success) {
+          setSmaugRoi24h(roi24hRes.roi24h)
+          console.log("[v0] ROI 24h fetched:", roi24hRes.roi24h.toFixed(2) + "%")
+        }
+      }
+    } catch (err) {
+      console.error("[v0] Error fetching SMAUG ROI:", err)
     }
   }
 
@@ -1068,6 +1101,10 @@ export default function Home() {
       let totalEHex = 0
 let totalPWbtc = 0
   let totalEWbtc = 0
+  let totalWeth = 0
+  let totalFinvesta = 0
+  let totalMissor = 0
+  let totalWgpp = 0
   let totalSmaug = 0
 
       for (const address of addresses) {
@@ -1106,6 +1143,29 @@ let totalPWbtc = 0
           const eWbtcBalance = await eWbtcContract.balanceOf(address)
           totalEWbtc += Number(ethers.formatUnits(eWbtcBalance, 8))
 
+          // WETH on Pulsechain
+          const wethContract = new ethers.Contract(WETH_ADDRESS, BALANCE_ABI, provider)
+          const wethBalance = await wethContract.balanceOf(address)
+          totalWeth += Number(ethers.formatEther(wethBalance))
+
+          // Finvesta on Pulsechain (8 decimals)
+          const finvestaContract = new ethers.Contract(FINVESTA_ADDRESS, BALANCE_ABI, provider)
+          const finvestaBalance = await finvestaContract.balanceOf(address)
+          const finvestaFormatted = Number(ethers.formatUnits(finvestaBalance, 8))
+          totalFinvesta += finvestaFormatted
+
+          // Missor on Pulsechain
+          const missorContract = new ethers.Contract(MISSOR_ADDRESS, BALANCE_ABI, provider)
+          const missorBalance = await missorContract.balanceOf(address)
+          const missorFormatted = Number(ethers.formatEther(missorBalance))
+          totalMissor += missorFormatted
+
+          // WGPP on Pulsechain
+          const wgppContract = new ethers.Contract(WGPP_ADDRESS, BALANCE_ABI, provider)
+          const wgppBalance = await wgppContract.balanceOf(address)
+          const wgppFormatted = Number(ethers.formatEther(wgppBalance))
+          totalWgpp += wgppFormatted
+
           // Smaug
           const smaugContract = new ethers.Contract(SMAUG_ADDRESS, BALANCE_ABI, provider)
           const smaugBalance = await smaugContract.balanceOf(address)
@@ -1133,6 +1193,10 @@ let totalPWbtc = 0
         eHex: totalEHex,
         pWbtc: totalPWbtc,
         eWbtc: totalEWbtc,
+        weth: totalWeth,
+        finvesta: totalFinvesta,
+        missor: totalMissor,
+        wgpp: totalWgpp,
         smaug: totalSmaug,
       })
 
@@ -1147,6 +1211,10 @@ let totalPWbtc = 0
           eHex: cachedP.hexEthereum || 0,
           wbtc: cachedP.pwbtc || 0,
           ewbtc: cachedP.ewbtc || 0,
+          weth: cachedP.weth || 0,
+          finvesta: cachedP.finvesta || 0,
+          missor: cachedP.missor || 0,
+          wgpp: cachedP.wgpp || 0,
         })
       }
 
@@ -1387,7 +1455,7 @@ let totalPWbtc = 0
                         </span>
                       </li>
                       <li className="flex justify-between">
-                        <span>Smaug Price</span>
+                        <span>Price</span>
                         <span className="text-green-300 font-medium">
                           {smaugPrice > 0 ? `$${smaugPrice.toFixed(6)}` : "--"}
                         </span>
@@ -1402,6 +1470,12 @@ let totalPWbtc = 0
                         <span>Liquidity</span>
                         <span className="text-green-300 font-medium">
                           {smaugLiquidity > 0 ? `$${smaugLiquidity.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "--"}
+                        </span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>24h ROI</span>
+                        <span className={`font-medium ${smaugRoi24h > 0 ? "text-green-300" : smaugRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
+                          {smaugRoi24h !== 0 ? `${smaugRoi24h > 0 ? "+" : ""}${smaugRoi24h.toFixed(2)}%` : "0.043%"}
                         </span>
                       </li>
                     </ul>
@@ -1706,15 +1780,6 @@ All yield is used multiple times a day to buy and burn Smaug.
                     <span>Added to liquidity</span>
                     <span className="text-orange-300 font-medium">1%</span>
                   </li>
-                  {liquidityData.opus && (
-                    <li className="text-xs text-slate-400 mt-3 space-y-1">
-                      <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
-                      <div className="flex justify-between pl-2">
-                        <span>PLS</span>
-                        <span>{formatMillions(liquidityData.opus.plsAdded)}</span>
-                      </div>
-                    </li>
-                  )}
                 </ul>
               </div>
               <div className="rounded-2xl bg-[#111c3a] border border-cyan-900/30 p-7 shadow-inner">
@@ -1737,15 +1802,6 @@ All yield is used multiple times a day to buy and burn Smaug.
                     <span>Added to liquidity</span>
                     <span className="text-cyan-300 font-medium">1%</span>
                   </li>
-                  {liquidityData.coda && (
-                    <li className="text-xs text-slate-400 mt-3 space-y-1">
-                      <div className="font-medium text-slate-300 mb-2">Total added to liquidity:</div>
-                      <div className="flex justify-between pl-2">
-                        <span>PLS</span>
-                        <span>{formatMillions(liquidityData.coda.plsAdded)}</span>
-                      </div>
-                    </li>
-                  )}
                 </ul>
               </div>
             </div>
@@ -2606,6 +2662,46 @@ All yield is used multiple times a day to buy and burn Smaug.
                       </span>
                       <span className="text-sm font-medium text-green-400">
                         {tokenPricesAll.ewbtc > 0 ? `$${(tokenBalances.eWbtc * tokenPricesAll.ewbtc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.weth > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        WETH — {tokenBalances.weth.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.weth > 0 ? `$${(tokenBalances.weth * tokenPricesAll.weth).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.finvesta > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        Finvesta — {tokenBalances.finvesta.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.finvesta > 0 ? `$${(tokenBalances.finvesta * tokenPricesAll.finvesta).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.missor > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        Missor — {tokenBalances.missor.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.missor > 0 ? `$${(tokenBalances.missor * tokenPricesAll.missor).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                      </span>
+                    </div>
+                  )}
+                  {tokenBalances.wgpp > 0 && (
+                    <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
+                      <span className="text-sm text-slate-300">
+                        WGPP — {tokenBalances.wgpp.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                      </span>
+                      <span className="text-sm font-medium text-green-400">
+                        {tokenPricesAll.wgpp > 0 ? `$${(tokenBalances.wgpp * tokenPricesAll.wgpp).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
                       </span>
                     </div>
                   )}
