@@ -84,21 +84,19 @@ export async function storeSmaugRoiSnapshot(balance: number) {
 
 export async function getSmaugRoi24h() {
   try {
-    // Get the snapshot closest to 24 hours ago (just older than 24h)
-    const oldResult = await sql`
+    const result = await sql`
       SELECT balance, timestamp FROM smaug_roi_snapshots
-      WHERE timestamp <= NOW() - INTERVAL '24 hours'
-      ORDER BY timestamp DESC
+      WHERE timestamp > NOW() - INTERVAL '24 hours'
+      ORDER BY timestamp ASC
       LIMIT 1
     `
 
-    if (oldResult.length === 0) {
+    if (result.length === 0) {
       return { success: false, roi24h: 0, message: "No snapshot from 24h ago yet" }
     }
 
-    const snapshot24hAgo = oldResult[0] as { balance: number; timestamp: string }
+    const snapshot24hAgo = result[0] as { balance: number; timestamp: string }
 
-    // Get the most recent snapshot
     const currentResult = await sql`
       SELECT balance FROM smaug_roi_snapshots
       ORDER BY timestamp DESC
