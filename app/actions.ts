@@ -72,7 +72,7 @@ export async function loadPortfolio(portfolioId: string) {
 export async function storeSmaugRoiSnapshot(balance: number) {
   try {
     await sql`
-      INSERT INTO smaug_roi_snapshots (balance, timestamp)
+      INSERT INTO smaug_roi_snapshots (smaug_balance, snapshot_time)
       VALUES (${balance}, NOW())
     `
     return { success: true }
@@ -86,9 +86,9 @@ export async function getSmaugRoi24h() {
   try {
     // Get the snapshot closest to 24 hours ago (just older than 24h)
     const oldResult = await sql`
-      SELECT balance, timestamp FROM smaug_roi_snapshots
-      WHERE timestamp <= NOW() - INTERVAL '24 hours'
-      ORDER BY timestamp DESC
+      SELECT smaug_balance, snapshot_time FROM smaug_roi_snapshots
+      WHERE snapshot_time <= NOW() - INTERVAL '24 hours'
+      ORDER BY snapshot_time DESC
       LIMIT 1
     `
 
@@ -96,12 +96,12 @@ export async function getSmaugRoi24h() {
       return { success: false, roi24h: 0, message: "No snapshot from 24h ago yet" }
     }
 
-    const snapshot24hAgo = oldResult[0] as { balance: number; timestamp: string }
+    const snapshot24hAgo = oldResult[0] as { smaug_balance: number; snapshot_time: string }
 
     // Get the most recent snapshot
     const currentResult = await sql`
-      SELECT balance FROM smaug_roi_snapshots
-      ORDER BY timestamp DESC
+      SELECT smaug_balance FROM smaug_roi_snapshots
+      ORDER BY snapshot_time DESC
       LIMIT 1
     `
 
@@ -109,14 +109,14 @@ export async function getSmaugRoi24h() {
       return { success: false, roi24h: 0, message: "No current snapshot" }
     }
 
-    const currentBalance = (currentResult[0] as { balance: number }).balance
-    const roi24h = ((currentBalance - snapshot24hAgo.balance) / snapshot24hAgo.balance) * 100
+    const currentBalance = (currentResult[0] as { smaug_balance: number }).smaug_balance
+    const roi24h = ((currentBalance - snapshot24hAgo.smaug_balance) / snapshot24hAgo.smaug_balance) * 100
 
     return {
       success: true,
       roi24h,
       currentBalance,
-      balanceYesterdayAgo: snapshot24hAgo.balance,
+      balance24hAgo: snapshot24hAgo.smaug_balance,
     }
   } catch (error) {
     console.error("Error fetching SMAUG ROI:", error)
