@@ -82,44 +82,34 @@ export async function storeSmaugRoiSnapshot(balance: number) {
   }
 }
 
-export async function getSmaugRoi24h() {
+export async function getSmaugRoi() {
   try {
-    // Get the snapshot closest to 24 hours ago (just older than 24h)
-    const oldResult = await sql`
-      SELECT smaug_balance, snapshot_time FROM smaug_roi_snapshots
-      WHERE snapshot_time <= NOW() - INTERVAL '24 hours'
-      ORDER BY snapshot_time DESC
-      LIMIT 1
-    `
-
-    if (oldResult.length === 0) {
-      return { success: false, roi24h: 0, message: "No snapshot from 24h ago yet" }
-    }
-
-    const snapshot24hAgo = oldResult[0] as { smaug_balance: number; snapshot_time: string }
-
-    // Get the most recent snapshot
     const currentResult = await sql`
       SELECT smaug_balance FROM smaug_roi_snapshots
       ORDER BY snapshot_time DESC
       LIMIT 1
     `
-
     if (currentResult.length === 0) {
-      return { success: false, roi24h: 0, message: "No current snapshot" }
+      return { success: false, roi24h: null, roi7d: null, roi30d: null }
     }
-
     const currentBalance = (currentResult[0] as { smaug_balance: number }).smaug_balance
-    const roi24h = ((currentBalance - snapshot24hAgo.smaug_balance) / snapshot24hAgo.smaug_balance) * 100
+
+    const [snap24h, snap7d, snap30d] = await Promise.all([
+      sql`SELECT smaug_balance FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '24 hours' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT smaug_balance FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '7 days' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT smaug_balance FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '30 days' ORDER BY snapshot_time DESC LIMIT 1`,
+    ])
+
+    const calc = (old: number) => ((currentBalance - old) / old) * 100
 
     return {
       success: true,
-      roi24h,
-      currentBalance,
-      balance24hAgo: snapshot24hAgo.smaug_balance,
+      roi24h: snap24h.length > 0 ? calc((snap24h[0] as { smaug_balance: number }).smaug_balance) : null,
+      roi7d:  snap7d.length  > 0 ? calc((snap7d[0]  as { smaug_balance: number }).smaug_balance) : null,
+      roi30d: snap30d.length > 0 ? calc((snap30d[0] as { smaug_balance: number }).smaug_balance) : null,
     }
   } catch (error) {
     console.error("Error fetching SMAUG ROI:", error)
-    return { success: false, roi24h: 0, message: "Failed to fetch ROI" }
+    return { success: false, roi24h: null, roi7d: null, roi30d: null }
   }
 }
