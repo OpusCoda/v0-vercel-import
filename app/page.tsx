@@ -508,11 +508,16 @@ export default function Home() {
 
     // Fetch and store ROI data
     try {
+      console.log("[v0] Fetching SMAUG ROI...")
       const roiRes = await fetch("/api/smaug-roi")
+      console.log("[v0] ROI API response ok:", roiRes.ok)
       if (roiRes.ok) {
         const roiData = await roiRes.json()
-        await storeSmaugRoiSnapshot(roiData.currentBalance)
+        console.log("[v0] ROI currentBalance:", roiData.currentBalance)
+        const storeResult = await storeSmaugRoiSnapshot(roiData.currentBalance)
+        console.log("[v0] Snapshot stored:", storeResult)
         const roiResult = await getSmaugRoi()
+        console.log("[v0] ROI result:", JSON.stringify(roiResult))
         if (roiResult.success) {
           setSmaugRoi24h(roiResult.roi24h)
           setSmaugRoi7d(roiResult.roi7d)
