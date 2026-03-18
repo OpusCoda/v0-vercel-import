@@ -2,7 +2,7 @@
 
 import { neon } from "@neondatabase/serverless"
 
-const sql = neon(process.env.DATABASE_URL!)
+const sql = neon(process.env.POSTGRES_URL!)
 
 function generateUniqueId(): string {
   const chars = "ABCDEFGHJKLMNOPQRSTUVWXYZ23456789"
@@ -72,7 +72,7 @@ export async function loadPortfolio(portfolioId: string) {
 export async function storeSmaugRoiSnapshot(balance: number) {
   try {
     await sql`
-      INSERT INTO smaug_roi_snapshots (balance, timestamp)
+      INSERT INTO smaug_roi_snapshots (smaug_balance, snapshot_time)
       VALUES (${balance}, NOW())
     `
     return { success: true }
@@ -82,42 +82,34 @@ export async function storeSmaugRoiSnapshot(balance: number) {
   }
 }
 
-export async function getSmaugRoi24h() {
+export async function getSmaugRoi() {
   try {
-    const result = await sql`
-      SELECT balance, timestamp FROM smaug_roi_snapshots
-      WHERE timestamp > NOW() - INTERVAL '24 hours'
-      ORDER BY timestamp ASC
-      LIMIT 1
-    `
-
-    if (result.length === 0) {
-      return { success: false, roi24h: 0, message: "No snapshot from 24h ago yet" }
-    }
-
-    const snapshot24hAgo = result[0] as { balance: number; timestamp: string }
-
     const currentResult = await sql`
-      SELECT balance FROM smaug_roi_snapshots
-      ORDER BY timestamp DESC
+      SELECT smaug_balance FROM smaug_roi_snapshots
+      ORDER BY snapshot_time DESC
       LIMIT 1
     `
-
     if (currentResult.length === 0) {
-      return { success: false, roi24h: 0, message: "No current snapshot" }
+      return { success: false, roi24h: null, roi7d: null, roi30d: null }
     }
+    const currentBalance = (currentResult[0] as { smaug_balance: number }).smaug_balance
 
-    const currentBalance = (currentResult[0] as { balance: number }).balance
-    const roi24h = ((currentBalance - snapshot24hAgo.balance) / snapshot24hAgo.balance) * 100
+    const [snap24h, snap7d, snap30d] = await Promise.all([
+      sql`SELECT smaug_balance FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '24 hours' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT smaug_balance FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '7 days' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT smaug_balance FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '30 days' ORDER BY snapshot_time DESC LIMIT 1`,
+    ])
+
+    const calc = (old: number) => ((currentBalance - old) / old) * 100
 
     return {
       success: true,
-      roi24h,
-      currentBalance,
-      balanceYesterdayAgo: snapshot24hAgo.balance,
+      roi24h: snap24h.length > 0 ? calc((snap24h[0] as { smaug_balance: number }).smaug_balance) : null,
+      roi7d:  snap7d.length  > 0 ? calc((snap7d[0]  as { smaug_balance: number }).smaug_balance) : null,
+      roi30d: snap30d.length > 0 ? calc((snap30d[0] as { smaug_balance: number }).smaug_balance) : null,
     }
   } catch (error) {
     console.error("Error fetching SMAUG ROI:", error)
-    return { success: false, roi24h: 0, message: "Failed to fetch ROI" }
+    return { success: false, roi24h: null, roi7d: null, roi30d: null }
   }
 }

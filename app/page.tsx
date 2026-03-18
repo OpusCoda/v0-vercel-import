@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { ethers } from "ethers"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
-import { storeSmaugRoiSnapshot, getSmaugRoi24h } from "@/app/actions"
+import { storeSmaugRoiSnapshot, getSmaugRoi } from "@/app/actions"
 
 const formatDecimals = (v: string, decimals = 0) => {
   const [i, d = ""] = v.split(".")
@@ -231,7 +231,9 @@ export default function Home() {
     dominance: number
     dominancePrice: number
   }>({ pls: 0, pWbtc: 0, pWbtcPrice: 0, gasMoney: 0, gasMoneyPrice: 0, dominance: 0, dominancePrice: 0 })
-  const [smaugRoi24h, setSmaugRoi24h] = useState(0)
+  const [smaugRoi24h, setSmaugRoi24h] = useState<number | null>(null)
+  const [smaugRoi7d, setSmaugRoi7d] = useState<number | null>(null)
+  const [smaugRoi30d, setSmaugRoi30d] = useState<number | null>(null)
 
   const toggleStakeCard = (cardId: string) => {
     setExpandedStakeCards((prev) => {
@@ -506,17 +508,20 @@ export default function Home() {
 
     // Fetch and store ROI data
     try {
-      console.log("[v0] Fetching SMAUG ROI data...")
+      console.log("[v0] Fetching SMAUG ROI...")
       const roiRes = await fetch("/api/smaug-roi")
+      console.log("[v0] ROI API response ok:", roiRes.ok)
       if (roiRes.ok) {
         const roiData = await roiRes.json()
-        // Store current snapshot
-        await storeSmaugRoiSnapshot(roiData.currentBalance)
-        // Get 24h ROI
-        const roi24hRes = await getSmaugRoi24h()
-        if (roi24hRes.success) {
-          setSmaugRoi24h(roi24hRes.roi24h)
-          console.log("[v0] ROI 24h fetched:", roi24hRes.roi24h.toFixed(2) + "%")
+        console.log("[v0] ROI currentBalance:", roiData.currentBalance)
+        const storeResult = await storeSmaugRoiSnapshot(roiData.currentBalance)
+        console.log("[v0] Snapshot stored:", storeResult)
+        const roiResult = await getSmaugRoi()
+        console.log("[v0] ROI result:", JSON.stringify(roiResult))
+        if (roiResult.success) {
+          setSmaugRoi24h(roiResult.roi24h)
+          setSmaugRoi7d(roiResult.roi7d)
+          setSmaugRoi30d(roiResult.roi30d)
         }
       }
     } catch (err) {
@@ -1474,10 +1479,26 @@ let totalPWbtc = 0
                       </li>
                       <li className="flex justify-between">
                         <span>24h ROI</span>
-                        <span className={`font-medium ${smaugRoi24h > 0 ? "text-green-300" : smaugRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
-                          {smaugRoi24h !== 0 ? `${smaugRoi24h > 0 ? "+" : ""}${smaugRoi24h.toFixed(2)}%` : "0.043%"}
+                        <span className={`font-medium ${smaugRoi24h !== null && smaugRoi24h > 0 ? "text-green-300" : smaugRoi24h !== null && smaugRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
+                          {smaugRoi24h !== null ? `${smaugRoi24h > 0 ? "+" : ""}${smaugRoi24h.toFixed(4)}%` : "--"}
                         </span>
                       </li>
+                      {smaugRoi7d !== null && (
+                        <li className="flex justify-between">
+                          <span>7d ROI</span>
+                          <span className={`font-medium ${smaugRoi7d > 0 ? "text-green-300" : smaugRoi7d < 0 ? "text-red-300" : "text-slate-400"}`}>
+                            {`${smaugRoi7d > 0 ? "+" : ""}${smaugRoi7d.toFixed(4)}%`}
+                          </span>
+                        </li>
+                      )}
+                      {smaugRoi30d !== null && (
+                        <li className="flex justify-between">
+                          <span>30d ROI</span>
+                          <span className={`font-medium ${smaugRoi30d > 0 ? "text-green-300" : smaugRoi30d < 0 ? "text-red-300" : "text-slate-400"}`}>
+                            {`${smaugRoi30d > 0 ? "+" : ""}${smaugRoi30d.toFixed(4)}%`}
+                          </span>
+                        </li>
+                      )}
                     </ul>
                   </div>
                 </div>
@@ -3154,6 +3175,23 @@ All yield is used multiple times a day to buy and burn Smaug.
                     aria-label="YouTube"
                   >
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                </div>
+              </Link>
+              <Link
+                href="https://www.instagram.com/smaugtoken/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <div className="w-14 h-14 rounded-full bg-[#111c3a] border border-blue-900/30 flex items-center justify-center hover:bg-pink-900/30 hover:border-pink-500/50 transition-all duration-300 shadow-lg hover:shadow-pink-500/20">
+                  <svg
+                    className="w-6 h-6 text-slate-400 group-hover:text-pink-400 transition-colors"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-label="Instagram"
+                  >
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                   </svg>
                 </div>
               </Link>
