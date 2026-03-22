@@ -1380,7 +1380,7 @@ let totalPWbtc = 0
                       
                     </p>
                     <ul className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl space-y-2">
-                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Opus</strong> — The first core printer token that consistently distributes Finvesta, Missor, and WGPP</span></li>
+                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Opus</strong> — The first core printer token which dependably distributes Finvesta to its holders</span></li>
                       <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Coda</strong> — The second printer token that consistently distributes WETH, pWBTC and PLSX</span></li>
                       <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Smaug</strong> — The sole deflationary token with reflections and four separate buy and burns</span></li>
                     </ul>
@@ -1783,19 +1783,19 @@ All yield is used multiple times a day to buy and burn Smaug.
             <div className="grid md:grid-cols-2 gap-8 mt-8">
               <div className="rounded-2xl bg-[#111c3a] border border-orange-900/30 p-7 shadow-inner">
                 <h3 className="text-2xl font-medium mb-4 text-orange-300 text-center">Opus</h3>
-                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">6% Tax</p>
+                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">4% Tax</p>
                 <ul className="space-y-2 text-slate-300">
                   <li className="flex justify-between">
-                    <span>Missor</span>
-                    <span className="text-orange-300 font-medium">3%</span>
+                    <span></span>
+                    <span className="text-orange-300 font-medium"></span>
                   </li>
                   <li className="flex justify-between">
                     <span>Finvesta</span>
-                    <span className="text-orange-300 font-medium">1%</span>
+                    <span className="text-orange-300 font-medium">3%</span>
                   </li>
                   <li className="flex justify-between">
-                    <span>World's Greatest pDAI Printer</span>
-                    <span className="text-orange-300 font-medium">1%</span>
+                    <span></span>
+                    <span className="text-orange-300 font-medium"></span>
                   </li>
                   <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
                     <span>Added to liquidity</span>
