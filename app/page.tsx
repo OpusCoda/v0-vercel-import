@@ -1783,7 +1783,7 @@ export default function Home() {
             <div className="grid md:grid-cols-2 gap-8 mt-8">
               <div className="rounded-2xl bg-[#111c3a] border border-orange-900/30 p-7 shadow-inner">
                 <h3 className="text-2xl font-medium mb-4 text-orange-300 text-center">Opus</h3>
-                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">4% Tax</p>
+                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">5% Tax</p>
                 <ul className="space-y-2 text-slate-300">
                   <li className="flex justify-between">
                     <span></span>
