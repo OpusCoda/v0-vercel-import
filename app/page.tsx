@@ -1794,7 +1794,7 @@ export default function Home() {
                     <span className="text-orange-300 font-medium">3%</span>
                   </li>
                   <li className="flex justify-between">
-                    <span>WGPP</span>
+                    <span>World's Greatest pDAI Printer</span>
                     <span className="text-orange-300 font-medium">1%</span>
                   </li>
                   <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
