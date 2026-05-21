@@ -1790,16 +1790,16 @@ export default function Home() {
                     <span className="text-orange-300 font-medium"></span>
                   </li>
                   <li className="flex justify-between">
-                    <span>Finvesta</span>
-                    <span className="text-orange-300 font-medium">3%</span>
+                    <span>PLS</span>
+                    <span className="text-orange-300 font-medium">5%</span>
                   </li>
                   <li className="flex justify-between">
-                    <span>Worlds Greatest pDAI Printer</span>
-                    <span className="text-orange-300 font-medium">1%</span>
+                    <span></span>
+                    <span className="text-orange-300 font-medium"></span>
                   </li>
                   <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
-                    <span>Added to liquidity</span>
-                    <span className="text-orange-300 font-medium">1%</span>
+                    <span></span>
+                    <span className="text-orange-300 font-medium"></span>
                   </li>
                 </ul>
               </div>
