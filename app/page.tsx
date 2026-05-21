@@ -576,10 +576,6 @@ export default function Home() {
         }
       }
       console.log("[v0] Coda distributors fetched")
-
-      console.log("[v0] Total Missor:", totalMissor.toString())
-      console.log("[v0] Total Finvesta:", totalFinvesta.toString())
-      console.log("[v0] Total WGPP:", totalWgpp.toString())
       console.log("[v0] Total WETH:", totalWeth.toString())
       console.log("[v0] Total pWBTC:", totalPwbtc.toString())
       console.log("[v0] Total PLSX:", totalPlsx.toString())
