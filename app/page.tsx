@@ -3049,7 +3049,7 @@ export default function Home() {
                   className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
                 >
                   <Image
-                    src="/opus.jpg"
+                    src="/opus-circle.png"
                     alt="Opus logo"
                     width={192}
                     height={192}
@@ -3066,11 +3066,11 @@ export default function Home() {
                   className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
                 >
                   <Image
-                    src="/coda1.jpg"
+                    src="/coda-circle.png"
                     alt="Coda logo"
                     width={192}
                     height={192}
-                    className="w-48 h-48 rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
+                    className="w-48 h-48 rounded-full shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
                   />
                   <span className="text-xl font-medium text-cyan-300 group-hover:text-cyan-200 transition-colors">
                     Buy Coda
@@ -3083,11 +3083,11 @@ export default function Home() {
                   className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
                 >
                   <Image
-                    src="/smaug.jpg"
+                    src="/smaug-circle.png"
                     alt="Smaug logo"
                     width={192}
                     height={192}
-                    className="w-48 h-48 rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
+                    className="w-48 h-48 rounded-full shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
                   />
                   <span className="text-xl font-medium text-cyan-300 group-hover:text-cyan-200 transition-colors">
                     Buy Smaug
