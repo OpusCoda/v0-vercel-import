@@ -1370,8 +1370,8 @@ export default function Home() {
               <div className="rounded-2xl bg-gradient-to-br from-[#0a1a0a] to-[#111c3a] border border-green-900/40 p-8">
                 <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
                   <img
-                    src="/images/dragon-dore.png"
-                    alt="Dragon illustration by Gustave Doré"
+                    src="/images/paradiso-dore.jpg"
+                    alt="Paradiso illustration by Gustave Doré"
                     className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-[0_0_60px_rgba(34,197,94,0.3)] object-cover"
                   />
                   <div className="text-center md:text-left">
@@ -1380,7 +1380,7 @@ export default function Home() {
 
                     </p>
                     <ul className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl space-y-2">
-                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Opus</strong> — The first core printer token which dependably distributes Finvesta to its holders</span></li>
+                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Opus</strong> — The first core printer token which dependably distributes PLS to its holders</span></li>
                       <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Coda</strong> — The second printer token that consistently distributes WETH, pWBTC and PLSX</span></li>
                       <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Smaug</strong> — The sole deflationary token with reflections and four separate buy and burns</span></li>
                     </ul>
