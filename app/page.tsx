@@ -2896,7 +2896,7 @@ export default function Home() {
               <p className="text-slate-200 text-sm mb-4 text-center">Contract addresses</p>
               <div className="space-y-3 text-cyan-300 text-base text-center">
                 {[
-                  { name: "Opus", address: "0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4" },
+                  { name: "Opus", address: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" },
                   { name: "Coda", address: "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7" },
                   { name: "Smaug", address: "0xf4754Aa585caBf38537A68660469A17E203D8632" },
                 ].map((token) => (
