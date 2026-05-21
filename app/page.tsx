@@ -36,7 +36,7 @@ const formatBillions = (v: string | number, decimals = 2) => {
   return formatMillions(v, decimals)
 }
 
-const OPUS_CONTRACT = "0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4"
+const OPUS_CONTRACT = "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a"
 const CODA_CONTRACT = "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
 const OPUS_V1_CONTRACT = "0x7251d2965f165fCE18Ae5fC4c4979e01b46057d7"
 const OPUS_V2_CONTRACT = "0x90501f0C51c3aaDc76c9b27E501b68Db153Dcc81"
@@ -44,9 +44,7 @@ const CODA_V1_CONTRACT = "0xD9857f41E67812dbDFfdD3269B550836EC131D0C"
 const CODA_V2_CONTRACT = "0x502E10403E20D6Ff42CBBDa7fdDC4e1315Da19AF"
 
 const OPUS_ABI = [
-  "function getTotalMissorEarned(address) view returns (uint256)", // 0x6887e0b3
-  "function getTotalFinvestaEarned(address) view returns (uint256)", // 0x94a17cf0
-  "function getTotalWgppEarned(address) view returns (uint256)", // 0xc3aff3e3
+  "function getTotalPlsEarned(address) view returns (uint256)", // 0x7312e419
 ]
 const CODA_ABI = [
   "function getTotalWethEarned(address) view returns (uint256)", // 0xcdaaa4f0
@@ -55,7 +53,7 @@ const CODA_ABI = [
 ]
 
 const SHARES_ABI = [
-  "function shares(address) view returns (uint256 amount, uint256 missorTotalExcluded, uint256 missorTotalRealised, uint256 finvestaTotalExcluded, uint256 finvestaTotalRealised, uint256 wgppTotalExcluded, uint256 wgppTotalRealised)", // 0xce7c2ac2 for Opus
+  "function shares(address) view returns (uint256 amount, uint256 plsTotalExcluded, uint256 plsTotalRealised)", // 0xce7c2ac2 for Opus
 ]
 
 const CODA_SHARES_ABI = [
@@ -63,9 +61,7 @@ const CODA_SHARES_ABI = [
 ]
 
 const DISTRIBUTOR_ABI = [
-  "function totalMissorDistributed() view returns (uint256)",
-  "function totalFinvestaDistributed() view returns (uint256)",
-  "function totalWgppDistributed() view returns (uint256)",
+  "function totalPlsDistributed() view returns (uint256)",
   "function totalWethDistributed() view returns (uint256)",
   "function totalWbtcDistributed() view returns (uint256)",
   "function totalPlsxDistributed() view returns (uint256)",
@@ -123,54 +119,54 @@ export default function Home() {
   const [rewards, setRewards] = useState<
     Array<{
       address: string
-      opus: { missor: string; finvesta: string; wgpp: string }
-      coda: { weth: string; Pwbtc: string; plsx: string }
-      holdings: { opus: string; coda: string }
-    }>
+  opus: { pls: string }
+  coda: { weth: string; Pwbtc: string; plsx: string }
+  holdings: { opus: string; coda: string }
+  }>
   >([])
   const [walletAddresses, setWalletAddresses] = useState<string[]>([""])
   const [loading, setLoading] = useState(false)
   const [walletRewards, setWalletRewards] = useState<{
-    opus: { missor: string; finvesta: string; wgpp: string }
-    coda: { weth: string; Pwbtc: string; plsx: string }
+  opus: { pls: string }
+  coda: { weth: string; Pwbtc: string; plsx: string }
   } | null>(null)
   const [error, setError] = useState("")
   const [smaugLpAddedData, setSmaugLpAddedData] = useState<{
     totalPLS: string
   } | null>(null)
   const [totalRewards, setTotalRewards] = useState<{
-    opus: { missor: string; finvesta: string; wgpp: string }
-    coda: { weth: string; Pwbtc: string; plsx: string }
+  opus: { pls: string }
+  coda: { weth: string; Pwbtc: string; plsx: string }
   } | null>(null)
   const [tokenPrices, setTokenPrices] = useState<{
-    missor: number
-    finvesta: number
-    wgpp: number
-    weth: number
-    Pwbtc: number
-    plsx: number
-    opus: number
-    coda: number
+  pls: number
+  missor: number
+  finvesta: number
+  wgpp: number
+  weth: number
+  Pwbtc: number
+  plsx: number
+  opus: number
+  coda: number
   }>({
-    missor: 0,
-    finvesta: 0,
-    wgpp: 0,
-    weth: 0,
-    Pwbtc: 0,
-    plsx: 0,
-    opus: 0,
+  pls: 0,
+  missor: 0,
+  finvesta: 0,
+  wgpp: 0,
+  weth: 0,
+  Pwbtc: 0,
+  plsx: 0,
+  opus: 0,
     coda: 0,
   })
   const [savedName, setSavedName] = useState("")
   const [loadName, setLoadName] = useState("")
   const [saveMessage, setSaveMessage] = useState("")
   const [totalDistributed, setTotalDistributed] = useState<{
-    missor: string
-    finvesta: string
-    wgpp: string
-    weth: string
-    Pwbtc: string
-    plsx: string
+  pls: string
+  weth: string
+  Pwbtc: string
+  plsx: string
   } | null>(null)
   const [duplicateWarning, setDuplicateWarning] = useState("")
 
@@ -394,14 +390,15 @@ export default function Home() {
 
   const applyTokenPrices = (prices: any) => {
     if (!prices) return
-    setTokenPrices({
-      missor: prices.missor || 0,
-      finvesta: prices.finvesta || 0,
-      wgpp: prices.wgpp || 0,
-      weth: prices.weth || 0,
-      Pwbtc: prices.pwbtc || 0,
-      plsx: prices.plsx || 0,
-      opus: prices.opus || 0,
+  setTokenPrices({
+  pls: prices.pls || 0,
+  missor: prices.missor || 0,
+  finvesta: prices.finvesta || 0,
+  wgpp: prices.wgpp || 0,
+  weth: prices.weth || 0,
+  Pwbtc: prices.pwbtc || 0,
+  plsx: prices.plsx || 0,
+  opus: prices.opus || 0,
       coda: prices.coda || 0,
     })
   }
@@ -534,12 +531,8 @@ export default function Home() {
     try {
       const provider = getProvider()
 
-      // Opus distributor contract addresses (v1, v2, v3)
-      const opusDistributors = [
-        "0x7251d2965f165fCE18Ae5fC4c4979e01b46057d7", // v1
-        "0x90501f0C51c3aaDc76c9b27E501b68Db153Dcc81", // v2
-        "0xD14594f3c736E0D742Cfe2C3A177fb813c1C04B9", // v3
-      ]
+      // Opus distributor contract address (new v1 with PLS rewards)
+      const opusDistributor = "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a"
 
       // Coda distributor contract addresses (v1, v2, v3)
       const codaDistributors = [
@@ -548,29 +541,17 @@ export default function Home() {
         "0x2924Dc56bb4eeF50d0d32D8aCD6AA7c61aFa5dfe", // v3
       ]
 
-      let totalMissor = 0n
-      let totalFinvesta = 0n
-      let totalWgpp = 0n
+      let totalPls = 0n
 
-      // Fetch all Opus distributor data in parallel
-      const opusResults = await Promise.allSettled(
-        opusDistributors.flatMap(address => {
-          const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
-          return [
-            rpcRetry(() => contract.totalMissorDistributed(), 1, 2000).then(v => ({ type: "missor" as const, value: BigInt(v) })),
-            rpcRetry(() => contract.totalFinvestaDistributed(), 1, 2000).then(v => ({ type: "finvesta" as const, value: BigInt(v) })),
-            rpcRetry(() => contract.totalWgppDistributed(), 1, 2000).then(v => ({ type: "wgpp" as const, value: BigInt(v) })),
-          ]
-        })
-      )
-      for (const r of opusResults) {
-        if (r.status === "fulfilled") {
-          if (r.value.type === "missor") totalMissor += r.value.value
-          else if (r.value.type === "finvesta") totalFinvesta += r.value.value
-          else if (r.value.type === "wgpp") totalWgpp += r.value.value
-        }
+      // Fetch Opus PLS distributed
+      try {
+        const opusContract = new ethers.Contract(opusDistributor, DISTRIBUTOR_ABI, provider)
+        const plsVal = await rpcRetry(() => opusContract.totalPlsDistributed(), 1, 2000)
+        totalPls = BigInt(plsVal)
+      } catch (e) {
+        console.error("Error fetching Opus PLS distributed:", e)
       }
-      console.log("[v0] Opus distributors fetched")
+      console.log("[v0] Opus distributor fetched, totalPls:", totalPls.toString())
 
       let totalWeth = 0n
       let totalPwbtc = 0n
@@ -595,18 +576,12 @@ export default function Home() {
         }
       }
       console.log("[v0] Coda distributors fetched")
-
-      console.log("[v0] Total Missor:", totalMissor.toString())
-      console.log("[v0] Total Finvesta:", totalFinvesta.toString())
-      console.log("[v0] Total WGPP:", totalWgpp.toString())
       console.log("[v0] Total WETH:", totalWeth.toString())
       console.log("[v0] Total pWBTC:", totalPwbtc.toString())
       console.log("[v0] Total PLSX:", totalPlsx.toString())
 
       setTotalDistributed({
-        missor: ethers.formatUnits(totalMissor, 18),
-        finvesta: ethers.formatUnits(totalFinvesta, 8),
-        wgpp: ethers.formatUnits(totalWgpp, 18),
+        pls: ethers.formatUnits(totalPls, 18),
         weth: ethers.formatUnits(totalWeth, 18),
         Pwbtc: ethers.formatUnits(totalPwbtc, 8),
         plsx: ethers.formatUnits(totalPlsx, 18),
@@ -721,9 +696,7 @@ export default function Home() {
       const codaV2Contract = new ethers.Contract(CODA_V2_CONTRACT, CODA_SHARES_ABI, provider)
 
       const allRewards = []
-      let distributedMissor = 0n
-      let distributedFinvesta = 0n
-      let distributedWgpp = 0n
+      let distributedPls = 0n
       let distributedWeth = 0n
       let distributedPWbtc = 0n
       let distributedPlsx = 0n
@@ -731,9 +704,7 @@ export default function Home() {
       for (const address of addresses) {
         console.log("[v0] Fetching rewards for:", address)
 
-        let opusMissor = 0n
-        let opusFinvesta = 0n
-        let opusWgpp = 0n
+        let opusPls = 0n
         let codaWeth = 0n
         let codaPWbtc = 0n
         let codaPlsx = 0n
@@ -758,27 +729,11 @@ export default function Home() {
         }
 
         try {
-          const opusMissorRaw = await opusContract.getTotalMissorEarned(address)
-          opusMissor = BigInt(opusMissorRaw)
-          console.log("[v0] Opus Missor (v3):", opusMissor.toString())
+          const opusPlsRaw = await opusContract.getTotalPlsEarned(address)
+          opusPls = BigInt(opusPlsRaw)
+          console.log("[v0] Opus PLS (new):", opusPls.toString())
         } catch (err) {
-          console.error("[v0] Error fetching Opus Missor:", err)
-        }
-
-        try {
-          const opusFinvestaRaw = await opusContract.getTotalFinvestaEarned(address)
-          opusFinvesta = BigInt(opusFinvestaRaw)
-          console.log("[v0] Opus Finvesta (v3):", opusFinvesta.toString())
-        } catch (err) {
-          console.error("[v0] Error fetching Opus Finvesta:", err)
-        }
-
-        try {
-          const opusWgppRaw = await opusContract.getTotalWgppEarned(address)
-          opusWgpp = BigInt(opusWgppRaw)
-          console.log("[v0] Opus WGPP (v3):", opusWgpp.toString())
-        } catch (err) {
-          console.error("[v0] Error fetching Opus WGPP:", err)
+          console.error("[v0] Error fetching Opus PLS:", err)
         }
 
         try {
@@ -803,46 +758,6 @@ export default function Home() {
           console.log("[v0] Coda PLSX (v3):", codaPlsx.toString())
         } catch (err) {
           console.error("[v0] Error fetching Coda PLSX:", err)
-        }
-
-        try {
-          const opusV1Shares = await opusV1Contract.shares(address)
-          const missorV1 = BigInt(opusV1Shares[2]) // missorTotalRealised at index 2
-          const finvestaV1 = BigInt(opusV1Shares[4]) // finvestaTotalRealised at index 4
-          const wgppV1 = BigInt(opusV1Shares[6]) // wgppTotalRealised at index 6
-          opusMissor += missorV1
-          opusFinvesta += finvestaV1
-          opusWgpp += wgppV1
-          console.log(
-            "[v0] Opus v1 historical - Missor:",
-            missorV1.toString(),
-            "Finvesta:",
-            finvestaV1.toString(),
-            "WGPP:",
-            wgppV1.toString(),
-          )
-        } catch (err) {
-          console.error("[v0] Error fetching Opus v1 historical rewards:", err)
-        }
-
-        try {
-          const opusV2Shares = await opusV2Contract.shares(address)
-          const missorV2 = BigInt(opusV2Shares[2]) // missorTotalRealised at index 2
-          const finvestaV2 = BigInt(opusV2Shares[4]) // finvestaTotalRealised at index 4
-          const wgppV2 = BigInt(opusV2Shares[6]) // wgppTotalRealised at index 6
-          opusMissor += missorV2
-          opusFinvesta += finvestaV2
-          opusWgpp += wgppV2
-          console.log(
-            "[v0] Opus v2 historical - Missor:",
-            missorV2.toString(),
-            "Finvesta:",
-            finvestaV2.toString(),
-            "WGPP:",
-            wgppV2.toString(),
-          )
-        } catch (err) {
-          console.error("[v0] Error fetching Opus v2 historical rewards:", err)
         }
 
         try {
@@ -885,9 +800,7 @@ export default function Home() {
           console.error("[v0] Error fetching Coda v2 historical rewards:", err)
         }
 
-        distributedMissor += opusMissor
-        distributedFinvesta += opusFinvesta
-        distributedWgpp += opusWgpp
+        distributedPls += opusPls
         distributedWeth += codaWeth
         distributedPWbtc += codaPWbtc
         distributedPlsx += codaPlsx
@@ -895,9 +808,7 @@ export default function Home() {
         allRewards.push({
           address,
           opus: {
-            missor: ethers.formatUnits(opusMissor, 18),
-            finvesta: ethers.formatUnits(opusFinvesta, 8),
-            wgpp: ethers.formatUnits(opusWgpp, 18),
+            pls: ethers.formatUnits(opusPls, 18),
           },
           coda: {
             weth: ethers.formatUnits(codaWeth, 18),
@@ -1248,22 +1159,20 @@ export default function Home() {
       setRewards(allRewards)
 
       const totals = allRewards.reduce(
-        (acc, wallet) => ({
-          opus: {
-            missor: (Number.parseFloat(acc.opus.missor) + Number.parseFloat(wallet.opus.missor)).toString(),
-            finvesta: (Number.parseFloat(acc.opus.finvesta) + Number.parseFloat(wallet.opus.finvesta)).toString(),
-            wgpp: (Number.parseFloat(acc.opus.wgpp) + Number.parseFloat(wallet.opus.wgpp)).toString(),
-          },
-          coda: {
-            weth: (Number.parseFloat(acc.coda.weth) + Number.parseFloat(wallet.coda.weth)).toString(),
+      (acc, wallet) => ({
+      opus: {
+      pls: (Number.parseFloat(acc.opus.pls) + Number.parseFloat(wallet.opus.pls)).toString(),
+      },
+      coda: {
+      weth: (Number.parseFloat(acc.coda.weth) + Number.parseFloat(wallet.coda.weth)).toString(),
             Pwbtc: (Number.parseFloat(acc.coda.Pwbtc) + Number.parseFloat(wallet.coda.Pwbtc)).toString(),
             plsx: (Number.parseFloat(acc.coda.plsx) + Number.parseFloat(wallet.coda.plsx)).toString(),
           },
         }),
-        {
-          opus: { missor: "0", finvesta: "0", wgpp: "0" },
-          coda: { weth: "0", Pwbtc: "0", plsx: "0" },
-        },
+      {
+      opus: { pls: "0" },
+      coda: { weth: "0", Pwbtc: "0", plsx: "0" },
+      },
       )
       setTotalRewards(totals)
 
@@ -1308,21 +1217,17 @@ export default function Home() {
   // Calculate total accumulated value and percentage for display
   const totalAccumulatedValue =
     totalRewards &&
-      tokenPrices.missor > 0 &&
-      tokenPrices.finvesta > 0 &&
-      tokenPrices.wgpp > 0 &&
+      tokenPrices.pls > 0 &&
       tokenPrices.weth > 0 &&
       tokenPrices.Pwbtc > 0 &&
       tokenPrices.plsx > 0
-      ? Number.parseFloat(totalRewards.opus.missor) * tokenPrices.missor +
-      Number.parseFloat(totalRewards.opus.finvesta) * tokenPrices.finvesta +
-      Number.parseFloat(totalRewards.opus.wgpp) * tokenPrices.wgpp +
+      ? Number.parseFloat(totalRewards.opus.pls) * tokenPrices.pls +
       Number.parseFloat(totalRewards.coda.weth) * tokenPrices.weth +
       Number.parseFloat(totalRewards.coda.Pwbtc) * tokenPrices.Pwbtc +
       Number.parseFloat(totalRewards.coda.plsx) * tokenPrices.plsx
       : 0
 
-  const totalPortfolioValue = tokenPrices.missor > 0 && tokenPrices.finvesta > 0 && tokenPrices.wgpp > 0 &&
+  const totalPortfolioValue = tokenPrices.pls > 0 &&
     tokenPrices.weth > 0 && tokenPrices.Pwbtc > 0 && tokenPrices.plsx > 0
     ? rewards.reduce((sum, w) =>
       sum + Number.parseFloat(w.holdings.opus) * tokenPrices.opus +
@@ -1332,15 +1237,11 @@ export default function Home() {
 
   const totalDistributedValue =
     totalDistributed &&
-      tokenPrices.missor > 0 &&
-      tokenPrices.finvesta > 0 &&
-      tokenPrices.wgpp > 0 &&
+      tokenPrices.pls > 0 &&
       tokenPrices.weth > 0 &&
       tokenPrices.Pwbtc > 0 &&
       tokenPrices.plsx > 0
-      ? Number.parseFloat(totalDistributed.missor) * tokenPrices.missor +
-      Number.parseFloat(totalDistributed.finvesta) * tokenPrices.finvesta +
-      Number.parseFloat(totalDistributed.wgpp) * tokenPrices.wgpp +
+      ? Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
       Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
       Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
       Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx
@@ -1370,8 +1271,8 @@ export default function Home() {
               <div className="rounded-2xl bg-gradient-to-br from-[#0a1a0a] to-[#111c3a] border border-green-900/40 p-8">
                 <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
                   <img
-                    src="/images/dragon-dore.png"
-                    alt="Dragon illustration by Gustave Doré"
+                    src="/images/paradiso-dore.jpg"
+                    alt="Paradiso illustration by Gustave Doré"
                     className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-[0_0_60px_rgba(34,197,94,0.3)] object-cover"
                   />
                   <div className="text-center md:text-left">
@@ -1380,7 +1281,7 @@ export default function Home() {
 
                     </p>
                     <ul className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl space-y-2">
-                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Opus</strong> — The first core printer token which dependably distributes Finvesta to its holders</span></li>
+                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Opus</strong> — The first core printer token that dependably distributes PLS to its holders</span></li>
                       <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Coda</strong> — The second printer token that consistently distributes WETH, pWBTC and PLSX</span></li>
                       <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Smaug</strong> — The sole deflationary token with reflections and four separate buy and burns</span></li>
                     </ul>
@@ -1790,16 +1691,16 @@ export default function Home() {
                     <span className="text-orange-300 font-medium"></span>
                   </li>
                   <li className="flex justify-between">
-                    <span>Finvesta</span>
-                    <span className="text-orange-300 font-medium">3%</span>
+                    <span>PLS</span>
+                    <span className="text-orange-300 font-medium">5%</span>
                   </li>
                   <li className="flex justify-between">
-                    <span>Worlds Greatest pDAI Printer</span>
-                    <span className="text-orange-300 font-medium">1%</span>
+                    <span></span>
+                    <span className="text-orange-300 font-medium"></span>
                   </li>
                   <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
-                    <span>Added to liquidity</span>
-                    <span className="text-orange-300 font-medium">1%</span>
+                    <span></span>
+                    <span className="text-orange-300 font-medium"></span>
                   </li>
                 </ul>
               </div>
@@ -1838,9 +1739,7 @@ export default function Home() {
                   Total distributed rewards: $
                   {formatWithCommas(
                     (
-                      Number.parseFloat(totalDistributed.missor) * tokenPrices.missor +
-                      Number.parseFloat(totalDistributed.finvesta) * tokenPrices.finvesta +
-                      Number.parseFloat(totalDistributed.wgpp) * tokenPrices.wgpp +
+                      Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
                       Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
                       Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
                       Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx
@@ -1853,38 +1752,14 @@ export default function Home() {
                     <h3 className="text-lg font-medium text-orange-400 mb-4">Opus</h3>
                     <div className="space-y-5 text-left">
                       <div className="flex justify-between items-start gap-8">
-                        <span className="text-slate-300">Missor:</span>
+                        <span className="text-slate-300">PLS:</span>
                         <div className="text-right">
-                          <div className="text-slate-100">{formatMillions(totalDistributed.missor, 2)}</div>
+                          <div className="text-slate-100">{formatMillions(totalDistributed.pls, 2)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas(
-                              (Number.parseFloat(totalDistributed.missor) * tokenPrices.missor).toFixed(2),
+                              (Number.parseFloat(totalDistributed.pls) * tokenPrices.pls).toFixed(2),
                             )}
-                            )
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-start gap-8">
-                        <span className="text-slate-300">Finvesta:</span>
-                        <div className="text-right">
-                          <div className="text-slate-100">{formatWithCommas(totalDistributed.finvesta)}</div>
-                          <div className="text-slate-400 text-sm">
-                            ($
-                            {formatWithCommas(
-                              (Number.parseFloat(totalDistributed.finvesta) * tokenPrices.finvesta).toFixed(2),
-                            )}
-                            )
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-start gap-8">
-                        <span className="text-slate-300">WGPP:</span>
-                        <div className="text-right">
-                          <div className="text-slate-100">{formatWithCommas(totalDistributed.wgpp)}</div>
-                          <div className="text-slate-400 text-sm">
-                            ($
-                            {formatWithCommas((Number.parseFloat(totalDistributed.wgpp) * tokenPrices.wgpp).toFixed(2))}
                             )
                           </div>
                         </div>
@@ -2143,9 +2018,7 @@ export default function Home() {
                                   <div className="flex justify-between items-center text-slate-300">
                                     <span className="text-base font-medium">Total accumulated rewards:</span>
                                     <span className="text-base font-medium">
-                                      {tokenPrices.missor > 0 &&
-                                        tokenPrices.finvesta > 0 &&
-                                        tokenPrices.wgpp > 0 &&
+                                      {tokenPrices.pls > 0 &&
                                         tokenPrices.weth > 0 &&
                                         tokenPrices.Pwbtc > 0 &&
                                         tokenPrices.plsx > 0 ? (
@@ -2167,15 +2040,13 @@ export default function Home() {
                                           Accumulated Opus rewards:
                                         </span>
                                         <span className="text-base font-medium">
-                                          {tokenPrices.missor > 0 && tokenPrices.finvesta > 0 && tokenPrices.wgpp > 0 && (
+                                          {tokenPrices.pls > 0 && (
                                             <>
                                               $
                                               {formatWithCommas(
                                                 formatDecimals(
                                                   (
-                                                    Number.parseFloat(totalRewards.opus.missor) * tokenPrices.missor +
-                                                    Number.parseFloat(totalRewards.opus.finvesta) * tokenPrices.finvesta +
-                                                    Number.parseFloat(totalRewards.opus.wgpp) * tokenPrices.wgpp
+                                                    Number.parseFloat(totalRewards.opus.pls) * tokenPrices.pls
                                                   ).toString(),
                                                   2,
                                                 ),
@@ -2186,50 +2057,16 @@ export default function Home() {
                                       </div>
                                       <div className="pl-2 space-y-2">
                                         <div className="flex justify-between items-center text-sm">
-                                          <span className="text-slate-400">Missor:</span>
+                                          <span className="text-slate-400">PLS:</span>
                                           <span className="text-slate-300">
-                                            {formatWithCommas(totalRewards.opus.missor)}
-                                            {tokenPrices.missor > 0 && (
+                                            {formatMillions(totalRewards.opus.pls, 2)}
+                                            {tokenPrices.pls > 0 && (
                                               <span className="text-slate-500 text-xs ml-2">
                                                 ($
                                                 {formatDecimals(
                                                   (
-                                                    Number.parseFloat(totalRewards.opus.missor) * tokenPrices.missor
+                                                    Number.parseFloat(totalRewards.opus.pls) * tokenPrices.pls
                                                   ).toString(),
-                                                  2,
-                                                )}
-                                                )
-                                              </span>
-                                            )}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-sm">
-                                          <span className="text-slate-400">Finvesta:</span>
-                                          <span className="text-slate-300">
-                                            {formatWithCommas(formatDecimals(totalRewards.opus.finvesta, 2))}
-                                            {tokenPrices.finvesta > 0 && (
-                                              <span className="text-slate-500 text-xs ml-2">
-                                                ($
-                                                {formatDecimals(
-                                                  (
-                                                    Number.parseFloat(totalRewards.opus.finvesta) * tokenPrices.finvesta
-                                                  ).toString(),
-                                                  2,
-                                                )}
-                                                )
-                                              </span>
-                                            )}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-sm">
-                                          <span className="text-slate-400">WGPP:</span>
-                                          <span className="text-slate-300">
-                                            {formatWithCommas(formatDecimals(totalRewards.opus.wgpp, 2))}
-                                            {tokenPrices.wgpp > 0 && (
-                                              <span className="text-slate-500 text-xs ml-2">
-                                                ($
-                                                {formatDecimals(
-                                                  (Number.parseFloat(totalRewards.opus.wgpp) * tokenPrices.wgpp).toString(),
                                                   2,
                                                 )}
                                                 )
@@ -2413,55 +2250,17 @@ export default function Home() {
                                       <h4 className="text-xs font-medium mb-1.5 text-orange-300">Opus Rewards</h4>
                                       <div className="space-y-1.5">
                                         <div className="flex justify-between items-start gap-3">
-                                          <span className="text-slate-300 text-xs flex-shrink-0">Missor:</span>
+                                          <span className="text-slate-300 text-xs flex-shrink-0">PLS:</span>
                                           <div className="text-right flex-shrink-0">
                                             <div className="text-slate-100 font-medium whitespace-nowrap text-xs">
-                                              {formatMillions(walletRewards.opus.missor)}
+                                              {formatMillions(walletRewards.opus.pls, 2)}
                                             </div>
-                                            {tokenPrices.missor > 0 && (
+                                            {tokenPrices.pls > 0 && (
                                               <div className="text-slate-400 text-xs whitespace-nowrap">
                                                 $
                                                 {formatDecimals(
                                                   (
-                                                    Number.parseFloat(walletRewards.opus.missor) * tokenPrices.missor
-                                                  ).toString(),
-                                                  2,
-                                                )}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                        <div className="flex justify-between items-start gap-3">
-                                          <span className="text-slate-300 text-xs flex-shrink-0">Finvesta:</span>
-                                          <div className="text-right flex-shrink-0">
-                                            <div className="text-slate-100 font-medium whitespace-nowrap text-xs">
-                                              {formatDecimals(walletRewards.opus.finvesta, 2)}
-                                            </div>
-                                            {tokenPrices.finvesta > 0 && (
-                                              <div className="text-slate-400 text-xs whitespace-nowrap">
-                                                $
-                                                {formatDecimals(
-                                                  (
-                                                    Number.parseFloat(walletRewards.opus.finvesta) * tokenPrices.finvesta
-                                                  ).toString(),
-                                                  2,
-                                                )}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                        <div className="flex justify-between items-start gap-3">
-                                          <span className="text-slate-300 text-xs flex-shrink-0">WGPP:</span>
-                                          <div className="text-right flex-shrink-0">
-                                            <div className="text-slate-100 font-medium whitespace-nowrap text-xs">
-                                              {formatDecimals(walletRewards.opus.wgpp, 2)}
-                                            </div>
-                                            {tokenPrices.wgpp > 0 && (
-                                              <div className="text-slate-400 text-xs whitespace-nowrap">
-                                                $
-                                                {formatDecimals(
-                                                  (
-                                                    Number.parseFloat(walletRewards.opus.wgpp) * tokenPrices.wgpp
+                                                    Number.parseFloat(walletRewards.opus.pls) * tokenPrices.pls
                                                   ).toString(),
                                                   2,
                                                 )}
@@ -2475,23 +2274,17 @@ export default function Home() {
                                               Total:
                                             </span>
                                             <div className="text-right flex-shrink-0">
-                                              {tokenPrices.missor > 0 &&
-                                                tokenPrices.finvesta > 0 &&
-                                                tokenPrices.wgpp > 0 && (
-                                                  <div className="text-orange-200 font-semibold whitespace-nowrap text-xs">
-                                                    $
-                                                    {formatDecimals(
-                                                      (
-                                                        Number.parseFloat(walletRewards.opus.missor) *
-                                                        tokenPrices.missor +
-                                                        Number.parseFloat(walletRewards.opus.finvesta) *
-                                                        tokenPrices.finvesta +
-                                                        Number.parseFloat(walletRewards.opus.wgpp) * tokenPrices.wgpp
-                                                      ).toString(),
-                                                      2,
-                                                    )}
-                                                  </div>
-                                                )}
+                                              {tokenPrices.pls > 0 && (
+                                                <div className="text-orange-200 font-semibold whitespace-nowrap text-xs">
+                                                  $
+                                                  {formatDecimals(
+                                                    (
+                                                      Number.parseFloat(walletRewards.opus.pls) * tokenPrices.pls
+                                                    ).toString(),
+                                                    2,
+                                                  )}
+                                                </div>
+                                              )}
                                             </div>
                                           </div>
                                         </div>
@@ -3043,17 +2836,17 @@ export default function Home() {
               </h2>
               <div className="flex flex-col md:flex-row justify-center items-center gap-12">
                 <Link
-                  href="https://ipfs.app.pulsex.com?outputCurrency=0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4"
+                  href="https://ipfs.app.pulsex.com?outputCurrency=0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
                 >
                   <Image
-                    src="/opus.jpg"
+                    src="/opus-circle.png"
                     alt="Opus logo"
                     width={192}
                     height={192}
-                    className="w-48 h-48 rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
+                    className="w-48 h-48 rounded-full shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
                   />
                   <span className="text-xl font-medium text-cyan-300 group-hover:text-cyan-200 transition-colors">
                     Buy Opus
@@ -3066,11 +2859,11 @@ export default function Home() {
                   className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
                 >
                   <Image
-                    src="/coda1.jpg"
+                    src="/coda-circle.png"
                     alt="Coda logo"
                     width={192}
                     height={192}
-                    className="w-48 h-48 rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
+                    className="w-48 h-48 rounded-full shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
                   />
                   <span className="text-xl font-medium text-cyan-300 group-hover:text-cyan-200 transition-colors">
                     Buy Coda
@@ -3083,11 +2876,11 @@ export default function Home() {
                   className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
                 >
                   <Image
-                    src="/smaug.jpg"
+                    src="/smaug-circle.png"
                     alt="Smaug logo"
                     width={192}
                     height={192}
-                    className="w-48 h-48 rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
+                    className="w-48 h-48 rounded-full shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
                   />
                   <span className="text-xl font-medium text-cyan-300 group-hover:text-cyan-200 transition-colors">
                     Buy Smaug
@@ -3099,7 +2892,7 @@ export default function Home() {
               <p className="text-slate-200 text-sm mb-4 text-center">Contract addresses</p>
               <div className="space-y-3 text-cyan-300 text-base text-center">
                 {[
-                  { name: "Opus", address: "0x3d1e671B4486314f9cD3827f3F3D80B2c6D46FB4" },
+                  { name: "Opus", address: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" },
                   { name: "Coda", address: "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7" },
                   { name: "Smaug", address: "0xf4754Aa585caBf38537A68660469A17E203D8632" },
                 ].map((token) => (
