@@ -3053,7 +3053,7 @@ export default function Home() {
                     alt="Opus logo"
                     width={192}
                     height={192}
-                    className="w-48 h-48 rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
+                    className="w-48 h-48 rounded-full shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-shadow duration-300"
                   />
                   <span className="text-xl font-medium text-cyan-300 group-hover:text-cyan-200 transition-colors">
                     Buy Opus
