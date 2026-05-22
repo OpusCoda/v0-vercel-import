@@ -47,7 +47,7 @@ const PAIR_ENDPOINTS: Array<{ key: keyof PriceData; url: string; extra?: string[
   { key: "pwbtc", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xe0e1f83a1c64cf65c1a86d7f3445fc4f58f7dcbf" },
   { key: "ewbtc", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xFf1eFdf60A84268cB5CDB310f05ff47b242EBc20" },
   { key: "plsx", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9" },
-  { key: "opus", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x14495adf3e689221655fdc950cd0133051ec61f9" },
+  { key: "opus", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x15dD01082095F1234f48AC920997621D66687972" },
   { key: "coda", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0x13b62b75cfa35814d30fbeec0682047aa6287dfb" },
   { key: "hexPulsechain", url: "https://api.dexscreener.com/latest/dex/pairs/pulsechain/0xf1f4ee610b2babb05c635f726ef8b0c568c8dc65" },
   { key: "hexEthereum", url: "https://api.dexscreener.com/latest/dex/pairs/ethereum/0x55d5c232d921b9eaa6b37b5845e439acd04b4dba" },
