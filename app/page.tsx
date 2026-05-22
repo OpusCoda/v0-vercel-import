@@ -545,11 +545,13 @@ export default function Home() {
 
       // Fetch Opus PLS distributed
       try {
+        console.log("[v0] Calling totalPlsDistributed on:", opusDistributor)
         const opusContract = new ethers.Contract(opusDistributor, DISTRIBUTOR_ABI, provider)
         const plsVal = await rpcRetry(() => opusContract.totalPlsDistributed(), 1, 2000)
+        console.log("[v0] Raw plsVal:", plsVal?.toString())
         totalPls = BigInt(plsVal)
       } catch (e) {
-        console.error("Error fetching Opus PLS distributed:", e)
+        console.error("[v0] Error fetching Opus PLS distributed:", e)
       }
       console.log("[v0] Opus distributor fetched, totalPls:", totalPls.toString())
 
