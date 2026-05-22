@@ -61,7 +61,7 @@ const CODA_SHARES_ABI = [
 ]
 
 const DISTRIBUTOR_ABI = [
-  "function getTotalPlsDistributed() view returns (uint256)", // 0x7312e419
+  "function totalDistributed() view returns (uint256)", // Opus distributor - PLS
   "function totalWethDistributed() view returns (uint256)",
   "function totalWbtcDistributed() view returns (uint256)",
   "function totalPlsxDistributed() view returns (uint256)",
@@ -545,15 +545,12 @@ export default function Home() {
 
       // Fetch Opus PLS distributed
       try {
-        console.log("[v0] Calling totalPlsDistributed on:", opusDistributor)
         const opusContract = new ethers.Contract(opusDistributor, DISTRIBUTOR_ABI, provider)
-        const plsVal = await rpcRetry(() => opusContract.getTotalPlsDistributed(), 1, 2000)
-        console.log("[v0] Raw plsVal:", plsVal?.toString())
+        const plsVal = await rpcRetry(() => opusContract.totalDistributed(), 1, 2000)
         totalPls = BigInt(plsVal)
       } catch (e) {
         console.error("[v0] Error fetching Opus PLS distributed:", e)
       }
-      console.log("[v0] Opus distributor fetched, totalPls:", totalPls.toString())
 
       let totalWeth = 0n
       let totalPwbtc = 0n
@@ -2516,7 +2513,7 @@ export default function Home() {
                         WGPP — {tokenBalances.wgpp.toLocaleString(undefined, { maximumFractionDigits: 4 })}
                       </span>
                       <span className="text-sm font-medium text-green-400">
-                        {tokenPricesAll.wgpp > 0 ? `$${(tokenBalances.wgpp * tokenPricesAll.wgpp).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                        {tokenPricesAll.wgpp > 0 ? `$${(tokenBalances.wgpp * tokenPricesAll.wgpp).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "��"}
                       </span>
                     </div>
                   )}
