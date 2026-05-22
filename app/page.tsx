@@ -44,7 +44,8 @@ const CODA_V1_CONTRACT = "0xD9857f41E67812dbDFfdD3269B550836EC131D0C"
 const CODA_V2_CONTRACT = "0x502E10403E20D6Ff42CBBDa7fdDC4e1315Da19AF"
 
 const OPUS_ABI = [
-  "function getTotalPlsEarned(address) view returns (uint256)", // 0x7312e419
+  "function getTotalPlsEarned(address) view returns (uint256)",
+  "function getTotalPlsDistributed() view returns (uint256)", // 0x7312e419
 ]
 const CODA_ABI = [
   "function getTotalWethEarned(address) view returns (uint256)", // 0xcdaaa4f0
@@ -543,10 +544,10 @@ export default function Home() {
 
       let totalPls = 0n
 
-      // Fetch Opus PLS distributed
+      // Fetch Opus PLS distributed from main Opus contract
       try {
-        const opusContract = new ethers.Contract(opusDistributor, DISTRIBUTOR_ABI, provider)
-        const plsVal = await rpcRetry(() => opusContract.totalDistributed(), 1, 2000)
+        const opusMainContract = new ethers.Contract(OPUS_CONTRACT, OPUS_ABI, provider)
+        const plsVal = await rpcRetry(() => opusMainContract.getTotalPlsDistributed(), 1, 2000)
         totalPls = BigInt(plsVal)
       } catch (e) {
         console.error("[v0] Error fetching Opus PLS distributed:", e)
