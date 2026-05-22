@@ -61,7 +61,7 @@ const CODA_SHARES_ABI = [
 ]
 
 const DISTRIBUTOR_ABI = [
-  "function totalPlsDistributed() view returns (uint256)",
+  "function getTotalPlsDistributed() view returns (uint256)", // 0x7312e419
   "function totalWethDistributed() view returns (uint256)",
   "function totalWbtcDistributed() view returns (uint256)",
   "function totalPlsxDistributed() view returns (uint256)",
@@ -547,7 +547,7 @@ export default function Home() {
       try {
         console.log("[v0] Calling totalPlsDistributed on:", opusDistributor)
         const opusContract = new ethers.Contract(opusDistributor, DISTRIBUTOR_ABI, provider)
-        const plsVal = await rpcRetry(() => opusContract.totalPlsDistributed(), 1, 2000)
+        const plsVal = await rpcRetry(() => opusContract.getTotalPlsDistributed(), 1, 2000)
         console.log("[v0] Raw plsVal:", plsVal?.toString())
         totalPls = BigInt(plsVal)
       } catch (e) {
