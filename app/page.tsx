@@ -532,7 +532,7 @@ export default function Home() {
       const provider = getProvider()
 
       // Opus distributor contract address (new v1 with PLS rewards)
-      const opusDistributor = "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a"
+      const opusDistributor = "0x07AB260B666f4557755dEAbb152AdD90df7F3644"
 
       // Coda distributor contract addresses (v1, v2, v3)
       const codaDistributors = [
