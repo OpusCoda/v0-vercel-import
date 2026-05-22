@@ -44,7 +44,8 @@ const CODA_V1_CONTRACT = "0xD9857f41E67812dbDFfdD3269B550836EC131D0C"
 const CODA_V2_CONTRACT = "0x502E10403E20D6Ff42CBBDa7fdDC4e1315Da19AF"
 
 const OPUS_ABI = [
-  "function getTotalPlsEarned(address) view returns (uint256)", // 0x7312e419
+  "function getTotalPlsEarned(address) view returns (uint256)",
+  "function getTotalPlsDistributed() view returns (uint256)", // 0x7312e419
 ]
 const CODA_ABI = [
   "function getTotalWethEarned(address) view returns (uint256)", // 0xcdaaa4f0
@@ -61,7 +62,7 @@ const CODA_SHARES_ABI = [
 ]
 
 const DISTRIBUTOR_ABI = [
-  "function totalPlsDistributed() view returns (uint256)",
+  "function totalDistributed() view returns (uint256)", // Opus distributor - PLS
   "function totalWethDistributed() view returns (uint256)",
   "function totalWbtcDistributed() view returns (uint256)",
   "function totalPlsxDistributed() view returns (uint256)",
@@ -532,7 +533,7 @@ export default function Home() {
       const provider = getProvider()
 
       // Opus distributor contract address (new v1 with PLS rewards)
-      const opusDistributor = "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a"
+      const opusDistributor = "0x07AB260B666f4557755dEAbb152AdD90df7F3644"
 
       // Coda distributor contract addresses (v1, v2, v3)
       const codaDistributors = [
@@ -543,15 +544,14 @@ export default function Home() {
 
       let totalPls = 0n
 
-      // Fetch Opus PLS distributed
+      // Fetch Opus PLS distributed from main Opus contract
       try {
-        const opusContract = new ethers.Contract(opusDistributor, DISTRIBUTOR_ABI, provider)
-        const plsVal = await rpcRetry(() => opusContract.totalPlsDistributed(), 1, 2000)
+        const opusMainContract = new ethers.Contract(OPUS_CONTRACT, OPUS_ABI, provider)
+        const plsVal = await rpcRetry(() => opusMainContract.getTotalPlsDistributed(), 1, 2000)
         totalPls = BigInt(plsVal)
       } catch (e) {
-        console.error("Error fetching Opus PLS distributed:", e)
+        console.error("[v0] Error fetching Opus PLS distributed:", e)
       }
-      console.log("[v0] Opus distributor fetched, totalPls:", totalPls.toString())
 
       let totalWeth = 0n
       let totalPwbtc = 0n
@@ -2514,7 +2514,7 @@ export default function Home() {
                         WGPP — {tokenBalances.wgpp.toLocaleString(undefined, { maximumFractionDigits: 4 })}
                       </span>
                       <span className="text-sm font-medium text-green-400">
-                        {tokenPricesAll.wgpp > 0 ? `$${(tokenBalances.wgpp * tokenPricesAll.wgpp).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+                        {tokenPricesAll.wgpp > 0 ? `$${(tokenBalances.wgpp * tokenPricesAll.wgpp).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "��"}
                       </span>
                     </div>
                   )}
