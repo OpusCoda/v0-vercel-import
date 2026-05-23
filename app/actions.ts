@@ -69,6 +69,51 @@ export async function loadPortfolio(portfolioId: string) {
   }
 }
 
+export async function storeOpusRoiSnapshot(plsEarned: number) {
+  try {
+    await sql`
+      INSERT INTO opus_roi_snapshots (pls_earned, snapshot_time)
+      VALUES (${plsEarned}, NOW())
+    `
+    return { success: true }
+  } catch (error) {
+    console.error("Error storing Opus ROI snapshot:", error)
+    return { success: false, error: "Failed to store snapshot" }
+  }
+}
+
+export async function getOpusRoi() {
+  try {
+    const currentResult = await sql`
+      SELECT pls_earned FROM opus_roi_snapshots
+      ORDER BY snapshot_time DESC
+      LIMIT 1
+    `
+    if (currentResult.length === 0) {
+      return { success: false, roi24h: null, roi7d: null, roi30d: null }
+    }
+    const currentEarned = (currentResult[0] as { pls_earned: number }).pls_earned
+
+    const [snap24h, snap7d, snap30d] = await Promise.all([
+      sql`SELECT pls_earned FROM opus_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '24 hours' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT pls_earned FROM opus_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '7 days' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT pls_earned FROM opus_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '30 days' ORDER BY snapshot_time DESC LIMIT 1`,
+    ])
+
+    const calc = (old: number) => ((currentEarned - old) / old) * 100
+
+    return {
+      success: true,
+      roi24h: snap24h.length > 0 ? calc((snap24h[0] as { pls_earned: number }).pls_earned) : null,
+      roi7d:  snap7d.length  > 0 ? calc((snap7d[0]  as { pls_earned: number }).pls_earned) : null,
+      roi30d: snap30d.length > 0 ? calc((snap30d[0] as { pls_earned: number }).pls_earned) : null,
+    }
+  } catch (error) {
+    console.error("Error fetching Opus ROI:", error)
+    return { success: false, roi24h: null, roi7d: null, roi30d: null }
+  }
+}
+
 export async function storeSmaugRoiSnapshot(balance: number) {
   try {
     await sql`

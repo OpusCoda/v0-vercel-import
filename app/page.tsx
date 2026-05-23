@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { ethers } from "ethers"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
-import { storeSmaugRoiSnapshot, getSmaugRoi } from "@/app/actions"
+import { storeSmaugRoiSnapshot, getSmaugRoi, storeOpusRoiSnapshot, getOpusRoi } from "@/app/actions"
 
 const formatDecimals = (v: string, decimals = 0) => {
   const [i, d = ""] = v.split(".")
@@ -231,6 +231,9 @@ export default function Home() {
   const [smaugRoi24h, setSmaugRoi24h] = useState<number | null>(null)
   const [smaugRoi7d, setSmaugRoi7d] = useState<number | null>(null)
   const [smaugRoi30d, setSmaugRoi30d] = useState<number | null>(null)
+  const [opusRoi24h, setOpusRoi24h] = useState<number | null>(null)
+  const [opusRoi7d, setOpusRoi7d] = useState<number | null>(null)
+  const [opusRoi30d, setOpusRoi30d] = useState<number | null>(null)
 
   const toggleStakeCard = (cardId: string) => {
     setExpandedStakeCards((prev) => {
@@ -524,6 +527,23 @@ export default function Home() {
       }
     } catch (err) {
       console.error("[v0] Error fetching SMAUG ROI:", err)
+    }
+
+    // Fetch and store Opus ROI data
+    try {
+      const opusRoiRes = await fetch("/api/opus-roi")
+      if (opusRoiRes.ok) {
+        const opusRoiData = await opusRoiRes.json()
+        await storeOpusRoiSnapshot(opusRoiData.plsEarned)
+        const opusRoiResult = await getOpusRoi()
+        if (opusRoiResult.success) {
+          setOpusRoi24h(opusRoiResult.roi24h)
+          setOpusRoi7d(opusRoiResult.roi7d)
+          setOpusRoi30d(opusRoiResult.roi30d)
+        }
+      }
+    } catch (err) {
+      console.error("[v0] Error fetching Opus ROI:", err)
     }
   }
 
@@ -1402,6 +1422,40 @@ export default function Home() {
                       )}
                     </ul>
                   </div>
+                </div>
+
+                {/* Opus ROI Ledger */}
+                <div className="rounded-2xl bg-[#111c3a] border border-orange-900/30 p-7 shadow-inner mt-8">
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <h4 className="text-xl font-medium text-orange-400">{"Opus's Ledger"}</h4>
+                  </div>
+                  <p className="text-slate-400 text-xs text-center mb-4">
+                    ROI tracked on 100,000 Opus held in the reference wallet. Measures growth in PLS earned over time.
+                  </p>
+                  <ul className="space-y-3 text-sm text-slate-300">
+                    <li className="flex justify-between">
+                      <span>24h ROI (PLS)</span>
+                      <span className={`font-medium ${opusRoi24h !== null && opusRoi24h > 0 ? "text-green-300" : opusRoi24h !== null && opusRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
+                        {opusRoi24h !== null ? `${opusRoi24h.toFixed(4)}%` : "--"}
+                      </span>
+                    </li>
+                    {opusRoi7d !== null && (
+                      <li className="flex justify-between">
+                        <span>7d ROI (PLS)</span>
+                        <span className={`font-medium ${opusRoi7d > 0 ? "text-green-300" : opusRoi7d < 0 ? "text-red-300" : "text-slate-400"}`}>
+                          {`${opusRoi7d.toFixed(4)}%`}
+                        </span>
+                      </li>
+                    )}
+                    {opusRoi30d !== null && (
+                      <li className="flex justify-between">
+                        <span>30d ROI (PLS)</span>
+                        <span className={`font-medium ${opusRoi30d > 0 ? "text-green-300" : opusRoi30d < 0 ? "text-red-300" : "text-slate-400"}`}>
+                          {`${opusRoi30d.toFixed(4)}%`}
+                        </span>
+                      </li>
+                    )}
+                  </ul>
                 </div>
 
                 {/* Smaug's Vault & The Hoard wallet */}
