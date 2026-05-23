@@ -25,8 +25,10 @@ export async function GET() {
 
     const data = await res.json() as { result: string }
     const rawEarned = BigInt(data.result)
-    // PLS has 18 decimals
-    const plsEarned = Number(rawEarned) / 1e18
+    // PLS has 18 decimals — divide in BigInt to avoid float precision loss
+    const wholePart = rawEarned / BigInt(1e18)
+    const fracPart = rawEarned % BigInt(1e18)
+    const plsEarned = Number(wholePart) + Number(fracPart) / 1e18
 
     return Response.json({
       plsEarned,
