@@ -1872,7 +1872,7 @@ export default function Home() {
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">WETH:</span>
                         <div className="text-right">
-                          <div className="text-slate-100">{formatDecimals(totalDistributed.weth, 2)}</div>
+                          <div className="text-slate-100">{formatDecimals(totalDistributed.weth, 4)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas((Number.parseFloat(totalDistributed.weth) * tokenPrices.weth).toFixed(2))}
@@ -1883,7 +1883,7 @@ export default function Home() {
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">pWBTC:</span>
                         <div className="text-right">
-                          <div className="text-slate-100">{formatDecimals(totalDistributed.Pwbtc, 2)}</div>
+                          <div className="text-slate-100">{formatDecimals(totalDistributed.Pwbtc, 4)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas(
