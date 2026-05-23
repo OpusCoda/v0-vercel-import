@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { ethers } from "ethers"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
-import { storeSmaugRoiSnapshot, getSmaugRoi, storeOpusRoiSnapshot, getOpusRoi } from "@/app/actions"
+import { storeSmaugRoiSnapshot, getSmaugRoi, storeOpusRoiSnapshot, getOpusRoi, storeCodaRoiSnapshot, getCodaRoi } from "@/app/actions"
 
 const formatDecimals = (v: string, decimals = 0) => {
   const [i, d = ""] = v.split(".")
@@ -234,6 +234,9 @@ export default function Home() {
   const [opusRoi24h, setOpusRoi24h] = useState<number | null>(null)
   const [opusRoi7d, setOpusRoi7d] = useState<number | null>(null)
   const [opusRoi30d, setOpusRoi30d] = useState<number | null>(null)
+  const [codaRoi24h, setCodaRoi24h] = useState<number | null>(null)
+  const [codaRoi7d, setCodaRoi7d] = useState<number | null>(null)
+  const [codaRoi30d, setCodaRoi30d] = useState<number | null>(null)
 
   const toggleStakeCard = (cardId: string) => {
     setExpandedStakeCards((prev) => {
@@ -544,6 +547,23 @@ export default function Home() {
       }
     } catch (err) {
       console.error("[v0] Error fetching Opus ROI:", err)
+    }
+
+    // Fetch and store Coda ROI data
+    try {
+      const codaRoiRes = await fetch("/api/cron/coda-roi")
+      if (codaRoiRes.ok) {
+        const codaRoiData = await codaRoiRes.json()
+        await storeCodaRoiSnapshot(codaRoiData.wethEarned, codaRoiData.pwbtcEarned, codaRoiData.plsxEarned, codaRoiData.usdValue)
+        const codaRoiResult = await getCodaRoi()
+        if (codaRoiResult.success) {
+          setCodaRoi24h(codaRoiResult.roi24h)
+          setCodaRoi7d(codaRoiResult.roi7d)
+          setCodaRoi30d(codaRoiResult.roi30d)
+        }
+      }
+    } catch (err) {
+      console.error("[v0] Error fetching Coda ROI:", err)
     }
   }
 
@@ -1770,6 +1790,34 @@ export default function Home() {
                     <span>PLSX</span>
                     <span className="text-cyan-300 font-medium">2%</span>
                   </li>
+                  {(codaRoi24h !== null || codaRoi7d !== null || codaRoi30d !== null) && (
+                    <li className="border-t border-slate-700/50 pt-2 mt-1 space-y-1.5">
+                      {codaRoi24h !== null && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">24h ROI</span>
+                          <span className={`font-medium ${codaRoi24h > 0 ? "text-green-300" : codaRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
+                            {`${codaRoi24h.toFixed(4)}%`}
+                          </span>
+                        </div>
+                      )}
+                      {codaRoi7d !== null && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">7d ROI</span>
+                          <span className={`font-medium ${codaRoi7d > 0 ? "text-green-300" : codaRoi7d < 0 ? "text-red-300" : "text-slate-400"}`}>
+                            {`${codaRoi7d.toFixed(4)}%`}
+                          </span>
+                        </div>
+                      )}
+                      {codaRoi30d !== null && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">30d ROI</span>
+                          <span className={`font-medium ${codaRoi30d > 0 ? "text-green-300" : codaRoi30d < 0 ? "text-red-300" : "text-slate-400"}`}>
+                            {`${codaRoi30d.toFixed(4)}%`}
+                          </span>
+                        </div>
+                      )}
+                    </li>
+                  )}
                   <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
                     <span>Added to liquidity</span>
                     <span className="text-cyan-300 font-medium">1%</span>

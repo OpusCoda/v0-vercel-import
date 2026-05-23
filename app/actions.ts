@@ -114,6 +114,51 @@ export async function getOpusRoi() {
   }
 }
 
+export async function storeCodaRoiSnapshot(wethEarned: number, pwbtcEarned: number, plsxEarned: number, usdValue: number) {
+  try {
+    await sql`
+      INSERT INTO coda_roi_snapshots (weth_earned, pwbtc_earned, plsx_earned, usd_value, snapshot_time)
+      VALUES (${wethEarned}, ${pwbtcEarned}, ${plsxEarned}, ${usdValue}, NOW())
+    `
+    return { success: true }
+  } catch (error) {
+    console.error("Error storing Coda ROI snapshot:", error)
+    return { success: false, error: "Failed to store snapshot" }
+  }
+}
+
+export async function getCodaRoi() {
+  try {
+    const currentResult = await sql`
+      SELECT usd_value FROM coda_roi_snapshots
+      ORDER BY snapshot_time DESC
+      LIMIT 1
+    `
+    if (currentResult.length === 0) {
+      return { success: false, roi24h: null, roi7d: null, roi30d: null }
+    }
+    const current = (currentResult[0] as { usd_value: number }).usd_value
+
+    const [snap24h, snap7d, snap30d] = await Promise.all([
+      sql`SELECT usd_value FROM coda_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '24 hours' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT usd_value FROM coda_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '7 days' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT usd_value FROM coda_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '30 days' ORDER BY snapshot_time DESC LIMIT 1`,
+    ])
+
+    const calc = (old: number) => ((current - old) / old) * 100
+
+    return {
+      success: true,
+      roi24h: snap24h.length > 0 ? calc((snap24h[0] as { usd_value: number }).usd_value) : null,
+      roi7d:  snap7d.length  > 0 ? calc((snap7d[0]  as { usd_value: number }).usd_value) : null,
+      roi30d: snap30d.length > 0 ? calc((snap30d[0] as { usd_value: number }).usd_value) : null,
+    }
+  } catch (error) {
+    console.error("Error fetching Coda ROI:", error)
+    return { success: false, roi24h: null, roi7d: null, roi30d: null }
+  }
+}
+
 export async function storeSmaugRoiSnapshot(balance: number) {
   try {
     await sql`
