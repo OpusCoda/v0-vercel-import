@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { ethers } from "ethers"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
-import { storeSmaugRoiSnapshot, getSmaugRoi } from "@/app/actions"
+import { storeSmaugRoiSnapshot, getSmaugRoi, storeOpusRoiSnapshot, getOpusRoi } from "@/app/actions"
 
 const formatDecimals = (v: string, decimals = 0) => {
   const [i, d = ""] = v.split(".")
@@ -231,6 +231,9 @@ export default function Home() {
   const [smaugRoi24h, setSmaugRoi24h] = useState<number | null>(null)
   const [smaugRoi7d, setSmaugRoi7d] = useState<number | null>(null)
   const [smaugRoi30d, setSmaugRoi30d] = useState<number | null>(null)
+  const [opusRoi24h, setOpusRoi24h] = useState<number | null>(null)
+  const [opusRoi7d, setOpusRoi7d] = useState<number | null>(null)
+  const [opusRoi30d, setOpusRoi30d] = useState<number | null>(null)
 
   const toggleStakeCard = (cardId: string) => {
     setExpandedStakeCards((prev) => {
@@ -524,6 +527,23 @@ export default function Home() {
       }
     } catch (err) {
       console.error("[v0] Error fetching SMAUG ROI:", err)
+    }
+
+    // Fetch and store Opus ROI data
+    try {
+      const opusRoiRes = await fetch("/api/opus-roi")
+      if (opusRoiRes.ok) {
+        const opusRoiData = await opusRoiRes.json()
+        await storeOpusRoiSnapshot(opusRoiData.plsEarned)
+        const opusRoiResult = await getOpusRoi()
+        if (opusRoiResult.success) {
+          setOpusRoi24h(opusRoiResult.roi24h)
+          setOpusRoi7d(opusRoiResult.roi7d)
+          setOpusRoi30d(opusRoiResult.roi30d)
+        }
+      }
+    } catch (err) {
+      console.error("[v0] Error fetching Opus ROI:", err)
     }
   }
 
@@ -1404,6 +1424,8 @@ export default function Home() {
                   </div>
                 </div>
 
+
+
                 {/* Smaug's Vault & The Hoard wallet */}
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner">
@@ -1694,6 +1716,34 @@ export default function Home() {
                     <span>PLS</span>
                     <span className="text-orange-300 font-medium">5%</span>
                   </li>
+                  {(opusRoi24h !== null || opusRoi7d !== null || opusRoi30d !== null) && (
+                    <li className="border-t border-slate-700/50 pt-2 mt-1 space-y-1.5">
+                      {opusRoi24h !== null && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">24h ROI</span>
+                          <span className={`font-medium ${opusRoi24h > 0 ? "text-green-300" : opusRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
+                            {`${opusRoi24h.toFixed(4)}%`}
+                          </span>
+                        </div>
+                      )}
+                      {opusRoi7d !== null && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">7d ROI</span>
+                          <span className={`font-medium ${opusRoi7d > 0 ? "text-green-300" : opusRoi7d < 0 ? "text-red-300" : "text-slate-400"}`}>
+                            {`${opusRoi7d.toFixed(4)}%`}
+                          </span>
+                        </div>
+                      )}
+                      {opusRoi30d !== null && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">30d ROI</span>
+                          <span className={`font-medium ${opusRoi30d > 0 ? "text-green-300" : opusRoi30d < 0 ? "text-red-300" : "text-slate-400"}`}>
+                            {`${opusRoi30d.toFixed(4)}%`}
+                          </span>
+                        </div>
+                      )}
+                    </li>
+                  )}
                   <li className="flex justify-between">
                     <span></span>
                     <span className="text-orange-300 font-medium"></span>
