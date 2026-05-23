@@ -1424,39 +1424,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Opus ROI Ledger */}
-                <div className="rounded-2xl bg-[#111c3a] border border-orange-900/30 p-7 shadow-inner mt-8">
-                  <div className="flex items-center justify-center gap-2 mb-4">
-                    <h4 className="text-xl font-medium text-orange-400">{"Opus's Ledger"}</h4>
-                  </div>
-                  <p className="text-slate-400 text-xs text-center mb-4">
-                    ROI tracked on 100,000 Opus held in the reference wallet. Measures growth in PLS earned over time.
-                  </p>
-                  <ul className="space-y-3 text-sm text-slate-300">
-                    <li className="flex justify-between">
-                      <span>24h ROI (PLS)</span>
-                      <span className={`font-medium ${opusRoi24h !== null && opusRoi24h > 0 ? "text-green-300" : opusRoi24h !== null && opusRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
-                        {opusRoi24h !== null ? `${opusRoi24h.toFixed(4)}%` : "--"}
-                      </span>
-                    </li>
-                    {opusRoi7d !== null && (
-                      <li className="flex justify-between">
-                        <span>7d ROI (PLS)</span>
-                        <span className={`font-medium ${opusRoi7d > 0 ? "text-green-300" : opusRoi7d < 0 ? "text-red-300" : "text-slate-400"}`}>
-                          {`${opusRoi7d.toFixed(4)}%`}
-                        </span>
-                      </li>
-                    )}
-                    {opusRoi30d !== null && (
-                      <li className="flex justify-between">
-                        <span>30d ROI (PLS)</span>
-                        <span className={`font-medium ${opusRoi30d > 0 ? "text-green-300" : opusRoi30d < 0 ? "text-red-300" : "text-slate-400"}`}>
-                          {`${opusRoi30d.toFixed(4)}%`}
-                        </span>
-                      </li>
-                    )}
-                  </ul>
-                </div>
+
 
                 {/* Smaug's Vault & The Hoard wallet */}
                 <div className="grid md:grid-cols-2 gap-8">
@@ -1748,6 +1716,34 @@ export default function Home() {
                     <span>PLS</span>
                     <span className="text-orange-300 font-medium">5%</span>
                   </li>
+                  {(opusRoi24h !== null || opusRoi7d !== null || opusRoi30d !== null) && (
+                    <li className="border-t border-slate-700/50 pt-2 mt-1 space-y-1.5">
+                      {opusRoi24h !== null && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">24h ROI</span>
+                          <span className={`font-medium ${opusRoi24h > 0 ? "text-green-300" : opusRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
+                            {`${opusRoi24h.toFixed(4)}%`}
+                          </span>
+                        </div>
+                      )}
+                      {opusRoi7d !== null && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">7d ROI</span>
+                          <span className={`font-medium ${opusRoi7d > 0 ? "text-green-300" : opusRoi7d < 0 ? "text-red-300" : "text-slate-400"}`}>
+                            {`${opusRoi7d.toFixed(4)}%`}
+                          </span>
+                        </div>
+                      )}
+                      {opusRoi30d !== null && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">30d ROI</span>
+                          <span className={`font-medium ${opusRoi30d > 0 ? "text-green-300" : opusRoi30d < 0 ? "text-red-300" : "text-slate-400"}`}>
+                            {`${opusRoi30d.toFixed(4)}%`}
+                          </span>
+                        </div>
+                      )}
+                    </li>
+                  )}
                   <li className="flex justify-between">
                     <span></span>
                     <span className="text-orange-300 font-medium"></span>
