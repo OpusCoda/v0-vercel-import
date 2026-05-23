@@ -2397,7 +2397,7 @@ export default function Home() {
                                           <span className="text-slate-300 text-xs flex-shrink-0">WETH:</span>
                                           <div className="text-right flex-shrink-0">
                                             <div className="text-slate-100 font-medium whitespace-nowrap text-xs">
-                                              {formatDecimals(walletRewards.coda.weth, 4)}
+                                              {formatDecimals(walletRewards.coda.weth, 5)}
                                             </div>
                                             {tokenPrices.weth > 0 && (
                                               <div className="text-slate-400 text-xs whitespace-nowrap">
@@ -2416,7 +2416,7 @@ export default function Home() {
                                           <span className="text-slate-300 text-xs flex-shrink-0">pWBTC:</span>
                                           <div className="text-right flex-shrink-0">
                                             <div className="text-slate-100 font-medium whitespace-nowrap text-xs">
-                                              {formatDecimals(walletRewards.coda.Pwbtc, 4)}
+                                              {formatDecimals(walletRewards.coda.Pwbtc, 5)}
                                             </div>
                                             {tokenPrices.Pwbtc > 0 && (
                                               <div className="text-slate-400 text-xs whitespace-nowrap">
