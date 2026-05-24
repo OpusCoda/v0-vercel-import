@@ -1626,45 +1626,7 @@ export default function Home() {
                           <span>{hoardData.pWbtc > 0 && hoardData.pWbtcPrice > 0 ? `$${(hoardData.pWbtc * hoardData.pWbtcPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
                         </div>
                       </li>
-                      <li className="border-t border-green-900/20 pt-3 mt-1">
-                        <div className="flex justify-between mb-2">
-                          <span>Total printer value</span>
-                          <span className="text-green-300 font-medium">
-                            {(() => {
-                              const gmVal = hoardData.gasMoney * hoardData.gasMoneyPrice
-                              const domVal = hoardData.dominance * hoardData.dominancePrice
-                              const total = gmVal + domVal
-                              return total > 0 ? `$${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "--"
-                            })()}
-                          </span>
-                        </div>
-                        <div className="ml-4 space-y-2">
-                          <div>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-slate-400">Gas Money</span>
-                              <span className="text-green-300 font-medium">
-                                {hoardData.gasMoney > 0 ? hoardData.gasMoney.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-xs text-slate-500">
-                              <span>Value</span>
-                              <span>{hoardData.gasMoney > 0 && hoardData.gasMoneyPrice > 0 ? `$${(hoardData.gasMoney * hoardData.gasMoneyPrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
-                            </div>
-                          </div>
-                          <div>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-slate-400">Dominance</span>
-                              <span className="text-green-300 font-medium">
-                                {hoardData.dominance > 0 ? hoardData.dominance.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "--"}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-xs text-slate-500">
-                              <span>Value</span>
-                              <span>{hoardData.dominance > 0 && hoardData.dominancePrice > 0 ? `$${(hoardData.dominance * hoardData.dominancePrice).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "--"}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
+                      {/* Total printer value hidden temporarily */}
                       <li className="border-t border-green-900/20 pt-3">
                         <div className="flex justify-between">
                           <span>Bought & burned to date</span>
@@ -1736,34 +1698,7 @@ export default function Home() {
                     <span>PLS</span>
                     <span className="text-orange-300 font-medium">5%</span>
                   </li>
-                  {(opusRoi24h !== null || opusRoi7d !== null || opusRoi30d !== null) && (
-                    <li className="border-t border-slate-700/50 pt-2 mt-1 space-y-1.5">
-                      {opusRoi24h !== null && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">24h ROI</span>
-                          <span className={`font-medium ${opusRoi24h > 0 ? "text-green-300" : opusRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
-                            {`${opusRoi24h.toFixed(4)}%`}
-                          </span>
-                        </div>
-                      )}
-                      {opusRoi7d !== null && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">7d ROI</span>
-                          <span className={`font-medium ${opusRoi7d > 0 ? "text-green-300" : opusRoi7d < 0 ? "text-red-300" : "text-slate-400"}`}>
-                            {`${opusRoi7d.toFixed(4)}%`}
-                          </span>
-                        </div>
-                      )}
-                      {opusRoi30d !== null && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">30d ROI</span>
-                          <span className={`font-medium ${opusRoi30d > 0 ? "text-green-300" : opusRoi30d < 0 ? "text-red-300" : "text-slate-400"}`}>
-                            {`${opusRoi30d.toFixed(4)}%`}
-                          </span>
-                        </div>
-                      )}
-                    </li>
-                  )}
+                  {/* ROI hidden temporarily */}
                   <li className="flex justify-between">
                     <span></span>
                     <span className="text-orange-300 font-medium"></span>
@@ -1790,34 +1725,7 @@ export default function Home() {
                     <span>PLSX</span>
                     <span className="text-cyan-300 font-medium">2%</span>
                   </li>
-                  {(codaRoi24h !== null || codaRoi7d !== null || codaRoi30d !== null) && (
-                    <li className="border-t border-slate-700/50 pt-2 mt-1 space-y-1.5">
-                      {codaRoi24h !== null && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">24h ROI</span>
-                          <span className={`font-medium ${codaRoi24h > 0 ? "text-green-300" : codaRoi24h < 0 ? "text-red-300" : "text-slate-400"}`}>
-                            {`${codaRoi24h.toFixed(4)}%`}
-                          </span>
-                        </div>
-                      )}
-                      {codaRoi7d !== null && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">7d ROI</span>
-                          <span className={`font-medium ${codaRoi7d > 0 ? "text-green-300" : codaRoi7d < 0 ? "text-red-300" : "text-slate-400"}`}>
-                            {`${codaRoi7d.toFixed(4)}%`}
-                          </span>
-                        </div>
-                      )}
-                      {codaRoi30d !== null && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">30d ROI</span>
-                          <span className={`font-medium ${codaRoi30d > 0 ? "text-green-300" : codaRoi30d < 0 ? "text-red-300" : "text-slate-400"}`}>
-                            {`${codaRoi30d.toFixed(4)}%`}
-                          </span>
-                        </div>
-                      )}
-                    </li>
-                  )}
+                  {/* ROI hidden temporarily */}
                   <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
                     <span>Added to liquidity</span>
                     <span className="text-cyan-300 font-medium">1%</span>
