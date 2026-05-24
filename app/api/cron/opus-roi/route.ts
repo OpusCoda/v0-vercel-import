@@ -30,10 +30,10 @@ export async function GET(request: Request) {
 
     const rpcData = await rpcRes.json() as { result: string }
     const rawEarned = BigInt(rpcData.result)
-    // Format as fixed-point string to avoid float precision loss
-    const divisor = BigInt("1000000000000000000")
+    // PLS has 18 decimals but contract returns value scaled by 1e22 (18 + 4 extra)
+    const divisor = BigInt("10000000000000000000000") // 1e22
     const whole = rawEarned / divisor
-    const frac = (rawEarned % divisor).toString().padStart(18, "0")
+    const frac = (rawEarned % divisor).toString().padStart(22, "0")
     const plsEarned = parseFloat(`${whole}.${frac}`)
 
     const prices = await pricesRes.json() as { opus: number; pls: number }
