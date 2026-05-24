@@ -30,10 +30,11 @@ export async function GET(request: Request) {
 
     const rpcData = await rpcRes.json() as { result: string }
     const rawEarned = BigInt(rpcData.result)
-    const divisor = BigInt("1000000000000000000") // 1e18 exact
-    const wholePart = rawEarned / divisor
-    const fracPart = rawEarned % divisor
-    const plsEarned = Number(wholePart) + Number(fracPart) / 1e18
+    // Format as fixed-point string to avoid float precision loss
+    const divisor = BigInt("1000000000000000000")
+    const whole = rawEarned / divisor
+    const frac = (rawEarned % divisor).toString().padStart(18, "0")
+    const plsEarned = parseFloat(`${whole}.${frac}`)
 
     const prices = await pricesRes.json() as { opus: number; pls: number }
     const opusPriceUsd = prices.opus ?? 0
