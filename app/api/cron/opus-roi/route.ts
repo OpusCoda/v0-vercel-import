@@ -30,8 +30,9 @@ export async function GET(request: Request) {
 
     const rpcData = await rpcRes.json() as { result: string }
     const rawEarned = BigInt(rpcData.result)
-    const wholePart = rawEarned / BigInt(1e18)
-    const fracPart = rawEarned % BigInt(1e18)
+    const divisor = BigInt("1000000000000000000") // 1e18 exact
+    const wholePart = rawEarned / divisor
+    const fracPart = rawEarned % divisor
     const plsEarned = Number(wholePart) + Number(fracPart) / 1e18
 
     const prices = await pricesRes.json() as { opus: number; pls: number }
