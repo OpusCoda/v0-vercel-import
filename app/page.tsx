@@ -2397,7 +2397,7 @@ export default function Home() {
                                           <span className="text-slate-300 text-xs flex-shrink-0">WETH:</span>
                                           <div className="text-right flex-shrink-0">
                                             <div className="text-slate-100 font-medium whitespace-nowrap text-xs">
-                                              {formatDecimals(walletRewards.coda.weth, 4)}
+                                              {formatDecimals(walletRewards.coda.weth, 5)}
                                             </div>
                                             {tokenPrices.weth > 0 && (
                                               <div className="text-slate-400 text-xs whitespace-nowrap">
@@ -2416,7 +2416,7 @@ export default function Home() {
                                           <span className="text-slate-300 text-xs flex-shrink-0">pWBTC:</span>
                                           <div className="text-right flex-shrink-0">
                                             <div className="text-slate-100 font-medium whitespace-nowrap text-xs">
-                                              {formatDecimals(walletRewards.coda.Pwbtc, 4)}
+                                              {formatDecimals(walletRewards.coda.Pwbtc, 5)}
                                             </div>
                                             {tokenPrices.Pwbtc > 0 && (
                                               <div className="text-slate-400 text-xs whitespace-nowrap">
@@ -2559,7 +2559,7 @@ export default function Home() {
                   {tokenBalances.pWbtc > 0 && (
                     <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
                       <span className="text-sm text-slate-300">
-                        pWBTC — {tokenBalances.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 3 })}
+                        pWBTC — {tokenBalances.pWbtc.toLocaleString(undefined, { maximumFractionDigits: 5 })}
                       </span>
                       <span className="text-sm font-medium text-green-400">
                         {tokenPricesAll.wbtc > 0 ? `$${(tokenBalances.pWbtc * tokenPricesAll.wbtc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
@@ -2569,7 +2569,7 @@ export default function Home() {
                   {tokenBalances.eWbtc > 0 && (
                     <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
                       <span className="text-sm text-slate-300">
-                        eWBTC — {tokenBalances.eWbtc.toLocaleString(undefined, { maximumFractionDigits: 3 })}
+                        eWBTC — {tokenBalances.eWbtc.toLocaleString(undefined, { maximumFractionDigits: 5 })}
                       </span>
                       <span className="text-sm font-medium text-green-400">
                         {tokenPricesAll.ewbtc > 0 ? `$${(tokenBalances.eWbtc * tokenPricesAll.ewbtc).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
@@ -2579,7 +2579,7 @@ export default function Home() {
                   {tokenBalances.weth > 0 && (
                     <div className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0">
                       <span className="text-sm text-slate-300">
-                        WETH — {tokenBalances.weth.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                        WETH — {tokenBalances.weth.toLocaleString(undefined, { maximumFractionDigits: 5 })}
                       </span>
                       <span className="text-sm font-medium text-green-400">
                         {tokenPricesAll.weth > 0 ? `$${(tokenBalances.weth * tokenPricesAll.weth).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}

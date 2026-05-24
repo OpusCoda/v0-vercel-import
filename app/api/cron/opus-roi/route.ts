@@ -9,30 +9,38 @@ function encodeGetTotalPlsEarned(address: string): string {
   return `0x${selector}${paddedAddress}`
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://rpc.pulsechain.com"
+    const baseUrl = new URL(request.url).origin
 
-    const res = await fetch(rpcUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        method: "eth_call",
-        params: [{ to: OPUS_CONTRACT, data: encodeGetTotalPlsEarned(ROI_WALLET) }, "latest"],
-        id: 1,
+    const [rpcRes, pricesRes] = await Promise.all([
+      fetch(rpcUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "eth_call",
+          params: [{ to: OPUS_CONTRACT, data: encodeGetTotalPlsEarned(ROI_WALLET) }, "latest"],
+          id: 1,
+        }),
       }),
-    })
+      fetch(`${baseUrl}/api/prices`, { cache: "no-store" }),
+    ])
 
-    const data = await res.json() as { result: string }
-    const rawEarned = BigInt(data.result)
+    const rpcData = await rpcRes.json() as { result: string }
+    const rawEarned = BigInt(rpcData.result)
     const wholePart = rawEarned / BigInt(1e18)
     const fracPart = rawEarned % BigInt(1e18)
     const plsEarned = Number(wholePart) + Number(fracPart) / 1e18
 
-    await storeOpusRoiSnapshot(plsEarned)
+    const prices = await pricesRes.json() as { opus: number; pls: number }
+    const opusPriceUsd = prices.opus ?? 0
+    const plsPriceUsd = prices.pls ?? 0
 
-    return Response.json({ success: true, plsEarned, timestamp: new Date() })
+    await storeOpusRoiSnapshot(plsEarned, opusPriceUsd, plsPriceUsd)
+
+    return Response.json({ success: true, plsEarned, opusPriceUsd, plsPriceUsd, timestamp: new Date() })
   } catch (error) {
     console.error("[v0] Opus ROI cron error:", error)
     return Response.json({ error: "Failed to store Opus ROI snapshot" }, { status: 500 })
