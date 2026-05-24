@@ -69,11 +69,11 @@ export async function loadPortfolio(portfolioId: string) {
   }
 }
 
-export async function storeOpusRoiSnapshot(plsEarned: number) {
+export async function storeOpusRoiSnapshot(plsEarned: number, opusPriceUsd: number = 0, plsPriceUsd: number = 0) {
   try {
     await sql`
-      INSERT INTO opus_roi_snapshots (pls_earned, snapshot_time)
-      VALUES (${plsEarned}, NOW())
+      INSERT INTO opus_roi_snapshots (pls_earned, opus_price_usd, pls_price_usd, snapshot_time)
+      VALUES (${plsEarned}, ${opusPriceUsd}, ${plsPriceUsd}, NOW())
     `
     return { success: true }
   } catch (error) {
@@ -84,15 +84,20 @@ export async function storeOpusRoiSnapshot(plsEarned: number) {
 
 export async function getOpusRoi() {
   try {
+    // Get latest snapshot with prices
     const currentResult = await sql`
-      SELECT pls_earned FROM opus_roi_snapshots
+      SELECT pls_earned, opus_price_usd, pls_price_usd FROM opus_roi_snapshots
+      WHERE opus_price_usd > 0 AND pls_price_usd > 0
       ORDER BY snapshot_time DESC
       LIMIT 1
     `
     if (currentResult.length === 0) {
       return { success: false, roi24h: null, roi7d: null, roi30d: null }
     }
-    const currentEarned = (currentResult[0] as { pls_earned: number }).pls_earned
+    const current = currentResult[0] as { pls_earned: number; opus_price_usd: number; pls_price_usd: number }
+
+    // Value of 100,000 Opus holding in USD
+    const holdingValueUsd = 100000 * current.opus_price_usd
 
     const [snap24h, snap7d, snap30d] = await Promise.all([
       sql`SELECT pls_earned FROM opus_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '24 hours' ORDER BY snapshot_time DESC LIMIT 1`,
@@ -100,7 +105,12 @@ export async function getOpusRoi() {
       sql`SELECT pls_earned FROM opus_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '30 days' ORDER BY snapshot_time DESC LIMIT 1`,
     ])
 
-    const calc = (old: number) => ((currentEarned - old) / old) * 100
+    // ROI = (PLS earned in period × PLS price) / (100,000 Opus × Opus price) × 100
+    const calc = (oldEarned: number) => {
+      const plsGained = current.pls_earned - oldEarned
+      const plsValueUsd = plsGained * current.pls_price_usd
+      return holdingValueUsd > 0 ? (plsValueUsd / holdingValueUsd) * 100 : 0
+    }
 
     return {
       success: true,
