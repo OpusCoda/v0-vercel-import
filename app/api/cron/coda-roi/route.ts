@@ -64,9 +64,18 @@ export async function GET() {
 
     const usdValue = (wethEarned * wethPrice) + (pwbtcEarned * pwbtcPrice) + (plsxEarned * plsxPrice)
 
-    await storeCodaRoiSnapshot(wethEarned, pwbtcEarned, plsxEarned, usdValue)
+    // Fetch CODA price from internal prices API for ROI denominator
+    let codaPriceUsd = 0
+    try {
+      const baseUrl = RPC_URL.includes("localhost") ? "http://localhost:3000" : "https://opuseco.com"
+      const pricesRes = await fetch(`${baseUrl}/api/prices`, { cache: "no-store" })
+      const prices = await pricesRes.json() as { coda?: number }
+      codaPriceUsd = prices.coda ?? 0
+    } catch { /* use 0 if fetch fails */ }
 
-    return Response.json({ success: true, wethEarned, pwbtcEarned, plsxEarned, usdValue, timestamp: new Date() })
+    await storeCodaRoiSnapshot(wethEarned, pwbtcEarned, plsxEarned, usdValue, codaPriceUsd)
+
+    return Response.json({ success: true, wethEarned, pwbtcEarned, plsxEarned, usdValue, codaPriceUsd, timestamp: new Date() })
   } catch (error) {
     console.error("[v0] Coda ROI cron error:", error)
     return Response.json({ error: "Failed to store Coda ROI snapshot" }, { status: 500 })

@@ -99,8 +99,9 @@ export async function getOpusRoi() {
 
     const latest = latestResult[0] as { pls_earned: number; opus_price_usd: number; pls_price_usd: number }
     const currentPlsEarned = Number(latest.pls_earned)
-    // Use latest prices for the numerator (current value of PLS earned)
-    const currentPlsPrice = Number(latest.pls_price_usd)
+    // Use most recent valid pls_price for numerator — latest snapshot may have pls_price=0 if cron failed to fetch
+    const latestPriceRow = latestPrices[0] as { pls_price_usd: number } | undefined
+    const currentPlsPrice = latestPriceRow ? Number(latestPriceRow.pls_price_usd) : 0
 
     // ROI = (PLS gained in period × current PLS price) / (100,000 Opus × Opus price at period start) × 100
     const calc = (snap: { pls_earned: number; opus_price_usd: number; pls_price_usd: number } | null) => {
@@ -123,11 +124,11 @@ export async function getOpusRoi() {
   }
 }
 
-export async function storeCodaRoiSnapshot(wethEarned: number, pwbtcEarned: number, plsxEarned: number, usdValue: number) {
+export async function storeCodaRoiSnapshot(wethEarned: number, pwbtcEarned: number, plsxEarned: number, usdValue: number, codaPriceUsd: number = 0) {
   try {
     await sql`
-      INSERT INTO coda_roi_snapshots (weth_earned, pwbtc_earned, plsx_earned, usd_value, snapshot_time)
-      VALUES (${wethEarned}, ${pwbtcEarned}, ${plsxEarned}, ${usdValue}, NOW())
+      INSERT INTO coda_roi_snapshots (weth_earned, pwbtc_earned, plsx_earned, usd_value, coda_price_usd, snapshot_time)
+      VALUES (${wethEarned}, ${pwbtcEarned}, ${plsxEarned}, ${usdValue}, ${codaPriceUsd}, NOW())
     `
     return { success: true }
   } catch (error) {
@@ -138,29 +139,33 @@ export async function storeCodaRoiSnapshot(wethEarned: number, pwbtcEarned: numb
 
 export async function getCodaRoi() {
   try {
-    const currentResult = await sql`
-      SELECT usd_value FROM coda_roi_snapshots
-      ORDER BY snapshot_time DESC
-      LIMIT 1
-    `
-    if (currentResult.length === 0) {
-      return { success: false, roi24h: null, roi7d: null, roi30d: null }
-    }
-    const current = (currentResult[0] as { usd_value: number }).usd_value
-
-    const [snap24h, snap7d, snap30d] = await Promise.all([
-      sql`SELECT usd_value FROM coda_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '24 hours' ORDER BY snapshot_time DESC LIMIT 1`,
-      sql`SELECT usd_value FROM coda_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '7 days' ORDER BY snapshot_time DESC LIMIT 1`,
-      sql`SELECT usd_value FROM coda_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '30 days' ORDER BY snapshot_time DESC LIMIT 1`,
+    const [latestResult, latestPrices, snap24h, snap7d, snap30d] = await Promise.all([
+      sql`SELECT usd_value FROM coda_roi_snapshots ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT coda_price_usd FROM coda_roi_snapshots WHERE coda_price_usd > 0 ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT usd_value, coda_price_usd FROM coda_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '24 hours' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT usd_value, coda_price_usd FROM coda_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '7 days' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT usd_value, coda_price_usd FROM coda_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '30 days' ORDER BY snapshot_time DESC LIMIT 1`,
     ])
 
-    const calc = (old: number) => ((current - old) / old) * 100
+    if (latestResult.length === 0) {
+      return { success: false, roi24h: null, roi7d: null, roi30d: null }
+    }
+
+    const currentUsdValue = Number((latestResult[0] as { usd_value: number }).usd_value)
+
+    // ROI = (rewards USD gained in period) / (100,000,000 CODA × CODA price at period start) × 100
+    const calc = (snap: { usd_value: number; coda_price_usd: number } | null) => {
+      if (!snap) return null
+      const rewardsGained = currentUsdValue - Number(snap.usd_value)
+      const holdingValueUsd = 100000000 * Number(snap.coda_price_usd)
+      return holdingValueUsd > 0 ? (rewardsGained / holdingValueUsd) * 100 : null
+    }
 
     return {
       success: true,
-      roi24h: snap24h.length > 0 ? calc((snap24h[0] as { usd_value: number }).usd_value) : null,
-      roi7d:  snap7d.length  > 0 ? calc((snap7d[0]  as { usd_value: number }).usd_value) : null,
-      roi30d: snap30d.length > 0 ? calc((snap30d[0] as { usd_value: number }).usd_value) : null,
+      roi24h: snap24h.length > 0 ? calc(snap24h[0] as { usd_value: number; coda_price_usd: number }) : null,
+      roi7d:  snap7d.length  > 0 ? calc(snap7d[0]  as { usd_value: number; coda_price_usd: number }) : null,
+      roi30d: snap30d.length > 0 ? calc(snap30d[0] as { usd_value: number; coda_price_usd: number }) : null,
     }
   } catch (error) {
     console.error("Error fetching Coda ROI:", error)
