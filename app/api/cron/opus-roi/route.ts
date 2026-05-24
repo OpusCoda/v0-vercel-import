@@ -30,8 +30,8 @@ export async function GET(request: Request) {
 
     const rpcData = await rpcRes.json() as { result: string }
     const rawEarned = BigInt(rpcData.result)
-    // Format as fixed-point string to avoid float precision loss
-    const divisor = BigInt("1000000000000000000")
+    // PLS has 18 decimals
+    const divisor = BigInt("1000000000000000000") // 1e18
     const whole = rawEarned / divisor
     const frac = (rawEarned % divisor).toString().padStart(18, "0")
     const plsEarned = parseFloat(`${whole}.${frac}`)

@@ -84,39 +84,37 @@ export async function storeOpusRoiSnapshot(plsEarned: number, opusPriceUsd: numb
 
 export async function getOpusRoi() {
   try {
-    // Get latest snapshot for current pls_earned and current prices
-    const [latestResult, snap24h, snap7d, snap30d] = await Promise.all([
-      sql`SELECT pls_earned, opus_price_usd, pls_price_usd FROM opus_roi_snapshots ORDER BY snapshot_time DESC LIMIT 1`,
-      // Fetch pls_earned AND prices from the period-start snapshot so denominator uses that period's Opus price
-      sql`SELECT pls_earned, opus_price_usd, pls_price_usd FROM opus_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '24 hours' ORDER BY snapshot_time DESC LIMIT 1`,
-      sql`SELECT pls_earned, opus_price_usd, pls_price_usd FROM opus_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '7 days' ORDER BY snapshot_time DESC LIMIT 1`,
-      sql`SELECT pls_earned, opus_price_usd, pls_price_usd FROM opus_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '30 days' ORDER BY snapshot_time DESC LIMIT 1`,
+    type Snap = { pls_earned: number; opus_price_usd: number; pls_price_usd: number }
+
+    const [latestResult, latestPriceResult, snap24h, snap7d, snap30d] = await Promise.all([
+      sql`SELECT pls_earned FROM opus_roi_snapshots ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT pls_price_usd FROM opus_roi_snapshots WHERE pls_price_usd > 0 ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT pls_earned, opus_price_usd FROM opus_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '24 hours' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT pls_earned, opus_price_usd FROM opus_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '7 days' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT pls_earned, opus_price_usd FROM opus_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '30 days' ORDER BY snapshot_time DESC LIMIT 1`,
     ])
 
-    if (latestResult.length === 0) {
+    if (latestResult.length === 0 || latestPriceResult.length === 0) {
       return { success: false, roi24h: null, roi7d: null, roi30d: null }
     }
 
-    const latest = latestResult[0] as { pls_earned: number; opus_price_usd: number; pls_price_usd: number }
-    const currentPlsEarned = Number(latest.pls_earned)
-    // Use most recent valid pls_price for numerator — latest snapshot may have pls_price=0 if cron failed to fetch
-    const latestPriceRow = latestPrices[0] as { pls_price_usd: number } | undefined
-    const currentPlsPrice = latestPriceRow ? Number(latestPriceRow.pls_price_usd) : 0
+    const currentPlsEarned = Number((latestResult[0] as { pls_earned: number }).pls_earned)
+    const currentPlsPrice = Number((latestPriceResult[0] as { pls_price_usd: number }).pls_price_usd)
 
     // ROI = (PLS gained in period × current PLS price) / (100,000 Opus × Opus price at period start) × 100
-    const calc = (snap: { pls_earned: number; opus_price_usd: number; pls_price_usd: number } | null) => {
+    const calc = (snap: { pls_earned: number; opus_price_usd: number } | null) => {
       if (!snap) return null
       const plsGained = currentPlsEarned - Number(snap.pls_earned)
       const plsValueUsd = plsGained * currentPlsPrice
       const holdingValueUsd = 100000 * Number(snap.opus_price_usd)
-      return holdingValueUsd > 0 ? (plsValueUsd / holdingValueUsd) * 100 : 0
+      return holdingValueUsd > 0 ? (plsValueUsd / holdingValueUsd) * 100 : null
     }
 
     return {
       success: true,
-      roi24h: snap24h.length > 0 ? calc(snap24h[0] as { pls_earned: number; opus_price_usd: number; pls_price_usd: number }) : null,
-      roi7d:  snap7d.length  > 0 ? calc(snap7d[0]  as { pls_earned: number; opus_price_usd: number; pls_price_usd: number }) : null,
-      roi30d: snap30d.length > 0 ? calc(snap30d[0] as { pls_earned: number; opus_price_usd: number; pls_price_usd: number }) : null,
+      roi24h: snap24h.length > 0 ? calc(snap24h[0] as Snap) : null,
+      roi7d:  snap7d.length  > 0 ? calc(snap7d[0]  as Snap) : null,
+      roi30d: snap30d.length > 0 ? calc(snap30d[0] as Snap) : null,
     }
   } catch (error) {
     console.error("Error fetching Opus ROI:", error)
