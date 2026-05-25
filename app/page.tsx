@@ -229,6 +229,7 @@ export default function Home() {
     dominance: number
     dominancePrice: number
   }>({ pls: 0, pWbtc: 0, pWbtcPrice: 0, gasMoney: 0, gasMoneyPrice: 0, dominance: 0, dominancePrice: 0 })
+  const [printerPlsEarned, setPrinterPlsEarned] = useState<{ finvesta: number; missor: number; wgpp: number }>({ finvesta: 0, missor: 0, wgpp: 0 })
   const [smaugRoi24h, setSmaugRoi24h] = useState<number | null>(null)
   const [smaugRoi7d, setSmaugRoi7d] = useState<number | null>(null)
   const [smaugRoi30d, setSmaugRoi30d] = useState<number | null>(null)
@@ -621,12 +622,30 @@ export default function Home() {
       console.log("[v0] Total pWBTC:", totalPwbtc.toString())
       console.log("[v0] Total PLSX:", totalPlsx.toString())
 
-      setTotalDistributed({
-        pls: ethers.formatUnits(totalPls, 18),
-        weth: ethers.formatUnits(totalWeth, 18),
-        Pwbtc: ethers.formatUnits(totalPwbtc, 8),
-        plsx: ethers.formatUnits(totalPlsx, 18),
-      })
+  setTotalDistributed({
+  pls: ethers.formatUnits(totalPls, 18),
+  weth: ethers.formatUnits(totalWeth, 18),
+  Pwbtc: ethers.formatUnits(totalPwbtc, 8),
+  plsx: ethers.formatUnits(totalPlsx, 18),
+  })
+
+  // Fetch PLS printed by Finvesta, Missor, WGPP via Opus contract
+  try {
+    const opusAbiPrinter = ["function getTotalPlsEarned(address) view returns (uint256)"]
+    const opusPrinterContract = new ethers.Contract(OPUS_CONTRACT, opusAbiPrinter, provider)
+    const [finvestaPls, missorPls, wgppPls] = await Promise.all([
+      opusPrinterContract.getTotalPlsEarned(FINVESTA_ADDRESS),
+      opusPrinterContract.getTotalPlsEarned(MISSOR_ADDRESS),
+      opusPrinterContract.getTotalPlsEarned(WGPP_ADDRESS),
+    ])
+    setPrinterPlsEarned({
+      finvesta: Number(ethers.formatUnits(finvestaPls, 18)),
+      missor: Number(ethers.formatUnits(missorPls, 18)),
+      wgpp: Number(ethers.formatUnits(wgppPls, 18)),
+    })
+  } catch (err) {
+    console.error("[v0] Error fetching printer PLS earned:", err)
+  }
     } catch (err) {
       console.error("Error fetching total distributed:", err)
     }
@@ -1300,9 +1319,9 @@ export default function Home() {
     Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
     Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
     Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx +
-    tokenBalances.finvesta * tokenPricesAll.finvesta +
-    tokenBalances.missor * tokenPricesAll.missor +
-    tokenBalances.wgpp * tokenPricesAll.wgpp
+    printerPlsEarned.finvesta * tokenPrices.pls +
+    printerPlsEarned.missor * tokenPrices.pls +
+    printerPlsEarned.wgpp * tokenPrices.pls
   : 0
 
   const percentage = totalDistributedValue > 0 ? (totalAccumulatedValue / totalPortfolioValue) * 100 : 0
@@ -1763,13 +1782,13 @@ export default function Home() {
                   Total distributed rewards: $
                   {formatWithCommas(
                     (
-            Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
+              Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
               Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
               Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
               Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx +
-              tokenBalances.finvesta * tokenPricesAll.finvesta +
-              tokenBalances.missor * tokenPricesAll.missor +
-              tokenBalances.wgpp * tokenPricesAll.wgpp
+              printerPlsEarned.finvesta * tokenPrices.pls +
+              printerPlsEarned.missor * tokenPrices.pls +
+              printerPlsEarned.wgpp * tokenPrices.pls
                     ).toFixed(0),
                   )}
                 </h2>
