@@ -777,18 +777,11 @@ export default function Home() {
           console.error("[v0] Error fetching Opus PLS:", err)
         }
 
-        let smaugMultiplier: number | null = null
-        try {
-          const multiplierContract = new ethers.Contract(
-            OPUS_CONTRACT,
-            ["function getSmaugMultiplier(address) view returns (uint256)"],
-            provider
-          )
-          const raw = await multiplierContract.getSmaugMultiplier(address)
-          smaugMultiplier = Number(raw)
-        } catch (err) {
-          console.error("[v0] Error fetching Smaug multiplier:", err)
-        }
+        const smaugMultiplierPromise = new ethers.Contract(
+          OPUS_CONTRACT,
+          ["function getSmaugMultiplier(address) view returns (uint256)"],
+          provider
+        ).getSmaugMultiplier(address).then((raw: bigint) => Number(raw)).catch(() => null)
 
         try {
           const codaWethRaw = await codaContract.getTotalWethEarned(address)
@@ -873,7 +866,7 @@ export default function Home() {
             opus: ethers.formatUnits(opusBalance, 18),
             coda: ethers.formatUnits(codaBalance, 18),
           },
-          smaugMultiplier,
+          smaugMultiplier: await smaugMultiplierPromise,
         })
       }
 
