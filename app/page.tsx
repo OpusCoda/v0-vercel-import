@@ -1296,11 +1296,14 @@ export default function Home() {
       tokenPrices.weth > 0 &&
       tokenPrices.Pwbtc > 0 &&
       tokenPrices.plsx > 0
-      ? Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
-      Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
-      Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
-      Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx
-      : 0
+  ? Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
+    Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
+    Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
+    Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx +
+    tokenBalances.finvesta * tokenPricesAll.finvesta +
+    tokenBalances.missor * tokenPricesAll.missor +
+    tokenBalances.wgpp * tokenPricesAll.wgpp
+  : 0
 
   const percentage = totalDistributedValue > 0 ? (totalAccumulatedValue / totalPortfolioValue) * 100 : 0
 
@@ -1760,10 +1763,13 @@ export default function Home() {
                   Total distributed rewards: $
                   {formatWithCommas(
                     (
-                      Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
-                      Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
-                      Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
-                      Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx
+            Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
+              Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
+              Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
+              Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx +
+              tokenBalances.finvesta * tokenPricesAll.finvesta +
+              tokenBalances.missor * tokenPricesAll.missor +
+              tokenBalances.wgpp * tokenPricesAll.wgpp
                     ).toFixed(0),
                   )}
                 </h2>
