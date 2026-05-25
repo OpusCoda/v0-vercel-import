@@ -638,10 +638,17 @@ export default function Home() {
       opusPrinterContract.getTotalPlsEarned(MISSOR_ADDRESS),
       opusPrinterContract.getTotalPlsEarned(WGPP_ADDRESS),
     ])
+    // Contract returns value scaled by 1e22, same as wallet cron
+    const scale = BigInt("10000000000000000000000")
+    const fmtPrinter = (raw: bigint) => {
+      const whole = raw / scale
+      const frac = (raw % scale).toString().padStart(22, "0")
+      return parseFloat(`${whole}.${frac}`)
+    }
     setPrinterPlsEarned({
-      finvesta: Number(ethers.formatUnits(finvestaPls, 18)),
-      missor: Number(ethers.formatUnits(missorPls, 18)),
-      wgpp: Number(ethers.formatUnits(wgppPls, 18)),
+      finvesta: fmtPrinter(BigInt(finvestaPls.toString())),
+      missor: fmtPrinter(BigInt(missorPls.toString())),
+      wgpp: fmtPrinter(BigInt(wgppPls.toString())),
     })
   } catch (err) {
     console.error("[v0] Error fetching printer PLS earned:", err)
@@ -1800,7 +1807,7 @@ export default function Home() {
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">PLS:</span>
                         <div className="text-right">
-                          <div className="text-slate-100">{formatMillions(totalDistributed.pls, 2)}</div>
+                          <div className="text-slate-100">{formatBillions(totalDistributed.pls, 2)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas(
