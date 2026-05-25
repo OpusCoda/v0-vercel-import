@@ -2185,7 +2185,7 @@ export default function Home() {
                     {/* Individual wallet rewards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {rewards
-                        .filter(w => Number.parseFloat(w.holdings.opus) > 0 || Number.parseFloat(w.holdings.coda) > 0)
+                        .filter(w => Number.parseFloat(w.holdings.opus) > 0 || Number.parseFloat(w.holdings.coda) > 0 || Number.parseFloat(w.holdings.smaug) > 0)
                         .map((walletRewards, index) => (
                           <div
                             key={index}
@@ -2270,8 +2270,9 @@ export default function Home() {
                                             $
                                             {formatWithCommas(
                                               (
-                                                Number.parseFloat(walletRewards.holdings.opus) * tokenPrices.opus +
-                                                Number.parseFloat(walletRewards.holdings.coda) * tokenPrices.coda
+                                      Number.parseFloat(walletRewards.holdings.opus) * tokenPrices.opus +
+                                      Number.parseFloat(walletRewards.holdings.coda) * tokenPrices.coda +
+                                      Number.parseFloat(walletRewards.holdings.smaug) * smaugPrice
                                               ).toFixed(2),
                                             )}
                                           </span>
