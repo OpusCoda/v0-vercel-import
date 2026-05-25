@@ -122,7 +122,7 @@ export default function Home() {
       address: string
   opus: { pls: string }
   coda: { weth: string; Pwbtc: string; plsx: string }
-  holdings: { opus: string; coda: string }
+  holdings: { opus: string; coda: string; smaug: string }
   smaugMultiplier: number | null
   }>
   >([])
@@ -783,6 +783,12 @@ export default function Home() {
           provider
         ).getSmaugMultiplier(address).then((raw: bigint) => Number(raw)).catch(() => null)
 
+        let smaugBalanceRaw = BigInt(0)
+        try {
+          const smaugC = new ethers.Contract(SMAUG_ADDRESS, ["function balanceOf(address) view returns (uint256)"], provider)
+          smaugBalanceRaw = await smaugC.balanceOf(address)
+        } catch { /* leave as 0 */ }
+
         try {
           const codaWethRaw = await codaContract.getTotalWethEarned(address)
           codaWeth = BigInt(codaWethRaw)
@@ -865,6 +871,7 @@ export default function Home() {
           holdings: {
             opus: ethers.formatUnits(opusBalance, 18),
             coda: ethers.formatUnits(codaBalance, 18),
+            smaug: ethers.formatUnits(smaugBalanceRaw, 18),
           },
           smaugMultiplier: await smaugMultiplierPromise,
         })
@@ -2209,14 +2216,27 @@ export default function Home() {
                                   <div className="px-3 sm:px-4 pb-3 sm:pb-4">
                                     {/* Holdings Section */}
                                     <div className="space-y-1.5 mb-3">
-                                      <div className="flex justify-between items-center text-xs">
-                                        <span className="text-slate-300">Opus holdings:</span>
-                                        <span className="text-slate-100 font-medium">
-                                          {formatMillions(Number.parseFloat(walletRewards.holdings.opus), 2)}
-                                          {tokenPrices?.opus > 0 && (
-                                            <span className="text-slate-400 text-xs ml-1.5">
-                                              ($
-                                              {formatWithCommas(
+                  {Number.parseFloat(walletRewards.holdings.smaug) > 0 && (
+                                    <div className="flex justify-between items-center text-xs">
+                                      <span className="text-slate-300">Smaug holdings:</span>
+                                      <span className="text-slate-100 font-medium">
+                                        {formatMillions(Number.parseFloat(walletRewards.holdings.smaug), 2)}
+                                        {smaugPrice > 0 && (
+                                          <span className="text-slate-400 text-xs ml-1.5">
+                                            (${formatWithCommas((Number.parseFloat(walletRewards.holdings.smaug) * smaugPrice).toFixed(2))})
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div className="flex justify-between items-center text-xs">
+                                    <span className="text-slate-300">Opus holdings:</span>
+                                    <span className="text-slate-100 font-medium">
+                                      {formatMillions(Number.parseFloat(walletRewards.holdings.opus), 2)}
+                                      {tokenPrices?.opus > 0 && (
+                                        <span className="text-slate-400 text-xs ml-1.5">
+                                          ($
+                                          {formatWithCommas(
                                                 (
                                                   Number.parseFloat(walletRewards.holdings.opus) * tokenPrices.opus
                                                 ).toFixed(2),
