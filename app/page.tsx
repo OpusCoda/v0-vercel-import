@@ -122,7 +122,8 @@ export default function Home() {
       address: string
   opus: { pls: string }
   coda: { weth: string; Pwbtc: string; plsx: string }
-  holdings: { opus: string; coda: string }
+  holdings: { opus: string; coda: string; smaug: string }
+  smaugMultiplier: number | null
   }>
   >([])
   const [walletAddresses, setWalletAddresses] = useState<string[]>([""])
@@ -228,6 +229,7 @@ export default function Home() {
     dominance: number
     dominancePrice: number
   }>({ pls: 0, pWbtc: 0, pWbtcPrice: 0, gasMoney: 0, gasMoneyPrice: 0, dominance: 0, dominancePrice: 0 })
+  const [printerPlsEarned, setPrinterPlsEarned] = useState<{ finvesta: number; missor: number; wgpp: number }>({ finvesta: 0, missor: 0, wgpp: 0 })
   const [smaugRoi24h, setSmaugRoi24h] = useState<number | null>(null)
   const [smaugRoi7d, setSmaugRoi7d] = useState<number | null>(null)
   const [smaugRoi30d, setSmaugRoi30d] = useState<number | null>(null)
@@ -620,12 +622,37 @@ export default function Home() {
       console.log("[v0] Total pWBTC:", totalPwbtc.toString())
       console.log("[v0] Total PLSX:", totalPlsx.toString())
 
-      setTotalDistributed({
-        pls: ethers.formatUnits(totalPls, 18),
-        weth: ethers.formatUnits(totalWeth, 18),
-        Pwbtc: ethers.formatUnits(totalPwbtc, 8),
-        plsx: ethers.formatUnits(totalPlsx, 18),
-      })
+  setTotalDistributed({
+  pls: ethers.formatUnits(totalPls, 18),
+  weth: ethers.formatUnits(totalWeth, 18),
+  Pwbtc: ethers.formatUnits(totalPwbtc, 8),
+  plsx: ethers.formatUnits(totalPlsx, 18),
+  })
+
+  // Fetch PLS printed by Finvesta, Missor, WGPP via Opus contract
+  try {
+    const opusAbiPrinter = ["function getTotalPlsEarned(address) view returns (uint256)"]
+    const opusPrinterContract = new ethers.Contract(OPUS_CONTRACT, opusAbiPrinter, provider)
+    const [finvestaPls, missorPls, wgppPls] = await Promise.all([
+      opusPrinterContract.getTotalPlsEarned(FINVESTA_ADDRESS),
+      opusPrinterContract.getTotalPlsEarned(MISSOR_ADDRESS),
+      opusPrinterContract.getTotalPlsEarned(WGPP_ADDRESS),
+    ])
+    // Contract returns value scaled by 1e22, same as wallet cron
+    const scale = BigInt("10000000000000000000000")
+    const fmtPrinter = (raw: bigint) => {
+      const whole = raw / scale
+      const frac = (raw % scale).toString().padStart(22, "0")
+      return parseFloat(`${whole}.${frac}`)
+    }
+    setPrinterPlsEarned({
+      finvesta: fmtPrinter(BigInt(finvestaPls.toString())),
+      missor: fmtPrinter(BigInt(missorPls.toString())),
+      wgpp: fmtPrinter(BigInt(wgppPls.toString())),
+    })
+  } catch (err) {
+    console.error("[v0] Error fetching printer PLS earned:", err)
+  }
     } catch (err) {
       console.error("Error fetching total distributed:", err)
     }
@@ -776,6 +803,18 @@ export default function Home() {
           console.error("[v0] Error fetching Opus PLS:", err)
         }
 
+        const smaugMultiplierPromise = new ethers.Contract(
+          OPUS_CONTRACT,
+          ["function getSmaugMultiplier(address) view returns (uint256)"],
+          provider
+        ).getSmaugMultiplier(address).then((raw: bigint) => Number(raw)).catch(() => null)
+
+        let smaugBalanceRaw = BigInt(0)
+        try {
+          const smaugC = new ethers.Contract(SMAUG_ADDRESS, ["function balanceOf(address) view returns (uint256)"], provider)
+          smaugBalanceRaw = await smaugC.balanceOf(address)
+        } catch { /* leave as 0 */ }
+
         try {
           const codaWethRaw = await codaContract.getTotalWethEarned(address)
           codaWeth = BigInt(codaWethRaw)
@@ -858,7 +897,9 @@ export default function Home() {
           holdings: {
             opus: ethers.formatUnits(opusBalance, 18),
             coda: ethers.formatUnits(codaBalance, 18),
+            smaug: ethers.formatUnits(smaugBalanceRaw, 18),
           },
+          smaugMultiplier: await smaugMultiplierPromise,
         })
       }
 
@@ -1281,11 +1322,14 @@ export default function Home() {
       tokenPrices.weth > 0 &&
       tokenPrices.Pwbtc > 0 &&
       tokenPrices.plsx > 0
-      ? Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
-      Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
-      Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
-      Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx
-      : 0
+  ? Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
+    Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
+    Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
+    Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx +
+    printerPlsEarned.finvesta * tokenPrices.pls +
+    printerPlsEarned.missor * tokenPrices.pls +
+    printerPlsEarned.wgpp * tokenPrices.pls
+  : 0
 
   const percentage = totalDistributedValue > 0 ? (totalAccumulatedValue / totalPortfolioValue) * 100 : 0
 
@@ -1745,10 +1789,13 @@ export default function Home() {
                   Total distributed rewards: $
                   {formatWithCommas(
                     (
-                      Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
-                      Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
-                      Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
-                      Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx
+              Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
+              Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
+              Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
+              Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx +
+              printerPlsEarned.finvesta * tokenPrices.pls +
+              printerPlsEarned.missor * tokenPrices.pls +
+              printerPlsEarned.wgpp * tokenPrices.pls
                     ).toFixed(0),
                   )}
                 </h2>
@@ -1760,7 +1807,7 @@ export default function Home() {
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">PLS:</span>
                         <div className="text-right">
-                          <div className="text-slate-100">{formatMillions(totalDistributed.pls, 2)}</div>
+                          <div className="text-slate-100">{formatBillions(totalDistributed.pls, 2)}</div>
                           <div className="text-slate-400 text-sm">
                             ($
                             {formatWithCommas(
@@ -2170,7 +2217,7 @@ export default function Home() {
                     {/* Individual wallet rewards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {rewards
-                        .filter(w => Number.parseFloat(w.holdings.opus) > 0 || Number.parseFloat(w.holdings.coda) > 0)
+                        .filter(w => Number.parseFloat(w.holdings.opus) > 0 || Number.parseFloat(w.holdings.coda) > 0 || Number.parseFloat(w.holdings.smaug) > 0)
                         .map((walletRewards, index) => (
                           <div
                             key={index}
@@ -2201,14 +2248,27 @@ export default function Home() {
                                   <div className="px-3 sm:px-4 pb-3 sm:pb-4">
                                     {/* Holdings Section */}
                                     <div className="space-y-1.5 mb-3">
-                                      <div className="flex justify-between items-center text-xs">
-                                        <span className="text-slate-300">Opus holdings:</span>
-                                        <span className="text-slate-100 font-medium">
-                                          {formatMillions(Number.parseFloat(walletRewards.holdings.opus), 2)}
-                                          {tokenPrices?.opus > 0 && (
-                                            <span className="text-slate-400 text-xs ml-1.5">
-                                              ($
-                                              {formatWithCommas(
+                  {Number.parseFloat(walletRewards.holdings.smaug) > 0 && (
+                                    <div className="flex justify-between items-center text-xs">
+                                      <span className="text-slate-300">Smaug holdings:</span>
+                                      <span className="text-slate-100 font-medium">
+                                        {formatMillions(Number.parseFloat(walletRewards.holdings.smaug), 2)}
+                                        {smaugPrice > 0 && (
+                                          <span className="text-slate-400 text-xs ml-1.5">
+                                            (${formatWithCommas((Number.parseFloat(walletRewards.holdings.smaug) * smaugPrice).toFixed(2))})
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div className="flex justify-between items-center text-xs">
+                                    <span className="text-slate-300">Opus holdings:</span>
+                                    <span className="text-slate-100 font-medium">
+                                      {formatMillions(Number.parseFloat(walletRewards.holdings.opus), 2)}
+                                      {tokenPrices?.opus > 0 && (
+                                        <span className="text-slate-400 text-xs ml-1.5">
+                                          ($
+                                          {formatWithCommas(
                                                 (
                                                   Number.parseFloat(walletRewards.holdings.opus) * tokenPrices.opus
                                                 ).toFixed(2),
@@ -2242,8 +2302,9 @@ export default function Home() {
                                             $
                                             {formatWithCommas(
                                               (
-                                                Number.parseFloat(walletRewards.holdings.opus) * tokenPrices.opus +
-                                                Number.parseFloat(walletRewards.holdings.coda) * tokenPrices.coda
+                                      Number.parseFloat(walletRewards.holdings.opus) * tokenPrices.opus +
+                                      Number.parseFloat(walletRewards.holdings.coda) * tokenPrices.coda +
+                                      Number.parseFloat(walletRewards.holdings.smaug) * smaugPrice
                                               ).toFixed(2),
                                             )}
                                           </span>
@@ -2296,6 +2357,18 @@ export default function Home() {
                                         </div>
                                       </div>
                                     </div>
+
+                                    {/* Smaug Multiplier */}
+                                    {walletRewards.smaugMultiplier !== null && walletRewards.smaugMultiplier > 0 && (
+                                      <div className="border-t border-slate-700/50 pt-2.5 mb-2.5">
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-xs text-slate-300">Smaug Multiplier</span>
+                                          <span className="text-xs font-medium text-green-300">
+                                            {`+${walletRewards.smaugMultiplier - 100}%`}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
 
                                     {/* Coda Rewards Section */}
                                     <div className="border-t border-slate-700/50 pt-2.5">
@@ -2555,6 +2628,33 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+                {/* Total USD value of Main tokens */}
+                {(() => {
+                  const total =
+                    (tokenBalances.pls * tokenPricesAll.pls || 0) +
+                    (tokenBalances.plsx * tokenPricesAll.plsx || 0) +
+                    (tokenBalances.inc * tokenPricesAll.inc || 0) +
+                    (tokenBalances.pHex * hexPricePulsechain || 0) +
+                    (tokenBalances.eHexFromEthereum * hexPriceEthereum || 0) +
+                    (tokenBalances.eHex * hexPriceEthereum || 0) +
+                    (tokenBalances.pWbtc * tokenPricesAll.pWbtc || 0) +
+                    (tokenBalances.eWbtc * tokenPricesAll.eWbtc || 0) +
+                    (tokenBalances.weth * tokenPricesAll.weth || 0) +
+                    (tokenBalances.finvesta * tokenPricesAll.finvesta || 0) +
+                    (tokenBalances.missor * tokenPricesAll.missor || 0) +
+                    (tokenBalances.wgpp * tokenPricesAll.wgpp || 0) +
+                    (rewards.reduce((s, w) => s + Number.parseFloat(w.holdings.opus), 0) * tokenPrices.opus || 0) +
+                    (rewards.reduce((s, w) => s + Number.parseFloat(w.holdings.coda), 0) * tokenPrices.coda || 0) +
+                    (tokenBalances.smaug * smaugPrice || 0)
+                  return total > 0 ? (
+                    <div className="flex justify-between items-center pt-3 mt-1 border-t border-slate-600/50">
+                      <span className="text-sm font-semibold text-slate-200">Total</span>
+                      <span className="text-sm font-bold text-green-300">
+                        ${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  ) : null
+                })()}
               </motion.div>
             )}
 
