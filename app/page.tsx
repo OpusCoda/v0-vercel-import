@@ -123,6 +123,7 @@ export default function Home() {
   opus: { pls: string }
   coda: { weth: string; Pwbtc: string; plsx: string }
   holdings: { opus: string; coda: string }
+  smaugMultiplier: number | null
   }>
   >([])
   const [walletAddresses, setWalletAddresses] = useState<string[]>([""])
@@ -776,6 +777,19 @@ export default function Home() {
           console.error("[v0] Error fetching Opus PLS:", err)
         }
 
+        let smaugMultiplier: number | null = null
+        try {
+          const multiplierContract = new ethers.Contract(
+            OPUS_CONTRACT,
+            ["function getSmaugMultiplier(address) view returns (uint256)"],
+            provider
+          )
+          const raw = await multiplierContract.getSmaugMultiplier(address)
+          smaugMultiplier = Number(raw)
+        } catch (err) {
+          console.error("[v0] Error fetching Smaug multiplier:", err)
+        }
+
         try {
           const codaWethRaw = await codaContract.getTotalWethEarned(address)
           codaWeth = BigInt(codaWethRaw)
@@ -859,6 +873,7 @@ export default function Home() {
             opus: ethers.formatUnits(opusBalance, 18),
             coda: ethers.formatUnits(codaBalance, 18),
           },
+          smaugMultiplier,
         })
       }
 
@@ -2297,6 +2312,18 @@ export default function Home() {
                                       </div>
                                     </div>
 
+                                    {/* Smaug Multiplier */}
+                                    {walletRewards.smaugMultiplier !== null && walletRewards.smaugMultiplier > 0 && (
+                                      <div className="border-t border-slate-700/50 pt-2.5 mb-2.5">
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-xs text-slate-300">Smaug Multiplier</span>
+                                          <span className="text-xs font-medium text-green-300">
+                                            {`+${walletRewards.smaugMultiplier - 100}%`}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
+
                                     {/* Coda Rewards Section */}
                                     <div className="border-t border-slate-700/50 pt-2.5">
                                       <h4 className="text-xs font-medium mb-1.5 text-cyan-300">Coda Rewards</h4>
@@ -2555,6 +2582,33 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+                {/* Total USD value of Main tokens */}
+                {(() => {
+                  const total =
+                    (tokenBalances.pls * tokenPricesAll.pls || 0) +
+                    (tokenBalances.plsx * tokenPricesAll.plsx || 0) +
+                    (tokenBalances.inc * tokenPricesAll.inc || 0) +
+                    (tokenBalances.pHex * hexPricePulsechain || 0) +
+                    (tokenBalances.eHexFromEthereum * hexPriceEthereum || 0) +
+                    (tokenBalances.eHex * hexPriceEthereum || 0) +
+                    (tokenBalances.pWbtc * tokenPricesAll.pWbtc || 0) +
+                    (tokenBalances.eWbtc * tokenPricesAll.eWbtc || 0) +
+                    (tokenBalances.weth * tokenPricesAll.weth || 0) +
+                    (tokenBalances.finvesta * tokenPricesAll.finvesta || 0) +
+                    (tokenBalances.missor * tokenPricesAll.missor || 0) +
+                    (tokenBalances.wgpp * tokenPricesAll.wgpp || 0) +
+                    (rewards.reduce((s, w) => s + Number.parseFloat(w.holdings.opus), 0) * tokenPrices.opus || 0) +
+                    (rewards.reduce((s, w) => s + Number.parseFloat(w.holdings.coda), 0) * tokenPrices.coda || 0) +
+                    (tokenBalances.smaug * smaugPrice || 0)
+                  return total > 0 ? (
+                    <div className="flex justify-between items-center pt-3 mt-1 border-t border-slate-600/50">
+                      <span className="text-sm font-semibold text-slate-200">Total</span>
+                      <span className="text-sm font-bold text-green-300">
+                        ${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  ) : null
+                })()}
               </motion.div>
             )}
 
