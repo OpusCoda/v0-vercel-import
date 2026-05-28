@@ -1,9 +1,9 @@
-import { getOpusRoi, getCodaRoi } from "@/app/actions"
+import { getOpusRoi, getCodaRoi, getSmaugRoi } from "@/app/actions"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
-  const [opus, coda] = await Promise.all([getOpusRoi(), getCodaRoi()])
+  const [opus, coda, smaug] = await Promise.all([getOpusRoi(), getCodaRoi(), getSmaugRoi()])
 
   return Response.json({
     opus: {
@@ -16,7 +16,12 @@ export async function GET() {
       roi7d: coda.roi7d ?? null,
       roi30d: coda.roi30d ?? null,
     },
-    description: "ROI % = rewards earned in period (USD) / token holding value at period start (USD) × 100. Based on a 100,000 Opus and 100,000,000 Coda reference holding.",
+    smaug: {
+      roi24h: smaug.roi24h ?? null,
+      roi7d: smaug.roi7d ?? null,
+      roi30d: smaug.roi30d ?? null,
+    },
+    description: "ROI % = rewards earned in period (USD) / token holding value at period start (USD) × 100. Based on a 100,000 Opus, 100,000,000 Coda, and 100,000 Smaug reference holding.",
     updatedAt: new Date().toISOString(),
   })
 }
