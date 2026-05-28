@@ -512,17 +512,26 @@ export default function Home() {
       console.error("[v0] Error fetching burn events:", err)
     }
 
-    // Fetch and store Smaug ROI snapshot then read back ROI
+    // Fetch and store ROI data
     try {
-      await fetch("/api/cron/smaug-roi")
-      const roiResult = await getSmaugRoi()
-      if (roiResult.success) {
-        setSmaugRoi24h(roiResult.roi24h)
-        setSmaugRoi7d(roiResult.roi7d)
-        setSmaugRoi30d(roiResult.roi30d)
+      console.log("[v0] Fetching SMAUG ROI...")
+      const roiRes = await fetch("/api/smaug-roi")
+      console.log("[v0] ROI API response ok:", roiRes.ok)
+      if (roiRes.ok) {
+        const roiData = await roiRes.json()
+        console.log("[v0] ROI currentBalance:", roiData.currentBalance)
+        const storeResult = await storeSmaugRoiSnapshot(roiData.currentBalance)
+        console.log("[v0] Snapshot stored:", storeResult)
+        const roiResult = await getSmaugRoi()
+        console.log("[v0] ROI result:", JSON.stringify(roiResult))
+        if (roiResult.success) {
+          setSmaugRoi24h(roiResult.roi24h)
+          setSmaugRoi7d(roiResult.roi7d)
+          setSmaugRoi30d(roiResult.roi30d)
+        }
       }
     } catch (err) {
-      console.error("[v0] Error fetching Smaug ROI:", err)
+      console.error("[v0] Error fetching SMAUG ROI:", err)
     }
 
     // Fetch and store Opus ROI data
