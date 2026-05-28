@@ -1382,7 +1382,7 @@ export default function Home() {
                         <span className="text-green-300 font-medium">1.0%</span>
                       </li>
                       <li className="flex justify-between">
-                        <span>Added to locked LP</span>
+                        <span>Added to burned LP</span>
                         <span className="text-green-300 font-medium">0.5%</span>
                       </li>
                     </ul>
