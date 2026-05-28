@@ -171,56 +171,47 @@ export async function getCodaRoi() {
   }
 }
 
-export async function storeSmaugRoiSnapshot(vaultPlsBalance: number, smaugPriceUsd: number = 0, plsPriceUsd: number = 0) {
+export async function storeSmaugRoiSnapshot(balance: number) {
   try {
     await sql`
-      INSERT INTO smaug_roi_snapshots (vault_pls_balance, smaug_price_usd, pls_price_usd, snapshot_time)
-      VALUES (${vaultPlsBalance}, ${smaugPriceUsd}, ${plsPriceUsd}, NOW())
+      INSERT INTO smaug_roi_snapshots (smaug_balance, snapshot_time)
+      VALUES (${balance}, NOW())
     `
     return { success: true }
   } catch (error) {
-    console.error("Error storing Smaug ROI snapshot:", error)
+    console.error("Error storing SMAUG ROI snapshot:", error)
     return { success: false, error: "Failed to store snapshot" }
   }
 }
 
 export async function getSmaugRoi() {
   try {
-    type Snap = { vault_pls_balance: number; smaug_price_usd: number }
-
-    const [latestResult, latestPriceResult, snap24h, snap7d, snap30d] = await Promise.all([
-      sql`SELECT vault_pls_balance FROM smaug_roi_snapshots ORDER BY snapshot_time DESC LIMIT 1`,
-      sql`SELECT pls_price_usd FROM smaug_roi_snapshots WHERE pls_price_usd > 0 ORDER BY snapshot_time DESC LIMIT 1`,
-      sql`SELECT vault_pls_balance, smaug_price_usd FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '24 hours' ORDER BY snapshot_time DESC LIMIT 1`,
-      sql`SELECT vault_pls_balance, smaug_price_usd FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '7 days' ORDER BY snapshot_time DESC LIMIT 1`,
-      sql`SELECT vault_pls_balance, smaug_price_usd FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '30 days' ORDER BY snapshot_time DESC LIMIT 1`,
-    ])
-
-    if (latestResult.length === 0 || latestPriceResult.length === 0) {
+    const currentResult = await sql`
+      SELECT smaug_balance FROM smaug_roi_snapshots
+      ORDER BY snapshot_time DESC
+      LIMIT 1
+    `
+    if (currentResult.length === 0) {
       return { success: false, roi24h: null, roi7d: null, roi30d: null }
     }
+    const currentBalance = (currentResult[0] as { smaug_balance: number }).smaug_balance
 
-    const currentVaultPls = Number((latestResult[0] as { vault_pls_balance: number }).vault_pls_balance)
-    const currentPlsPrice = Number((latestPriceResult[0] as { pls_price_usd: number }).pls_price_usd)
+    const [snap24h, snap7d, snap30d] = await Promise.all([
+      sql`SELECT smaug_balance FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '24 hours' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT smaug_balance FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '7 days' ORDER BY snapshot_time DESC LIMIT 1`,
+      sql`SELECT smaug_balance FROM smaug_roi_snapshots WHERE snapshot_time <= NOW() - INTERVAL '30 days' ORDER BY snapshot_time DESC LIMIT 1`,
+    ])
 
-    // ROI = (PLS added to vault in period × current PLS price) / (100,000 Smaug × Smaug price at period start) × 100
-    const SMAUG_HOLDING = 100000
-    const calc = (snap: Snap | null) => {
-      if (!snap) return null
-      const plsGained = currentVaultPls - Number(snap.vault_pls_balance)
-      const plsValueUsd = plsGained * currentPlsPrice
-      const holdingValueUsd = SMAUG_HOLDING * Number(snap.smaug_price_usd)
-      return holdingValueUsd > 0 ? (plsValueUsd / holdingValueUsd) * 100 : null
-    }
+    const calc = (old: number) => ((currentBalance - old) / old) * 100
 
     return {
       success: true,
-      roi24h: snap24h.length > 0 ? calc(snap24h[0] as Snap) : null,
-      roi7d:  snap7d.length  > 0 ? calc(snap7d[0]  as Snap) : null,
-      roi30d: snap30d.length > 0 ? calc(snap30d[0] as Snap) : null,
+      roi24h: snap24h.length > 0 ? calc((snap24h[0] as { smaug_balance: number }).smaug_balance) : null,
+      roi7d:  snap7d.length  > 0 ? calc((snap7d[0]  as { smaug_balance: number }).smaug_balance) : null,
+      roi30d: snap30d.length > 0 ? calc((snap30d[0] as { smaug_balance: number }).smaug_balance) : null,
     }
   } catch (error) {
-    console.error("Error fetching Smaug ROI:", error)
+    console.error("Error fetching SMAUG ROI:", error)
     return { success: false, roi24h: null, roi7d: null, roi30d: null }
   }
 }

@@ -512,17 +512,26 @@ export default function Home() {
       console.error("[v0] Error fetching burn events:", err)
     }
 
-    // Fetch and store Smaug ROI snapshot then read back ROI
+    // Fetch and store ROI data
     try {
-      await fetch("/api/cron/smaug-roi")
-      const roiResult = await getSmaugRoi()
-      if (roiResult.success) {
-        setSmaugRoi24h(roiResult.roi24h)
-        setSmaugRoi7d(roiResult.roi7d)
-        setSmaugRoi30d(roiResult.roi30d)
+      console.log("[v0] Fetching SMAUG ROI...")
+      const roiRes = await fetch("/api/smaug-roi")
+      console.log("[v0] ROI API response ok:", roiRes.ok)
+      if (roiRes.ok) {
+        const roiData = await roiRes.json()
+        console.log("[v0] ROI currentBalance:", roiData.currentBalance)
+        const storeResult = await storeSmaugRoiSnapshot(roiData.currentBalance)
+        console.log("[v0] Snapshot stored:", storeResult)
+        const roiResult = await getSmaugRoi()
+        console.log("[v0] ROI result:", JSON.stringify(roiResult))
+        if (roiResult.success) {
+          setSmaugRoi24h(roiResult.roi24h)
+          setSmaugRoi7d(roiResult.roi7d)
+          setSmaugRoi30d(roiResult.roi30d)
+        }
       }
     } catch (err) {
-      console.error("[v0] Error fetching Smaug ROI:", err)
+      console.error("[v0] Error fetching SMAUG ROI:", err)
     }
 
     // Fetch and store Opus ROI data
@@ -1382,13 +1391,13 @@ export default function Home() {
                         <span className="text-green-300 font-medium">1.0%</span>
                       </li>
                       <li className="flex justify-between">
-                        <span>Added to burned LP</span>
+                        <span>Added to locked LP</span>
                         <span className="text-green-300 font-medium">0.5%</span>
                       </li>
                     </ul>
                     {smaugLpAddedData && (
                       <div className="text-xs text-slate-400 mt-4 text-center">
-                        Burned PLS added: {formatMillions(smaugLpAddedData.totalPLS)}
+                        Locked PLS added: {formatMillions(smaugLpAddedData.totalPLS)}
                       </div>
                     )}
                   </div>
