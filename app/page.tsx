@@ -1391,13 +1391,13 @@ export default function Home() {
                         <span className="text-green-300 font-medium">1.0%</span>
                       </li>
                       <li className="flex justify-between">
-                        <span>Added to locked LP</span>
+                        <span>Added to burned LP</span>
                         <span className="text-green-300 font-medium">0.5%</span>
                       </li>
                     </ul>
                     {smaugLpAddedData && (
                       <div className="text-xs text-slate-400 mt-4 text-center">
-                        Locked PLS added: {formatMillions(smaugLpAddedData.totalPLS)}
+                        Burned PLS added: {formatMillions(smaugLpAddedData.totalPLS)}
                       </div>
                     )}
                   </div>
