@@ -3,9 +3,6 @@
   "env": {
     "RPC_URL": "https://rpc.pulsechain.com"
   },
-  "crons": [
-    { "path": "/api/cron/smaug-roi", "schedule": "0 * * * *" }
-  ],
   "headers": [
     {
       "source": "/api(.*)",
