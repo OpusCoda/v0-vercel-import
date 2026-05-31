@@ -1692,7 +1692,7 @@ export default function Home() {
                 <div className="rounded-2xl bg-[#111c3a] border border-green-900/30 p-7 shadow-inner mt-4">
                   <h4 className="text-xl font-medium text-green-300 text-center mb-3">🏔️ The Lonely Mountain Reserve</h4>
                   <p className="text-slate-300 text-sm leading-relaxed text-center max-w-3xl mx-auto">
-                    This reserve holds 100 Finvesta and 100,000 Missor. When Finvesta crosses $100 and/or Missor crosses $0.10, these reserves will be deployed to incrementally buy Smaug and burn them — removing even more from circulation.
+                    This reserve holds an assortment of tokens. When tokens in this reserve hit certain thresholds, they will be deployed to incrementally buy Smaug and burn them — removing even more from circulation.
                   </p>
                 </div>
 
