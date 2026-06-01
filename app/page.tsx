@@ -620,7 +620,22 @@ export default function Home() {
       console.log("[v0] Coda distributors fetched")
       console.log("[v0] Total WETH:", totalWeth.toString())
       console.log("[v0] Total pWBTC:", totalPwbtc.toString())
-      console.log("[v0] Total PLSX:", totalPlsx.toString())
+      console.log("[v0] Total PLSX (old distributors):", totalPlsx.toString())
+
+      // Fetch PLSX distributed from the new (redeployed) Coda contract via raw selector 0x775b2dfa
+      try {
+        const newCodaPlsxData = await rpcRetry(
+          () => provider.call({ to: CODA_CONTRACT, data: "0x775b2dfa" }),
+          1,
+          2000,
+        )
+        if (newCodaPlsxData && newCodaPlsxData !== "0x") {
+          totalPlsx += BigInt(newCodaPlsxData)
+        }
+        console.log("[v0] Total PLSX (incl. new Coda contract):", totalPlsx.toString())
+      } catch (e) {
+        console.error("[v0] Error fetching new Coda PLSX distributed:", e)
+      }
 
   setTotalDistributed({
   pls: ethers.formatUnits(totalPls, 18),
@@ -1788,10 +1803,33 @@ export default function Home() {
                 <h2 className="text-2xl md:text-3xl font-medium text-center mb-8 text-slate-200">
                   Total distributed rewards: $
                   {formatWithCommas(
-                    (Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx).toFixed(0),
+                    (
+                      Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
+                      Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx
+                    ).toFixed(0),
                   )}
                 </h2>
-                <div className="max-w-md mx-auto">
+                <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                  {/* Opus Rewards */}
+                  <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 space-y-5">
+                    <h3 className="text-lg font-medium text-orange-400 mb-4">Opus</h3>
+                    <div className="space-y-5 text-left">
+                      <div className="flex justify-between items-start gap-8">
+                        <span className="text-slate-300">PLS:</span>
+                        <div className="text-right">
+                          <div className="text-slate-100">{formatBillions(totalDistributed.pls, 2)}</div>
+                          <div className="text-slate-400 text-sm">
+                            ($
+                            {formatWithCommas(
+                              (Number.parseFloat(totalDistributed.pls) * tokenPrices.pls).toFixed(2),
+                            )}
+                            )
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Coda Rewards */}
                   <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 space-y-5">
                     <h3 className="text-lg font-medium text-cyan-400 mb-4">Coda</h3>
