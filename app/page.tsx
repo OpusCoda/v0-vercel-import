@@ -1759,11 +1759,11 @@ export default function Home() {
                 <ul className="space-y-2 text-slate-300">
                   <li className="flex justify-between">
                     <span></span>
-                    <span className="text-cyan-300 font-medium">2%</span>
+                    <span className="text-cyan-300 font-medium"></span>
                   </li>
                   <li className="flex justify-between">
                     <span></span>
-                    <span className="text-cyan-300 font-medium">2%</span>
+                    <span className="text-cyan-300 font-medium"></span>
                   </li>
                   <li className="flex justify-between">
                     <span>PLSX</span>
