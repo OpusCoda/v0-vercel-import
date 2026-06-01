@@ -1755,14 +1755,14 @@ export default function Home() {
               </div>
               <div className="rounded-2xl bg-[#111c3a] border border-cyan-900/30 p-7 shadow-inner">
                 <h3 className="text-2xl font-medium mb-4 text-cyan-300 text-center">Coda</h3>
-                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">7% Tax</p>
+                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">5% Tax</p>
                 <ul className="space-y-2 text-slate-300">
                   <li className="flex justify-between">
-                    <span>WETH</span>
+                    <span></span>
                     <span className="text-cyan-300 font-medium">2%</span>
                   </li>
                   <li className="flex justify-between">
-                    <span>pWBTC</span>
+                    <span></span>
                     <span className="text-cyan-300 font-medium">2%</span>
                   </li>
                   <li className="flex justify-between">
