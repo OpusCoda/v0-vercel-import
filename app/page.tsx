@@ -1787,7 +1787,7 @@ export default function Home() {
                   </li>
                   <li className="flex justify-between">
                     <span>PLSX</span>
-                    <span className="text-cyan-300 font-medium">2%</span>
+                    <span className="text-cyan-300 font-medium">5%</span>
                   </li>
                   {/* ROI hidden temporarily */}
                   <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
