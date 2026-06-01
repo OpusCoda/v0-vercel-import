@@ -37,7 +37,7 @@ const formatBillions = (v: string | number, decimals = 2) => {
 }
 
 const OPUS_CONTRACT = "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a"
-const CODA_CONTRACT = "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
+  const CODA_CONTRACT = "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28"
 const OPUS_V1_CONTRACT = "0x7251d2965f165fCE18Ae5fC4c4979e01b46057d7"
 const OPUS_V2_CONTRACT = "0x90501f0C51c3aaDc76c9b27E501b68Db153Dcc81"
 const CODA_V1_CONTRACT = "0xD9857f41E67812dbDFfdD3269B550836EC131D0C"
@@ -2959,7 +2959,7 @@ export default function Home() {
                   </span>
                 </Link>
                 <Link
-                  href="https://ipfs.app.pulsex.com?outputCurrency=0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
+                  href="https://ipfs.app.pulsex.com?outputCurrency=0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
@@ -2999,7 +2999,7 @@ export default function Home() {
               <div className="space-y-3 text-cyan-300 text-base text-center">
                 {[
                   { name: "Opus", address: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" },
-                  { name: "Coda", address: "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7" },
+                  { name: "Coda", address: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" },
                   { name: "Smaug", address: "0xf4754Aa585caBf38537A68660469A17E203D8632" },
                 ].map((token) => (
                   <div key={token.name} className="flex items-center justify-center gap-2">
