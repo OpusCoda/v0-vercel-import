@@ -1788,66 +1788,14 @@ export default function Home() {
                 <h2 className="text-2xl md:text-3xl font-medium text-center mb-8 text-slate-200">
                   Total distributed rewards: $
                   {formatWithCommas(
-                    (
-              Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
-              Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
-              Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
-              Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx +
-              printerPlsEarned.finvesta * tokenPrices.pls +
-              printerPlsEarned.missor * tokenPrices.pls +
-              printerPlsEarned.wgpp * tokenPrices.pls
-                    ).toFixed(0),
+                    (Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx).toFixed(0),
                   )}
                 </h2>
-                <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                  {/* Opus Rewards */}
-                  <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 space-y-5">
-                    <h3 className="text-lg font-medium text-orange-400 mb-4">Opus</h3>
-                    <div className="space-y-5 text-left">
-                      <div className="flex justify-between items-start gap-8">
-                        <span className="text-slate-300">PLS:</span>
-                        <div className="text-right">
-                          <div className="text-slate-100">{formatBillions(totalDistributed.pls, 2)}</div>
-                          <div className="text-slate-400 text-sm">
-                            ($
-                            {formatWithCommas(
-                              (Number.parseFloat(totalDistributed.pls) * tokenPrices.pls).toFixed(2),
-                            )}
-                            )
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
+                <div className="max-w-md mx-auto">
                   {/* Coda Rewards */}
                   <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 space-y-5">
                     <h3 className="text-lg font-medium text-cyan-400 mb-4">Coda</h3>
                     <div className="space-y-5 text-left">
-                      <div className="flex justify-between items-start gap-8">
-                        <span className="text-slate-300">WETH:</span>
-                        <div className="text-right">
-                          <div className="text-slate-100">{formatDecimals(totalDistributed.weth, 2)}</div>
-                          <div className="text-slate-400 text-sm">
-                            ($
-                            {formatWithCommas((Number.parseFloat(totalDistributed.weth) * tokenPrices.weth).toFixed(2))}
-                            )
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-start gap-8">
-                        <span className="text-slate-300">pWBTC:</span>
-                        <div className="text-right">
-                          <div className="text-slate-100">{formatDecimals(totalDistributed.Pwbtc, 2)}</div>
-                          <div className="text-slate-400 text-sm">
-                            ($
-                            {formatWithCommas(
-                              (Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc).toFixed(2),
-                            )}
-                            )
-                          </div>
-                        </div>
-                      </div>
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">PLSX:</span>
                         <div className="text-right">
