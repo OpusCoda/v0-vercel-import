@@ -1771,8 +1771,8 @@ export default function Home() {
                   </li>
                   {/* ROI hidden temporarily */}
                   <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
-                    <span>Added to liquidity</span>
-                    <span className="text-cyan-300 font-medium">1%</span>
+                    <span></span>
+                    <span className="text-cyan-300 font-medium"></span>
                   </li>
                 </ul>
               </div>
