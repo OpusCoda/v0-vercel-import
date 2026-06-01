@@ -37,7 +37,7 @@ const formatBillions = (v: string | number, decimals = 2) => {
 }
 
 const OPUS_CONTRACT = "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a"
-const CODA_CONTRACT = "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
+  const CODA_CONTRACT = "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28"
 const OPUS_V1_CONTRACT = "0x7251d2965f165fCE18Ae5fC4c4979e01b46057d7"
 const OPUS_V2_CONTRACT = "0x90501f0C51c3aaDc76c9b27E501b68Db153Dcc81"
 const CODA_V1_CONTRACT = "0xD9857f41E67812dbDFfdD3269B550836EC131D0C"
@@ -620,7 +620,22 @@ export default function Home() {
       console.log("[v0] Coda distributors fetched")
       console.log("[v0] Total WETH:", totalWeth.toString())
       console.log("[v0] Total pWBTC:", totalPwbtc.toString())
-      console.log("[v0] Total PLSX:", totalPlsx.toString())
+      console.log("[v0] Total PLSX (old distributors):", totalPlsx.toString())
+
+      // Fetch PLSX distributed from the new (redeployed) Coda contract via raw selector 0x775b2dfa
+      try {
+        const newCodaPlsxData = await rpcRetry(
+          () => provider.call({ to: CODA_CONTRACT, data: "0x775b2dfa" }),
+          1,
+          2000,
+        )
+        if (newCodaPlsxData && newCodaPlsxData !== "0x") {
+          totalPlsx += BigInt(newCodaPlsxData)
+        }
+        console.log("[v0] Total PLSX (incl. new Coda contract):", totalPlsx.toString())
+      } catch (e) {
+        console.error("[v0] Error fetching new Coda PLSX distributed:", e)
+      }
 
   setTotalDistributed({
   pls: ethers.formatUnits(totalPls, 18),
@@ -1703,7 +1718,7 @@ export default function Home() {
             <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(56,189,248,0.1)] bg-black">
               <iframe
                 className="w-full aspect-video"
-                src="https://www.youtube-nocookie.com/embed/dN3_cmqsbPc?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&loop=1&playlist=dN3_cmqsbPc"
+                src="https://www.youtube-nocookie.com/embed/Qr-avVraIA0?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1&loop=1&playlist=Qr-avVraIA0"
                 title="Opus and Coda explainer video"
                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen={false}
@@ -1755,15 +1770,15 @@ export default function Home() {
               </div>
               <div className="rounded-2xl bg-[#111c3a] border border-cyan-900/30 p-7 shadow-inner">
                 <h3 className="text-2xl font-medium mb-4 text-cyan-300 text-center">Coda</h3>
-                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">7% Tax</p>
+                <p className="text-slate-200 text-lg mb-4 text-center font-semibold">5% Tax</p>
                 <ul className="space-y-2 text-slate-300">
                   <li className="flex justify-between">
-                    <span>WETH</span>
-                    <span className="text-cyan-300 font-medium">2%</span>
+                    <span></span>
+                    <span className="text-cyan-300 font-medium"></span>
                   </li>
                   <li className="flex justify-between">
-                    <span>pWBTC</span>
-                    <span className="text-cyan-300 font-medium">2%</span>
+                    <span></span>
+                    <span className="text-cyan-300 font-medium"></span>
                   </li>
                   <li className="flex justify-between">
                     <span>PLSX</span>
@@ -1771,8 +1786,8 @@ export default function Home() {
                   </li>
                   {/* ROI hidden temporarily */}
                   <li className="flex justify-between border-t border-slate-700 pt-2 mt-2">
-                    <span>Added to liquidity</span>
-                    <span className="text-cyan-300 font-medium">1%</span>
+                    <span></span>
+                    <span className="text-cyan-300 font-medium"></span>
                   </li>
                 </ul>
               </div>
@@ -1789,13 +1804,8 @@ export default function Home() {
                   Total distributed rewards: $
                   {formatWithCommas(
                     (
-              Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
-              Number.parseFloat(totalDistributed.weth) * tokenPrices.weth +
-              Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc +
-              Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx +
-              printerPlsEarned.finvesta * tokenPrices.pls +
-              printerPlsEarned.missor * tokenPrices.pls +
-              printerPlsEarned.wgpp * tokenPrices.pls
+                      Number.parseFloat(totalDistributed.pls) * tokenPrices.pls +
+                      Number.parseFloat(totalDistributed.plsx) * tokenPrices.plsx
                     ).toFixed(0),
                   )}
                 </h2>
@@ -1824,30 +1834,6 @@ export default function Home() {
                   <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 space-y-5">
                     <h3 className="text-lg font-medium text-cyan-400 mb-4">Coda</h3>
                     <div className="space-y-5 text-left">
-                      <div className="flex justify-between items-start gap-8">
-                        <span className="text-slate-300">WETH:</span>
-                        <div className="text-right">
-                          <div className="text-slate-100">{formatDecimals(totalDistributed.weth, 2)}</div>
-                          <div className="text-slate-400 text-sm">
-                            ($
-                            {formatWithCommas((Number.parseFloat(totalDistributed.weth) * tokenPrices.weth).toFixed(2))}
-                            )
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-start gap-8">
-                        <span className="text-slate-300">pWBTC:</span>
-                        <div className="text-right">
-                          <div className="text-slate-100">{formatDecimals(totalDistributed.Pwbtc, 2)}</div>
-                          <div className="text-slate-400 text-sm">
-                            ($
-                            {formatWithCommas(
-                              (Number.parseFloat(totalDistributed.Pwbtc) * tokenPrices.Pwbtc).toFixed(2),
-                            )}
-                            )
-                          </div>
-                        </div>
-                      </div>
                       <div className="flex justify-between items-start gap-8">
                         <span className="text-slate-300">PLSX:</span>
                         <div className="text-right">
@@ -2959,7 +2945,7 @@ export default function Home() {
                   </span>
                 </Link>
                 <Link
-                  href="https://ipfs.app.pulsex.com?outputCurrency=0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
+                  href="https://ipfs.app.pulsex.com?outputCurrency=0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex flex-col items-center gap-4 hover:scale-105 transition-transform duration-300"
@@ -2999,7 +2985,7 @@ export default function Home() {
               <div className="space-y-3 text-cyan-300 text-base text-center">
                 {[
                   { name: "Opus", address: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" },
-                  { name: "Coda", address: "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7" },
+                  { name: "Coda", address: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" },
                   { name: "Smaug", address: "0xf4754Aa585caBf38537A68660469A17E203D8632" },
                 ].map((token) => (
                   <div key={token.name} className="flex items-center justify-center gap-2">
