@@ -38,6 +38,7 @@ const formatBillions = (v: string | number, decimals = 2) => {
 
 const OPUS_CONTRACT = "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a"
   const CODA_CONTRACT = "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28"
+  const CODA_OLD_CONTRACT = "0xC67E1E5F535bDDF5d0CEFaA9b7ed2A170f654CD7"
 const OPUS_V1_CONTRACT = "0x7251d2965f165fCE18Ae5fC4c4979e01b46057d7"
 const OPUS_V2_CONTRACT = "0x90501f0C51c3aaDc76c9b27E501b68Db153Dcc81"
 const CODA_V1_CONTRACT = "0xD9857f41E67812dbDFfdD3269B550836EC131D0C"
@@ -771,6 +772,7 @@ export default function Home() {
 
       const opusTokenContract = new ethers.Contract(OPUS_CONTRACT, BALANCE_ABI, provider)
       const codaTokenContract = new ethers.Contract(CODA_CONTRACT, BALANCE_ABI, provider)
+      const codaOldTokenContract = new ethers.Contract(CODA_OLD_CONTRACT, BALANCE_ABI, provider)
 
       const opusV1Contract = new ethers.Contract(OPUS_V1_CONTRACT, SHARES_ABI, provider)
       const opusV2Contract = new ethers.Contract(OPUS_V2_CONTRACT, SHARES_ABI, provider)
@@ -803,9 +805,12 @@ export default function Home() {
         }
 
         try {
-          const codaBalanceRaw = await codaTokenContract.balanceOf(address)
-          codaBalance = BigInt(codaBalanceRaw)
-          console.log("[v0] Coda balance:", codaBalance.toString())
+          const [codaNewRaw, codaOldRaw] = await Promise.all([
+            codaTokenContract.balanceOf(address).catch(() => 0n),
+            codaOldTokenContract.balanceOf(address).catch(() => 0n),
+          ])
+          codaBalance = BigInt(codaNewRaw) + BigInt(codaOldRaw)
+          console.log("[v0] Coda balance (new + old):", codaBalance.toString())
         } catch (err) {
           console.error("[v0] Error fetching Coda balance:", err)
         }
