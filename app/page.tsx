@@ -2904,19 +2904,27 @@ export default function Home() {
                 </button>
                 {expandedStakeCards.has("liquid-loans") && (
                   <div className="space-y-2 mt-4">
-                    {liquidLoansVaults.map((vault, idx) => (
-                      <div
-                        key={`${vault.wallet}-${idx}`}
-                        className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
-                      >
-                        <span className="text-sm text-slate-300">
-                          {vault.wallet.slice(0, 6)}...{vault.wallet.slice(-4)} — Collateral: {vault.lockedPLS.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
-                        </span>
-                        <span className="text-sm font-medium text-green-400">
-                          Debt: {vault.debt.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
-                        </span>
-                      </div>
-                    ))}
+                    {liquidLoansVaults.map((vault, idx) => {
+                      const icr = vault.debt > 0 ? ((vault.lockedPLS * tokenPrices.pls) / vault.debt) * 100 : null
+                      return (
+                        <div
+                          key={`${vault.wallet}-${idx}`}
+                          className="flex justify-between items-center py-2 border-b border-slate-700/30 last:border-0"
+                        >
+                          <span className="text-sm text-slate-300">
+                            {vault.wallet.slice(0, 6)}...{vault.wallet.slice(-4)} — Collateral: {vault.lockedPLS.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
+                          </span>
+                          <div className="flex items-center gap-4">
+                            <span className="text-sm font-medium text-cyan-400">
+                              ICR: {icr !== null ? `${icr.toLocaleString(undefined, { maximumFractionDigits: 1 })}%` : "—"}
+                            </span>
+                            <span className="text-sm font-medium text-green-400">
+                              Debt: {vault.debt.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDL
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </motion.div>
