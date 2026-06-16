@@ -1380,8 +1380,8 @@ export default function Home() {
 
                     </p>
                     <ul className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl space-y-2">
-                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Opus</strong> — The first core printer token that dependably distributes PLS to its holders</span></li>
-                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Coda</strong> — The second printer token that dependably distributes PLSX to its holders</span></li>
+                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Opus</strong> — The first core token that dependably distributes PLS to its holders</span></li>
+                      <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Coda</strong> — The second token that dependably distributes PLSX to its holders</span></li>
                       <li className="flex gap-2"><span className="text-green-300">{'•'}</span><span><strong className="text-green-300">Smaug</strong> — The sole deflationary token with reflections and four separate buy and burns</span></li>
                     </ul>
                   </div>
@@ -1630,7 +1630,7 @@ export default function Home() {
                       </button>
                     </div>
                     <p className="text-slate-400 text-sm text-center mb-5">
-                      Smaug's hoard of assorted yield-generating printer tokens.
+                      Smaug's hoard of assorted yield-generating distributor tokens.
                       All yield is used to buy and burn Smaug.
                     </p>
                     <ul className="space-y-3 text-sm text-slate-300">
@@ -1726,9 +1726,9 @@ export default function Home() {
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
-                <h3 className="text-xl font-medium mb-3 text-cyan-300">Reliable printing</h3>
+                <h3 className="text-xl font-medium mb-3 text-cyan-300">Reliable distribution</h3>
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Our printers deliver a steady minimum 1% daily ROI.
+                  Our tokens distribute a steady 1% minimum daily return of value.
                 </p>
               </div>
               <div className="rounded-2xl bg-[#111c3a] border border-blue-900/30 p-7 shadow-inner">
