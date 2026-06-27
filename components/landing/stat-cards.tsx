@@ -24,10 +24,24 @@ export function StatCards() {
   const [plsDistributed, setPlsDistributed] = useState<number | null>(null)
   const [plsxDistributed, setPlsxDistributed] = useState<number | null>(null)
   const [smaugBurned, setSmaugBurned] = useState<number | null>(null)
+  const [plsPrice, setPlsPrice] = useState<number | null>(null)
+  const [plsxPrice, setPlsxPrice] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchStats = async () => {
       const provider = getProvider()
+
+      // Token prices for USD values
+      try {
+        const res = await fetch("/api/prices")
+        if (res.ok) {
+          const prices = await res.json()
+          setPlsPrice(prices.pls ?? null)
+          setPlsxPrice(prices.plsx ?? null)
+        }
+      } catch (err) {
+        console.error("[v0] Error fetching prices:", err)
+      }
 
       // Total PLS distributed (Opus) + printer PLS (Finvesta/Missor/WGPP)
       try {
@@ -92,11 +106,15 @@ export function StatCards() {
   }, [])
 
   const display = (v: number | null) => (v === null ? "—" : formatBillions(v))
+  const usd = (amount: number | null, price: number | null) => {
+    if (amount === null || price === null) return null
+    return `$${(amount * price).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+  }
 
   const stats = [
-    { label: "TOTAL PLS DISTRIBUTED", value: display(plsDistributed), unit: "PLS", icon: <Coins className="h-8 w-8 text-[#d4af37]" /> },
-    { label: "TOTAL PLSX DISTRIBUTED", value: display(plsxDistributed), unit: "PLSX", icon: <Droplets className="h-8 w-8 text-[#d4af37]" /> },
-    { label: "SMAUG BURNED", value: display(smaugBurned), unit: "SMAUG", icon: <Flame className="h-8 w-8 text-[#d4af37]" /> },
+    { label: "TOTAL PLS DISTRIBUTED", value: display(plsDistributed), unit: "PLS", usd: usd(plsDistributed, plsPrice), icon: <Coins className="h-8 w-8 text-[#d4af37]" /> },
+    { label: "TOTAL PLSX DISTRIBUTED", value: display(plsxDistributed), unit: "PLSX", usd: usd(plsxDistributed, plsxPrice), icon: <Droplets className="h-8 w-8 text-[#d4af37]" /> },
+    { label: "SMAUG BURNED", value: display(smaugBurned), unit: "SMAUG", usd: null, icon: <Flame className="h-8 w-8 text-[#d4af37]" /> },
   ]
 
   return (
@@ -110,11 +128,11 @@ export function StatCards() {
               <span className="mt-1 font-serif text-2xl font-bold text-[#e8e6e3]">
                 {stat.value} <span className="text-sm font-normal text-[#9ca3af]">{stat.unit}</span>
               </span>
+              {stat.usd && <span className="mt-0.5 font-sans text-sm text-[#d4af37]">{stat.usd}</span>}
             </span>
           </div>
         ))}
       </div>
-      <p className="mt-4 text-center font-sans text-xs text-[#7c7a76]">Live on-chain data from PulseChain</p>
     </section>
   )
 }
