@@ -26,16 +26,7 @@ export function Hero() {
             The OpusEco ecosystem rewards participation across staking, prediction markets, and community wagers.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <button
-              type="button"
-              className="rounded-md bg-[#d4af37] px-8 py-3.5 font-sans text-sm font-semibold text-[#0a0a0c] transition-colors hover:bg-[#c19b2e]"
-            >
-              Connect Wallet
-            </button>
-          </div>
-
-          <p className="mt-6 flex items-center gap-2 font-sans text-sm text-[#9ca3af]">
+          <p className="mt-8 flex items-center gap-2 font-sans text-sm text-[#9ca3af]">
             <ShieldCheck className="h-4 w-4 text-[#d4af37]" />
             Secure. Non-custodial. Your keys, your assets.
           </p>

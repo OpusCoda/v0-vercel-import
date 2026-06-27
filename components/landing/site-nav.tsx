@@ -52,9 +52,10 @@ export function SiteNav() {
           <Link
             href="#docs"
             aria-label="Documentation"
-            className="hidden text-[#9ca3af] transition-colors hover:text-[#d4af37] sm:block"
+            className="hidden items-center gap-2 text-[#9ca3af] transition-colors hover:text-[#d4af37] sm:flex"
           >
             <BookOpen className="h-5 w-5" />
+            <span className="font-sans text-sm">Docs</span>
           </Link>
           <button
             type="button"
