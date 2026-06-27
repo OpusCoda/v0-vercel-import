@@ -17,7 +17,7 @@ export function Hero() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 py-20 md:px-6 md:py-28 lg:py-32">
+      <div className="relative mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-24 lg:py-28">
         <div className="max-w-2xl">
           <h1 className="text-balance font-serif text-4xl font-bold leading-tight text-[#e8e6e3] md:text-5xl lg:text-6xl">
             Earn from PulseChain by <span className="text-[#d4af37]">holding, staking, and predicting.</span>

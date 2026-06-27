@@ -1,5 +1,4 @@
 import Image from "next/image"
-import { OrnamentHeading } from "./participate"
 
 const tokens = [
   {
@@ -31,9 +30,7 @@ const tokens = [
 export function Tokens() {
   return (
     <section id="tokens" className="mx-auto max-w-7xl scroll-mt-20 px-4 py-12 md:px-6">
-      <OrnamentHeading>The Tokens</OrnamentHeading>
-
-      <div className="mt-10 grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3">
         {tokens.map((token) => (
           <article key={token.name} className="rounded-2xl border border-[#2a2a35] bg-[#101017] p-7">
             <div className="flex items-center gap-4">
