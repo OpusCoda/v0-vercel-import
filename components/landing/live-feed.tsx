@@ -71,7 +71,7 @@ function XTimeline({ handle, name, url }: { handle: string; name: string; url: s
         <a
           className="twitter-timeline"
           data-theme="dark"
-          data-tweet-limit="1"
+          data-tweet-limit="3"
           data-chrome="noheader nofooter noborders transparent"
           data-dnt="true"
           href={url}
