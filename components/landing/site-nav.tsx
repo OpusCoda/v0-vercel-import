@@ -22,8 +22,8 @@ export function SiteNav() {
         {/* Brand */}
         <Link href="/" className="flex items-center gap-3">
           <Image
-            src="/smaug-circle.png"
-            alt="OpusEco dragon emblem"
+            src="/favicon-96x96.png"
+            alt="Opus emblem"
             width={44}
             height={44}
             className="rounded-full ring-1 ring-[#d4af37]/40"
