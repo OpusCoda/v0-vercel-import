@@ -16,7 +16,7 @@ const products: Product[] = [
   {
     name: "Oath Vault",
     tagline: "Peer-to-peer wager escrow",
-    accent: "#9b7fc4",
+    accent: "#d4af37",
     Icon: Scale,
     contract: "OathVault.sol",
     audience: { Icon: User, label: "One-to-one · creator vs. challenger" },
