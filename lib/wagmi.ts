@@ -104,11 +104,49 @@ const braveWalletAlways = (): Wallet => ({
     })),
 })
 
+// Locate the ZKX Wallet injected provider.
+function getZkxProvider() {
+  if (typeof window === "undefined") return undefined
+  const w = window as unknown as {
+    zkx?: unknown
+    ethereum?: { isZKX?: boolean; isZkx?: boolean; providers?: { isZKX?: boolean; isZkx?: boolean }[] }
+  }
+  if (w.zkx) return w.zkx
+  const eth = w.ethereum
+  if (eth?.isZKX || eth?.isZkx) return eth
+  const nested = eth?.providers?.find((p) => p?.isZKX || p?.isZkx)
+  return nested ?? undefined
+}
+
+// Custom ZKX Wallet that always appears as a default option. Connects via its
+// injected provider when the extension is installed, otherwise shows download.
+const zkxWallet = (): Wallet => ({
+  id: "zkx",
+  name: "ZKX Wallet",
+  iconUrl: "/wallets/zkx.png",
+  iconBackground: "#000",
+  installed: typeof window !== "undefined" ? !!getZkxProvider() || undefined : undefined,
+  downloadUrls: {
+    browserExtension: "https://zkx.io",
+  },
+  createConnector: (walletDetails) =>
+    createConnector((config) => ({
+      ...injected({
+        target: () => ({
+          id: walletDetails.rkDetails.id,
+          name: walletDetails.rkDetails.name,
+          provider: getZkxProvider() as never,
+        }),
+      })(config),
+      ...walletDetails,
+    })),
+})
+
 const connectors = connectorsForWallets(
   [
     {
       groupName: "Official",
-      wallets: [internetMoneyWallet, braveWalletAlways],
+      wallets: [internetMoneyWallet, braveWalletAlways, zkxWallet],
     },
     {
       groupName: "Popular",
