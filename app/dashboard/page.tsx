@@ -7,6 +7,7 @@ import { ethers } from "ethers"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
 import { storeSmaugRoiSnapshot, getSmaugRoi, storeOpusRoiSnapshot, getOpusRoi, storeCodaRoiSnapshot, getCodaRoi } from "@/app/actions"
+import { useAccount } from "wagmi"
 
 const formatDecimals = (v: string, decimals = 0) => {
   const [i, d = ""] = v.split(".")
@@ -127,6 +128,8 @@ export default function Home() {
   }>
   >([])
   const [walletAddresses, setWalletAddresses] = useState<string[]>([""])
+  const { address: connectedAddress, isConnected } = useAccount()
+  const autoFilledRef = useRef<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [walletRewards, setWalletRewards] = useState<{
   opus: { pls: string }
@@ -299,6 +302,29 @@ export default function Home() {
   useEffect(() => {
     // Fetch saved lists from database here if needed
   }, [])
+
+  // When a wallet connects, prefill the first address slot and auto-load rewards
+  useEffect(() => {
+    if (isConnected && connectedAddress && autoFilledRef.current !== connectedAddress) {
+      autoFilledRef.current = connectedAddress
+      setWalletAddresses((prev) => {
+        // Avoid duplicating if the address is already being tracked
+        if (prev.some((a) => a.toLowerCase() === connectedAddress.toLowerCase())) return prev
+        const firstEmpty = prev.findIndex((a) => !a.trim())
+        if (firstEmpty !== -1) {
+          const next = [...prev]
+          next[firstEmpty] = connectedAddress
+          return next
+        }
+        return [...prev, connectedAddress]
+      })
+      fetchRewards([connectedAddress])
+    }
+    if (!isConnected) {
+      autoFilledRef.current = null
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, connectedAddress])
 
   // Single shared RPC provider to avoid multiple competing connections
   const providerRef = useRef<ethers.JsonRpcProvider | null>(null)

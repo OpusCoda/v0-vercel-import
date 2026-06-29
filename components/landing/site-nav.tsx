@@ -4,6 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
 import { BookOpen, Menu, X } from "lucide-react"
+import { ConnectWalletButton } from "./connect-wallet-button"
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -57,12 +58,9 @@ export function SiteNav() {
             <BookOpen className="h-5 w-5" />
             <span className="font-sans text-sm">Docs</span>
           </Link>
-          <button
-            type="button"
-            className="hidden rounded-md bg-[#d4af37] px-5 py-2.5 font-sans text-sm font-semibold text-[#0a0a0c] transition-colors hover:bg-[#c19b2e] sm:block"
-          >
-            Connect Wallet
-          </button>
+          <div className="hidden sm:block">
+            <ConnectWalletButton />
+          </div>
           <button
             type="button"
             aria-label="Toggle menu"
@@ -90,12 +88,9 @@ export function SiteNav() {
               </li>
             ))}
           </ul>
-          <button
-            type="button"
-            className="mt-3 w-full rounded-md bg-[#d4af37] px-5 py-2.5 font-sans text-sm font-semibold text-[#0a0a0c]"
-          >
-            Connect Wallet
-          </button>
+          <div className="mt-3">
+            <ConnectWalletButton fullWidth />
+          </div>
         </nav>
       )}
     </header>

@@ -1,6 +1,8 @@
 import type React from "react"
 import "./globals.css"
+import "@rainbow-me/rainbowkit/styles.css"
 import { Sacramento, Inter, Merriweather, Roboto, Marcellus_SC } from "next/font/google"
+import { Providers } from "@/components/providers"
 
 const sacramento = Sacramento({
   subsets: ["latin"],
@@ -54,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${merriweather.variable} ${sacramento.variable} ${inter.variable} ${roboto.variable} ${marcellusSC.variable}`}>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
