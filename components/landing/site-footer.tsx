@@ -59,15 +59,14 @@ export function SiteFooter() {
 
           {/* Disclaimer */}
           <div>
-            <h3 className="font-sans text-sm font-semibold text-[#e8e6e3]">Disclaimer</h3>
+            <h3 className="font-sans text-sm font-semibold text-[#e8e6e3]"></h3>
             <p className="mt-4 font-sans text-sm leading-relaxed text-[#9ca3af]">
-              OpusEco is a DeFi ecosystem on PulseChain. Always do your own research. Nothing here is financial advice.
             </p>
           </div>
         </div>
 
         <div className="mt-10 border-t border-[#2a2a35] pt-6">
-          <p className="font-sans text-xs text-[#7c7a76]">© 2024 OpusEco. All rights reserved.</p>
+          <p className="font-sans text-xs text-[#7c7a76]">© since deployment.</p>
         </div>
       </div>
     </footer>
