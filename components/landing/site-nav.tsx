@@ -29,8 +29,8 @@ export function SiteNav() {
             className="rounded-full ring-1 ring-[#d4af37]/40"
           />
           <span className="flex flex-col leading-tight">
-            <span className="font-serif text-lg font-bold tracking-[0.18em] text-[#e8e6e3]">OPUSECO</span>
-            <span className="font-sans text-[11px] tracking-wide text-[#9ca3af]">The PulseChain Ecosystem</span>
+            <span className="font-serif text-lg font-bold tracking-[0.18em] text-[#e8e6e3]">OPUS</span>
+            <span className="font-sans text-[11px] tracking-wide text-[#9ca3af]">An ecosystem on PulseChain</span>
           </span>
         </Link>
 
