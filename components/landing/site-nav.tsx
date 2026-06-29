@@ -7,7 +7,7 @@ import { BookOpen, Menu, X } from "lucide-react"
 
 const navLinks = [
   { label: "Home", href: "/" },
-  { label: "Stake", href: "/stake" },
+  { label: "Earn", href: "/earn" },
   { label: "Markets", href: "/markets" },
   { label: "Dashboard", href: "/dashboard" },
   { label: "Tokens", href: "/tokens" },
