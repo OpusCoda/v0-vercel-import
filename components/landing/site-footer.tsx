@@ -14,10 +14,9 @@ const columns = [
   {
     heading: "Community",
     items: [
-      { label: "Telegram", href: "#" },
-      { label: "X (Twitter)", href: "#" },
-      { label: "Discord", href: "#" },
-      { label: "YouTube", href: "#" },
+      { label: "X (Twitter)", href: "https://x.com/OpusEco" },
+      { label: "Telegram", href: "https://t.me/opus_official" },
+      { label: "YouTube", href: "https://www.youtube.com/@opustoken" },
     ],
   },
 ]
@@ -46,6 +45,8 @@ export function SiteFooter() {
                   <li key={item.label}>
                     <Link
                       href={item.href}
+                      target={item.href.startsWith("http") ? "_blank" : undefined}
+                      rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
                       className="font-sans text-sm text-[#9ca3af] transition-colors hover:text-[#d4af37]"
                     >
                       {item.label}
