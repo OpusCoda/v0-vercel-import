@@ -125,7 +125,7 @@ export function StatCards() {
   const stats = [
     { label: "TOTAL PLS DISTRIBUTED", value: display(plsDistributed), unit: "PLS", usd: usd(plsDistributed, plsPrice), icon: <Coins className="h-8 w-8 text-[#d4af37]" /> },
     { label: "TOTAL PLSX DISTRIBUTED", value: display(plsxDistributed), unit: "PLSX", usd: usd(plsxDistributed, plsxPrice), icon: <Droplets className="h-8 w-8 text-[#d4af37]" /> },
-    { label: "DISTRIBUTED OTHER TOKENS", value: fmtUsd(otherTokensUsd) ?? "—", unit: "", usd: null, sub: "Missor · Finvesta · WGPP", icon: <Gift className="h-8 w-8 text-[#d4af37]" /> },
+    { label: "OTHER TOKENS", value: fmtUsd(otherTokensUsd) ?? "—", unit: "", usd: null, sub: "", icon: <Gift className="h-8 w-8 text-[#d4af37]" /> },
     { label: "SMAUG BURNED", value: display(smaugBurned), unit: "SMAUG", usd: null, icon: <Flame className="h-8 w-8 text-[#d4af37]" /> },
   ]
 
