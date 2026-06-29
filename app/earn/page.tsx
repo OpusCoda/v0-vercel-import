@@ -3,7 +3,7 @@ import { SiteNav } from "@/components/landing/site-nav"
 import { SiteFooter } from "@/components/landing/site-footer"
 import { ComingSoon } from "@/components/landing/coming-soon"
 
-export default function StakePage() {
+export default function EarnPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0c]">
       <SiteNav />
