@@ -30,7 +30,7 @@ export function SiteNav() {
           />
           <span className="flex flex-col leading-tight">
             <span className="font-serif text-lg font-bold tracking-[0.18em] text-[#e8e6e3]">OPUS</span>
-            <span className="font-sans text-[11px] tracking-wide text-[#9ca3af]">An ecosystem on PulseChain</span>
+            <span className="font-sans text-[11px] tracking-wide text-[#9ca3af]">On PulseChain</span>
           </span>
         </Link>
 
