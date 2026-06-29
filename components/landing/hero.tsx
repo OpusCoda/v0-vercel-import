@@ -20,10 +20,10 @@ export function Hero() {
       <div className="relative mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-24 lg:py-28">
         <div className="max-w-2xl">
           <h1 className="text-balance font-serif text-4xl font-bold leading-tight text-[#e8e6e3] md:text-5xl lg:text-6xl">
-            Earn from PulseChain by <span className="text-[#d4af37]">holding, staking, and predicting.</span>
+            Earn on PulseChain <span className="text-[#d4af37]">by holding, staking, and predicting.</span>
           </h1>
           <p className="mt-6 max-w-md text-pretty font-sans text-base leading-relaxed text-[#b8b6b1] md:text-lg">
-            The OpusEco ecosystem rewards participation across staking, prediction markets, and community wagers.
+            Hold Opus for PLS. Hold Coda for PLSX. Stake Smaug and watch the supply shrink.
           </p>
 
           <p className="mt-8 flex items-center gap-2 font-sans text-sm text-[#9ca3af]">
