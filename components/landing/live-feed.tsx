@@ -8,6 +8,7 @@ import { SMAUG_ADDRESS, SMAUG_ABI, BURN_ADDRESS, getProvider, rpcRetry, formatWi
 type FeedItem = {
   id: string
   kind: "burn" | "post"
+  live?: boolean
   // burn
   title?: string
   detail?: string
@@ -18,31 +19,24 @@ type FeedItem = {
   url?: string
 }
 
-// Curated X post previews (no public API — content is hand-maintained).
+// Curated X profiles to surface in the feed (no public API, so these link out
+// to the real accounts rather than fabricating individual posts/timestamps).
 const X_POSTS: FeedItem[] = [
   {
-    id: "post-opuseco-1",
+    id: "post-opuseco",
     kind: "post",
     handle: "@OpusEco",
     name: "OpusEco",
-    text: "Every transaction strengthens the hoard. Smaug keeps burning, holders keep earning.",
+    text: "Official updates on Opus, Coda & Smaug — burns, reflections and ecosystem news.",
     url: "https://x.com/OpusEco/",
   },
   {
-    id: "post-rhw-1",
+    id: "post-rhw",
     kind: "post",
     handle: "@RichardHeartWin",
     name: "Richard Heart",
-    text: "PulseChain keeps shipping. Self-custody, low fees, and a community that actually builds.",
+    text: "PulseChain founder — protocol news, self-custody and community building.",
     url: "https://x.com/RichardHeartWin/",
-  },
-  {
-    id: "post-opuseco-2",
-    kind: "post",
-    handle: "@OpusEco",
-    name: "OpusEco",
-    text: "Holding Opus & Coda pays you in PLS and PLSX reflections — automatically, every block.",
-    url: "https://x.com/OpusEco/",
   },
 ]
 
@@ -52,22 +46,74 @@ const X_ICON = (
   </svg>
 )
 
-function relativeTime(secondsAgo: number) {
-  if (secondsAgo < 60) return "just now"
-  const m = Math.floor(secondsAgo / 60)
-  if (m < 60) return `${m}m ago`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
-  const d = Math.floor(h / 24)
-  return `${d}d ago`
+function FeedRow({ item }: { item: FeedItem }) {
+  const ref = useRef<HTMLLIElement>(null)
+
+  // Genuine "new entry" flash: light gold background fading to transparent.
+  useEffect(() => {
+    if (item.live && ref.current) {
+      ref.current.animate(
+        [
+          { backgroundColor: "rgba(212, 175, 55, 0.18)", opacity: 0, transform: "translateY(-10px)" },
+          { backgroundColor: "rgba(212, 175, 55, 0.10)", opacity: 1, transform: "translateY(0)" },
+          { backgroundColor: "transparent", opacity: 1, transform: "translateY(0)" },
+        ],
+        { duration: 1100, easing: "ease-out", fill: "forwards" },
+      )
+    }
+  }, [item.live])
+
+  return (
+    <li ref={ref} className="flex items-start gap-3 border-b border-[#1c1c24] px-5 py-3.5">
+      {item.kind === "burn" ? (
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d4af37]/10 ring-1 ring-[#d4af37]/30">
+          <Flame className="h-4 w-4 text-[#d4af37]" />
+        </span>
+      ) : (
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e8e6e3]/10 text-[#e8e6e3] ring-1 ring-[#e8e6e3]/20">
+          {X_ICON}
+        </span>
+      )}
+
+      <div className="min-w-0 flex-1">
+        {item.kind === "burn" ? (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="rounded bg-[#d4af37]/15 px-1.5 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wider text-[#d4af37]">
+                Protocol
+              </span>
+              <span className="truncate font-sans text-sm font-semibold text-[#e8e6e3]">{item.title}</span>
+            </div>
+            <p className="mt-0.5 truncate font-sans text-xs text-[#9ca3af]">{item.detail}</p>
+          </>
+        ) : (
+          <a href={item.url} target="_blank" rel="noopener noreferrer" className="group block">
+            <div className="flex items-center gap-2">
+              <span className="font-sans text-sm font-semibold text-[#e8e6e3]">{item.name}</span>
+              <span className="font-sans text-xs text-[#7c7a76]">{item.handle}</span>
+              <ExternalLink className="h-3 w-3 text-[#7c7a76] transition-colors group-hover:text-[#d4af37]" />
+            </div>
+            <p className="mt-0.5 line-clamp-2 font-sans text-xs leading-relaxed text-[#9ca3af] group-hover:text-[#c9c7c3]">
+              {item.text}
+            </p>
+          </a>
+        )}
+      </div>
+
+      {item.live && (
+        <span className="shrink-0 font-sans text-[11px] font-medium text-[#d4af37]">just now</span>
+      )}
+    </li>
+  )
 }
 
 export function LiveFeed() {
   const [burnedMillions, setBurnedMillions] = useState<number | null>(null)
-  const [paused, setPaused] = useState(false)
-  const [order, setOrder] = useState(0)
+  const [liveIds, setLiveIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
+    let cancelled = false
+
     const fetchBurned = async () => {
       try {
         const provider = getProvider()
@@ -78,61 +124,48 @@ export function LiveFeed() {
         } catch {
           burned = await rpcRetry(() => smaug.balanceOf(BURN_ADDRESS))
         }
-        const total = Number(ethers.formatEther(burned))
-        setBurnedMillions(Math.floor(total / 1_000_000))
+        const millions = Math.floor(Number(ethers.formatEther(burned)) / 1_000_000)
+        if (cancelled) return
+        setBurnedMillions((prev) => {
+          // Only flag entries as "live" when a genuinely new milestone is crossed
+          // while the user is watching — never on the initial load.
+          if (prev !== null && millions > prev) {
+            const fresh = new Set<string>()
+            for (let m = prev + 1; m <= millions; m++) fresh.add(`burn-${m}`)
+            setLiveIds(fresh)
+          }
+          return millions
+        })
       } catch (err) {
         console.error("[v0] Error fetching Smaug burned for feed:", err)
       }
     }
+
     fetchBurned()
+    const t = setInterval(fetchBurned, 45000)
+    return () => {
+      cancelled = true
+      clearInterval(t)
+    }
   }, [])
 
-  // Build the feed: real burn milestones (each extra million) + curated X posts.
+  // Real entries only: recent burn milestones (newest on top) + curated X profiles.
   const items = useMemo<FeedItem[]>(() => {
+    if (burnedMillions === null) return []
     const burnItems: FeedItem[] = []
-    if (burnedMillions !== null) {
-      // Most recent ~8 million-thresholds crossed, newest (highest) first.
-      const count = Math.min(8, burnedMillions)
-      for (let i = 0; i < count; i++) {
-        const milestone = burnedMillions - i
-        burnItems.push({
-          id: `burn-${milestone}`,
-          kind: "burn",
-          title: `${formatWithCommas(milestone)}M SMAUG burned`,
-          detail:
-            i === 0
-              ? "Latest burn milestone reached — supply permanently reduced."
-              : "Burn milestone — supply permanently reduced.",
-        })
-      }
+    const count = Math.min(6, burnedMillions)
+    for (let i = 0; i < count; i++) {
+      const milestone = burnedMillions - i
+      burnItems.push({
+        id: `burn-${milestone}`,
+        kind: "burn",
+        live: liveIds.has(`burn-${milestone}`),
+        title: `${formatWithCommas(milestone)}M SMAUG burned`,
+        detail: "Burn milestone reached — supply permanently reduced.",
+      })
     }
-
-    // Interleave posts between burn milestones so the feed feels varied.
-    const merged: FeedItem[] = []
-    let bi = 0
-    let pi = 0
-    while (bi < burnItems.length || pi < X_POSTS.length) {
-      if (bi < burnItems.length) merged.push(burnItems[bi++])
-      if (bi < burnItems.length) merged.push(burnItems[bi++])
-      if (pi < X_POSTS.length) merged.push(X_POSTS[pi++])
-    }
-    return merged
-  }, [burnedMillions])
-
-  // Auto-advance: rotate the list so a "new" item slides in on top.
-  useEffect(() => {
-    if (paused || items.length <= 1) return
-    const t = setInterval(() => setOrder((o) => (o + 1) % items.length), 3500)
-    return () => clearInterval(t)
-  }, [paused, items.length])
-
-  const rotated = useMemo(() => {
-    if (items.length === 0) return []
-    return items.map((_, i) => items[(i + order) % items.length])
-  }, [items, order])
-
-  // Synthetic "time since" that increases as items rotate down the list.
-  const baseRef = useRef(Date.now())
+    return [...burnItems, ...X_POSTS]
+  }, [burnedMillions, liveIds])
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-4 md:px-6">
@@ -148,64 +181,14 @@ export function LiveFeed() {
           <span className="font-sans text-xs text-[#7c7a76]">Burns &amp; community updates</span>
         </div>
 
-        <ul
-          className="relative h-[340px] overflow-hidden"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          aria-label="Live ecosystem feed"
-        >
-          {rotated.length === 0 && (
-            <li className="flex h-full items-center justify-center font-sans text-sm text-[#7c7a76]">
-              Loading live data…
+        <ul className="relative max-h-[360px] overflow-y-auto" aria-label="Live ecosystem feed" aria-live="polite">
+          {items.length === 0 ? (
+            <li className="flex h-[200px] items-center justify-center font-sans text-sm text-[#7c7a76]">
+              Waiting for live on-chain activity…
             </li>
+          ) : (
+            items.map((item) => <FeedRow key={item.id} item={item} />)
           )}
-          {rotated.map((item, idx) => (
-            <li
-              key={`${item.id}-${order}`}
-              className={`flex items-start gap-3 border-b border-[#1c1c24] px-5 py-3.5 transition-all duration-500 ${
-                idx === 0 ? "animate-[feedIn_0.5s_ease-out] bg-[#12121a]" : ""
-              }`}
-            >
-              {item.kind === "burn" ? (
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d4af37]/10 ring-1 ring-[#d4af37]/30">
-                  <Flame className="h-4 w-4 text-[#d4af37]" />
-                </span>
-              ) : (
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e8e6e3]/10 text-[#e8e6e3] ring-1 ring-[#e8e6e3]/20">
-                  {X_ICON}
-                </span>
-              )}
-
-              <div className="min-w-0 flex-1">
-                {item.kind === "burn" ? (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <span className="rounded bg-[#d4af37]/15 px-1.5 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wider text-[#d4af37]">
-                        Protocol
-                      </span>
-                      <span className="truncate font-sans text-sm font-semibold text-[#e8e6e3]">{item.title}</span>
-                    </div>
-                    <p className="mt-0.5 truncate font-sans text-xs text-[#9ca3af]">{item.detail}</p>
-                  </>
-                ) : (
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="group block">
-                    <div className="flex items-center gap-2">
-                      <span className="font-sans text-sm font-semibold text-[#e8e6e3]">{item.name}</span>
-                      <span className="font-sans text-xs text-[#7c7a76]">{item.handle}</span>
-                      <ExternalLink className="h-3 w-3 text-[#7c7a76] transition-colors group-hover:text-[#d4af37]" />
-                    </div>
-                    <p className="mt-0.5 line-clamp-2 font-sans text-xs leading-relaxed text-[#9ca3af] group-hover:text-[#c9c7c3]">
-                      {item.text}
-                    </p>
-                  </a>
-                )}
-              </div>
-
-              <span className="shrink-0 font-sans text-[11px] text-[#5f5d59]">
-                {relativeTime((idx + 1) * 47 + Math.floor((Date.now() - baseRef.current) / 1000))}
-              </span>
-            </li>
-          ))}
         </ul>
       </div>
     </section>
