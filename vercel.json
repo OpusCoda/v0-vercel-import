@@ -3,6 +3,10 @@
   "env": {
     "RPC_URL": "https://rpc.pulsechain.com"
   },
+  "crons": [
+    { "path": "/api/stats", "schedule": "* * * * *" },
+    { "path": "/api/prices", "schedule": "* * * * *" }
+  ],
   "headers": [
     {
       "source": "/api(.*)",

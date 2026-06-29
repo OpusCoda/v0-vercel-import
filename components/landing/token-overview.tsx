@@ -1,22 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { ethers } from "ethers"
 import { RefreshCw, Copy, Check, Mountain } from "lucide-react"
-import {
-  SMAUG_ADDRESS,
-  SMAUG_ABI,
-  BALANCE_ABI,
-  PWBTC_ADDRESS,
-  SMAUG_VAULT_ADDRESS,
-  SMAUG_HOARD_ADDRESS,
-  GAS_MONEY_ADDRESS,
-  DOMINANCE_ADDRESS,
-  BURN_ADDRESS,
-  getProvider,
-  rpcRetry,
-  formatMillions,
-} from "@/lib/onchain"
+import { SMAUG_VAULT_ADDRESS, SMAUG_HOARD_ADDRESS, formatMillions } from "@/lib/onchain"
 import { storeSmaugRoiSnapshot, getSmaugRoi } from "@/app/actions"
 
 type HoardData = {
@@ -57,85 +43,38 @@ export function TokenOverview() {
     }
   }
 
-  const fetchSmaugLPEvents = async () => {
-    try {
-      const provider = getProvider()
-      const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
-      const lpFilter = smaugContract.filters.LPAdded()
-      const lpEvents = await rpcRetry(() => smaugContract.queryFilter(lpFilter, 0, "latest"), 2, 3000)
-      let totalPLS = 0n
-      for (const event of lpEvents) {
-        const log = event as ethers.EventLog
-        totalPLS += BigInt(log.args[1])
-      }
-      setSmaugLpPls(ethers.formatUnits(totalPLS, 18))
-    } catch (error) {
-      console.error("[v0] Failed to fetch Smaug LP events:", error)
-    }
+  // Apply price-derived values from the cached /api/prices response
+  const applyPrices = (p: any) => {
+    if (!p) return
+    setPlsPrice(p.pls || 0)
+    setSmaugPrice(p.smaug || 0)
+    setSmaugMarketCap(p.smaugMarketCap || 0)
+    setSmaugLiquidity(p.smaugLiquidity || 0)
   }
 
-  const fetchSmaugVaultData = async (prices?: any) => {
+  // All on-chain numbers come from the shared, server-cached /api/stats route
+  const fetchStats = async (prices?: any) => {
     const p = prices || cachedPricesRef.current
-    if (p) {
-      setPlsPrice(p.pls || 0)
-      setSmaugPrice(p.smaug || 0)
-      setSmaugMarketCap(p.smaugMarketCap || 0)
-      setSmaugLiquidity(p.smaugLiquidity || 0)
-    }
-
-    const provider = getProvider()
-    const smaugContract = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
-
     try {
-      const vaultBalance = await rpcRetry(() => provider.getBalance(SMAUG_VAULT_ADDRESS))
-      setSmaugVaultPLS(Number(ethers.formatEther(vaultBalance)))
-    } catch (err) {
-      console.error("[v0] Error fetching vault PLS balance:", err)
-    }
-
-    try {
-      const hoardPlsBalance = await rpcRetry(() => provider.getBalance(SMAUG_HOARD_ADDRESS))
-      const pWbtcContract = new ethers.Contract(PWBTC_ADDRESS, BALANCE_ABI, provider)
-      const pWbtcBal = await rpcRetry(() => pWbtcContract.balanceOf(SMAUG_HOARD_ADDRESS))
+      const res = await fetch("/api/stats")
+      if (!res.ok) return
+      const s = await res.json()
+      setSmaugLpPls(String(s.smaugLpPls ?? 0))
+      setSmaugVaultPLS(s.smaugVaultPLS ?? 0)
+      setSmaugTotalBurned(s.smaugBurned ?? 0)
+      setSmaugVaultBurned(s.smaugVaultBurned ?? 0)
+      setSmaugHoardBurned(s.smaugHoardBurned ?? 0)
       setHoardData({
-        pls: Number(ethers.formatEther(hoardPlsBalance)),
-        pWbtc: Number(ethers.formatUnits(pWbtcBal, 8)),
+        pls: s.smaugHoardPLS ?? 0,
+        pWbtc: s.smaugHoardPWbtc ?? 0,
         pWbtcPrice: p?.pwbtc || 0,
       })
     } catch (err) {
-      console.error("[v0] Error fetching hoard balances:", err)
+      console.error("[v0] Error fetching on-chain stats:", err)
     }
+  }
 
-    await new Promise((r) => setTimeout(r, 1000))
-
-    try {
-      let burned
-      try {
-        burned = await rpcRetry(() => smaugContract.totalBurned())
-      } catch {
-        burned = await rpcRetry(() => smaugContract.balanceOf(BURN_ADDRESS))
-      }
-      setSmaugTotalBurned(Number(ethers.formatEther(burned)))
-    } catch (err) {
-      console.error("[v0] Error fetching total burned:", err)
-    }
-
-    await new Promise((r) => setTimeout(r, 1000))
-
-    try {
-      const transferFilter = smaugContract.filters.Transfer
-      const [vaultBurnEvents, hoardBurnEvents] = await Promise.all([
-        rpcRetry(() => smaugContract.queryFilter(transferFilter(SMAUG_VAULT_ADDRESS, BURN_ADDRESS)), 2, 3000),
-        rpcRetry(() => smaugContract.queryFilter(transferFilter(SMAUG_HOARD_ADDRESS, BURN_ADDRESS)), 2, 3000),
-      ])
-      const vaultBurnTotal = vaultBurnEvents.reduce((sum, e) => sum + Number(ethers.formatEther((e as ethers.EventLog).args[2])), 0)
-      const hoardBurnTotal = hoardBurnEvents.reduce((sum, e) => sum + Number(ethers.formatEther((e as ethers.EventLog).args[2])), 0)
-      setSmaugVaultBurned(vaultBurnTotal)
-      setSmaugHoardBurned(hoardBurnTotal)
-    } catch (err) {
-      console.error("[v0] Error fetching burn events:", err)
-    }
-
+  const fetchRoi = async () => {
     try {
       const roiRes = await fetch("/api/smaug-roi")
       if (roiRes.ok) {
@@ -156,23 +95,17 @@ export function TokenOverview() {
   useEffect(() => {
     const init = async () => {
       const prices = await fetchCachedPrices()
-      try {
-        await fetchSmaugVaultData(prices)
-      } catch {}
-      try {
-        await fetchSmaugLPEvents()
-      } catch {}
+      applyPrices(prices)
+      await Promise.allSettled([fetchStats(prices), fetchRoi()])
     }
     init()
   }, [])
 
   const refresh = async () => {
     setIsRefreshing(true)
-    try {
-      const prices = await fetchCachedPrices()
-      await fetchSmaugVaultData(prices)
-      await fetchSmaugLPEvents()
-    } catch {}
+    const prices = await fetchCachedPrices()
+    applyPrices(prices)
+    await Promise.allSettled([fetchStats(prices), fetchRoi()])
     setIsRefreshing(false)
   }
 

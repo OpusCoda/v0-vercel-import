@@ -1,24 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ethers } from "ethers"
 import { Coins, Flame, Droplets, Gift } from "lucide-react"
-import {
-  OPUS_CONTRACT,
-  CODA_CONTRACT,
-  CODA_DISTRIBUTORS,
-  SMAUG_ADDRESS,
-  FINVESTA_ADDRESS,
-  MISSOR_ADDRESS,
-  WGPP_ADDRESS,
-  OPUS_ABI,
-  DISTRIBUTOR_ABI,
-  SMAUG_ABI,
-  BURN_ADDRESS,
-  getProvider,
-  rpcRetry,
-  formatBillions,
-} from "@/lib/onchain"
+import { formatBillions } from "@/lib/onchain"
 
 export function StatCards() {
   const [plsDistributed, setPlsDistributed] = useState<number | null>(null)
@@ -29,14 +13,20 @@ export function StatCards() {
   const [otherTokensUsd, setOtherTokensUsd] = useState<number | null>(null)
 
   useEffect(() => {
-    const fetchStats = async () => {
-      const provider = getProvider()
-
-      // Token prices for USD values
+    const fetchData = async () => {
+      // Cached on-chain stats + prices — both served from fast, shared server caches
       try {
-        const res = await fetch("/api/prices")
-        if (res.ok) {
-          const prices = await res.json()
+        const [statsRes, pricesRes] = await Promise.all([fetch("/api/stats"), fetch("/api/prices")])
+
+        if (statsRes.ok) {
+          const stats = await statsRes.json()
+          setPlsDistributed(stats.plsDistributed ?? null)
+          setPlsxDistributed(stats.plsxDistributed ?? null)
+          setSmaugBurned(stats.smaugBurned ?? null)
+        }
+
+        if (pricesRes.ok) {
+          const prices = await pricesRes.json()
           setPlsPrice(prices.pls ?? null)
           setPlsxPrice(prices.plsx ?? null)
 
@@ -51,69 +41,10 @@ export function StatCards() {
           setOtherTokensUsd(otherUsd)
         }
       } catch (err) {
-        console.error("[v0] Error fetching prices:", err)
-      }
-
-      // Total PLS distributed (Opus) + printer PLS (Finvesta/Missor/WGPP)
-      try {
-        const opus = new ethers.Contract(OPUS_CONTRACT, OPUS_ABI, provider)
-        const plsVal = await rpcRetry(() => opus.getTotalPlsDistributed(), 1, 2000)
-        let totalPls = Number(ethers.formatUnits(plsVal, 18))
-
-        const scale = BigInt("10000000000000000000000")
-        const fmtPrinter = (raw: bigint) => {
-          const whole = raw / scale
-          const frac = (raw % scale).toString().padStart(22, "0")
-          return Number.parseFloat(`${whole}.${frac}`)
-        }
-        const [finvesta, missor, wgpp] = await Promise.all([
-          rpcRetry(() => opus.getTotalPlsEarned(FINVESTA_ADDRESS), 1, 2000),
-          rpcRetry(() => opus.getTotalPlsEarned(MISSOR_ADDRESS), 1, 2000),
-          rpcRetry(() => opus.getTotalPlsEarned(WGPP_ADDRESS), 1, 2000),
-        ])
-        totalPls += fmtPrinter(BigInt(finvesta.toString())) + fmtPrinter(BigInt(missor.toString())) + fmtPrinter(BigInt(wgpp.toString()))
-        setPlsDistributed(totalPls)
-      } catch (err) {
-        console.error("[v0] Error fetching PLS distributed:", err)
-      }
-
-      // Total PLSX distributed (Coda distributors + new Coda contract selector)
-      try {
-        let totalPlsx = 0n
-        const results = await Promise.allSettled(
-          CODA_DISTRIBUTORS.map((address) => {
-            const contract = new ethers.Contract(address, DISTRIBUTOR_ABI, provider)
-            return rpcRetry(() => contract.totalPlsxDistributed(), 1, 2000).then((v) => BigInt(v))
-          }),
-        )
-        for (const r of results) if (r.status === "fulfilled") totalPlsx += r.value
-
-        try {
-          const newCodaPlsx = await rpcRetry(() => provider.call({ to: CODA_CONTRACT, data: "0x775b2dfa" }), 1, 2000)
-          if (newCodaPlsx && newCodaPlsx !== "0x") totalPlsx += BigInt(newCodaPlsx)
-        } catch (e) {
-          console.error("[v0] Error fetching new Coda PLSX:", e)
-        }
-        setPlsxDistributed(Number(ethers.formatUnits(totalPlsx, 18)))
-      } catch (err) {
-        console.error("[v0] Error fetching PLSX distributed:", err)
-      }
-
-      // Smaug burned
-      try {
-        const smaug = new ethers.Contract(SMAUG_ADDRESS, SMAUG_ABI, provider)
-        let burned
-        try {
-          burned = await rpcRetry(() => smaug.totalBurned())
-        } catch {
-          burned = await rpcRetry(() => smaug.balanceOf(BURN_ADDRESS))
-        }
-        setSmaugBurned(Number(ethers.formatEther(burned)))
-      } catch (err) {
-        console.error("[v0] Error fetching Smaug burned:", err)
+        console.error("[v0] Error fetching stats:", err)
       }
     }
-    fetchStats()
+    fetchData()
   }, [])
 
   const display = (v: number | null) => (v === null ? "—" : formatBillions(v))
