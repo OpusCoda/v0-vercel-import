@@ -248,7 +248,10 @@ export function MarketsList() {
         {/* Left column: Probability Shop */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Probability Shop</h3>
+            <div>
+              <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Probability Shop</h3>
+              <p className="font-sans text-xs text-[#7c7a76]">Prediction market</p>
+            </div>
             <span className="font-sans text-xs text-[#7c7a76]">{filteredProbabilityMarkets.length} markets</span>
           </div>
           <div className="flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2">
@@ -272,23 +275,24 @@ export function MarketsList() {
 
         {/* Right column: Oath Market */}
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-2">
+          <div>
             <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Oath Market</h3>
-            <div className="flex gap-1">
-              {["All", "Active", "Open"].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setOathFilter(status as "All" | "Active" | "Open")}
-                  className={`rounded px-2 py-1 font-sans text-xs font-semibold transition-colors ${
-                    oathFilter === status
-                      ? "bg-[#d4af37] text-[#0a0a0c]"
-                      : "border border-[#2a2a35] bg-[#101017] text-[#b8b6b1] hover:border-[#d4af37]/50"
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
+            <p className="font-sans text-xs text-[#7c7a76]">Peer-to-peer wager escrow</p>
+          </div>
+          <div className="flex gap-1">
+            {["All", "Active", "Open"].map((status) => (
+              <button
+                key={status}
+                onClick={() => setOathFilter(status as "All" | "Active" | "Open")}
+                className={`rounded px-2 py-1 font-sans text-xs font-semibold transition-colors ${
+                  oathFilter === status
+                    ? "bg-[#d4af37] text-[#0a0a0c]"
+                    : "border border-[#2a2a35] bg-[#101017] text-[#b8b6b1] hover:border-[#d4af37]/50"
+                }`}
+              >
+                {status}
+              </button>
+            ))}
           </div>
 
           {/* Price Range Filter */}
