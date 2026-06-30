@@ -293,43 +293,86 @@ export function MarketsList() {
 
           {/* Price Range Filter */}
           <div className="rounded-lg border border-[#2a2a35] bg-[#0a0a0c] p-4">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between">
               <p className="font-sans text-xs font-semibold text-[#b8b6b1]">Stake Range</p>
               <p className="font-sans text-xs text-[#d4af37]">
                 {formatPrice(priceMin)} – {formatPrice(priceMax)} PLS
               </p>
             </div>
 
-            {/* Min Slider */}
-            <div className="mb-3 space-y-1">
-              <label className="block font-sans text-[10px] text-[#7c7a76]">Min</label>
-              <input
-                type="range"
-                min={MIN_PRICE}
-                max={priceMax}
-                value={priceMin}
-                onChange={(e) => {
-                  const newMin = Math.min(Number(e.target.value), priceMax)
-                  setPriceMin(newMin)
-                }}
-                className="w-full accent-[#d4af37]"
-              />
-            </div>
+            {/* Dual-handle range slider */}
+            <div className="relative flex items-center gap-2">
+              <style>{`
+                input[type='range'] {
+                  appearance: none;
+                  width: 100%;
+                  height: 4px;
+                  border-radius: 2px;
+                  background: #2a2a35;
+                  outline: none;
+                  -webkit-appearance: none;
+                  z-index: ${priceMax > MAX_PRICE * 0.5 ? 5 : 3};
+                }
+                input[type='range']::-webkit-slider-thumb {
+                  appearance: none;
+                  -webkit-appearance: none;
+                  width: 16px;
+                  height: 16px;
+                  border-radius: 50%;
+                  background: #d4af37;
+                  cursor: pointer;
+                  box-shadow: 0 0 0 2px #0a0a0c;
+                  z-index: ${priceMax > MAX_PRICE * 0.5 ? 5 : 3};
+                }
+                input[type='range']::-moz-range-thumb {
+                  width: 16px;
+                  height: 16px;
+                  border-radius: 50%;
+                  background: #d4af37;
+                  cursor: pointer;
+                  border: 2px solid #0a0a0c;
+                  z-index: ${priceMax > MAX_PRICE * 0.5 ? 5 : 3};
+                }
+                .slider-container {
+                  position: relative;
+                  width: 100%;
+                }
+                .slider-container input {
+                  position: absolute;
+                  width: 100%;
+                }
+                .slider-min {
+                  z-index: 3;
+                }
+                .slider-max {
+                  z-index: ${priceMax > MAX_PRICE * 0.5 ? 5 : 3};
+                }
+              `}</style>
 
-            {/* Max Slider */}
-            <div className="space-y-1">
-              <label className="block font-sans text-[10px] text-[#7c7a76]">Max</label>
-              <input
-                type="range"
-                min={priceMin}
-                max={MAX_PRICE}
-                value={priceMax}
-                onChange={(e) => {
-                  const newMax = Math.max(Number(e.target.value), priceMin)
-                  setPriceMax(newMax)
-                }}
-                className="w-full accent-[#d4af37]"
-              />
+              <div className="slider-container">
+                <input
+                  type="range"
+                  min={MIN_PRICE}
+                  max={MAX_PRICE}
+                  value={priceMin}
+                  onChange={(e) => {
+                    const newMin = Math.min(Number(e.target.value), priceMax)
+                    setPriceMin(newMin)
+                  }}
+                  className="slider-min"
+                />
+                <input
+                  type="range"
+                  min={MIN_PRICE}
+                  max={MAX_PRICE}
+                  value={priceMax}
+                  onChange={(e) => {
+                    const newMax = Math.max(Number(e.target.value), priceMin)
+                    setPriceMax(newMax)
+                  }}
+                  className="slider-max"
+                />
+              </div>
             </div>
 
             {/* Reset button */}
@@ -339,7 +382,7 @@ export function MarketsList() {
                   setPriceMin(MIN_PRICE)
                   setPriceMax(MAX_PRICE)
                 }}
-                className="mt-3 w-full rounded px-2 py-1 font-sans text-xs font-semibold text-[#d4af37] hover:bg-[#d4af37]/10 transition-colors"
+                className="mt-4 w-full rounded px-2 py-1 font-sans text-xs font-semibold text-[#d4af37] hover:bg-[#d4af37]/10 transition-colors"
               >
                 Reset
               </button>
