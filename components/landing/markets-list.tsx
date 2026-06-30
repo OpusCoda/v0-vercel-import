@@ -296,7 +296,7 @@ export function MarketsList() {
             <div className="mb-4 flex items-center justify-between">
               <p className="font-sans text-xs font-semibold text-[#b8b6b1]">Stake Range</p>
               <p className="font-sans text-xs text-[#d4af37]">
-                {formatPrice(priceMin)} – {formatPrice(priceMax)} PLS
+                {formatPrice(priceMin)} – {formatPrice(priceMax)}{priceMax === MAX_PRICE ? "+" : ""} PLS
               </p>
             </div>
 
