@@ -255,8 +255,6 @@ export function ReferralsDashboard() {
             </div>
           ))}
         </div>
-        <p className="mx-auto mt-8 max-w-2xl text-pretty text-center font-sans text-xs leading-relaxed text-[#7c7a76]">
-        </p>
       </div>
     </section>
   )
