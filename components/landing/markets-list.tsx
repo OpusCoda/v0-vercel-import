@@ -142,10 +142,32 @@ const oathMarkets: OathMarket[] = [
 
 const CATEGORIES: Category[] = ["Crypto", "Politics", "Sports", "Macro", "PulseChain", "Misc"]
 
+const MIN_PRICE = 1
+const MAX_PRICE = 1_000_000_000
+
+// Format large numbers with K, M, B suffixes
+function formatPrice(value: number): string {
+  if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(1) + "B"
+  if (value >= 1_000_000) return (value / 1_000_000).toFixed(1) + "M"
+  if (value >= 1_000) return (value / 1_000).toFixed(1) + "K"
+  return value.toString()
+}
+
+// Parse formatted strings back to numbers
+function parsePrice(str: string): number {
+  const num = parseFloat(str)
+  if (str.endsWith("B")) return num * 1_000_000_000
+  if (str.endsWith("M")) return num * 1_000_000
+  if (str.endsWith("K")) return num * 1_000
+  return num
+}
+
 export function MarketsList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategories, setSelectedCategories] = useState<Set<Category>>(new Set())
   const [oathFilter, setOathFilter] = useState<"All" | "Active" | "Open">("All")
+  const [priceMin, setPriceMin] = useState(MIN_PRICE)
+  const [priceMax, setPriceMax] = useState(MAX_PRICE)
 
   // Filter Probability Shop markets
   const filteredProbabilityMarkets = useMemo(() => {
@@ -165,9 +187,12 @@ export function MarketsList() {
       const matchesCategory = selectedCategories.size === 0 || selectedCategories.has(market.category)
       const matchesStatus =
         oathFilter === "All" || (oathFilter === "Active" && market.status === "active") || (oathFilter === "Open" && market.status === "open")
-      return matchesSearch && matchesCategory && matchesStatus
+      // Check if the max of (yes staked, no staked) falls within price range
+      const maxStaked = Math.max(market.yesData.staked, market.noData.staked)
+      const matchesPrice = maxStaked >= priceMin && maxStaked <= priceMax
+      return matchesSearch && matchesCategory && matchesStatus && matchesPrice
     })
-  }, [searchQuery, selectedCategories, oathFilter])
+  }, [searchQuery, selectedCategories, oathFilter, priceMin, priceMax])
 
   const toggleCategory = (cat: Category) => {
     const newCats = new Set(selectedCategories)
@@ -265,6 +290,62 @@ export function MarketsList() {
               ))}
             </div>
           </div>
+
+          {/* Price Range Filter */}
+          <div className="rounded-lg border border-[#2a2a35] bg-[#0a0a0c] p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="font-sans text-xs font-semibold text-[#b8b6b1]">Stake Range</p>
+              <p className="font-sans text-xs text-[#d4af37]">
+                {formatPrice(priceMin)} – {formatPrice(priceMax)} PLS
+              </p>
+            </div>
+
+            {/* Min Slider */}
+            <div className="mb-3 space-y-1">
+              <label className="block font-sans text-[10px] text-[#7c7a76]">Min</label>
+              <input
+                type="range"
+                min={MIN_PRICE}
+                max={priceMax}
+                value={priceMin}
+                onChange={(e) => {
+                  const newMin = Math.min(Number(e.target.value), priceMax)
+                  setPriceMin(newMin)
+                }}
+                className="w-full accent-[#d4af37]"
+              />
+            </div>
+
+            {/* Max Slider */}
+            <div className="space-y-1">
+              <label className="block font-sans text-[10px] text-[#7c7a76]">Max</label>
+              <input
+                type="range"
+                min={priceMin}
+                max={MAX_PRICE}
+                value={priceMax}
+                onChange={(e) => {
+                  const newMax = Math.max(Number(e.target.value), priceMin)
+                  setPriceMax(newMax)
+                }}
+                className="w-full accent-[#d4af37]"
+              />
+            </div>
+
+            {/* Reset button */}
+            {(priceMin !== MIN_PRICE || priceMax !== MAX_PRICE) && (
+              <button
+                onClick={() => {
+                  setPriceMin(MIN_PRICE)
+                  setPriceMax(MAX_PRICE)
+                }}
+                className="mt-3 w-full rounded px-2 py-1 font-sans text-xs font-semibold text-[#d4af37] hover:bg-[#d4af37]/10 transition-colors"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+
           <div className="flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2">
             {filteredOathMarkets.length > 0 ? (
               filteredOathMarkets.map((market, idx) => (
