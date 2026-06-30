@@ -238,7 +238,7 @@ export function ReferralsDashboard() {
             {
               Icon: Layers,
               title: "Stacking capped at 50%",
-              body: "Combined discounts and bonuses from referrals and Smaug staking are capped at 40% so the model stays sustainable.",
+              body: "Combined discounts and bonuses from referrals and Smaug staking are capped at 50%.",
             },
             {
               Icon: Clock,
