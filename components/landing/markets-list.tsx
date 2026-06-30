@@ -207,7 +207,7 @@ export function MarketsList() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
       <div className="mb-8 text-center">
-        <h2 className="font-serif text-2xl font-bold text-[#e8e6e3] md:text-3xl">The Opus Market</h2>
+        <h2 className="font-serif text-2xl font-bold text-[#e8e6e3] md:text-3xl">The Opus Marketplace</h2>
         <p className="mt-2 font-sans text-sm text-[#b8b6b1]">Browse and place bets on real-world outcomes</p>
       </div>
 
