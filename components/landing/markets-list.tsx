@@ -301,55 +301,82 @@ export function MarketsList() {
             </div>
 
             {/* Dual-handle range slider */}
-            <div className="relative flex items-center gap-2">
+            <div className="relative w-full">
               <style>{`
-                input[type='range'] {
-                  appearance: none;
-                  width: 100%;
-                  height: 4px;
-                  border-radius: 2px;
-                  background: #2a2a35;
-                  outline: none;
-                  -webkit-appearance: none;
-                  z-index: ${priceMax > MAX_PRICE * 0.5 ? 5 : 3};
-                }
-                input[type='range']::-webkit-slider-thumb {
-                  appearance: none;
-                  -webkit-appearance: none;
-                  width: 16px;
-                  height: 16px;
-                  border-radius: 50%;
-                  background: #d4af37;
-                  cursor: pointer;
-                  box-shadow: 0 0 0 2px #0a0a0c;
-                  z-index: ${priceMax > MAX_PRICE * 0.5 ? 5 : 3};
-                }
-                input[type='range']::-moz-range-thumb {
-                  width: 16px;
-                  height: 16px;
-                  border-radius: 50%;
-                  background: #d4af37;
-                  cursor: pointer;
-                  border: 2px solid #0a0a0c;
-                  z-index: ${priceMax > MAX_PRICE * 0.5 ? 5 : 3};
-                }
-                .slider-container {
+                .dual-slider {
                   position: relative;
                   width: 100%;
+                  height: 4px;
+                  margin: 8px 0;
                 }
-                .slider-container input {
+                .dual-slider input[type='range'] {
                   position: absolute;
                   width: 100%;
+                  height: 4px;
+                  top: 0;
+                  appearance: none;
+                  -webkit-appearance: none;
+                  background: transparent;
+                  outline: none;
+                  pointer-events: none;
                 }
-                .slider-min {
-                  z-index: 3;
+                .dual-slider input[type='range']::-webkit-slider-thumb {
+                  appearance: none;
+                  -webkit-appearance: none;
+                  width: 16px;
+                  height: 16px;
+                  border-radius: 50%;
+                  background: #d4af37;
+                  cursor: pointer;
+                  pointer-events: auto;
+                  box-shadow: 0 0 0 2px #0a0a0c;
                 }
-                .slider-max {
-                  z-index: ${priceMax > MAX_PRICE * 0.5 ? 5 : 3};
+                .dual-slider input[type='range']::-moz-range-thumb {
+                  width: 16px;
+                  height: 16px;
+                  border-radius: 50%;
+                  background: #d4af37;
+                  cursor: pointer;
+                  pointer-events: auto;
+                  border: 2px solid #0a0a0c;
+                }
+                .dual-slider input[type='range']::-webkit-slider-runnable-track {
+                  background: transparent;
+                  border: none;
+                }
+                .dual-slider input[type='range']::-moz-range-track {
+                  background: transparent;
+                  border: none;
+                }
+                .dual-slider .track {
+                  position: absolute;
+                  top: 0;
+                  height: 4px;
+                  background: #2a2a35;
+                  border-radius: 2px;
+                  pointer-events: none;
+                  width: 100%;
+                }
+                .dual-slider .range {
+                  position: absolute;
+                  top: 0;
+                  height: 4px;
+                  background: #d4af37;
+                  border-radius: 2px;
+                  pointer-events: none;
+                  z-index: 1;
                 }
               `}</style>
 
-              <div className="slider-container">
+              <div className="dual-slider">
+                <div className="track" />
+                <div
+                  className="range"
+                  style={{
+                    left: `${((priceMin - MIN_PRICE) / (MAX_PRICE - MIN_PRICE)) * 100}%`,
+                    right: `${100 - ((priceMax - MIN_PRICE) / (MAX_PRICE - MIN_PRICE)) * 100}%`,
+                  }}
+                />
                 <input
                   type="range"
                   min={MIN_PRICE}
@@ -359,7 +386,7 @@ export function MarketsList() {
                     const newMin = Math.min(Number(e.target.value), priceMax)
                     setPriceMin(newMin)
                   }}
-                  className="slider-min"
+                  style={{ zIndex: priceMin > MAX_PRICE - (MAX_PRICE - MIN_PRICE) * 0.1 ? 5 : 3 }}
                 />
                 <input
                   type="range"
@@ -370,23 +397,10 @@ export function MarketsList() {
                     const newMax = Math.max(Number(e.target.value), priceMin)
                     setPriceMax(newMax)
                   }}
-                  className="slider-max"
+                  style={{ zIndex: priceMax > MAX_PRICE - (MAX_PRICE - MIN_PRICE) * 0.1 ? 3 : 5 }}
                 />
               </div>
             </div>
-
-            {/* Reset button */}
-            {(priceMin !== MIN_PRICE || priceMax !== MAX_PRICE) && (
-              <button
-                onClick={() => {
-                  setPriceMin(MIN_PRICE)
-                  setPriceMax(MAX_PRICE)
-                }}
-                className="mt-4 w-full rounded px-2 py-1 font-sans text-xs font-semibold text-[#d4af37] hover:bg-[#d4af37]/10 transition-colors"
-              >
-                Reset
-              </button>
-            )}
           </div>
 
           <div className="flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2">
