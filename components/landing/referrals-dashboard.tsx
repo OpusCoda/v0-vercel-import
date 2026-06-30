@@ -256,8 +256,6 @@ export function ReferralsDashboard() {
           ))}
         </div>
         <p className="mx-auto mt-8 max-w-2xl text-pretty text-center font-sans text-xs leading-relaxed text-[#7c7a76]">
-          The referral name registry and your link are live now. Fee discounts, PLS reward payouts, and the immutable
-          on-chain referrer binding activate when the Oath Vault and Probability Shop contracts deploy.
         </p>
       </div>
     </section>
