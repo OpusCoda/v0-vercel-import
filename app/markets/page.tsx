@@ -8,8 +8,8 @@ export default function MarketsPage() {
     <main className="min-h-screen bg-[#0a0a0c]">
       <SiteNav />
       <div className="pt-24 md:pt-28">
-        <MarketsOverview />
         <MarketsList />
+        <MarketsOverview />
       </div>
       <SiteFooter />
     </main>
