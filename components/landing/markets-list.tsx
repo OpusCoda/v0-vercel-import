@@ -5,16 +5,33 @@ import { Search, X } from "lucide-react"
 import { MarketCard, type MarketCardProps } from "./market-card"
 
 type Category = "Crypto" | "Politics" | "Sports" | "Macro" | "PulseChain" | "Misc"
-type OathStatus = "Active" | "Open"
+type OathStatus = "active" | "open"
 
-interface ExtendedMarketCard extends MarketCardProps {
+interface ProbabilityMarket {
+  type: "probability"
+  icon: string
+  title: string
   category: Category
-  status?: OathStatus // Only for Oath Market
+  outcomes: Array<{ label: string; odds: number }>
+}
+
+interface OathMarket {
+  type: "oath"
+  icon: string
+  betType: string
+  description: string
+  deadline: string
+  category: Category
+  yesData: { label: string; staked: number; wins: number; isTaken: boolean }
+  noData: { label: string; staked: number; wins: number; isTaken: boolean }
+  closesIn: string
+  status: OathStatus
 }
 
 // Mock Probability Shop markets (always "Active")
-const probabilityMarkets: ExtendedMarketCard[] = [
+const probabilityMarkets: ProbabilityMarket[] = [
   {
+    type: "probability",
     icon: "🏆",
     title: "2026 World Cup Champion",
     category: "Sports",
@@ -23,10 +40,9 @@ const probabilityMarkets: ExtendedMarketCard[] = [
       { label: "Argentina", odds: 20 },
       { label: "Spain", odds: 11 },
     ],
-    volume: "247,238",
-    openInterest: "3,802,720",
   },
   {
+    type: "probability",
     icon: "🏦",
     title: "July Fed funds decision",
     category: "Macro",
@@ -35,10 +51,9 @@ const probabilityMarkets: ExtendedMarketCard[] = [
       { label: "Increase", odds: 13 },
       { label: "Decrease", odds: 3 },
     ],
-    volume: "4,174",
-    openInterest: "11,462",
   },
   {
+    type: "probability",
     icon: "📊",
     title: "June CPI year-over-year",
     category: "Macro",
@@ -47,10 +62,9 @@ const probabilityMarkets: ExtendedMarketCard[] = [
       { label: "Exactly 3.8%", odds: 30 },
       { label: "Above 3.8%", odds: 28 },
     ],
-    volume: "28",
-    openInterest: "3,197",
   },
   {
+    type: "probability",
     icon: "₿",
     title: "BTC price range on Jul 1 at 1:00 PM?",
     category: "Crypto",
@@ -59,77 +73,70 @@ const probabilityMarkets: ExtendedMarketCard[] = [
       { label: "Below 58435", odds: 31 },
       { label: "Above 60820", odds: 29 },
     ],
-    volume: "78",
-    openInterest: "3,134",
   },
 ]
 
 // Mock Oath Market (P2P) bets with Active/Open status
-const oathMarkets: ExtendedMarketCard[] = [
+const oathMarkets: OathMarket[] = [
   {
+    type: "oath",
     icon: "💰",
-    title: "PLS above $0.0001 on Jan 1, 2027",
+    betType: "PRICE BET",
+    description: "PLS above $0.0001",
+    deadline: "by March 15, 2027",
     category: "PulseChain",
-    status: "Active",
-    outcomes: [
-      { label: "Yes", odds: 65 },
-      { label: "No", odds: 35 },
-    ],
-    volume: "125,500",
-    openInterest: "2,340,000",
-    isOathMarket: true,
+    yesData: { label: "YES (taken)", staked: 2000, wins: 1000, isTaken: true },
+    noData: { label: "NO (open)", staked: 1000, wins: 2000, isTaken: false },
+    closesIn: "4 days",
+    status: "open",
   },
   {
+    type: "oath",
     icon: "⚽",
-    title: "Man United wins next match",
+    betType: "SPORTS BET",
+    description: "Man United wins next match",
+    deadline: "by July 20, 2026",
     category: "Sports",
-    status: "Open",
-    outcomes: [
-      { label: "Yes", odds: 45 },
-      { label: "No", odds: 55 },
-    ],
-    volume: "89,200",
-    openInterest: "1,567,800",
-    isOathMarket: true,
+    yesData: { label: "YES (open)", staked: 1500, wins: 1650, isTaken: false },
+    noData: { label: "NO (taken)", staked: 1650, wins: 1500, isTaken: true },
+    closesIn: "12 days",
+    status: "active",
   },
   {
+    type: "oath",
     icon: "📈",
-    title: "S&P 500 closes above 5500",
+    betType: "INDEX BET",
+    description: "S&P 500 above 6,000",
+    deadline: "by Dec 31, 2026",
     category: "Macro",
-    status: "Active",
-    outcomes: [
-      { label: "Yes", odds: 72 },
-      { label: "No", odds: 28 },
-    ],
-    volume: "156,400",
-    openInterest: "3,821,900",
-    isOathMarket: true,
+    yesData: { label: "YES (taken)", staked: 3000, wins: 2500, isTaken: true },
+    noData: { label: "NO (open)", staked: 2500, wins: 3000, isTaken: false },
+    closesIn: "184 days",
+    status: "active",
   },
   {
+    type: "oath",
     icon: "🎬",
-    title: "Oscar Best Picture 2027 - Opus Films",
+    betType: "ENTERTAINMENT BET",
+    description: "Oscar Best Picture 2027 winner announced",
+    deadline: "by March 12, 2027",
     category: "Misc",
-    status: "Open",
-    outcomes: [
-      { label: "Yes", odds: 8 },
-      { label: "No", odds: 92 },
-    ],
-    volume: "12,300",
-    openInterest: "234,500",
-    isOathMarket: true,
+    yesData: { label: "YES (open)", staked: 500, wins: 4500, isTaken: false },
+    noData: { label: "NO (taken)", staked: 4500, wins: 500, isTaken: true },
+    closesIn: "255 days",
+    status: "open",
   },
   {
+    type: "oath",
     icon: "🏛️",
-    title: "Trump wins 2028 US election",
+    betType: "ELECTION BET",
+    description: "Trump wins 2028 US election",
+    deadline: "by Nov 15, 2028",
     category: "Politics",
-    status: "Active",
-    outcomes: [
-      { label: "Yes", odds: 55 },
-      { label: "No", odds: 45 },
-    ],
-    volume: "500,000",
-    openInterest: "8,200,000",
-    isOathMarket: true,
+    yesData: { label: "YES (taken)", staked: 5000, wins: 5000, isTaken: true },
+    noData: { label: "NO (open)", staked: 5000, wins: 5000, isTaken: false },
+    closesIn: "528 days",
+    status: "active",
   },
 ]
 
@@ -152,10 +159,12 @@ export function MarketsList() {
   // Filter Oath Market
   const filteredOathMarkets = useMemo(() => {
     return oathMarkets.filter((market) => {
-      const matchesSearch = market.title.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesSearch =
+        market.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        market.betType.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesCategory = selectedCategories.size === 0 || selectedCategories.has(market.category)
       const matchesStatus =
-        oathFilter === "All" || (oathFilter === "Active" && market.status === "Active") || (oathFilter === "Open" && market.status === "Open")
+        oathFilter === "All" || (oathFilter === "Active" && market.status === "active") || (oathFilter === "Open" && market.status === "open")
       return matchesSearch && matchesCategory && matchesStatus
     })
   }, [searchQuery, selectedCategories, oathFilter])
@@ -219,7 +228,15 @@ export function MarketsList() {
           </div>
           <div className="flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2">
             {filteredProbabilityMarkets.length > 0 ? (
-              filteredProbabilityMarkets.map((market, idx) => <MarketCard key={idx} {...market} />)
+              filteredProbabilityMarkets.map((market, idx) => (
+                <MarketCard
+                  key={idx}
+                  type="probability"
+                  icon={market.icon}
+                  title={market.title}
+                  outcomes={market.outcomes}
+                />
+              ))
             ) : (
               <div className="py-8 text-center text-[#7c7a76]">
                 <p className="font-sans text-sm">No markets match your search</p>
@@ -251,14 +268,18 @@ export function MarketsList() {
           <div className="flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2">
             {filteredOathMarkets.length > 0 ? (
               filteredOathMarkets.map((market, idx) => (
-                <div key={idx} className="relative">
-                  <MarketCard {...market} isOathMarket />
-                  {market.status && (
-                    <div className="absolute top-2 right-2 rounded-full bg-[#d4af37]/10 px-2 py-1 font-sans text-[10px] font-semibold text-[#d4af37] border border-[#d4af37]/30">
-                      {market.status}
-                    </div>
-                  )}
-                </div>
+                <MarketCard
+                  key={idx}
+                  type="oath"
+                  icon={market.icon}
+                  betType={market.betType}
+                  description={market.description}
+                  deadline={market.deadline}
+                  category={market.category}
+                  yesData={market.yesData}
+                  noData={market.noData}
+                  closesIn={market.closesIn}
+                />
               ))
             ) : (
               <div className="py-8 text-center text-[#7c7a76]">
