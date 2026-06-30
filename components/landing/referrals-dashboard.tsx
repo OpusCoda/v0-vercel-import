@@ -228,7 +228,7 @@ export function ReferralsDashboard() {
             {
               Icon: Percent,
               title: "20% fee discount for your invitees",
-              body: "Anyone who joins through your link pays 20% lower protocol fees on Oath Vault wagers and Probability Shop trades.",
+              body: "Anyone who joins through your link pays 20% lower protocol fees on Oath Market wagers and Probability Shop trades.",
             },
             {
               Icon: Gift,

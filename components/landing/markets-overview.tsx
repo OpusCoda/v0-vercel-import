@@ -14,11 +14,11 @@ type Product = {
 
 const products: Product[] = [
   {
-    name: "Oath Vault",
+    name: "Oath Market",
     tagline: "Peer-to-peer wager escrow",
     accent: "#d4af37",
     Icon: Scale,
-    contract: "OathVault.sol",
+    contract: "OathMarket.sol",
     audience: { Icon: User, label: "One-to-one · creator vs. challenger" },
     description:
       "Two parties lock PLS against each other on the outcome of any event — a sports result, a price milestone, a real-world prediction, anything they agree on. The creator sets the terms, the odds, and how long the offer stays open. A challenger accepts by matching their side.",
@@ -63,7 +63,7 @@ const products: Product[] = [
       {
         Icon: Scale,
         title: "Smaug fee discount",
-        body: "Holding and staking Smaug gives a fee discount on all trades, shared with Oath Vault via SmaugStaking.",
+        body: "Holding and staking Smaug gives a fee discount on all trades, shared with Oath Market via SmaugStaking.",
       },
     ],
   },
@@ -84,7 +84,7 @@ export function MarketsOverview() {
     <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
       <OrnamentHeading>Two ways to put PLS on an outcome</OrnamentHeading>
       <p className="mx-auto mt-4 max-w-2xl text-pretty text-center font-sans text-base leading-relaxed text-[#b8b6b1]">
-        Oath Vault and the Probability Shop are related but mechanically very different products. Both launch with
+        Oath Market and the Probability Shop are related but mechanically very different products. Both launch with
         on-chain settlement and share the Smaug staking fee discount.
       </p>
 

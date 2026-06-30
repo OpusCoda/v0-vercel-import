@@ -1,6 +1,6 @@
 -- Referral system: name registry + immutable user->referrer bindings
 -- Off-chain pre-launch registry. On-chain enforcement happens once the
--- protocol contracts (Prediction Market, Oath Vault) are deployed.
+-- protocol contracts (Prediction Market, Oath Market) are deployed.
 
 -- Maps a human-readable referral name to a wallet address.
 CREATE TABLE IF NOT EXISTS referral_names (
