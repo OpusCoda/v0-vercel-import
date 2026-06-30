@@ -11,6 +11,7 @@ const navLinks = [
   { label: "Earn", href: "/earn" },
   { label: "Markets", href: "/markets" },
   { label: "Referrals", href: "/referrals" },
+  { label: "Portfolio", href: "/portfolio" },
   { label: "Dashboard", href: "/dashboard" },
   { label: "Tokens", href: "/tokens" },
 ]
