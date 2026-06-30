@@ -1,6 +1,7 @@
 import { SiteNav } from "@/components/landing/site-nav"
 import { SiteFooter } from "@/components/landing/site-footer"
 import { MarketsOverview } from "@/components/landing/markets-overview"
+import { MarketsList } from "@/components/landing/markets-list"
 
 export default function MarketsPage() {
   return (
@@ -8,6 +9,7 @@ export default function MarketsPage() {
       <SiteNav />
       <div className="pt-24 md:pt-28">
         <MarketsOverview />
+        <MarketsList />
       </div>
       <SiteFooter />
     </main>
