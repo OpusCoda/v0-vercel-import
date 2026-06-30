@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 /**
  * @title ReferralRegistry
  * @notice Standalone, reusable referral registry for the Opus Ecosystem.
- *         Designed to be shared across protocol modules (Oath Market,
+ *         Designed to be shared across protocol modules (Oath Ma,
  *         Probability Shop, and any future module) so that a user's referrer
  *         is recorded ONCE and honored everywhere.
  *
