@@ -10,6 +10,7 @@ const navLinks = [
   { label: "Home", href: "/" },
   { label: "Earn", href: "/earn" },
   { label: "Markets", href: "/markets" },
+  { label: "Referrals", href: "/referrals" },
   { label: "Dashboard", href: "/dashboard" },
   { label: "Tokens", href: "/tokens" },
 ]

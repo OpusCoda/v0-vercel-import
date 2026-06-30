@@ -3,6 +3,7 @@ import "./globals.css"
 import "@rainbow-me/rainbowkit/styles.css"
 import { Sacramento, Inter, Merriweather, Roboto, Marcellus_SC } from "next/font/google"
 import { Providers } from "@/components/providers"
+import { ReferralCapture } from "@/components/referral-capture"
 
 const sacramento = Sacramento({
   subsets: ["latin"],
@@ -56,7 +57,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${merriweather.variable} ${sacramento.variable} ${inter.variable} ${roboto.variable} ${marcellusSC.variable}`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <ReferralCapture />
+          {children}
+        </Providers>
       </body>
     </html>
   )
