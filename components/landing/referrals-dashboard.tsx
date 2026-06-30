@@ -232,12 +232,12 @@ export function ReferralsDashboard() {
             },
             {
               Icon: Gift,
-              title: "10 / 70 / 20 reward split",
-              body: "Protocol fees are paid in PLS and split: 10% to the referrer, 70% to the protocol, and 20% to Smaug stakers.",
+              title: "10% referral reward",
+              body: "You earn 10% of every protocol fee your invitee pays, paid instantly in PLS.",
             },
             {
               Icon: Layers,
-              title: "Stacking capped at 40%",
+              title: "Stacking capped at 50%",
               body: "Combined discounts and bonuses from referrals and Smaug staking are capped at 40% so the model stays sustainable.",
             },
             {
