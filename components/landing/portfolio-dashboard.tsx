@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { TrendingUp, Trash2, ExternalLink, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { TrendingUp, Trash2, ExternalLink, X, ChevronDown } from 'lucide-react'
 import { ConnectWalletButton } from './connect-wallet-button'
+import { ethers } from 'ethers'
 
 interface Wallet {
   id: string
@@ -22,18 +23,57 @@ interface Asset {
   change24h: number
 }
 
+interface HexStake {
+  stakeId: string
+  stakedHearts: string
+  stakeShares: string
+  lockedDay: number
+  stakedDays: number
+  unlockedDay: number
+  isAutoStake: boolean
+  daysRemaining: number
+  isActive: boolean
+}
+
+interface LiquidLoan {
+  wallet: string
+  lockedPLS: number
+  debt: number
+}
+
 const TOKEN_CONTRACTS = [
   { symbol: 'OPUS', name: 'Opus', address: '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a' },
   { symbol: 'CODA', name: 'Coda', address: '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28' },
   { symbol: 'SMAUG', name: 'Smaug', address: '0xf4754Aa585caBf38537A68660469A17E203D8632' },
 ]
 
+const HEX_PULSECHAIN_ADDRESS = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'
+const HSI_MANAGER_ADDRESS = '0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3'
+const LIQUID_LOANS_VAULT_MANAGER = '0xD79bfb86fA06e8782b401bC0197d92563602D2Ab'
+
+const HEX_STAKING_ABI = [
+  'function stakeCount(address) view returns (uint256)',
+  'function stakeLists(address, uint256) view returns (uint40 stakeId, uint72 stakedHearts, uint72 stakeShares, uint16 lockedDay, uint16 stakedDays, uint16 unlockedDay, bool isAutoStake)',
+  'function currentDay() view returns (uint256)',
+]
+
+const LIQUID_LOANS_ABI = [
+  'function getVaultColl(address) view returns (uint256)',
+  'function getVaultDebt(address) view returns (uint256)',
+]
+
+const PULSECHAIN_RPC_URL = 'https://rpc.pulsechain.com'
+
 export function PortfolioDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
+  const [hexStakes, setHexStakes] = useState<HexStake[]>([])
+  const [hsiStakes, setHsiStakes] = useState<HexStake[]>([])
+  const [liquidLoans, setLiquidLoans] = useState<LiquidLoan[]>([])
   const [totalPortfolioValue, setTotalPortfolioValue] = useState(0)
   const [change24h, setChange24h] = useState(0)
+  const [expandedStakes, setExpandedStakes] = useState<Set<string>>(new Set())
 
   // Modal states
   const [showConnectModal, setShowConnectModal] = useState(false)
@@ -49,6 +89,90 @@ export function PortfolioDashboard() {
   const [loadWalletName, setLoadWalletName] = useState('')
   const [loadingWallets, setLoadingWallets] = useState(false)
 
+  // Fetch HEX stakes for wallets
+  const fetchHexStakes = async (addresses: string[]) => {
+    try {
+      const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
+      const hexContract = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, provider)
+      const hsiContract = new ethers.Contract(HSI_MANAGER_ADDRESS, HEX_STAKING_ABI, provider)
+
+      const currentDay = await hexContract.currentDay()
+      const allHexStakes: HexStake[] = []
+      const allHsiStakes: HexStake[] = []
+
+      for (const address of addresses) {
+        // Fetch HEX stakes
+        const hexStakeCount = await hexContract.stakeCount(address)
+        for (let i = 0; i < Number(hexStakeCount); i++) {
+          const stake = await hexContract.stakeLists(address, i)
+          const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+          const daysRemaining = Number(stake.stakedDays) - daysPassed
+          allHexStakes.push({
+            stakeId: stake.stakeId.toString(),
+            stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
+            stakeShares: ethers.formatUnits(stake.stakeShares, 12),
+            lockedDay: Number(stake.lockedDay),
+            stakedDays: Number(stake.stakedDays),
+            unlockedDay: Number(stake.unlockedDay),
+            isAutoStake: stake.isAutoStake,
+            daysRemaining: Math.max(0, daysRemaining),
+            isActive: stake.unlockedDay === 0,
+          })
+        }
+
+        // Fetch HSI stakes
+        const hsiStakeCount = await hsiContract.stakeCount(address)
+        for (let i = 0; i < Number(hsiStakeCount); i++) {
+          const stake = await hsiContract.stakeLists(address, i)
+          const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+          const daysRemaining = Number(stake.stakedDays) - daysPassed
+          allHsiStakes.push({
+            stakeId: stake.stakeId.toString(),
+            stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
+            stakeShares: ethers.formatUnits(stake.stakeShares, 12),
+            lockedDay: Number(stake.lockedDay),
+            stakedDays: Number(stake.stakedDays),
+            unlockedDay: Number(stake.unlockedDay),
+            isAutoStake: stake.isAutoStake,
+            daysRemaining: Math.max(0, daysRemaining),
+            isActive: stake.unlockedDay === 0,
+          })
+        }
+      }
+
+      setHexStakes(allHexStakes)
+      setHsiStakes(allHsiStakes)
+    } catch (error) {
+      console.error('Error fetching HEX stakes:', error)
+    }
+  }
+
+  // Fetch Liquid Loans positions
+  const fetchLiquidLoans = async (addresses: string[]) => {
+    try {
+      const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
+      const vaultManager = new ethers.Contract(LIQUID_LOANS_VAULT_MANAGER, LIQUID_LOANS_ABI, provider)
+      const loans: LiquidLoan[] = []
+
+      for (const address of addresses) {
+        const coll = await vaultManager.getVaultColl(address)
+        const debt = await vaultManager.getVaultDebt(address)
+
+        if (coll > 0n || debt > 0n) {
+          loans.push({
+            wallet: address,
+            lockedPLS: Number(ethers.formatUnits(coll, 18)),
+            debt: Number(ethers.formatUnits(debt, 18)),
+          })
+        }
+      }
+
+      setLiquidLoans(loans)
+    } catch (error) {
+      console.error('Error fetching Liquid Loans:', error)
+    }
+  }
+
   // Populate assets with demo data when wallets are saved
   const handleSaveEditedWallets = () => {
     setWallets(editingWallets)
@@ -61,6 +185,13 @@ export function PortfolioDashboard() {
       { symbol: 'SMAUG', name: 'Smaug', address: TOKEN_CONTRACTS[2].address, balance: 55100, value: 47280.15, change24h: 3.72 },
     ]
     setAssets(demoAssets)
+
+    // Fetch HEX stakes and Liquid Loans
+    const selectedAddresses = editingWallets.filter(w => w.selected).map(w => w.address)
+    if (selectedAddresses.length > 0) {
+      fetchHexStakes(selectedAddresses)
+      fetchLiquidLoans(selectedAddresses)
+    }
   }
 
   const handleOpenEditModal = () => {
@@ -199,9 +330,8 @@ export function PortfolioDashboard() {
                 {[
                   { id: 'overview', label: 'Overview' },
                   { id: 'assets', label: 'Assets' },
-                  { id: 'stakes', label: 'Stakes' },
-                  { id: 'rewards', label: 'Rewards' },
-                  { id: 'history', label: 'History' },
+                  { id: 'hexstakes', label: 'HEX Stakes' },
+                  { id: 'liquidloans', label: 'Liquid Loans positions' },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -253,6 +383,99 @@ export function PortfolioDashboard() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+
+            {/* HEX Stakes Tab */}
+            {activeTab === 'hexstakes' && (
+              <div className="mb-12">
+                <div className="mb-6">
+                  <h3 className="font-serif text-xl font-bold text-[#d4af37]">HEX Stakes</h3>
+                  {hexStakes.length > 0 && <p className="font-sans text-sm text-[#7c7a76] mt-1">{hexStakes.length} active stake{hexStakes.length !== 1 ? 's' : ''}</p>}
+                </div>
+                {hexStakes.length === 0 ? (
+                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-8 text-center">
+                    <p className="font-sans text-[#7c7a76]">No HEX stakes found</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {hexStakes.map((stake) => (
+                      <div key={stake.stakeId} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-sans font-semibold text-[#b8b6b1]">${Number(stake.stakedHearts).toLocaleString('en-US', { maximumFractionDigits: 2 })} HEX</p>
+                            <p className="font-sans text-xs text-[#7c7a76] mt-1">Stake ID: {stake.stakeId}</p>
+                            <p className={`font-sans text-xs mt-2 ${stake.isActive ? 'text-[#3fbf6f]' : 'text-[#ff6b4a]'}`}>
+                              {stake.isActive ? `${stake.daysRemaining} days remaining` : 'Ended'}
+                            </p>
+                          </div>
+                          <button onClick={() => setExpandedStakes(prev => {
+                            const newSet = new Set(prev)
+                            newSet.has(stake.stakeId) ? newSet.delete(stake.stakeId) : newSet.add(stake.stakeId)
+                            return newSet
+                          })} className="text-[#7c7a76] hover:text-[#d4af37]">
+                            <ChevronDown className={`h-5 w-5 transition-transform ${expandedStakes.has(stake.stakeId) ? 'rotate-180' : ''}`} />
+                          </button>
+                        </div>
+                        {expandedStakes.has(stake.stakeId) && (
+                          <div className="mt-4 border-t border-[#2a2a35] pt-4 space-y-2">
+                            <div className="flex justify-between">
+                              <span className="font-sans text-xs text-[#7c7a76]">Staked Days:</span>
+                              <span className="font-sans text-sm text-[#b8b6b1]">{stake.stakedDays}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-sans text-xs text-[#7c7a76]">Locked Day:</span>
+                              <span className="font-sans text-sm text-[#b8b6b1]">{stake.lockedDay}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-sans text-xs text-[#7c7a76]">Unlocked Day:</span>
+                              <span className="font-sans text-sm text-[#b8b6b1]">{stake.unlockedDay}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Liquid Loans Tab */}
+            {activeTab === 'liquidloans' && (
+              <div className="mb-12">
+                <div className="mb-6">
+                  <h3 className="font-serif text-xl font-bold text-[#d4af37]">Liquid Loans Positions</h3>
+                  {liquidLoans.length > 0 && <p className="font-sans text-sm text-[#7c7a76] mt-1">{liquidLoans.length} active position{liquidLoans.length !== 1 ? 's' : ''}</p>}
+                </div>
+                {liquidLoans.length === 0 ? (
+                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-8 text-center">
+                    <p className="font-sans text-[#7c7a76]">No Liquid Loans positions found</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {liquidLoans.map((loan) => (
+                      <div key={loan.wallet} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <p className="font-sans text-xs text-[#7c7a76]">Collateral</p>
+                            <p className="font-serif font-semibold text-[#d4af37] mt-1">${loan.lockedPLS.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                            <p className="font-sans text-xs text-[#7c7a76] mt-1">PLS</p>
+                          </div>
+                          <div>
+                            <p className="font-sans text-xs text-[#7c7a76]">Debt</p>
+                            <p className="font-serif font-semibold text-[#d4af37] mt-1">${loan.debt.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                            <p className="font-sans text-xs text-[#7c7a76] mt-1">USDL</p>
+                          </div>
+                          <div>
+                            <p className="font-sans text-xs text-[#7c7a76]">Ratio</p>
+                            <p className="font-serif font-semibold text-[#3fbf6f] mt-1">{loan.lockedPLS > 0 ? ((loan.debt / loan.lockedPLS) * 100).toFixed(1) : '0'}%</p>
+                          </div>
+                        </div>
+                        <p className="font-sans text-xs text-[#7c7a76] mt-4 truncate">{loan.wallet}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
