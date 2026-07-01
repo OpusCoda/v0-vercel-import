@@ -188,34 +188,7 @@ export function PortfolioDashboard() {
           </div>
         )}
 
-        {/* Your Wallets Section */}
-        <div className="mb-12">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-serif text-xl font-bold text-[#d4af37]">Your Wallets <span className="font-sans text-sm text-[#7c7a76]">{wallets.length}</span></h2>
-          </div>
-          {wallets.length === 0 ? (
-            <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-8 text-center">
-              <p className="font-sans text-[#7c7a76]">No wallets added yet. Connect or add wallets to get started.</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {selectedWallets.map((wallet) => (
-                <div key={wallet.id} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4 hover:border-[#d4af37]/30 transition-colors">
-                  <div className="mb-3">
-                    <h3 className="font-serif font-bold text-[#d4af37]">{wallet.name}</h3>
-                  </div>
-                  <p className="font-sans text-xs text-[#7c7a76]">{wallet.address}</p>
-                  <div className="mt-4 flex items-end justify-between border-t border-[#2a2a35] pt-4">
-                    <div>
-                      <p className="font-serif text-xl font-bold text-[#d4af37]">${wallet.balance.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
-                      <p className="font-sans text-xs text-[#7c7a76]">{wallet.percentage}%</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+
 
         {/* Content shown only when wallets are connected */}
         {selectedWallets.length > 0 && (
@@ -335,20 +308,7 @@ export function PortfolioDashboard() {
               </div>
             </div>
 
-            {/* Recent Activity */}
-            <div>
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-serif text-xl font-bold text-[#d4af37]">Recent Activity Across All Wallets</h3>
-                <button className="flex items-center gap-2 font-sans text-sm font-semibold text-[#d4af37] transition-colors hover:text-[#e8c860]">
-                  View full history <ExternalLink className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-6">
-                <div className="text-center py-8">
-                  <p className="font-sans text-[#7c7a76]">No recent activity</p>
-                </div>
-              </div>
-            </div>
+
           </>
         )}
 
