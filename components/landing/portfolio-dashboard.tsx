@@ -349,7 +349,33 @@ export function PortfolioDashboard() {
               </div>
             </div>
 
-            {/* Tab Content */}
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+              <div className="mb-12">
+                <h3 className="mb-6 font-serif text-xl font-bold text-[#d4af37]">Portfolio Overview</h3>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+                    <p className="font-sans text-xs font-semibold text-[#7c7a76]">Total Assets</p>
+                    <p className="mt-2 font-serif font-bold text-[#d4af37]">${totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                    <p className="mt-1 font-sans text-xs font-semibold text-[#3fbf6f]">{change24h > 0 ? '+' : ''}{change24h}% (24h)</p>
+                  </div>
+                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+                    <p className="font-sans text-xs font-semibold text-[#7c7a76]">Selected Wallets</p>
+                    <p className="mt-2 font-serif font-bold text-[#d4af37]">{selectedWallets.length}</p>
+                  </div>
+                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+                    <p className="font-sans text-xs font-semibold text-[#7c7a76]">Tokens Held</p>
+                    <p className="mt-2 font-serif font-bold text-[#d4af37]">{assets.length}</p>
+                  </div>
+                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+                    <p className="font-sans text-xs font-semibold text-[#7c7a76]">HEX Stakes</p>
+                    <p className="mt-2 font-serif font-bold text-[#d4af37]">{hexStakes.length}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Assets Tab */}
             {activeTab === 'assets' && (
               <div className="mb-12">
                 <h3 className="mb-6 font-serif text-xl font-bold text-[#d4af37]">Your Holdings</h3>
@@ -543,30 +569,7 @@ export function PortfolioDashboard() {
               </div>
             </div>
 
-            {/* Asset Allocation & Holdings */}
-            <div className="mb-12 grid gap-8 lg:grid-cols-2">
-              {/* Asset Allocation */}
-              <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-6">
-                <h3 className="mb-6 font-serif text-lg font-bold text-[#d4af37]">Asset Allocation</h3>
-                <div className="text-center py-12">
-                  <p className="font-sans text-[#7c7a76]">Loading assets...</p>
-                </div>
-                <button className="mt-6 flex items-center gap-2 font-sans text-sm font-semibold text-[#d4af37] transition-colors hover:text-[#e8c860]">
-                  View all assets <TrendingUp className="h-4 w-4" />
-                </button>
-              </div>
 
-              {/* Holdings by Token */}
-              <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-6">
-                <h3 className="mb-6 font-serif text-lg font-bold text-[#d4af37]">Holdings by Token</h3>
-                <div className="text-center py-12">
-                  <p className="font-sans text-[#7c7a76]">Loading holdings...</p>
-                </div>
-                <button className="mt-6 flex items-center gap-2 font-sans text-sm font-semibold text-[#d4af37] transition-colors hover:text-[#e8c860]">
-                  View all assets <TrendingUp className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
 
 
           </>
