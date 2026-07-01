@@ -45,9 +45,13 @@ interface LiquidLoan {
 }
 
 const TOKEN_CONTRACTS = [
-  { symbol: 'OPUS', name: 'Opus', address: '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a' },
-  { symbol: 'CODA', name: 'Coda', address: '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28' },
-  { symbol: 'SMAUG', name: 'Smaug', address: '0xf4754Aa585caBf38537A68660469A17E203D8632' },
+  { symbol: 'OPUS', name: 'Opus', address: '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a', decimals: 18 },
+  { symbol: 'CODA', name: 'Coda', address: '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28', decimals: 18 },
+  { symbol: 'SMAUG', name: 'Smaug', address: '0xf4754Aa585caBf38537A68660469A17E203D8632', decimals: 18 },
+  { symbol: 'PLS', name: 'Pulse', address: 'native', decimals: 18 },
+  { symbol: 'PLSX', name: 'PulseX', address: '0x95B303987A60C71504D99Aa1b13B4DA07b0790ab', decimals: 18 },
+  { symbol: 'INC', name: 'Incentive', address: '0x2fa2c892376ecc53b06b6ac850a177bd86b04c10', decimals: 18 },
+  { symbol: 'HEX', name: 'HEX', address: '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39', decimals: 8 },
 ]
 
 const HEX_PULSECHAIN_ADDRESS = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'
@@ -72,11 +76,34 @@ const ERC20_ABI = [
 
 const PULSECHAIN_RPC_URL = 'https://rpc.pulsechain.com'
 
-// Token prices (in USD) - these could be fetched from an API in production
-const TOKEN_PRICES: { [key: string]: number } = {
-  OPUS: 0.05,
-  CODA: 0.051,
-  SMAUG: 0.857,
+// Coingecko API for fetching token prices
+const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
+  try {
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=pulsechain,pulsex,hex&vs_currencies=usd'
+    )
+    const data = await response.json()
+    return {
+      PLS: data.pulsechain?.usd || 0,
+      PLSX: data.pulsex?.usd || 0,
+      HEX: data.hex?.usd || 0,
+      OPUS: 0.05, // Fallback prices
+      CODA: 0.051,
+      SMAUG: 0.857,
+      INC: 0.01,
+    }
+  } catch (error) {
+    console.error('Error fetching prices:', error)
+    return {
+      OPUS: 0.05,
+      CODA: 0.051,
+      SMAUG: 0.857,
+      PLS: 0.08,
+      PLSX: 0.05,
+      HEX: 0.04,
+      INC: 0.01,
+    }
+  }
 }
 
 export function PortfolioDashboard() {
@@ -108,28 +135,49 @@ export function PortfolioDashboard() {
   const fetchTokenBalances = async (addresses: string[]) => {
     try {
       const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
-      const fetchedAssets: Asset[] = []
+      const prices = await fetchTokenPrices()
+      
+      // Aggregate balances by token across all wallets
+      const tokenBalances: { [symbol: string]: { balance: number; token: typeof TOKEN_CONTRACTS[0] } } = {}
 
       for (const token of TOKEN_CONTRACTS) {
-        const tokenContract = new ethers.Contract(token.address, ERC20_ABI, provider)
+        let totalBalance = 0
         
-        for (const address of addresses) {
-          const balance = await tokenContract.balanceOf(address)
-          const balanceNumber = Number(ethers.formatUnits(balance, 18))
-          
-          if (balanceNumber > 0) {
-            const price = TOKEN_PRICES[token.symbol] || 0
-            fetchedAssets.push({
-              symbol: token.symbol,
-              name: token.name,
-              address: token.address,
-              balance: balanceNumber,
-              value: balanceNumber * price,
-              change24h: 0, // Would need price API for 24h change
-            })
+        if (token.symbol === 'PLS') {
+          // Handle native PLS separately
+          for (const address of addresses) {
+            const balance = await provider.getBalance(address)
+            totalBalance += Number(ethers.formatUnits(balance, 18))
+          }
+        } else {
+          const tokenContract = new ethers.Contract(token.address, ERC20_ABI, provider)
+          for (const address of addresses) {
+            const balance = await tokenContract.balanceOf(address)
+            totalBalance += Number(ethers.formatUnits(balance, token.decimals))
           }
         }
+        
+        if (totalBalance > 0) {
+          tokenBalances[token.symbol] = { balance: totalBalance, token }
+        }
       }
+
+      // Convert to assets and filter by minimum value of $1
+      const fetchedAssets: Asset[] = Object.entries(tokenBalances)
+        .map(([symbol, { balance, token }]) => {
+          const price = prices[symbol] || 0
+          const value = balance * price
+          return {
+            symbol,
+            name: token.name,
+            address: token.address,
+            balance,
+            value,
+            change24h: 0,
+          }
+        })
+        .filter(asset => asset.value >= 1)
+        .sort((a, b) => b.value - a.value)
 
       setAssets(fetchedAssets)
     } catch (error) {
