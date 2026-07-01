@@ -62,7 +62,19 @@ const LIQUID_LOANS_ABI = [
   'function getVaultDebt(address) view returns (uint256)',
 ]
 
+const ERC20_ABI = [
+  'function balanceOf(address) view returns (uint256)',
+  'function decimals() view returns (uint8)',
+]
+
 const PULSECHAIN_RPC_URL = 'https://rpc.pulsechain.com'
+
+// Token prices (in USD) - these could be fetched from an API in production
+const TOKEN_PRICES: { [key: string]: number } = {
+  OPUS: 0.05,
+  CODA: 0.051,
+  SMAUG: 0.857,
+}
 
 export function PortfolioDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
@@ -88,6 +100,39 @@ export function PortfolioDashboard() {
   // Load Wallet state
   const [loadWalletName, setLoadWalletName] = useState('')
   const [loadingWallets, setLoadingWallets] = useState(false)
+
+  // Fetch token balances for wallets
+  const fetchTokenBalances = async (addresses: string[]) => {
+    try {
+      const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
+      const fetchedAssets: Asset[] = []
+
+      for (const token of TOKEN_CONTRACTS) {
+        const tokenContract = new ethers.Contract(token.address, ERC20_ABI, provider)
+        
+        for (const address of addresses) {
+          const balance = await tokenContract.balanceOf(address)
+          const balanceNumber = Number(ethers.formatUnits(balance, 18))
+          
+          if (balanceNumber > 0) {
+            const price = TOKEN_PRICES[token.symbol] || 0
+            fetchedAssets.push({
+              symbol: token.symbol,
+              name: token.name,
+              address: token.address,
+              balance: balanceNumber,
+              value: balanceNumber * price,
+              change24h: 0, // Would need price API for 24h change
+            })
+          }
+        }
+      }
+
+      setAssets(fetchedAssets)
+    } catch (error) {
+      console.error('Error fetching token balances:', error)
+    }
+  }
 
   // Fetch HEX stakes for wallets
   const fetchHexStakes = async (addresses: string[]) => {
@@ -177,15 +222,18 @@ export function PortfolioDashboard() {
   const handleSaveEditedWallets = () => {
     setWallets(editingWallets)
     setShowEditWalletsModal(false)
-    
-    // Clear assets until real data is fetched
-    setAssets([])
 
-    // Fetch HEX stakes and Liquid Loans for selected wallets
+    // Fetch real data for selected wallets
     const selectedAddresses = editingWallets.filter(w => w.selected).map(w => w.address)
     if (selectedAddresses.length > 0) {
+      fetchTokenBalances(selectedAddresses)
       fetchHexStakes(selectedAddresses)
       fetchLiquidLoans(selectedAddresses)
+    } else {
+      setAssets([])
+      setHexStakes([])
+      setHsiStakes([])
+      setLiquidLoans([])
     }
   }
 
@@ -256,6 +304,12 @@ export function PortfolioDashboard() {
       setWallets(loadedWallets)
       setLoadWalletName('')
       setShowLoadWalletModal(false)
+      
+      // Fetch real data for loaded wallets
+      const selectedAddresses = loadedWallets.map(w => w.address)
+      fetchTokenBalances(selectedAddresses)
+      fetchHexStakes(selectedAddresses)
+      fetchLiquidLoans(selectedAddresses)
     } catch (error) {
       console.error('Error loading wallet list:', error)
       alert('Failed to load wallet list. Please check the name and try again.')
