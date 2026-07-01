@@ -13,9 +13,25 @@ interface Wallet {
   selected: boolean
 }
 
+interface Asset {
+  symbol: string
+  name: string
+  address: string
+  balance: number
+  value: number
+  change24h: number
+}
+
+const TOKEN_CONTRACTS = [
+  { symbol: 'OPUS', name: 'Opus', address: '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a' },
+  { symbol: 'CODA', name: 'Coda', address: '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28' },
+  { symbol: 'SMAUG', name: 'Smaug', address: '0xf4754Aa585caBf38537A68660469A17E203D8632' },
+]
+
 export function PortfolioDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [wallets, setWallets] = useState<Wallet[]>([])
+  const [assets, setAssets] = useState<Asset[]>([])
   const [totalPortfolioValue, setTotalPortfolioValue] = useState(0)
   const [change24h, setChange24h] = useState(0)
 
@@ -32,6 +48,20 @@ export function PortfolioDashboard() {
   // Load Wallet state
   const [loadWalletName, setLoadWalletName] = useState('')
   const [loadingWallets, setLoadingWallets] = useState(false)
+
+  // Populate assets with demo data when wallets are saved
+  const handleSaveEditedWallets = () => {
+    setWallets(editingWallets)
+    setShowEditWalletsModal(false)
+    
+    // Populate with demo assets
+    const demoAssets: Asset[] = [
+      { symbol: 'OPUS', name: 'Opus', address: TOKEN_CONTRACTS[0].address, balance: 1240000, value: 62421.20, change24h: 4.21 },
+      { symbol: 'CODA', name: 'Coda', address: TOKEN_CONTRACTS[1].address, balance: 810000, value: 41380.35, change24h: 5.18 },
+      { symbol: 'SMAUG', name: 'Smaug', address: TOKEN_CONTRACTS[2].address, balance: 55100, value: 47280.15, change24h: 3.72 },
+    ]
+    setAssets(demoAssets)
+  }
 
   const handleOpenEditModal = () => {
     setEditingWallets(wallets)
@@ -72,10 +102,7 @@ export function PortfolioDashboard() {
     setNewWalletName('')
   }
 
-  const handleSaveEditedWallets = () => {
-    setWallets(editingWallets)
-    setShowEditWalletsModal(false)
-  }
+
 
   const handleLoadWallets = async () => {
     if (!loadWalletName) {
@@ -197,27 +224,64 @@ export function PortfolioDashboard() {
             <div className="mb-8 border-b border-[#2a2a35]">
               <div className="flex gap-8">
                 {[
-                  { id: 'overview', label: 'Overview', icon: '📊' },
-                  { id: 'assets', label: 'Assets', icon: '💎' },
-                  { id: 'stakes', label: 'Stakes', icon: '🔒' },
-                  { id: 'rewards', label: 'Rewards', icon: '🎁' },
-                  { id: 'history', label: 'History', icon: '📜' },
+                  { id: 'overview', label: 'Overview' },
+                  { id: 'assets', label: 'Assets' },
+                  { id: 'stakes', label: 'Stakes' },
+                  { id: 'rewards', label: 'Rewards' },
+                  { id: 'history', label: 'History' },
                 ].map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`pb-4 font-sans text-sm font-semibold transition-colors flex items-center gap-2 ${
+                    className={`pb-4 font-sans text-sm font-semibold transition-colors ${
                       activeTab === tab.id
                         ? 'border-b-2 border-[#d4af37] text-[#d4af37]'
                         : 'text-[#7c7a76] hover:text-[#b8b6b1]'
                     }`}
                   >
-                    <span>{tab.icon}</span>
                     {tab.label}
                   </button>
                 ))}
               </div>
             </div>
+
+            {/* Tab Content */}
+            {activeTab === 'assets' && (
+              <div className="mb-12">
+                <h3 className="mb-6 font-serif text-xl font-bold text-[#d4af37]">Your Holdings</h3>
+                <div className="rounded-lg border border-[#2a2a35] bg-[#101017] overflow-hidden">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-[#2a2a35]">
+                        <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Token</th>
+                        <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Balance</th>
+                        <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Value (USD)</th>
+                        <th className="px-6 py-3 text-right font-sans text-xs font-semibold text-[#7c7a76]">24h Change</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {assets.map((asset) => (
+                        <tr key={asset.symbol} className="border-b border-[#2a2a35] last:border-b-0 hover:bg-[#0a0a0c] transition-colors">
+                          <td className="px-6 py-4">
+                            <div>
+                              <p className="font-sans font-semibold text-[#b8b6b1]">{asset.name}</p>
+                              <p className="font-sans text-xs text-[#7c7a76]">{asset.symbol}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 font-sans text-sm text-[#b8b6b1]">{asset.balance.toLocaleString()}</td>
+                          <td className="px-6 py-4 font-serif font-semibold text-[#d4af37]">${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
+                          <td className="px-6 py-4 text-right">
+                            <span className={`font-sans text-sm font-semibold ${asset.change24h >= 0 ? 'text-[#3fbf6f]' : 'text-[#ff6b4a]'}`}>
+                              {asset.change24h >= 0 ? '+' : ''}{asset.change24h}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Portfolio Overview Metrics */}
             <div className="mb-12">
