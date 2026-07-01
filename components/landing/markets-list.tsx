@@ -300,7 +300,7 @@ export function MarketsList() {
           {/* Price Range Filter */}
           <div className="rounded-lg border border-[#2a2a35] bg-[#0a0a0c] p-4">
             <div className="mb-4 flex items-center justify-between">
-              <p className="font-sans text-xs font-semibold text-[#b8b6b1]">Stake Range</p>
+              <p className="font-sans text-xs font-semibold text-[#b8b6b1]">Range</p>
               <p className="font-sans text-xs text-[#d4af37]">
                 {formatPrice(priceMin)} – {formatPrice(priceMax)}{priceMax === MAX_PRICE ? "+" : ""} PLS
               </p>
