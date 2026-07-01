@@ -50,7 +50,7 @@ const TOKEN_CONTRACTS = [
   { symbol: 'SMAUG', name: 'Smaug', address: '0xf4754Aa585caBf38537A68660469A17E203D8632', decimals: 18 },
   { symbol: 'PLS', name: 'Pulse', address: 'native', decimals: 18 },
   { symbol: 'PLSX', name: 'PulseX', address: '0x95B303987A60C71504D99Aa1b13B4DA07b0790ab', decimals: 18 },
-  { symbol: 'INC', name: 'Incentive', address: '0x2fa2c892376ecc53b06b6ac850a177bd86b04c10', decimals: 18 },
+  { symbol: 'INC', name: 'Incentive', address: '0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d', decimals: 18 },
   { symbol: 'HEX', name: 'HEX', address: '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39', decimals: 8 },
 ]
 
@@ -80,15 +80,15 @@ const PULSECHAIN_RPC_URL = 'https://rpc.pulsechain.com'
 const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
   try {
     const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=pulsechain,pulsex,hex&vs_currencies=usd'
+      'https://api.coingecko.com/api/v3/simple/price?ids=pulsechain,pulsex,hex,opus-token,coda-token&vs_currencies=usd'
     )
     const data = await response.json()
     return {
-      PLS: data.pulsechain?.usd || 0,
-      PLSX: data.pulsex?.usd || 0,
-      HEX: data.hex?.usd || 0,
-      OPUS: 0.05, // Fallback prices
-      CODA: 0.051,
+      PLS: data.pulsechain?.usd || 0.08,
+      PLSX: data.pulsex?.usd || 0.05,
+      HEX: data.hex?.usd || 0.04,
+      OPUS: data['opus-token']?.usd || 0.05,
+      CODA: data['coda-token']?.usd || 0.051,
       SMAUG: 0.857,
       INC: 0.01,
     }
@@ -162,7 +162,7 @@ export function PortfolioDashboard() {
         }
       }
 
-      // Convert to assets and filter by minimum value of $1
+      // Convert to assets and filter by balance > 0 and value > 0
       const fetchedAssets: Asset[] = Object.entries(tokenBalances)
         .map(([symbol, { balance, token }]) => {
           const price = prices[symbol] || 0
@@ -176,7 +176,7 @@ export function PortfolioDashboard() {
             change24h: 0,
           }
         })
-        .filter(asset => asset.value >= 1)
+        .filter(asset => asset.balance > 0 && asset.value > 0)
         .sort((a, b) => b.value - a.value)
 
       setAssets(fetchedAssets)
