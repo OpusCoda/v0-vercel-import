@@ -328,11 +328,12 @@ export function PortfolioDashboard() {
             <div className="mb-8 border-b border-[#2a2a35]">
               <div className="flex gap-8">
                 {[
-                  { id: 'overview', label: 'Overview' },
-                  { id: 'assets', label: 'Assets' },
-                  { id: 'hexstakes', label: 'HEX Stakes' },
-                  { id: 'liquidloans', label: 'Liquid Loans positions' },
-                ].map((tab) => (
+                  { id: 'overview', label: 'Overview', show: true },
+                  { id: 'assets', label: 'Assets', show: true },
+                  { id: 'hexstakes', label: 'HEX Stakes', show: hexStakes.length > 0 },
+                  { id: 'hsistakes', label: 'HSI Stakes', show: hsiStakes.length > 0 },
+                  { id: 'liquidloans', label: 'Liquid Loans positions', show: liquidLoans.length > 0 },
+                ].filter(tab => tab.show).map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
@@ -387,19 +388,14 @@ export function PortfolioDashboard() {
             )}
 
             {/* HEX Stakes Tab */}
-            {activeTab === 'hexstakes' && (
+            {activeTab === 'hexstakes' && hexStakes.length > 0 && (
               <div className="mb-12">
                 <div className="mb-6">
                   <h3 className="font-serif text-xl font-bold text-[#d4af37]">HEX Stakes</h3>
-                  {hexStakes.length > 0 && <p className="font-sans text-sm text-[#7c7a76] mt-1">{hexStakes.length} active stake{hexStakes.length !== 1 ? 's' : ''}</p>}
+                  <p className="font-sans text-sm text-[#7c7a76] mt-1">{hexStakes.length} active stake{hexStakes.length !== 1 ? 's' : ''}</p>
                 </div>
-                {hexStakes.length === 0 ? (
-                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-8 text-center">
-                    <p className="font-sans text-[#7c7a76]">No HEX stakes found</p>
-                  </div>
-                ) : (
-                  <div className="grid gap-4">
-                    {hexStakes.map((stake) => (
+                <div className="grid gap-4">
+                  {hexStakes.map((stake) => (
                       <div key={stake.stakeId} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
                         <div className="flex items-center justify-between">
                           <div>
@@ -435,25 +431,67 @@ export function PortfolioDashboard() {
                         )}
                       </div>
                     ))}
-                  </div>
-                )}
+                </div>
+              </div>
+            )}
+
+            {/* HSI Stakes Tab */}
+            {activeTab === 'hsistakes' && hsiStakes.length > 0 && (
+              <div className="mb-12">
+                <div className="mb-6">
+                  <h3 className="font-serif text-xl font-bold text-[#d4af37]">HSI Stakes</h3>
+                  <p className="font-sans text-sm text-[#7c7a76] mt-1">{hsiStakes.length} active stake{hsiStakes.length !== 1 ? 's' : ''}</p>
+                </div>
+                <div className="grid gap-4">
+                  {hsiStakes.map((stake) => (
+                    <div key={stake.stakeId} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-sans font-semibold text-[#b8b6b1]">${Number(stake.stakedHearts).toLocaleString('en-US', { maximumFractionDigits: 2 })} HSI</p>
+                          <p className="font-sans text-xs text-[#7c7a76] mt-1">Stake ID: {stake.stakeId}</p>
+                          <p className={`font-sans text-xs mt-2 ${stake.isActive ? 'text-[#3fbf6f]' : 'text-[#ff6b4a]'}`}>
+                            {stake.isActive ? `${stake.daysRemaining} days remaining` : 'Ended'}
+                          </p>
+                        </div>
+                        <button onClick={() => setExpandedStakes(prev => {
+                          const newSet = new Set(prev)
+                          newSet.has(stake.stakeId) ? newSet.delete(stake.stakeId) : newSet.add(stake.stakeId)
+                          return newSet
+                        })} className="text-[#7c7a76] hover:text-[#d4af37]">
+                          <ChevronDown className={`h-5 w-5 transition-transform ${expandedStakes.has(stake.stakeId) ? 'rotate-180' : ''}`} />
+                        </button>
+                      </div>
+                      {expandedStakes.has(stake.stakeId) && (
+                        <div className="mt-4 border-t border-[#2a2a35] pt-4 space-y-2">
+                          <div className="flex justify-between">
+                            <span className="font-sans text-xs text-[#7c7a76]">Staked Days:</span>
+                            <span className="font-sans text-sm text-[#b8b6b1]">{stake.stakedDays}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-sans text-xs text-[#7c7a76]">Locked Day:</span>
+                            <span className="font-sans text-sm text-[#b8b6b1]">{stake.lockedDay}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-sans text-xs text-[#7c7a76]">Unlocked Day:</span>
+                            <span className="font-sans text-sm text-[#b8b6b1]">{stake.unlockedDay}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Liquid Loans Tab */}
-            {activeTab === 'liquidloans' && (
+            {activeTab === 'liquidloans' && liquidLoans.length > 0 && (
               <div className="mb-12">
                 <div className="mb-6">
                   <h3 className="font-serif text-xl font-bold text-[#d4af37]">Liquid Loans Positions</h3>
-                  {liquidLoans.length > 0 && <p className="font-sans text-sm text-[#7c7a76] mt-1">{liquidLoans.length} active position{liquidLoans.length !== 1 ? 's' : ''}</p>}
+                  <p className="font-sans text-sm text-[#7c7a76] mt-1">{liquidLoans.length} active position{liquidLoans.length !== 1 ? 's' : ''}</p>
                 </div>
-                {liquidLoans.length === 0 ? (
-                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-8 text-center">
-                    <p className="font-sans text-[#7c7a76]">No Liquid Loans positions found</p>
-                  </div>
-                ) : (
-                  <div className="grid gap-4">
-                    {liquidLoans.map((loan) => (
+                <div className="grid gap-4">
+                  {liquidLoans.map((loan) => (
                       <div key={loan.wallet} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
                         <div className="grid grid-cols-3 gap-4">
                           <div>
@@ -474,8 +512,7 @@ export function PortfolioDashboard() {
                         <p className="font-sans text-xs text-[#7c7a76] mt-4 truncate">{loan.wallet}</p>
                       </div>
                     ))}
-                  </div>
-                )}
+                </div>
               </div>
             )}
 
