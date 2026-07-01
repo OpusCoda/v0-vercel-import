@@ -278,7 +278,7 @@ export function PortfolioDashboard() {
         <div className="mb-8 grid gap-8 md:grid-cols-3">
           <div className="md:col-span-2">
             <h1 className="font-serif text-4xl font-bold text-[#d4af37] md:text-5xl">Portfolio</h1>
-            <p className="mt-2 font-sans text-[#b8b6b1]">Track all your assets, stakes, and rewards across multiple wallets.</p>
+            <p className="mt-2 font-sans text-[#b8b6b1]">See what your wallets hold.</p>
             <div className="mt-6 flex gap-3">
               <button onClick={() => setShowConnectModal(true)} className="rounded-lg bg-[#d4af37] px-6 py-3 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]">
                 Connect Wallet
