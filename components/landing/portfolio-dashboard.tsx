@@ -271,6 +271,16 @@ export function PortfolioDashboard() {
 
   const selectedWallets = wallets.filter((w) => w.selected)
 
+  // Calculate total portfolio value from assets
+  useEffect(() => {
+    if (assets.length > 0) {
+      const total = assets.reduce((sum, asset) => sum + asset.value, 0)
+      const avgChange = assets.reduce((sum, asset) => sum + asset.change24h, 0) / assets.length
+      setTotalPortfolioValue(total)
+      setChange24h(Math.round(avgChange * 100) / 100)
+    }
+  }, [assets])
+
   return (
     <main className="min-h-screen bg-[#0a0a0c] px-4 py-24 md:px-6 md:py-28">
       <div className="mx-auto max-w-7xl">
@@ -292,19 +302,7 @@ export function PortfolioDashboard() {
             </div>
           </div>
 
-          {/* Total Portfolio Value Card */}
-          <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-sans text-xs font-semibold text-[#7c7a76]">Total Portfolio Value</p>
-                <p className="mt-3 font-serif text-3xl font-bold text-[#d4af37]">
-                  ${totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
-                </p>
-                <p className="mt-2 font-sans text-xs font-semibold text-[#3fbf6f]">{change24h > 0 ? '+' : ''}{change24h}% (24h)</p>
-              </div>
-              <TrendingUp className="h-12 w-12 text-[#d4af37]" />
-            </div>
-          </div>
+
         </div>
 
         {/* Selected Wallets Chips */}
