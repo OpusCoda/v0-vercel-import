@@ -281,6 +281,24 @@ export function PortfolioDashboard() {
     }
   }, [assets])
 
+  // Populate demo assets on initial load
+  useEffect(() => {
+    const demoAssets: Asset[] = [
+      { symbol: 'OPUS', name: 'Opus', address: TOKEN_CONTRACTS[0].address, balance: 1240000, value: 62421.20, change24h: 4.21 },
+      { symbol: 'CODA', name: 'Coda', address: TOKEN_CONTRACTS[1].address, balance: 810000, value: 41380.35, change24h: 5.18 },
+      { symbol: 'SMAUG', name: 'Smaug', address: TOKEN_CONTRACTS[2].address, balance: 55100, value: 47280.15, change24h: 3.72 },
+    ]
+    setAssets(demoAssets)
+    setWallets([{
+      id: 'demo-1',
+      name: 'Demo Wallet',
+      address: '0xDemo',
+      balance: 0,
+      percentage: 0,
+      selected: true,
+    }])
+  }, [])
+
   return (
     <main className="min-h-screen bg-[#0a0a0c] px-4 py-24 md:px-6 md:py-28">
       <div className="mx-auto max-w-7xl">
@@ -540,32 +558,7 @@ export function PortfolioDashboard() {
               </div>
             )}
 
-            {/* Portfolio Overview Metrics */}
-            <div className="mb-12">
-              <h3 className="mb-6 font-serif text-xl font-bold text-[#d4af37]">Portfolio Overview</h3>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                  <p className="font-sans text-xs font-semibold text-[#7c7a76]">Total Assets</p>
-                  <p className="mt-2 font-serif font-bold text-[#d4af37]">${totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
-                  <p className="mt-1 font-sans text-xs font-semibold text-[#3fbf6f]">{change24h > 0 ? '+' : ''}{change24h}% (24h)</p>
-                </div>
-                <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                  <p className="font-sans text-xs font-semibold text-[#7c7a76]">Total Rewards (All Time)</p>
-                  <p className="mt-2 font-serif font-bold text-[#d4af37]">-- PLS</p>
-                  <p className="mt-1 font-sans text-xs text-[#7c7a76]">-- PLSX</p>
-                </div>
-                <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                  <p className="font-sans text-xs font-semibold text-[#7c7a76]">Total Staked (Smaug)</p>
-                  <p className="mt-2 font-serif font-bold text-[#d4af37]">-- SMAUG</p>
-                  <p className="mt-1 font-sans text-xs text-[#7c7a76]">-- active stakes</p>
-                </div>
-                <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                  <p className="font-sans text-xs font-semibold text-[#7c7a76]">Referrals Earned</p>
-                  <p className="mt-2 font-serif font-bold text-[#d4af37]">-- OATH</p>
-                  <p className="mt-1 font-sans text-xs text-[#7c7a76]">-- (24h)</p>
-                </div>
-              </div>
-            </div>
+
 
 
 
