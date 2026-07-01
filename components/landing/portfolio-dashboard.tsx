@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { TrendingUp, MoreVertical, Plus, ExternalLink, X } from 'lucide-react'
+import { TrendingUp, Trash2, ExternalLink, X } from 'lucide-react'
 import { ConnectWalletButton } from './connect-wallet-button'
 
 interface Wallet {
@@ -10,7 +10,7 @@ interface Wallet {
   address: string
   balance: number
   percentage: number
-  status: 'Active' | 'Inactive'
+  selected: boolean
 }
 
 export function PortfolioDashboard() {
@@ -21,58 +21,60 @@ export function PortfolioDashboard() {
 
   // Modal states
   const [showConnectModal, setShowConnectModal] = useState(false)
-  const [showAddWalletModal, setShowAddWalletModal] = useState(false)
+  const [showEditWalletsModal, setShowEditWalletsModal] = useState(false)
   const [showLoadWalletModal, setShowLoadWalletModal] = useState(false)
 
-  // Add Wallet form state
-  const [newWalletName, setNewWalletName] = useState('')
+  // Edit wallets state
+  const [editingWallets, setEditingWallets] = useState<Wallet[]>([])
   const [newWalletAddress, setNewWalletAddress] = useState('')
-  const [saveWalletList, setSaveWalletList] = useState(false)
-  const [walletListName, setWalletListName] = useState('')
+  const [newWalletName, setNewWalletName] = useState('')
 
   // Load Wallet state
   const [loadWalletName, setLoadWalletName] = useState('')
   const [loadingWallets, setLoadingWallets] = useState(false)
 
-  const handleAddWallet = async () => {
-    if (!newWalletName || !newWalletAddress) {
-      alert('Please fill in all fields')
+  const handleOpenEditModal = () => {
+    setEditingWallets(wallets)
+    setShowEditWalletsModal(true)
+  }
+
+  const handleUpdateWalletName = (id: string, newName: string) => {
+    setEditingWallets(editingWallets.map((w) => (w.id === id ? { ...w, name: newName } : w)))
+  }
+
+  const handleDeleteWallet = (id: string) => {
+    setEditingWallets(editingWallets.filter((w) => w.id !== id))
+  }
+
+  const handleToggleWalletSelection = (id: string) => {
+    setEditingWallets(
+      editingWallets.map((w) => (w.id === id ? { ...w, selected: !w.selected } : w))
+    )
+  }
+
+  const handleAddNewWallet = () => {
+    if (!newWalletAddress) {
+      alert('Please enter a wallet address')
       return
     }
 
     const newWallet: Wallet = {
       id: Math.random().toString(36).substr(2, 9),
-      name: newWalletName,
+      name: newWalletName || 'Wallet',
       address: newWalletAddress,
       balance: 0,
       percentage: 0,
-      status: 'Active',
+      selected: true,
     }
 
-    const updatedWallets = [...wallets, newWallet]
-    setWallets(updatedWallets)
-
-    // Save wallet list if requested
-    if (saveWalletList && walletListName) {
-      try {
-        await fetch('/api/saved-wallets', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: walletListName,
-            addresses: updatedWallets.map((w) => w.address),
-          }),
-        })
-      } catch (error) {
-        console.error('Error saving wallet list:', error)
-      }
-    }
-
-    setNewWalletName('')
+    setEditingWallets([...editingWallets, newWallet])
     setNewWalletAddress('')
-    setSaveWalletList(false)
-    setWalletListName('')
-    setShowAddWalletModal(false)
+    setNewWalletName('')
+  }
+
+  const handleSaveEditedWallets = () => {
+    setWallets(editingWallets)
+    setShowEditWalletsModal(false)
   }
 
   const handleLoadWallets = async () => {
@@ -95,7 +97,7 @@ export function PortfolioDashboard() {
         address,
         balance: 0,
         percentage: 0,
-        status: 'Active' as const,
+        selected: true,
       }))
 
       setWallets(loadedWallets)
@@ -109,11 +111,13 @@ export function PortfolioDashboard() {
     }
   }
 
+  const selectedWallets = wallets.filter((w) => w.selected)
+
   return (
     <main className="min-h-screen bg-[#0a0a0c] px-4 py-24 md:px-6 md:py-28">
       <div className="mx-auto max-w-7xl">
         {/* Header Section */}
-        <div className="mb-12 grid gap-8 md:grid-cols-3">
+        <div className="mb-8 grid gap-8 md:grid-cols-3">
           <div className="md:col-span-2">
             <h1 className="font-serif text-4xl font-bold text-[#d4af37] md:text-5xl">Portfolio</h1>
             <p className="mt-2 font-sans text-[#b8b6b1]">Track all your assets, stakes, and rewards across multiple wallets.</p>
@@ -121,9 +125,8 @@ export function PortfolioDashboard() {
               <button onClick={() => setShowConnectModal(true)} className="rounded-lg bg-[#d4af37] px-6 py-3 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]">
                 Connect Wallet
               </button>
-              <button onClick={() => setShowAddWalletModal(true)} className="flex items-center gap-2 rounded-lg border border-[#2a2a35] bg-[#101017] px-6 py-3 font-sans font-semibold text-[#d4af37] transition-colors hover:border-[#d4af37]/50">
-                <Plus className="h-4 w-4" />
-                Add Wallet
+              <button onClick={() => handleOpenEditModal()} className="rounded-lg border border-[#2a2a35] bg-[#101017] px-6 py-3 font-sans font-semibold text-[#d4af37] transition-colors hover:border-[#d4af37]/50">
+                Edit Wallets
               </button>
               <button onClick={() => setShowLoadWalletModal(true)} className="rounded-lg border border-[#2a2a35] bg-[#101017] px-6 py-3 font-sans font-semibold text-[#d4af37] transition-colors hover:border-[#d4af37]/50">
                 Load Saved Wallet
@@ -146,6 +149,18 @@ export function PortfolioDashboard() {
           </div>
         </div>
 
+        {/* Selected Wallets Chips */}
+        {wallets.length > 0 && (
+          <div className="mb-8 flex flex-wrap gap-2">
+            {selectedWallets.map((wallet) => (
+              <div key={wallet.id} className="rounded-lg border border-[#2a2a35] bg-[#101017] px-4 py-2">
+                <p className="font-sans text-xs font-semibold text-[#7c7a76]">{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}</p>
+                <p className="font-sans text-xs text-[#b8b6b1]">{wallet.name}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Your Wallets Section */}
         <div className="mb-12">
           <div className="mb-6 flex items-center justify-between">
@@ -153,20 +168,14 @@ export function PortfolioDashboard() {
           </div>
           {wallets.length === 0 ? (
             <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-8 text-center">
-              <p className="font-sans text-[#7c7a76]">No wallets connected yet. Connect a wallet to get started.</p>
+              <p className="font-sans text-[#7c7a76]">No wallets added yet. Connect or add wallets to get started.</p>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {wallets.map((wallet) => (
-                <div key={wallet.id} className="rounded-lg border-2 border-[#2a2a35] bg-[#101017] p-4 hover:border-[#d4af37]/30 transition-colors">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">⭐</span>
-                      <h3 className="font-serif font-bold text-[#d4af37]">{wallet.name}</h3>
-                    </div>
-                    <button className="text-[#7c7a76] hover:text-[#d4af37] transition-colors">
-                      <MoreVertical className="h-4 w-4" />
-                    </button>
+              {selectedWallets.map((wallet) => (
+                <div key={wallet.id} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4 hover:border-[#d4af37]/30 transition-colors">
+                  <div className="mb-3">
+                    <h3 className="font-serif font-bold text-[#d4af37]">{wallet.name}</h3>
                   </div>
                   <p className="font-sans text-xs text-[#7c7a76]">{wallet.address}</p>
                   <div className="mt-4 flex items-end justify-between border-t border-[#2a2a35] pt-4">
@@ -174,7 +183,6 @@ export function PortfolioDashboard() {
                       <p className="font-serif text-xl font-bold text-[#d4af37]">${wallet.balance.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
                       <p className="font-sans text-xs text-[#7c7a76]">{wallet.percentage}%</p>
                     </div>
-                    <span className="rounded-full bg-[#3fbf6f]/10 px-2 py-1 font-sans text-xs font-semibold text-[#3fbf6f]">{wallet.status}</span>
                   </div>
                 </div>
               ))}
@@ -183,7 +191,7 @@ export function PortfolioDashboard() {
         </div>
 
         {/* Content shown only when wallets are connected */}
-        {wallets.length > 0 && (
+        {selectedWallets.length > 0 && (
           <>
             {/* Tabs */}
             <div className="mb-8 border-b border-[#2a2a35]">
@@ -291,7 +299,7 @@ export function PortfolioDashboard() {
                 </button>
               </div>
               <div className="mb-6">
-                <ConnectWalletButton fullWidth />
+                <ConnectWalletButton />
               </div>
               <p className="font-sans text-xs text-center text-[#7c7a76]">
                 Connect your wallet to track your portfolio across multiple chains.
@@ -300,73 +308,93 @@ export function PortfolioDashboard() {
           </div>
         )}
 
-        {/* Add Wallet Modal */}
-        {showAddWalletModal && (
+        {/* Edit Wallets Modal */}
+        {showEditWalletsModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-md rounded-lg bg-[#101017] p-6 border border-[#2a2a35]">
+            <div className="w-full max-w-2xl rounded-lg bg-[#101017] p-6 border border-[#2a2a35] max-h-[90vh] overflow-y-auto">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-serif text-xl font-bold text-[#d4af37]">Add Wallet</h3>
-                <button onClick={() => setShowAddWalletModal(false)} className="text-[#7c7a76] hover:text-[#d4af37]">
+                <h3 className="font-serif text-2xl font-bold text-[#d4af37]">Edit Addresses</h3>
+                <button onClick={() => setShowEditWalletsModal(false)} className="text-[#7c7a76] hover:text-[#d4af37]">
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block font-sans text-xs font-semibold text-[#7c7a76] mb-2">Wallet Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Main Wallet"
-                    value={newWalletName}
-                    onChange={(e) => setNewWalletName(e.target.value)}
-                    className="w-full rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#d4af37] outline-none transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block font-sans text-xs font-semibold text-[#7c7a76] mb-2">Wallet Address</label>
-                  <input
-                    type="text"
-                    placeholder="0x..."
-                    value={newWalletAddress}
-                    onChange={(e) => setNewWalletAddress(e.target.value)}
-                    className="w-full rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#d4af37] outline-none transition-colors"
-                  />
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={saveWalletList}
-                    onChange={(e) => setSaveWalletList(e.target.checked)}
-                    className="w-4 h-4 rounded border-[#2a2a35] bg-[#0a0a0c] accent-[#d4af37]"
-                  />
-                  <span className="font-sans text-xs text-[#7c7a76]">Save wallet list</span>
-                </label>
-                {saveWalletList && (
-                  <div>
-                    <label className="block font-sans text-xs font-semibold text-[#7c7a76] mb-2">List Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., My Portfolio"
-                      value={walletListName}
-                      onChange={(e) => setWalletListName(e.target.value)}
-                      className="w-full rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#d4af37] outline-none transition-colors"
-                    />
-                  </div>
-                )}
+              <div className="mb-6 flex gap-2 border-b border-[#2a2a35] pb-4">
+                <button className="rounded-lg bg-[#2a2a35] px-4 py-2 font-sans text-sm font-semibold text-[#d4af37]">
+                  {editingWallets.length} Addresses
+                </button>
               </div>
 
-              <div className="flex gap-3">
+              {/* Existing Wallets */}
+              <div className="space-y-4 mb-8">
+                {editingWallets.map((wallet) => (
+                  <div key={wallet.id} className="flex items-center gap-4 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] p-4">
+                    <input
+                      type="checkbox"
+                      checked={wallet.selected}
+                      onChange={() => handleToggleWalletSelection(wallet.id)}
+                      className="w-5 h-5 rounded border-[#2a2a35] bg-[#0a0a0c] accent-[#d4af37] cursor-pointer"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-sans text-sm text-[#b8b6b1] truncate">{wallet.address}</p>
+                    </div>
+                    <input
+                      type="text"
+                      value={wallet.name}
+                      onChange={(e) => handleUpdateWalletName(wallet.id, e.target.value)}
+                      placeholder="Wallet name"
+                      className="rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-3 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#d4af37] outline-none transition-colors w-40"
+                    />
+                    <button
+                      onClick={() => handleDeleteWallet(wallet.id)}
+                      className="p-2 text-[#7c7a76] hover:text-[#ff6b4a] transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add New Address */}
+              <div className="mb-6 border-t border-[#2a2a35] pt-6">
+                <p className="mb-4 font-sans text-sm font-semibold text-[#d4af37]">Add new Address</p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={newWalletAddress}
+                    onChange={(e) => setNewWalletAddress(e.target.value)}
+                    placeholder="0x..."
+                    className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#d4af37] outline-none transition-colors"
+                  />
+                  <input
+                    type="text"
+                    value={newWalletName}
+                    onChange={(e) => setNewWalletName(e.target.value)}
+                    placeholder="Wallet name"
+                    className="rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#d4af37] outline-none transition-colors w-40"
+                  />
+                  <button
+                    onClick={handleAddNewWallet}
+                    className="rounded-lg bg-[#d4af37] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 border-t border-[#2a2a35] pt-6">
                 <button
-                  onClick={() => setShowAddWalletModal(false)}
+                  onClick={() => setShowEditWalletsModal(false)}
                   className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans font-semibold text-[#d4af37] transition-colors hover:border-[#d4af37]/50"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleAddWallet}
+                  onClick={handleSaveEditedWallets}
                   className="flex-1 rounded-lg bg-[#d4af37] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]"
                 >
-                  Add Wallet
+                  Save Wallets
                 </button>
               </div>
             </div>
