@@ -31,8 +31,11 @@ interface HexStake {
   stakedDays: number
   unlockedDay: number
   isAutoStake: boolean
+  daysPassed: number
   daysRemaining: number
   isActive: boolean
+  wallet: string
+  chain: string
 }
 
 interface LiquidLoan {
@@ -152,6 +155,7 @@ export function PortfolioDashboard() {
           const stake = await hexContract.stakeLists(address, i)
           const daysPassed = Number(currentDay) - Number(stake.lockedDay)
           const daysRemaining = Number(stake.stakedDays) - daysPassed
+          const isActive = Number(stake.unlockedDay) === 0
           allHexStakes.push({
             stakeId: stake.stakeId.toString(),
             stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
@@ -160,8 +164,11 @@ export function PortfolioDashboard() {
             stakedDays: Number(stake.stakedDays),
             unlockedDay: Number(stake.unlockedDay),
             isAutoStake: stake.isAutoStake,
+            daysPassed: Math.max(0, daysPassed),
             daysRemaining: Math.max(0, daysRemaining),
-            isActive: stake.unlockedDay === 0,
+            isActive,
+            wallet: address,
+            chain: 'Pulsechain',
           })
         }
 
@@ -171,6 +178,7 @@ export function PortfolioDashboard() {
           const stake = await hsiContract.stakeLists(address, i)
           const daysPassed = Number(currentDay) - Number(stake.lockedDay)
           const daysRemaining = Number(stake.stakedDays) - daysPassed
+          const isActive = Number(stake.unlockedDay) === 0
           allHsiStakes.push({
             stakeId: stake.stakeId.toString(),
             stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
@@ -179,8 +187,11 @@ export function PortfolioDashboard() {
             stakedDays: Number(stake.stakedDays),
             unlockedDay: Number(stake.unlockedDay),
             isAutoStake: stake.isAutoStake,
+            daysPassed: Math.max(0, daysPassed),
             daysRemaining: Math.max(0, daysRemaining),
-            isActive: stake.unlockedDay === 0,
+            isActive,
+            wallet: address,
+            chain: 'Pulsechain',
           })
         }
       }
@@ -467,45 +478,14 @@ export function PortfolioDashboard() {
               <div className="mb-12">
                 <div className="mb-6">
                   <h3 className="font-serif text-xl font-bold text-[#d4af37]">HEX Stakes</h3>
-                  <p className="font-sans text-sm text-[#7c7a76] mt-1">{hexStakes.length} active stake{hexStakes.length !== 1 ? 's' : ''}</p>
+                  <p className="font-sans text-sm text-[#7c7a76] mt-1">{hexStakes.length} stake{hexStakes.length !== 1 ? 's' : ''}</p>
                 </div>
-                <div className="grid gap-4">
+                <div className="space-y-2">
                   {hexStakes.map((stake) => (
-                      <div key={stake.stakeId} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-sans font-semibold text-[#b8b6b1]">${Number(stake.stakedHearts).toLocaleString('en-US', { maximumFractionDigits: 2 })} HEX</p>
-                            <p className="font-sans text-xs text-[#7c7a76] mt-1">Stake ID: {stake.stakeId}</p>
-                            <p className={`font-sans text-xs mt-2 ${stake.isActive ? 'text-[#3fbf6f]' : 'text-[#ff6b4a]'}`}>
-                              {stake.isActive ? `${stake.daysRemaining} days remaining` : 'Ended'}
-                            </p>
-                          </div>
-                          <button onClick={() => setExpandedStakes(prev => {
-                            const newSet = new Set(prev)
-                            newSet.has(stake.stakeId) ? newSet.delete(stake.stakeId) : newSet.add(stake.stakeId)
-                            return newSet
-                          })} className="text-[#7c7a76] hover:text-[#d4af37]">
-                            <ChevronDown className={`h-5 w-5 transition-transform ${expandedStakes.has(stake.stakeId) ? 'rotate-180' : ''}`} />
-                          </button>
-                        </div>
-                        {expandedStakes.has(stake.stakeId) && (
-                          <div className="mt-4 border-t border-[#2a2a35] pt-4 space-y-2">
-                            <div className="flex justify-between">
-                              <span className="font-sans text-xs text-[#7c7a76]">Staked Days:</span>
-                              <span className="font-sans text-sm text-[#b8b6b1]">{stake.stakedDays}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-sans text-xs text-[#7c7a76]">Locked Day:</span>
-                              <span className="font-sans text-sm text-[#b8b6b1]">{stake.lockedDay}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-sans text-xs text-[#7c7a76]">Unlocked Day:</span>
-                              <span className="font-sans text-sm text-[#b8b6b1]">{stake.unlockedDay}</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                    <div key={`${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
+                      Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -515,43 +495,12 @@ export function PortfolioDashboard() {
               <div className="mb-12">
                 <div className="mb-6">
                   <h3 className="font-serif text-xl font-bold text-[#d4af37]">HSI Stakes</h3>
-                  <p className="font-sans text-sm text-[#7c7a76] mt-1">{hsiStakes.length} active stake{hsiStakes.length !== 1 ? 's' : ''}</p>
+                  <p className="font-sans text-sm text-[#7c7a76] mt-1">{hsiStakes.length} stake{hsiStakes.length !== 1 ? 's' : ''}</p>
                 </div>
-                <div className="grid gap-4">
+                <div className="space-y-2">
                   {hsiStakes.map((stake) => (
-                    <div key={stake.stakeId} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-sans font-semibold text-[#b8b6b1]">${Number(stake.stakedHearts).toLocaleString('en-US', { maximumFractionDigits: 2 })} HSI</p>
-                          <p className="font-sans text-xs text-[#7c7a76] mt-1">Stake ID: {stake.stakeId}</p>
-                          <p className={`font-sans text-xs mt-2 ${stake.isActive ? 'text-[#3fbf6f]' : 'text-[#ff6b4a]'}`}>
-                            {stake.isActive ? `${stake.daysRemaining} days remaining` : 'Ended'}
-                          </p>
-                        </div>
-                        <button onClick={() => setExpandedStakes(prev => {
-                          const newSet = new Set(prev)
-                          newSet.has(stake.stakeId) ? newSet.delete(stake.stakeId) : newSet.add(stake.stakeId)
-                          return newSet
-                        })} className="text-[#7c7a76] hover:text-[#d4af37]">
-                          <ChevronDown className={`h-5 w-5 transition-transform ${expandedStakes.has(stake.stakeId) ? 'rotate-180' : ''}`} />
-                        </button>
-                      </div>
-                      {expandedStakes.has(stake.stakeId) && (
-                        <div className="mt-4 border-t border-[#2a2a35] pt-4 space-y-2">
-                          <div className="flex justify-between">
-                            <span className="font-sans text-xs text-[#7c7a76]">Staked Days:</span>
-                            <span className="font-sans text-sm text-[#b8b6b1]">{stake.stakedDays}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-sans text-xs text-[#7c7a76]">Locked Day:</span>
-                            <span className="font-sans text-sm text-[#b8b6b1]">{stake.lockedDay}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-sans text-xs text-[#7c7a76]">Unlocked Day:</span>
-                            <span className="font-sans text-sm text-[#b8b6b1]">{stake.unlockedDay}</span>
-                          </div>
-                        </div>
-                      )}
+                    <div key={`${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
+                      Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HSI — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
                     </div>
                   ))}
                 </div>
