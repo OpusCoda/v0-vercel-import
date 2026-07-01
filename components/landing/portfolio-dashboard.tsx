@@ -173,20 +173,15 @@ export function PortfolioDashboard() {
     }
   }
 
-  // Populate assets with demo data when wallets are saved
+  // Save edited wallets and fetch real data
   const handleSaveEditedWallets = () => {
     setWallets(editingWallets)
     setShowEditWalletsModal(false)
     
-    // Populate with demo assets
-    const demoAssets: Asset[] = [
-      { symbol: 'OPUS', name: 'Opus', address: TOKEN_CONTRACTS[0].address, balance: 1240000, value: 62421.20, change24h: 4.21 },
-      { symbol: 'CODA', name: 'Coda', address: TOKEN_CONTRACTS[1].address, balance: 810000, value: 41380.35, change24h: 5.18 },
-      { symbol: 'SMAUG', name: 'Smaug', address: TOKEN_CONTRACTS[2].address, balance: 55100, value: 47280.15, change24h: 3.72 },
-    ]
-    setAssets(demoAssets)
+    // Clear assets until real data is fetched
+    setAssets([])
 
-    // Fetch HEX stakes and Liquid Loans
+    // Fetch HEX stakes and Liquid Loans for selected wallets
     const selectedAddresses = editingWallets.filter(w => w.selected).map(w => w.address)
     if (selectedAddresses.length > 0) {
       fetchHexStakes(selectedAddresses)
@@ -281,23 +276,7 @@ export function PortfolioDashboard() {
     }
   }, [assets])
 
-  // Populate demo assets on initial load
-  useEffect(() => {
-    const demoAssets: Asset[] = [
-      { symbol: 'OPUS', name: 'Opus', address: TOKEN_CONTRACTS[0].address, balance: 1240000, value: 62421.20, change24h: 4.21 },
-      { symbol: 'CODA', name: 'Coda', address: TOKEN_CONTRACTS[1].address, balance: 810000, value: 41380.35, change24h: 5.18 },
-      { symbol: 'SMAUG', name: 'Smaug', address: TOKEN_CONTRACTS[2].address, balance: 55100, value: 47280.15, change24h: 3.72 },
-    ]
-    setAssets(demoAssets)
-    setWallets([{
-      id: 'demo-1',
-      name: 'Demo Wallet',
-      address: '0xDemo',
-      balance: 0,
-      percentage: 0,
-      selected: true,
-    }])
-  }, [])
+
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] px-4 py-24 md:px-6 md:py-28">
