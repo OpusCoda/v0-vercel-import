@@ -105,7 +105,7 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
       CODA: 0.0004,
       SMAUG: 0.0002213,
       PRVX: 0.00000001,
-      INC: 0.01,
+      INC: 0.30,
       WETH: data.ethereum?.usd || 2500,
       WBTC: data.bitcoin?.usd || 45000,
       eBTC: data.bitcoin?.usd || 45000,
@@ -121,7 +121,7 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
       PLSX: 0.05,
       HEX: 0.04,
       eHEX: 0.04,
-      INC: 0.01,
+      INC: 0.30,
       WETH: 2500,
       WBTC: 45000,
       eBTC: 45000,
@@ -655,11 +655,13 @@ export function PortfolioDashboard() {
                         <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Token</th>
                         <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Balance</th>
                         <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Value (USD)</th>
-                        <th className="px-6 py-3 text-right font-sans text-xs font-semibold text-[#7c7a76]">24h Change</th>
+                        <th className="px-6 py-3 text-right font-sans text-xs font-semibold text-[#7c7a76]">Price</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {assets.filter(a => a.value > 0.5).map((asset) => (
+                      {assets.filter(a => a.value > 0.5).map((asset) => {
+                        const price = asset.balance > 0 ? asset.value / asset.balance : 0
+                        return (
                         <tr key={asset.symbol} className="border-b border-[#2a2a35] last:border-b-0 hover:bg-[#0a0a0c] transition-colors">
                           <td className="px-6 py-4">
                             <div>
@@ -670,12 +672,13 @@ export function PortfolioDashboard() {
                           <td className="px-6 py-4 font-sans text-sm text-[#b8b6b1]">{asset.balance.toLocaleString()}</td>
                           <td className="px-6 py-4 font-serif font-semibold text-[#d4af37]">${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
                           <td className="px-6 py-4 text-right">
-                            <span className={`font-sans text-sm font-semibold ${asset.change24h >= 0 ? 'text-[#3fbf6f]' : 'text-[#ff6b4a]'}`}>
-                              {asset.change24h >= 0 ? '+' : ''}{asset.change24h}%
+                            <span className="font-sans text-sm font-semibold text-[#d4af37]">
+                              ${price.toLocaleString('en-US', { maximumFractionDigits: price < 0.01 ? 8 : 4 })}
                             </span>
                           </td>
                         </tr>
-                      ))}
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
