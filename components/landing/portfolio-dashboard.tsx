@@ -407,10 +407,6 @@ export function PortfolioDashboard() {
 
   // Save edited wallets and fetch real data
   const handleSaveEditedWallets = async () => {
-    // Update state with edited wallets
-    setWallets(editingWallets)
-    setShowEditWalletsModal(false)
-
     // Save wallet list locally and to API if it was loaded from a saved list
     if (loadedWalletListName) {
       try {
@@ -432,18 +428,9 @@ export function PortfolioDashboard() {
       }
     }
 
-    // Fetch real data for selected wallets
-    const selectedAddresses = editingWallets.filter(w => w.selected).map(w => w.address)
-    if (selectedAddresses.length > 0) {
-      await fetchTokenBalances(selectedAddresses)
-      await fetchHexStakes(selectedAddresses)
-      await fetchLiquidLoans(selectedAddresses)
-    } else {
-      setAssets([])
-      setHexStakes([])
-      setHsiStakes([])
-      setLiquidLoans([])
-    }
+    // Update state with edited wallets - this will trigger the useEffect to fetch data
+    setWallets(editingWallets)
+    setShowEditWalletsModal(false)
   }
 
   const handleOpenEditModal = () => {
