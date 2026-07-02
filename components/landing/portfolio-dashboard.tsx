@@ -582,24 +582,15 @@ export function PortfolioDashboard() {
           <h1 className="font-serif text-5xl font-bold text-[#f4f4f4] mb-2">Portfolio</h1>
           <p className="font-sans text-[#9a9a9a] mb-12">Track and manage all your wallets in one place.</p>
           
-          {/* Quick Stats Row */}
-          <div className="grid grid-cols-3 gap-12 mb-12">
-            <div>
-              <p className="font-sans text-xs font-medium text-[#9a9a9a] mb-1">Total Portfolio Value</p>
-              <p className="font-serif text-3xl font-bold text-[#f4f4f4]">${totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
-              <p className={`font-sans text-sm mt-1 ${change24h >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>{change24h > 0 ? '+' : ''}{change24h}% (24h)</p>
+          {/* Quick Stats Row - Only show when wallets exist */}
+          {wallets.length > 0 && (
+            <div className="mb-12">
+              <div>
+                <p className="font-sans text-xs font-medium text-[#9a9a9a] mb-1">Total Portfolio Value</p>
+                <p className="font-serif text-3xl font-bold text-[#f4f4f4]">${totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+              </div>
             </div>
-            <div>
-              <p className="font-sans text-xs font-medium text-[#9a9a9a] mb-1">Selected Wallets</p>
-              <p className="font-serif text-3xl font-bold text-[#f4f4f4]">{selectedWallets.length}</p>
-              <p className="font-sans text-sm text-[#9a9a9a] mt-1">of {wallets.length} saved</p>
-            </div>
-            <div>
-              <p className="font-sans text-xs font-medium text-[#9a9a9a] mb-1">Total P&L (24h)</p>
-              <p className="font-serif text-3xl font-bold text-[#f4f4f4]">+$0.00</p>
-              <p className="font-sans text-sm text-[#10b981] mt-1">0%</p>
-            </div>
-          </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-4">
