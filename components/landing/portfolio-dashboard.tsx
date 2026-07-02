@@ -204,9 +204,13 @@ export function PortfolioDashboard() {
         .sort((a, b) => b.value - a.value)
 
       setAssets(fetchedAssets)
-      console.log('[v0] Fetched', fetchedAssets.length, 'assets for', addresses.length, 'wallets')
+      console.log('[v0] DIAGNOSTIC fetchTokenBalances: fetched', fetchedAssets.length, 'assets (after > 0.5 filter)')
+      if (fetchedAssets.length === 0) {
+        console.log('[v0] DIAGNOSTIC: No assets passed the > 0.5 USD value filter')
+        console.log('[v0] DIAGNOSTIC: This means all tokens have value <= $0.50')
+      }
     } catch (error) {
-      console.error('[v0] Error fetching token balances:', error)
+      console.error('[v0] DIAGNOSTIC Error in fetchTokenBalances:', error)
       setAssets([])
     }
   }
@@ -549,6 +553,7 @@ export function PortfolioDashboard() {
   }
 
   const selectedWallets = wallets.filter((w) => w.selected)
+  console.log('[v0] DIAGNOSTIC: wallets.length=', wallets.length, 'selectedWallets.length=', selectedWallets.length, 'assets.length=', assets.length)
 
   // Calculate total portfolio value from assets
   useEffect(() => {
@@ -577,9 +582,9 @@ export function PortfolioDashboard() {
   // Fetch data when selected wallets change
   useEffect(() => {
     const selectedAddresses = wallets.filter(w => w.selected).map(w => w.address)
-    console.log('[v0] Wallets changed, selected:', selectedAddresses.length, 'wallets')
+    console.log('[v0] DIAGNOSTIC useEffect: wallets.length=', wallets.length, 'selectedAddresses.length=', selectedAddresses.length, 'addresses:', selectedAddresses)
     if (selectedAddresses.length > 0) {
-      console.log('[v0] Fetching portfolio data')
+      console.log('[v0] Calling fetchTokenBalances with', selectedAddresses.length, 'addresses')
       fetchTokenBalances(selectedAddresses)
       fetchHexStakes(selectedAddresses)
       fetchLiquidLoans(selectedAddresses)
@@ -722,7 +727,7 @@ export function PortfolioDashboard() {
               <div className="mb-12">
                 <h3 className="font-serif text-xl font-bold text-[#f4f4f4] mb-6">Holdings</h3>
                 <div className="space-y-2">
-                  {assets.filter(a => a.value > 0.5).slice(0, 10).map((asset) => (
+                  {assets.filter(a => a.value > 0).slice(0, 10).map((asset) => (
                     <div key={asset.symbol} className="flex justify-between items-center py-3 px-4 rounded hover:bg-[rgba(255,255,255,0.02)]">
                       <div>
                         <p className="font-sans text-sm font-medium text-[#f4f4f4]">{asset.symbol}</p>
@@ -731,8 +736,8 @@ export function PortfolioDashboard() {
                       <p className="font-sans font-semibold text-[#d8b13d]">${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
                     </div>
                   ))}
-                  {assets.filter(a => a.value > 0.5).length > 10 && (
-                    <p className="font-sans text-xs text-[#9a9a9a] text-center py-3">+{assets.filter(a => a.value > 0.5).length - 10} more tokens</p>
+                  {assets.filter(a => a.value > 0).length > 10 && (
+                    <p className="font-sans text-xs text-[#9a9a9a] text-center py-3">+{assets.filter(a => a.value > 0).length - 10} more tokens</p>
                   )}
                 </div>
               </div>
@@ -753,7 +758,7 @@ export function PortfolioDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {assets.filter(a => a.value > 0.5).map((asset) => {
+                      {assets.filter(a => a.value > 0).map((asset) => {
                         const price = asset.balance > 0 ? asset.value / asset.balance : 0
                         return (
                         <tr key={asset.symbol} className="border-b border-[#2a2a35] last:border-b-0 hover:bg-[#0a0a0c] transition-colors">
