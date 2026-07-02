@@ -204,8 +204,10 @@ export function PortfolioDashboard() {
         .sort((a, b) => b.value - a.value)
 
       setAssets(fetchedAssets)
+      console.log('[v0] Fetched', fetchedAssets.length, 'assets for', addresses.length, 'wallets')
     } catch (error) {
-      console.error('Error fetching token balances:', error)
+      console.error('[v0] Error fetching token balances:', error)
+      setAssets([])
     }
   }
 
@@ -407,6 +409,9 @@ export function PortfolioDashboard() {
 
   // Save edited wallets and fetch real data
   const handleSaveEditedWallets = async () => {
+    console.log('[v0] handleSaveEditedWallets called with', editingWallets.length, 'wallets')
+    console.log('[v0] editingWallets:', editingWallets)
+    
     // Save wallet list locally and to API if it was loaded from a saved list
     if (loadedWalletListName) {
       try {
@@ -429,14 +434,19 @@ export function PortfolioDashboard() {
     }
 
     // Update state with edited wallets - this will trigger the useEffect to fetch data
+    console.log('[v0] Calling setWallets with', editingWallets.length, 'wallets')
     setWallets(editingWallets)
     setShowEditWalletsModal(false)
   }
 
   const handleOpenEditModal = () => {
-    // Auto-select all wallets when opening Edit modal for convenience
-    const selectedWallets = wallets.map(w => ({ ...w, selected: true }))
-    setEditingWallets(selectedWallets)
+    // Auto-select all wallets when opening Edit modal for convenience (only if wallets exist)
+    if (wallets.length > 0) {
+      const selectedWallets = wallets.map(w => ({ ...w, selected: true }))
+      setEditingWallets(selectedWallets)
+    } else {
+      setEditingWallets([])
+    }
     setShowEditWalletsModal(true)
   }
 
@@ -460,10 +470,16 @@ export function PortfolioDashboard() {
       return
     }
 
+    // Validate wallet address format
+    if (!ethers.isAddress(newWalletAddress)) {
+      alert('Invalid wallet address format')
+      return
+    }
+
     const newWallet: Wallet = {
       id: Math.random().toString(36).substr(2, 9),
       name: newWalletName || 'Wallet',
-      address: newWalletAddress,
+      address: ethers.getAddress(newWalletAddress), // Normalize address to checksum format
       balance: 0,
       percentage: 0,
       selected: true,
@@ -549,11 +565,14 @@ export function PortfolioDashboard() {
   // Fetch data when selected wallets change
   useEffect(() => {
     const selectedAddresses = wallets.filter(w => w.selected).map(w => w.address)
+    console.log('[v0] Wallets changed, selected:', selectedAddresses.length, 'wallets')
     if (selectedAddresses.length > 0) {
+      console.log('[v0] Fetching portfolio data')
       fetchTokenBalances(selectedAddresses)
       fetchHexStakes(selectedAddresses)
       fetchLiquidLoans(selectedAddresses)
     } else {
+      console.log('[v0] No selected wallets, clearing data')
       setAssets([])
       setHexStakes([])
       setHsiStakes([])
