@@ -67,6 +67,7 @@ const LIQUID_LOANS_VAULT_MANAGER = '0xD79bfb86fA06e8782b401bC0197d92563602D2Ab'
 
 // Ethereum contracts
 const HEX_ETHEREUM_ADDRESS = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'
+const HSI_MANAGER_ADDRESS = '0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3'
 const HSI_ETHEREUM_ADDRESS = '0xb3A6f6C4b6418F6e1198bb455c86b5bEeF6af329'
 
 const HEX_STAKING_ABI = [
@@ -288,9 +289,81 @@ export function PortfolioDashboard() {
       console.error('Error fetching Ethereum HEX data:', error)
     }
 
-    // TODO: Implement HSI stakes fetching with proper ABI
-    // HSI stakes are ERC-721 NFTs and require different contract interaction
-    // For now, HSI stays empty until proper ABI and contract paths are defined
+    // Fetch Pulsechain HSI stakes
+    try {
+      const pulsechainProvider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
+      const hsiContractPulse = new ethers.Contract(HSI_MANAGER_ADDRESS, HEX_STAKING_ABI, pulsechainProvider)
+      const hexContractPulse = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, pulsechainProvider)
+      const currentDayPulse = await hexContractPulse.currentDay()
+
+      for (const address of addresses) {
+        try {
+          const hsiStakeCount = await hsiContractPulse.stakeCount(address)
+          for (let i = 0; i < Number(hsiStakeCount); i++) {
+            const stake = await hsiContractPulse.stakeLists(address, i)
+            const daysPassed = Number(currentDayPulse) - Number(stake.lockedDay)
+            const daysRemaining = Number(stake.stakedDays) - daysPassed
+            const isActive = Number(stake.unlockedDay) === 0
+            allHsiStakes.push({
+              stakeId: stake.stakeId.toString(),
+              stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
+              stakeShares: ethers.formatUnits(stake.stakeShares, 12),
+              lockedDay: Number(stake.lockedDay),
+              stakedDays: Number(stake.stakedDays),
+              unlockedDay: Number(stake.unlockedDay),
+              isAutoStake: stake.isAutoStake,
+              daysPassed: Math.max(0, daysPassed),
+              daysRemaining: Math.max(0, daysRemaining),
+              isActive,
+              wallet: address,
+              chain: 'Pulsechain',
+            })
+          }
+        } catch (e) {
+          console.error(`Error fetching Pulsechain HSI stakes for ${address}:`, e)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching Pulsechain HSI data:', error)
+    }
+
+    // Fetch Ethereum HSI stakes
+    try {
+      const ethereumProvider = new ethers.JsonRpcProvider(ETHEREUM_RPC_URL)
+      const hsiEthContract = new ethers.Contract(HSI_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+      const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+      const currentDayEth = await hexEthContract.currentDay()
+
+      for (const address of addresses) {
+        try {
+          const hsiStakeCount = await hsiEthContract.stakeCount(address)
+          for (let i = 0; i < Number(hsiStakeCount); i++) {
+            const stake = await hsiEthContract.stakeLists(address, i)
+            const daysPassed = Number(currentDayEth) - Number(stake.lockedDay)
+            const daysRemaining = Number(stake.stakedDays) - daysPassed
+            const isActive = Number(stake.unlockedDay) === 0
+            allHsiStakes.push({
+              stakeId: stake.stakeId.toString(),
+              stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
+              stakeShares: ethers.formatUnits(stake.stakeShares, 12),
+              lockedDay: Number(stake.lockedDay),
+              stakedDays: Number(stake.stakedDays),
+              unlockedDay: Number(stake.unlockedDay),
+              isAutoStake: stake.isAutoStake,
+              daysPassed: Math.max(0, daysPassed),
+              daysRemaining: Math.max(0, daysRemaining),
+              isActive,
+              wallet: address,
+              chain: 'Ethereum',
+            })
+          }
+        } catch (e) {
+          console.error(`Error fetching Ethereum HSI stakes for ${address}:`, e)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching Ethereum HSI data:', error)
+    }
 
     // Sort by daysRemaining (least first)
     allHexStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
