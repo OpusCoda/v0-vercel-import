@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from 'react'
 
-const TIERS = [
-  { name: 'Hatchling', min: 30, max: 89, multiplier: '1×', rebate: '5%', icon: '🐉' },
-  { name: 'Drake', min: 90, max: 179, multiplier: '1.5×', rebate: '10%', icon: '🐲' },
-  { name: 'Dragon', min: 180, max: 364, multiplier: '2×', rebate: '20%', icon: '🔥' },
-  { name: 'Elder Dragon', min: 365, max: 729, multiplier: '3×', rebate: '30%', icon: '👑' },
-  { name: 'Smaug', min: 730, max: 730, multiplier: '5×', rebate: '40%', icon: '🐲🔥' },
+export const TIERS = [
+  { name: 'Hatchling', min: 30, max: 89, multiplier: 1, feeRebate: 5, icon: '🥚' },
+  { name: 'Drake', min: 90, max: 179, multiplier: 1.5, feeRebate: 10, icon: '🥚' },
+  { name: 'Dragon', min: 180, max: 364, multiplier: 2, feeRebate: 20, icon: '🥚' },
+  { name: 'Elder Dragon', min: 365, max: 729, multiplier: 3, feeRebate: 30, icon: '🥚' },
+  { name: 'Smaug', min: 730, max: 730, multiplier: 5, feeRebate: 40, icon: '🥚' },
 ]
 
 function getTier(days: number) {
