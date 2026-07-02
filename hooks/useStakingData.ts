@@ -25,11 +25,11 @@ export function useStakingData() {
 
   // Fetch user's SMAUG balance
   const { data: balanceData } = useReadContract({
-    address: SMAUG_TOKEN as `0x${string}`,
-    abi: ERC20_ABI,
-    functionName: 'balanceOf',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address },
+  address: SMAUG_TOKEN as `0x${string}`,
+  abi: ERC20_ABI,
+  functionName: 'balanceOf',
+  args: [address!],
+  query: { enabled: !!address },
   })
 
   useEffect(() => {
