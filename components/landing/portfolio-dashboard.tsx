@@ -93,7 +93,7 @@ const ETHEREUM_RPC_URL = 'https://ethereum-rpc.publicnode.com'
 const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
   try {
     const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=pulsechain,pulsex,hex,ethereum,bitcoin,opus-token,coda-token&vs_currencies=usd'
+      'https://api.coingecko.com/api/v3/simple/price?ids=pulsechain,pulsex,hex,ethereum,bitcoin&vs_currencies=usd'
     )
     const data = await response.json()
     return {
@@ -101,10 +101,10 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
       PLSX: data.pulsex?.usd || 0.05,
       HEX: data.hex?.usd || 0.04,
       eHEX: data.hex?.usd || 0.04,
-      OPUS: data['opus-token']?.usd || 0.1247,
-      CODA: data['coda-token']?.usd || 0.1165,
-      SMAUG: 0.000002,
-      PRVX: 0.000000142,
+      OPUS: 0.0004037,
+      CODA: 0.0004,
+      SMAUG: 0.00000001,
+      PRVX: 0.00000001,
       INC: 0.01,
       WETH: data.ethereum?.usd || 2500,
       WBTC: data.bitcoin?.usd || 45000,
@@ -113,10 +113,10 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
   } catch (error) {
     console.error('Error fetching prices:', error)
     return {
-      OPUS: 0.1247,
-      CODA: 0.1165,
-      SMAUG: 0.000002,
-      PRVX: 0.000000142,
+      OPUS: 0.0004037,
+      CODA: 0.0004,
+      SMAUG: 0.00000001,
+      PRVX: 0.00000001,
       PLS: 0.08,
       PLSX: 0.05,
       HEX: 0.04,
