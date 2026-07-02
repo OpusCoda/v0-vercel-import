@@ -1,7 +1,7 @@
 import { parseUnits } from 'viem'
 
 export const STAKING_CONTRACT = '0x1DafEa6eBDaFd2BD9c3fBf86DFccccAbBB0E3bda'
-export const SMAUG_TOKEN = '0x262b2d5d50014f2b0297ba52c6c74f4c0d9020d6' // PulseChain SMAUG
+export const SMAUG_TOKEN = '0xf4754Aa585caBf38537A68660469A17E203D8632' // PulseChain SMAUG
 
 // Minimal ABI for staking contract functions
 export const STAKING_ABI = [
