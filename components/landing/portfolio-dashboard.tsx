@@ -49,6 +49,7 @@ const TOKEN_CONTRACTS = [
   { symbol: 'OPUS', name: 'Opus', address: '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a', decimals: 18 },
   { symbol: 'CODA', name: 'Coda', address: '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28', decimals: 18 },
   { symbol: 'SMAUG', name: 'Smaug', address: '0xf4754Aa585caBf38537A68660469A17E203D8632', decimals: 18 },
+  { symbol: 'PRVX', name: 'Privex', address: '0x7f681a5ad615238357ba148c281e2eaefd2de55a', decimals: 18 },
   { symbol: 'PLS', name: 'Pulse', address: 'native', decimals: 18 },
   { symbol: 'PLSX', name: 'PulseX', address: '0x95B303987A60C71504D99Aa1b13B4DA07b0790ab', decimals: 18 },
   { symbol: 'INC', name: 'Incentive', address: '0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d', decimals: 18 },
@@ -88,7 +89,7 @@ const ERC20_ABI = [
 const PULSECHAIN_RPC_URL = 'https://rpc.pulsechain.com'
 const ETHEREUM_RPC_URL = 'https://eth.llamarpc.com'
 
-// Coingecko API for fetching token prices
+// Token prices from DexScreener and market data
 const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
   try {
     const response = await fetch(
@@ -100,9 +101,10 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
       PLSX: data.pulsex?.usd || 0.05,
       HEX: data.hex?.usd || 0.04,
       eHEX: data.hex?.usd || 0.04,
-      OPUS: data['opus-token']?.usd || 0.05,
-      CODA: data['coda-token']?.usd || 0.051,
-      SMAUG: 0.01,
+      OPUS: data['opus-token']?.usd || 0.1247,
+      CODA: data['coda-token']?.usd || 0.1165,
+      SMAUG: 0.000002,
+      PRVX: 0.000000142,
       INC: 0.01,
       WETH: data.ethereum?.usd || 2500,
       WBTC: data.bitcoin?.usd || 45000,
@@ -111,9 +113,10 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
   } catch (error) {
     console.error('Error fetching prices:', error)
     return {
-      OPUS: 0.05,
-      CODA: 0.051,
-      SMAUG: 0.01,
+      OPUS: 0.1247,
+      CODA: 0.1165,
+      SMAUG: 0.000002,
+      PRVX: 0.000000142,
       PLS: 0.08,
       PLSX: 0.05,
       HEX: 0.04,
@@ -659,7 +662,7 @@ export function PortfolioDashboard() {
               <div className="mb-12">
                 <h3 className="font-serif text-xl font-bold text-[#f4f4f4] mb-6">Holdings</h3>
                 <div className="space-y-2">
-                  {assets.slice(0, 10).map((asset) => (
+                  {assets.filter(a => a.value > 0.5).slice(0, 10).map((asset) => (
                     <div key={asset.symbol} className="flex justify-between items-center py-3 px-4 rounded hover:bg-[rgba(255,255,255,0.02)]">
                       <div>
                         <p className="font-sans text-sm font-medium text-[#f4f4f4]">{asset.symbol}</p>
@@ -668,8 +671,8 @@ export function PortfolioDashboard() {
                       <p className="font-sans font-semibold text-[#d8b13d]">${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
                     </div>
                   ))}
-                  {assets.length > 10 && (
-                    <p className="font-sans text-xs text-[#9a9a9a] text-center py-3">+{assets.length - 10} more tokens</p>
+                  {assets.filter(a => a.value > 0.5).length > 10 && (
+                    <p className="font-sans text-xs text-[#9a9a9a] text-center py-3">+{assets.filter(a => a.value > 0.5).length - 10} more tokens</p>
                   )}
                 </div>
               </div>
@@ -690,7 +693,7 @@ export function PortfolioDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {assets.map((asset) => (
+                      {assets.filter(a => a.value > 0.5).map((asset) => (
                         <tr key={asset.symbol} className="border-b border-[#2a2a35] last:border-b-0 hover:bg-[#0a0a0c] transition-colors">
                           <td className="px-6 py-4">
                             <div>
