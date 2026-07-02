@@ -323,30 +323,23 @@ export function PortfolioDashboard() {
     try {
       const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
       const vaultManager = new ethers.Contract(LIQUID_LOANS_VAULT_MANAGER, LIQUID_LOANS_ABI, provider)
+      const prices = await fetchTokenPrices()
+      const plsPrice = prices.PLS || 0.08
       const loans: LiquidLoan[] = []
-
-      // Fetch PLS price for ICR calculation (assuming $1 for simplicity, or fetch from API)
-      const plsPrice = 1 // Could be fetched from price API
 
       for (const address of addresses) {
         const coll = await vaultManager.getVaultColl(address)
         const debt = await vaultManager.getVaultDebt(address)
 
         if (coll > 0n || debt > 0n) {
-          let icr = 0
-          try {
-            // getCurrentICR expects price in wei format (e.g., 1 PLS = 10^18 wei)
-            const icrResult = await vaultManager.getCurrentICR(address, ethers.parseEther(plsPrice.toString()))
-            icr = Number(ethers.formatUnits(icrResult, 16)) // ICR is typically in basis points (10000 = 100%)
-          } catch (e) {
-            console.error('Error fetching ICR for address:', address, e)
-            icr = 0
-          }
+          const collateralUSD = Number(ethers.formatUnits(coll, 18)) * plsPrice
+          const debtUSD = Number(ethers.formatUnits(debt, 18))
+          const icr = debtUSD > 0 ? (collateralUSD / debtUSD) * 100 : 0
 
           loans.push({
             wallet: address,
             lockedPLS: Number(ethers.formatUnits(coll, 18)),
-            debt: Number(ethers.formatUnits(debt, 18)),
+            debt: debtUSD,
             icr,
           })
         }
@@ -659,7 +652,7 @@ export function PortfolioDashboard() {
                         </div>
                         <div>
                           <p className="font-sans text-xs text-[#7c7a76]">ICR</p>
-                          <p className={`font-serif font-semibold mt-1 ${loan.icr >= 150 ? 'text-[#3fbf6f]' : loan.icr >= 110 ? 'text-[#f59e0b]' : 'text-[#ff6b4a]'}`}>{(loan.icr / 100).toFixed(2)}%</p>
+                          <p className={`font-serif font-semibold mt-1 ${loan.icr >= 150 ? 'text-[#3fbf6f]' : loan.icr >= 110 ? 'text-[#f59e0b]' : 'text-[#ff6b4a]'}`}>{loan.icr.toFixed(2)}%</p>
                         </div>
                       </div>
                       <p className="font-sans text-xs text-[#7c7a76] mt-4 truncate">{loan.wallet}</p>
