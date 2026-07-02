@@ -53,6 +53,10 @@ const TOKEN_CONTRACTS = [
   { symbol: 'PLSX', name: 'PulseX', address: '0x95B303987A60C71504D99Aa1b13B4DA07b0790ab', decimals: 18 },
   { symbol: 'INC', name: 'Incentive', address: '0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d', decimals: 18 },
   { symbol: 'HEX', name: 'HEX', address: '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39', decimals: 8 },
+  { symbol: 'eHEX', name: 'eHEX (Ethereum)', address: '0x57fde0a71132198BBeC939B98976993d8D89D225', decimals: 8 },
+  { symbol: 'WETH', name: 'WETH', address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C', decimals: 18 },
+  { symbol: 'WBTC', name: 'Wrapped Bitcoin', address: '0xb17D901469B9208B17d916112988A3FeD19b5cA1', decimals: 8 },
+  { symbol: 'eBTC', name: 'eBTC (WBTC from Ethereum)', address: '0xb17D901469B9208B17d916112988A3FeD19b5cA1', decimals: 8 },
 ]
 
 // Pulsechain contracts
@@ -88,28 +92,36 @@ const ETHEREUM_RPC_URL = 'https://eth.llamarpc.com'
 const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
   try {
     const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=pulsechain,pulsex,hex,opus-token,coda-token&vs_currencies=usd'
+      'https://api.coingecko.com/api/v3/simple/price?ids=pulsechain,pulsex,hex,ethereum,bitcoin,opus-token,coda-token&vs_currencies=usd'
     )
     const data = await response.json()
     return {
       PLS: data.pulsechain?.usd || 0.08,
       PLSX: data.pulsex?.usd || 0.05,
       HEX: data.hex?.usd || 0.04,
+      eHEX: data.hex?.usd || 0.04,
       OPUS: data['opus-token']?.usd || 0.05,
       CODA: data['coda-token']?.usd || 0.051,
-      SMAUG: 0.857,
+      SMAUG: 0.01,
       INC: 0.01,
+      WETH: data.ethereum?.usd || 2500,
+      WBTC: data.bitcoin?.usd || 45000,
+      eBTC: data.bitcoin?.usd || 45000,
     }
   } catch (error) {
     console.error('Error fetching prices:', error)
     return {
       OPUS: 0.05,
       CODA: 0.051,
-      SMAUG: 0.857,
+      SMAUG: 0.01,
       PLS: 0.08,
       PLSX: 0.05,
       HEX: 0.04,
+      eHEX: 0.04,
       INC: 0.01,
+      WETH: 2500,
+      WBTC: 45000,
+      eBTC: 45000,
     }
   }
 }
@@ -476,6 +488,21 @@ export function PortfolioDashboard() {
     }
   }, [assets])
 
+  // Fetch data when selected wallets change
+  useEffect(() => {
+    const selectedAddresses = wallets.filter(w => w.selected).map(w => w.address)
+    if (selectedAddresses.length > 0) {
+      fetchTokenBalances(selectedAddresses)
+      fetchHexStakes(selectedAddresses)
+      fetchLiquidLoans(selectedAddresses)
+    } else {
+      setAssets([])
+      setHexStakes([])
+      setHsiStakes([])
+      setLiquidLoans([])
+    }
+  }, [wallets])
+
 
 
   return (
@@ -601,51 +628,21 @@ export function PortfolioDashboard() {
 
             {/* Overview Tab */}
             {activeTab === 'overview' && (
-              <div className="grid grid-cols-2 gap-12 mb-12">
-                {/* Summary Section */}
-                <div>
-                  <h3 className="font-serif text-xl font-bold text-[#f4f4f4] mb-6">Summary</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center pb-3 border-b border-[rgba(255,255,255,0.08)]">
-                      <p className="font-sans text-sm text-[#9a9a9a]">Total Assets</p>
-                      <p className="font-sans font-semibold text-[#f4f4f4]">${totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[rgba(255,255,255,0.08)]">
-                      <p className="font-sans text-sm text-[#9a9a9a]">Total Tokens</p>
-                      <p className="font-sans font-semibold text-[#f4f4f4]">{assets.length}</p>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[rgba(255,255,255,0.08)]">
-                      <p className="font-sans text-sm text-[#9a9a9a]">HEX Staked</p>
-                      <p className="font-sans font-semibold text-[#f4f4f4]">{hexStakes.length} stakes</p>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[rgba(255,255,255,0.08)]">
-                      <p className="font-sans text-sm text-[#9a9a9a]">HSI Staked</p>
-                      <p className="font-sans font-semibold text-[#f4f4f4]">{hsiStakes.length} stakes</p>
-                    </div>
-                    <div className="flex justify-between items-center pt-2">
-                      <p className="font-sans text-sm text-[#9a9a9a]">Liquid Loans</p>
-                      <p className="font-sans font-semibold text-[#f4f4f4]">{liquidLoans.length} position{liquidLoans.length !== 1 ? 's' : ''}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Holdings Section */}
-                <div>
-                  <h3 className="font-serif text-xl font-bold text-[#f4f4f4] mb-6">Holdings</h3>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {assets.slice(0, 8).map((asset) => (
-                      <div key={asset.symbol} className="flex justify-between items-center py-2 px-3 rounded hover:bg-[rgba(255,255,255,0.02)]">
-                        <div>
-                          <p className="font-sans text-sm font-medium text-[#f4f4f4]">{asset.symbol}</p>
-                          <p className="font-sans text-xs text-[#9a9a9a]">{Number(asset.balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-                        </div>
-                        <p className="font-sans font-semibold text-[#d8b13d]">${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+              <div className="mb-12">
+                <h3 className="font-serif text-xl font-bold text-[#f4f4f4] mb-6">Holdings</h3>
+                <div className="space-y-2">
+                  {assets.slice(0, 10).map((asset) => (
+                    <div key={asset.symbol} className="flex justify-between items-center py-3 px-4 rounded hover:bg-[rgba(255,255,255,0.02)]">
+                      <div>
+                        <p className="font-sans text-sm font-medium text-[#f4f4f4]">{asset.symbol}</p>
+                        <p className="font-sans text-xs text-[#9a9a9a]">{Number(asset.balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                       </div>
-                    ))}
-                    {assets.length > 8 && (
-                      <p className="font-sans text-xs text-[#9a9a9a] text-center py-2">+{assets.length - 8} more</p>
-                    )}
-                  </div>
+                      <p className="font-sans font-semibold text-[#d8b13d]">${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                    </div>
+                  ))}
+                  {assets.length > 10 && (
+                    <p className="font-sans text-xs text-[#9a9a9a] text-center py-3">+{assets.length - 10} more tokens</p>
+                  )}
                 </div>
               </div>
             )}
