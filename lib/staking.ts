@@ -77,12 +77,12 @@ export const ERC20_ABI = [
 ] as const
 
 export function formatSmaugBalance(balance: bigint): string {
-  return (Number(balance) / 1e8).toLocaleString('en-US', {
+  return (Number(balance) / 1e18).toLocaleString('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   })
 }
 
 export function parseSmaugAmount(amount: string): bigint {
-  return parseUnits(amount, 8)
+  return parseUnits(amount, 18)
 }

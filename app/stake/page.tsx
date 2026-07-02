@@ -61,7 +61,7 @@ export default function StakePage() {
           address: STAKING_CONTRACT as `0x${string}`,
           abi: STAKING_ABI,
           functionName: 'stake',
-          args: [amountBn, BigInt(days)],
+          args: [amountBn, BigInt(days * 86400)],
         },
         {
           onSuccess: (hash) => {
