@@ -434,7 +434,9 @@ export function PortfolioDashboard() {
   }
 
   const handleOpenEditModal = () => {
-    setEditingWallets(wallets)
+    // Auto-select all wallets when opening Edit modal for convenience
+    const selectedWallets = wallets.map(w => ({ ...w, selected: true }))
+    setEditingWallets(selectedWallets)
     setShowEditWalletsModal(true)
   }
 
