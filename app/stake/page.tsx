@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { SiteNav } from '@/components/landing/site-nav'
 
 export const TIERS = [
   { name: 'Hatchling', min: 30, max: 89, multiplier: 1, feeRebate: 5, icon: '🥚' },
@@ -23,8 +24,10 @@ export default function StakePage() {
   const selectedTier = useMemo(() => getTier(days), [days])
 
   return (
-    <main className="min-h-screen bg-[#09090B] px-6 py-12 text-[#f4f4f4]">
-      <div className="mx-auto max-w-7xl space-y-8">
+    <>
+      <SiteNav />
+      <main className="min-h-screen bg-[#09090B] px-6 py-12 text-[#f4f4f4]">
+        <div className="mx-auto max-w-7xl space-y-8">
         <header className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="font-serif text-5xl font-bold tracking-tight md:text-6xl">
@@ -219,8 +222,9 @@ export default function StakePage() {
             </table>
           </div>
         </section>
-      </div>
-    </main>
+        </div>
+      </main>
+    </>
   )
 }
 
