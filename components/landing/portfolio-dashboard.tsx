@@ -587,7 +587,7 @@ export function PortfolioDashboard() {
               Connect Wallet
             </button>
             <button onClick={() => handleOpenEditModal()} className="border border-[#d8b13d] text-[#d8b13d] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#d8b13d]/5 transition-colors">
-              Edit Wallets
+              {wallets.length > 0 ? 'Edit Wallets' : 'Add Wallet'}
             </button>
             <button onClick={() => setShowLoadWalletModal(true)} className="border border-[#d8b13d] text-[#d8b13d] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#d8b13d]/5 transition-colors">
               Load Saved Wallet
