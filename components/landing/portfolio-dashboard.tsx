@@ -211,127 +211,93 @@ export function PortfolioDashboard() {
 
   // Fetch HEX stakes from both Pulsechain and Ethereum
   const fetchHexStakes = async (addresses: string[]) => {
-    try {
-      const allHexStakes: HexStake[] = []
-      const allHsiStakes: HexStake[] = []
+    const allHexStakes: HexStake[] = []
+    const allHsiStakes: HexStake[] = []
 
-      // Fetch from Pulsechain
+    // Fetch Pulsechain HEX stakes
+    try {
       const pulsechainProvider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
       const hexContractPulse = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, pulsechainProvider)
-      const hsiContractPulse = new ethers.Contract(HSI_MANAGER_ADDRESS, HEX_STAKING_ABI, pulsechainProvider)
       const currentDayPulse = await hexContractPulse.currentDay()
 
       for (const address of addresses) {
-        // Fetch HEX stakes from Pulsechain
-        const hexStakeCount = await hexContractPulse.stakeCount(address)
-        for (let i = 0; i < Number(hexStakeCount); i++) {
-          const stake = await hexContractPulse.stakeLists(address, i)
-          const daysPassed = Number(currentDayPulse) - Number(stake.lockedDay)
-          const daysRemaining = Number(stake.stakedDays) - daysPassed
-          const isActive = Number(stake.unlockedDay) === 0
-          allHexStakes.push({
-            stakeId: stake.stakeId.toString(),
-            stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
-            stakeShares: ethers.formatUnits(stake.stakeShares, 12),
-            lockedDay: Number(stake.lockedDay),
-            stakedDays: Number(stake.stakedDays),
-            unlockedDay: Number(stake.unlockedDay),
-            isAutoStake: stake.isAutoStake,
-            daysPassed: Math.max(0, daysPassed),
-            daysRemaining: Math.max(0, daysRemaining),
-            isActive,
-            wallet: address,
-            chain: 'Pulsechain',
-          })
-        }
-
-        // Fetch HSI stakes from Pulsechain
-        const hsiStakeCount = await hsiContractPulse.stakeCount(address)
-        for (let i = 0; i < Number(hsiStakeCount); i++) {
-          const stake = await hsiContractPulse.stakeLists(address, i)
-          const daysPassed = Number(currentDayPulse) - Number(stake.lockedDay)
-          const daysRemaining = Number(stake.stakedDays) - daysPassed
-          const isActive = Number(stake.unlockedDay) === 0
-          allHsiStakes.push({
-            stakeId: stake.stakeId.toString(),
-            stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
-            stakeShares: ethers.formatUnits(stake.stakeShares, 12),
-            lockedDay: Number(stake.lockedDay),
-            stakedDays: Number(stake.stakedDays),
-            unlockedDay: Number(stake.unlockedDay),
-            isAutoStake: stake.isAutoStake,
-            daysPassed: Math.max(0, daysPassed),
-            daysRemaining: Math.max(0, daysRemaining),
-            isActive,
-            wallet: address,
-            chain: 'Pulsechain',
-          })
+        try {
+          const hexStakeCount = await hexContractPulse.stakeCount(address)
+          for (let i = 0; i < Number(hexStakeCount); i++) {
+            const stake = await hexContractPulse.stakeLists(address, i)
+            const daysPassed = Number(currentDayPulse) - Number(stake.lockedDay)
+            const daysRemaining = Number(stake.stakedDays) - daysPassed
+            const isActive = Number(stake.unlockedDay) === 0
+            allHexStakes.push({
+              stakeId: stake.stakeId.toString(),
+              stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
+              stakeShares: ethers.formatUnits(stake.stakeShares, 12),
+              lockedDay: Number(stake.lockedDay),
+              stakedDays: Number(stake.stakedDays),
+              unlockedDay: Number(stake.unlockedDay),
+              isAutoStake: stake.isAutoStake,
+              daysPassed: Math.max(0, daysPassed),
+              daysRemaining: Math.max(0, daysRemaining),
+              isActive,
+              wallet: address,
+              chain: 'Pulsechain',
+            })
+          }
+        } catch (e) {
+          console.error(`Error fetching Pulsechain HEX stakes for ${address}:`, e)
         }
       }
+    } catch (error) {
+      console.error('Error fetching Pulsechain HEX data:', error)
+    }
 
-      // Fetch from Ethereum
+    // Fetch Ethereum HEX stakes
+    try {
       const ethereumProvider = new ethers.JsonRpcProvider(ETHEREUM_RPC_URL)
       const hexContractEth = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
-      const hsiContractEth = new ethers.Contract(HSI_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
       const currentDayEth = await hexContractEth.currentDay()
 
       for (const address of addresses) {
-        // Fetch HEX stakes from Ethereum
-        const hexStakeCount = await hexContractEth.stakeCount(address)
-        for (let i = 0; i < Number(hexStakeCount); i++) {
-          const stake = await hexContractEth.stakeLists(address, i)
-          const daysPassed = Number(currentDayEth) - Number(stake.lockedDay)
-          const daysRemaining = Number(stake.stakedDays) - daysPassed
-          const isActive = Number(stake.unlockedDay) === 0
-          allHexStakes.push({
-            stakeId: stake.stakeId.toString(),
-            stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
-            stakeShares: ethers.formatUnits(stake.stakeShares, 12),
-            lockedDay: Number(stake.lockedDay),
-            stakedDays: Number(stake.stakedDays),
-            unlockedDay: Number(stake.unlockedDay),
-            isAutoStake: stake.isAutoStake,
-            daysPassed: Math.max(0, daysPassed),
-            daysRemaining: Math.max(0, daysRemaining),
-            isActive,
-            wallet: address,
-            chain: 'Ethereum',
-          })
-        }
-
-        // Fetch HSI stakes from Ethereum
-        const hsiStakeCount = await hsiContractEth.stakeCount(address)
-        for (let i = 0; i < Number(hsiStakeCount); i++) {
-          const stake = await hsiContractEth.stakeLists(address, i)
-          const daysPassed = Number(currentDayEth) - Number(stake.lockedDay)
-          const daysRemaining = Number(stake.stakedDays) - daysPassed
-          const isActive = Number(stake.unlockedDay) === 0
-          allHsiStakes.push({
-            stakeId: stake.stakeId.toString(),
-            stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
-            stakeShares: ethers.formatUnits(stake.stakeShares, 12),
-            lockedDay: Number(stake.lockedDay),
-            stakedDays: Number(stake.stakedDays),
-            unlockedDay: Number(stake.unlockedDay),
-            isAutoStake: stake.isAutoStake,
-            daysPassed: Math.max(0, daysPassed),
-            daysRemaining: Math.max(0, daysRemaining),
-            isActive,
-            wallet: address,
-            chain: 'Ethereum',
-          })
+        try {
+          const hexStakeCount = await hexContractEth.stakeCount(address)
+          for (let i = 0; i < Number(hexStakeCount); i++) {
+            const stake = await hexContractEth.stakeLists(address, i)
+            const daysPassed = Number(currentDayEth) - Number(stake.lockedDay)
+            const daysRemaining = Number(stake.stakedDays) - daysPassed
+            const isActive = Number(stake.unlockedDay) === 0
+            allHexStakes.push({
+              stakeId: stake.stakeId.toString(),
+              stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
+              stakeShares: ethers.formatUnits(stake.stakeShares, 12),
+              lockedDay: Number(stake.lockedDay),
+              stakedDays: Number(stake.stakedDays),
+              unlockedDay: Number(stake.unlockedDay),
+              isAutoStake: stake.isAutoStake,
+              daysPassed: Math.max(0, daysPassed),
+              daysRemaining: Math.max(0, daysRemaining),
+              isActive,
+              wallet: address,
+              chain: 'Ethereum',
+            })
+          }
+        } catch (e) {
+          console.error(`Error fetching Ethereum HEX stakes for ${address}:`, e)
         }
       }
-
-      // Sort by daysRemaining (least first)
-      allHexStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
-      allHsiStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
-
-      setHexStakes(allHexStakes)
-      setHsiStakes(allHsiStakes)
     } catch (error) {
-      console.error('Error fetching HEX stakes:', error)
+      console.error('Error fetching Ethereum HEX data:', error)
     }
+
+    // TODO: Implement HSI stakes fetching with proper ABI
+    // HSI stakes are ERC-721 NFTs and require different contract interaction
+    // For now, HSI stays empty until proper ABI and contract paths are defined
+
+    // Sort by daysRemaining (least first)
+    allHexStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
+    allHsiStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
+
+    setHexStakes(allHexStakes)
+    setHsiStakes(allHsiStakes)
   }
 
   // Fetch Liquid Loans positions
