@@ -1,4 +1,13 @@
 import { TIERS } from './create-stake-card'
+import EggIcon from './egg-icon'
+
+const tierEggMap: Record<string, 'hatchling' | 'drake' | 'dragon' | 'elder-dragon' | 'smaug'> = {
+  Hatchling: 'hatchling',
+  Drake: 'drake',
+  Dragon: 'dragon',
+  'Elder Dragon': 'elder-dragon',
+  Smaug: 'smaug',
+}
 
 export default function TierProgression() {
   return (
@@ -15,8 +24,8 @@ export default function TierProgression() {
           >
             <div className="grid grid-cols-[1fr_auto_auto] items-center gap-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1a1a20] text-xl">
-                  {tier.icon}
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1a1a20]">
+                  <EggIcon tier={tierEggMap[tier.name]} />
                 </div>
 
                 <div>

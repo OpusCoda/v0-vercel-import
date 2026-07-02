@@ -1,10 +1,12 @@
 'use client'
 
+import EggIcon from './egg-icon'
+
 const mockStakes = [
-  ['#1247', '10,000 SMAUG', '🟡 Smaug', '730 days', '612 days', '83.8%', '1,842.72 SMAUG'],
-  ['#1189', '5,000 SMAUG', '🟣 Elder Dragon', '365 days', '195 days', '53.4%', '542.18 SMAUG'],
-  ['#1083', '2,500 SMAUG', '🔵 Dragon', '180 days', '96 days', '46.7%', '186.45 SMAUG'],
-  ['#977', '1,000 SMAUG', '🟢 Drake', '90 days', '32 days', '35.6%', '28.34 SMAUG'],
+  { id: '#1247', amount: '10,000 SMAUG', tier: 'Smaug', eggTier: 'smaug' as const, duration: '730 days', daysRemaining: '612 days', progress: '83.8%', rewards: '1,842.72 SMAUG' },
+  { id: '#1189', amount: '5,000 SMAUG', tier: 'Elder Dragon', eggTier: 'elder-dragon' as const, duration: '365 days', daysRemaining: '195 days', progress: '53.4%', rewards: '542.18 SMAUG' },
+  { id: '#1083', amount: '2,500 SMAUG', tier: 'Dragon', eggTier: 'dragon' as const, duration: '180 days', daysRemaining: '96 days', progress: '46.7%', rewards: '186.45 SMAUG' },
+  { id: '#977', amount: '1,000 SMAUG', tier: 'Drake', eggTier: 'drake' as const, duration: '90 days', daysRemaining: '32 days', progress: '35.6%', rewards: '28.34 SMAUG' },
 ]
 
 export default function YourStakes() {
@@ -43,32 +45,31 @@ export default function YourStakes() {
 
           <tbody className="divide-y divide-white/10">
             {mockStakes.map((stake) => (
-              <tr key={stake[0]} className="hover:bg-[#09090B]">
-                {stake.map((cell, i) => (
-                  <td
-                    key={i}
-                    className={`px-6 py-4 text-sm ${
-                      i === 6 ? 'font-semibold text-[#D8B13D]' : 'text-[#f4f4f4]'
-                    }`}
-                  >
-                    {i === 5 ? (
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-24 rounded-full bg-[#1a1a20]">
-                          <div
-                            className="h-full rounded-full bg-[#D8B13D]"
-                            style={{ width: cell }}
-                          />
-                        </div>
-                        <span className="text-[#9a9a9a]">{cell}</span>
-                      </div>
-                    ) : (
-                      cell
-                    )}
-                  </td>
-                ))}
-
+              <tr key={stake.id} className="hover:bg-[#09090B]">
+                <td className="px-6 py-4 text-sm text-[#f4f4f4]">{stake.id}</td>
+                <td className="px-6 py-4 text-sm text-[#f4f4f4]">{stake.amount}</td>
+                <td className="px-6 py-4 text-sm text-[#f4f4f4]">
+                  <div className="flex items-center gap-2">
+                    <EggIcon tier={stake.eggTier} />
+                    {stake.tier}
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm text-[#f4f4f4]">{stake.duration}</td>
+                <td className="px-6 py-4 text-sm text-[#f4f4f4]">{stake.daysRemaining}</td>
+                <td className="px-6 py-4 text-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 w-24 rounded-full bg-[#1a1a20]">
+                      <div
+                        className="h-full rounded-full bg-[#D8B13D]"
+                        style={{ width: stake.progress }}
+                      />
+                    </div>
+                    <span className="text-[#9a9a9a]">{stake.progress}</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm font-semibold text-[#D8B13D]">{stake.rewards}</td>
                 <td className="px-6 py-4 text-right">
-                  <button className="rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-sm font-semibold text-[#D8B13D]">
+                  <button className="rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors">
                     Manage
                   </button>
                 </td>
