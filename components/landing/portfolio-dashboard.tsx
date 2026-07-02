@@ -523,12 +523,12 @@ export function PortfolioDashboard() {
             <div className="mb-8 border-b border-[#2a2a35]">
               <div className="flex gap-8">
                 {[
-                  { id: 'overview', label: 'Overview', show: true },
-                  { id: 'assets', label: 'Assets', show: true },
-                  { id: 'hexstakes', label: 'HEX Stakes', show: hexStakes.length > 0 },
-                  { id: 'hsistakes', label: 'HSI Stakes', show: hsiStakes.length > 0 },
-                  { id: 'liquidloans', label: 'Liquid Loans positions', show: liquidLoans.length > 0 },
-                ].filter(tab => tab.show).map((tab) => (
+                  { id: 'overview', label: 'Overview' },
+                  { id: 'assets', label: 'Assets' },
+                  { id: 'hexstakes', label: 'HEX Stakes' },
+                  { id: 'hsistakes', label: 'HSI Stakes' },
+                  { id: 'liquidloans', label: 'Liquid Loans positions' },
+                ].map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
@@ -609,7 +609,7 @@ export function PortfolioDashboard() {
             )}
 
             {/* HEX Stakes Tab */}
-            {activeTab === 'hexstakes' && hexStakes.length > 0 && (
+            {activeTab === 'hexstakes' && (
               <div className="mb-12">
                 <div className="mb-6">
                   <h3 className="font-serif text-xl font-bold text-[#d4af37]">HEX Stakes</h3>
@@ -643,11 +643,16 @@ export function PortfolioDashboard() {
                     </div>
                   )}
                 </div>
+                {hexStakes.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="font-sans text-[#7c7a76]">No HEX stakes found</p>
+                  </div>
+                )}
               </div>
             )}
 
             {/* HSI Stakes Tab */}
-            {activeTab === 'hsistakes' && hsiStakes.length > 0 && (
+            {activeTab === 'hsistakes' && (
               <div className="mb-12">
                 <div className="mb-6">
                   <h3 className="font-serif text-xl font-bold text-[#d4af37]">HSI Stakes</h3>
@@ -681,11 +686,16 @@ export function PortfolioDashboard() {
                     </div>
                   )}
                 </div>
+                {hsiStakes.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="font-sans text-[#7c7a76]">No HSI stakes found</p>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Liquid Loans Tab */}
-            {activeTab === 'liquidloans' && liquidLoans.length > 0 && (
+            {activeTab === 'liquidloans' && (
               <div className="mb-12">
                 <div className="mb-6">
                   <h3 className="font-serif text-xl font-bold text-[#d4af37]">Liquid Loans Positions</h3>
@@ -714,6 +724,11 @@ export function PortfolioDashboard() {
                     </div>
                   ))}
                 </div>
+                {liquidLoans.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="font-sans text-[#7c7a76]">No Liquid Loans positions found</p>
+                  </div>
+                )}
               </div>
             )}
 
