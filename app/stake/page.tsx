@@ -1,7 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useAccount, useWriteContract } from 'wagmi'
 import { SiteNav } from '@/components/landing/site-nav'
+import { useStakingData } from '@/hooks/useStakingData'
+import { STAKING_CONTRACT, STAKING_ABI, SMAUG_TOKEN, ERC20_ABI, parseSmaugAmount } from '@/lib/staking'
 
 export const TIERS = [
   { name: 'Hatchling',    min: 30,  max: 89,  multiplier: 1,   feeRebate: 5,  icon: '🥚' },
@@ -24,10 +27,57 @@ const MOCK_STAKES = [
 ]
 
 export default function StakePage() {
+  const { address, isConnected } = useAccount()
+  const { totalStaked, totalStakers, balance, isLoading } = useStakingData()
+  const { writeContract, isPending } = useWriteContract()
+
   const [amount, setAmount] = useState('')
   const [days, setDays] = useState(365)
+  const [stakeError, setStakeError] = useState('')
+  const [stakeTxHash, setStakeTxHash] = useState('')
 
   const selectedTier = useMemo(() => getTier(days), [days])
+
+  const handleStake = async () => {
+    if (!isConnected || !address) {
+      setStakeError('Please connect your wallet')
+      return
+    }
+    if (!amount || parseFloat(amount) <= 0) {
+      setStakeError('Please enter a valid amount')
+      return
+    }
+    if (!selectedTier) {
+      setStakeError('Please select a valid duration (30-730 days)')
+      return
+    }
+
+    setStakeError('')
+    try {
+      const amountBn = parseSmaugAmount(amount)
+      // TODO: Check allowance and approve if needed before calling stake
+      writeContract(
+        {
+          address: STAKING_CONTRACT as `0x${string}`,
+          abi: STAKING_ABI,
+          functionName: 'stake',
+          args: [amountBn, BigInt(days)],
+        },
+        {
+          onSuccess: (hash) => {
+            setStakeTxHash(hash)
+            setAmount('')
+            setDays(365)
+          },
+          onError: (error) => {
+            setStakeError(error?.message || 'Failed to stake')
+          },
+        }
+      )
+    } catch (err) {
+      setStakeError(err instanceof Error ? err.message : 'Failed to stake')
+    }
+  }
 
   return (
     <>
@@ -49,10 +99,10 @@ export default function StakePage() {
             {/* Stats strip — single bordered row, no individual cards */}
             <div className="flex divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-[#111116]">
               {[
-                { label: 'Current APR',   value: '38.42%'       },
-                { label: 'TVL',           value: '$183,642'      },
-                { label: 'Total staked',  value: '52.7M SMAUG'  },
-                { label: 'Active stakers',value: '1,284'         },
+                { label: 'Current APR',   value: isLoading ? '—' : '38.42%' },
+                { label: 'TVL',           value: isLoading ? '—' : '$183,642' },
+                { label: 'Total staked',  value: isLoading ? '—' : `${totalStaked} SMAUG` },
+                { label: 'Active stakers',value: isLoading ? '—' : totalStakers.toLocaleString() },
               ].map(({ label, value }) => (
                 <div key={label} className="flex-1 px-6 py-4">
                   <div className="text-xs font-semibold uppercase tracking-wide text-[#8f8f8f]">
@@ -64,6 +114,18 @@ export default function StakePage() {
                 </div>
               ))}
             </div>
+
+            {/* Your balance section */}
+            {isConnected && (
+              <div className="rounded-xl border border-white/10 bg-[#09090B] px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#9a9a9a]">Available balance:</span>
+                  <span className="font-serif text-lg font-bold text-[#D8B13D]">
+                    {isLoading ? '—' : `${balance} SMAUG`}
+                  </span>
+                </div>
+              </div>
+            )}
           </header>
 
           {/* ── Create + Tiers ─────────────────────────────── */}
@@ -132,8 +194,24 @@ export default function StakePage() {
                   </div>
                 </div>
 
-                <button className="mt-2 w-full rounded-xl bg-[#D8B13D] px-5 py-4 font-bold text-black transition hover:opacity-90">
-                  Create stake
+                {stakeError && (
+                  <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">
+                    {stakeError}
+                  </div>
+                )}
+
+                {stakeTxHash && (
+                  <div className="mt-3 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm text-green-400">
+                    Stake created! Tx: {stakeTxHash.slice(0, 10)}...
+                  </div>
+                )}
+
+                <button
+                  onClick={handleStake}
+                  disabled={!isConnected || isPending || !selectedTier || !amount}
+                  className="mt-4 w-full rounded-xl bg-[#D8B13D] px-5 py-4 font-bold text-black transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {!isConnected ? 'Connect wallet' : isPending ? 'Staking...' : 'Create stake'}
                 </button>
               </div>
             </div>
