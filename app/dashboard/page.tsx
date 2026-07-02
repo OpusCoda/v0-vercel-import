@@ -1375,7 +1375,7 @@ export default function Home() {
   const percentage = totalDistributedValue > 0 ? (totalAccumulatedValue / totalPortfolioValue) * 100 : 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a1628] via-[#111c3a] to-[#0a1628]">
+    <div className="min-h-screen bg-linear-to-b from-[#0a1628] via-[#111c3a] to-[#0a1628]">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1393,7 +1393,7 @@ export default function Home() {
 
             {/* Smaug Section */}
             <div>
-              <div className="rounded-2xl bg-gradient-to-br from-[#0a1a0a] to-[#111c3a] border border-green-900/40 p-8">
+              <div className="rounded-2xl bg-linear-to-br from-[#0a1a0a] to-[#111c3a] border border-green-900/40 p-8">
                 <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
                   <img
                     src="/images/paradiso-dore.jpg"
@@ -1888,7 +1888,7 @@ export default function Home() {
               </h2>
 
               <div className="space-y-6 max-w-4xl mx-auto w-full">
-                <div className="rounded-2xl bg-gradient-to-br from-[#1a2847] to-[#0f1729] border border-cyan-500/30 p-4 sm:p-8 shadow-2xl">
+                <div className="rounded-2xl bg-linear-to-br from-[#1a2847] to-[#0f1729] border border-cyan-500/30 p-4 sm:p-8 shadow-2xl">
                   <div className="space-y-4">
                     {walletAddresses.map((address, index) => (
                       <div key={index} className="grid grid-cols-[1fr_auto] gap-2">
@@ -1923,7 +1923,7 @@ export default function Home() {
                     <button
                       onClick={() => fetchRewards()}
                       disabled={loading}
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-600 to-cyan-600 hover:from-orange-500 hover:to-cyan-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 px-6 py-3 bg-linear-to-r from-orange-600 to-cyan-600 hover:from-orange-500 hover:to-cyan-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? "Updating..." : rewards && rewards.length > 0 ? "Update" : "Where things stand"}
                     </button>
@@ -1988,7 +1988,7 @@ export default function Home() {
                         <motion.div
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 mb-4"
+                          className="bg-linear-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm p-8 rounded-2xl border border-slate-700/50 mb-4"
                         >
                           <div className="space-y-3">
                             {/* Total Value */}
@@ -2329,8 +2329,8 @@ export default function Home() {
                                       <h4 className="text-xs font-medium mb-1.5 text-orange-300">Opus Rewards</h4>
                                       <div className="space-y-1.5">
                                         <div className="flex justify-between items-start gap-3">
-                                          <span className="text-slate-300 text-xs flex-shrink-0">PLS:</span>
-                                          <div className="text-right flex-shrink-0">
+                                          <span className="text-slate-300 text-xs shrink-0">PLS:</span>
+                                          <div className="text-right shrink-0">
                                             <div className="text-slate-100 font-medium whitespace-nowrap text-xs">
                                               {formatMillions(walletRewards.opus.pls, 2)}
                                             </div>
@@ -2349,10 +2349,10 @@ export default function Home() {
                                         </div>
                                         <div className="border-t border-slate-700/50 pt-1.5 mt-1.5">
                                           <div className="flex justify-between items-start gap-3">
-                                            <span className="text-orange-300 text-xs flex-shrink-0 font-medium">
+                                            <span className="text-orange-300 text-xs shrink-0 font-medium">
                                               Total:
                                             </span>
-                                            <div className="text-right flex-shrink-0">
+                                            <div className="text-right shrink-0">
                                               {tokenPrices.pls > 0 && (
                                                 <div className="text-orange-200 font-semibold whitespace-nowrap text-xs">
                                                   $
@@ -2387,8 +2387,8 @@ export default function Home() {
                                       <h4 className="text-xs font-medium mb-1.5 text-cyan-300">Coda Rewards</h4>
                                       <div className="space-y-1.5">
                                         <div className="flex justify-between items-start gap-3">
-                                          <span className="text-slate-300 text-xs flex-shrink-0">WETH:</span>
-                                          <div className="text-right flex-shrink-0">
+                                          <span className="text-slate-300 text-xs shrink-0">WETH:</span>
+                                          <div className="text-right shrink-0">
                                             <div className="text-slate-100 font-medium whitespace-nowrap text-xs">
                                               {formatDecimals(walletRewards.coda.weth, 5)}
                                             </div>
@@ -2406,8 +2406,8 @@ export default function Home() {
                                           </div>
                                         </div>
                                         <div className="flex justify-between items-start gap-3">
-                                          <span className="text-slate-300 text-xs flex-shrink-0">pWBTC:</span>
-                                          <div className="text-right flex-shrink-0">
+                                          <span className="text-slate-300 text-xs shrink-0">pWBTC:</span>
+                                          <div className="text-right shrink-0">
                                             <div className="text-slate-100 font-medium whitespace-nowrap text-xs">
                                               {formatDecimals(walletRewards.coda.Pwbtc, 5)}
                                             </div>
@@ -2425,8 +2425,8 @@ export default function Home() {
                                           </div>
                                         </div>
                                         <div className="flex justify-between items-start gap-3">
-                                          <span className="text-slate-300 text-xs flex-shrink-0">PLSX:</span>
-                                          <div className="text-right flex-shrink-0">
+                                          <span className="text-slate-300 text-xs shrink-0">PLSX:</span>
+                                          <div className="text-right shrink-0">
                                             <div className="text-slate-100 font-medium whitespace-nowrap text-xs">
                                               {formatMillions(walletRewards.coda.plsx, 2)}
                                             </div>
@@ -2445,10 +2445,10 @@ export default function Home() {
                                         </div>
                                         <div className="border-t border-slate-700/50 pt-1.5 mt-1.5">
                                           <div className="flex justify-between items-start gap-3">
-                                            <span className="text-cyan-300 text-xs flex-shrink-0 font-medium">
+                                            <span className="text-cyan-300 text-xs shrink-0 font-medium">
                                               Total:
                                             </span>
-                                            <div className="text-right flex-shrink-0">
+                                            <div className="text-right shrink-0">
                                               {tokenPrices.weth > 0 && tokenPrices.Pwbtc > 0 && tokenPrices.plsx > 0 && (
                                                 <div className="text-cyan-200 font-semibold whitespace-nowrap text-xs">
                                                   $
@@ -2485,7 +2485,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+                className="rounded-2xl bg-linear-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
                 <h3 className="text-lg font-semibold text-slate-100 mb-4">Main tokens</h3>
                 <div className="space-y-2">
@@ -2649,8 +2649,8 @@ export default function Home() {
                     (tokenBalances.pHex * hexPricePulsechain || 0) +
                     (tokenBalances.eHexFromEthereum * hexPriceEthereum || 0) +
                     (tokenBalances.eHex * hexPriceEthereum || 0) +
-                    (tokenBalances.pWbtc * tokenPricesAll.pWbtc || 0) +
-                    (tokenBalances.eWbtc * tokenPricesAll.eWbtc || 0) +
+                    (tokenBalances.pWbtc * tokenPricesAll.wbtc || 0) +
+                    (tokenBalances.eWbtc * tokenPricesAll.ewbtc || 0) +
                     (tokenBalances.weth * tokenPricesAll.weth || 0) +
                     (tokenBalances.finvesta * tokenPricesAll.finvesta || 0) +
                     (tokenBalances.missor * tokenPricesAll.missor || 0) +
@@ -2676,7 +2676,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+                className="rounded-2xl bg-linear-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
                 <button
                   type="button"
@@ -2733,7 +2733,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+                className="rounded-2xl bg-linear-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
                 <button
                   type="button"
@@ -2791,7 +2791,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+                className="rounded-2xl bg-linear-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
                 <button
                   type="button"
@@ -2848,7 +2848,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+                className="rounded-2xl bg-linear-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
                 <button
                   type="button"
@@ -2906,7 +2906,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="rounded-2xl bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
+                className="rounded-2xl bg-linear-to-br from-[#0f172a] to-[#1e293b] border border-slate-700/50 p-6"
               >
                 <button
                   type="button"
