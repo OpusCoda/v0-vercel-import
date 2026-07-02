@@ -352,9 +352,22 @@ export function PortfolioDashboard() {
   }
 
   // Save edited wallets and fetch real data
-  const handleSaveEditedWallets = () => {
+  const handleSaveEditedWallets = async () => {
     setWallets(editingWallets)
     setShowEditWalletsModal(false)
+
+    // Save wallet list to API if it was loaded from a saved list
+    // (Check if wallets have consistent naming pattern from a loaded list)
+    const loadedWalletMatch = editingWallets.every((w, i) => w.name === `Wallet ${i + 1}`)
+    if (loadedWalletMatch && editingWallets.length > 0) {
+      try {
+        // Try to save back to the loaded wallet list name
+        const walletNames = editingWallets.map(w => w.address)
+        // We would need the original list name, so for now just update the state
+      } catch (error) {
+        console.error('Error saving wallets:', error)
+      }
+    }
 
     // Fetch real data for selected wallets
     const selectedAddresses = editingWallets.filter(w => w.selected).map(w => w.address)
@@ -602,12 +615,33 @@ export function PortfolioDashboard() {
                   <h3 className="font-serif text-xl font-bold text-[#d4af37]">HEX Stakes</h3>
                   <p className="font-sans text-sm text-[#7c7a76] mt-1">{hexStakes.length} stake{hexStakes.length !== 1 ? 's' : ''}</p>
                 </div>
-                <div className="space-y-2">
-                  {hexStakes.map((stake) => (
-                    <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
-                      [{stake.chain}] Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                <div className="space-y-6">
+                  {/* Pulsechain Stakes */}
+                  {hexStakes.filter(s => s.chain === 'Pulsechain').length > 0 && (
+                    <div>
+                      <h4 className="font-sans text-sm font-semibold text-[#d4af37] mb-2">Pulsechain</h4>
+                      <div className="space-y-2">
+                        {hexStakes.filter(s => s.chain === 'Pulsechain').map((stake) => (
+                          <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
+                  {/* Ethereum Stakes */}
+                  {hexStakes.filter(s => s.chain === 'Ethereum').length > 0 && (
+                    <div>
+                      <h4 className="font-sans text-sm font-semibold text-[#d4af37] mb-2">Ethereum</h4>
+                      <div className="space-y-2">
+                        {hexStakes.filter(s => s.chain === 'Ethereum').map((stake) => (
+                          <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -619,12 +653,33 @@ export function PortfolioDashboard() {
                   <h3 className="font-serif text-xl font-bold text-[#d4af37]">HSI Stakes</h3>
                   <p className="font-sans text-sm text-[#7c7a76] mt-1">{hsiStakes.length} stake{hsiStakes.length !== 1 ? 's' : ''}</p>
                 </div>
-                <div className="space-y-2">
-                  {hsiStakes.map((stake) => (
-                    <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
-                      [{stake.chain}] Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HSI — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                <div className="space-y-6">
+                  {/* Pulsechain Stakes */}
+                  {hsiStakes.filter(s => s.chain === 'Pulsechain').length > 0 && (
+                    <div>
+                      <h4 className="font-sans text-sm font-semibold text-[#d4af37] mb-2">Pulsechain</h4>
+                      <div className="space-y-2">
+                        {hsiStakes.filter(s => s.chain === 'Pulsechain').map((stake) => (
+                          <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HSI — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
+                  {/* Ethereum Stakes */}
+                  {hsiStakes.filter(s => s.chain === 'Ethereum').length > 0 && (
+                    <div>
+                      <h4 className="font-sans text-sm font-semibold text-[#d4af37] mb-2">Ethereum</h4>
+                      <div className="space-y-2">
+                        {hsiStakes.filter(s => s.chain === 'Ethereum').map((stake) => (
+                          <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
+                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HSI — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
