@@ -479,38 +479,93 @@ export function PortfolioDashboard() {
 
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] px-4 py-24 md:px-6 md:py-28">
+    <main className="min-h-screen bg-[#0b0b0e] px-6 py-12 md:px-8 md:py-16">
       <div className="mx-auto max-w-7xl">
-        {/* Header Section */}
-        <div className="mb-8 grid gap-8 md:grid-cols-3">
-          <div className="md:col-span-2">
-            <h1 className="font-serif text-4xl font-bold text-[#d4af37] md:text-5xl">Portfolio</h1>
-            <p className="mt-2 font-sans text-[#b8b6b1]">See what your wallets hold.</p>
-            <div className="mt-6 flex gap-3">
-              <button onClick={() => setShowConnectModal(true)} className="rounded-lg bg-[#d4af37] px-6 py-3 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]">
-                Connect Wallet
-              </button>
-              <button onClick={() => handleOpenEditModal()} className="rounded-lg border border-[#2a2a35] bg-[#101017] px-6 py-3 font-sans font-semibold text-[#d4af37] transition-colors hover:border-[#d4af37]/50">
-                Edit Wallets
-              </button>
-              <button onClick={() => setShowLoadWalletModal(true)} className="rounded-lg border border-[#2a2a35] bg-[#101017] px-6 py-3 font-sans font-semibold text-[#d4af37] transition-colors hover:border-[#d4af37]/50">
-                Load Saved Wallet
-              </button>
+        {/* Header with Title and Stats */}
+        <div className="mb-16">
+          <h1 className="font-serif text-5xl font-bold text-[#f4f4f4] mb-2">Portfolio</h1>
+          <p className="font-sans text-[#9a9a9a] mb-12">Track and manage all your wallets in one place.</p>
+          
+          {/* Quick Stats Row */}
+          <div className="grid grid-cols-3 gap-12 mb-12">
+            <div>
+              <p className="font-sans text-xs font-medium text-[#9a9a9a] mb-1">Total Portfolio Value</p>
+              <p className="font-serif text-3xl font-bold text-[#f4f4f4]">${totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+              <p className={`font-sans text-sm mt-1 ${change24h >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>{change24h > 0 ? '+' : ''}{change24h}% (24h)</p>
+            </div>
+            <div>
+              <p className="font-sans text-xs font-medium text-[#9a9a9a] mb-1">Selected Wallets</p>
+              <p className="font-serif text-3xl font-bold text-[#f4f4f4]">{selectedWallets.length}</p>
+              <p className="font-sans text-sm text-[#9a9a9a] mt-1">of {wallets.length} saved</p>
+            </div>
+            <div>
+              <p className="font-sans text-xs font-medium text-[#9a9a9a] mb-1">Total P&L (24h)</p>
+              <p className="font-serif text-3xl font-bold text-[#f4f4f4]">+$0.00</p>
+              <p className="font-sans text-sm text-[#10b981] mt-1">0%</p>
             </div>
           </div>
 
-
+          {/* Action Buttons */}
+          <div className="flex gap-4">
+            <button onClick={() => setShowConnectModal(true)} className="bg-[#d8b13d] text-[#0b0b0e] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#e8c860] transition-colors">
+              Connect Wallet
+            </button>
+            <button onClick={() => handleOpenEditModal()} className="border border-[#d8b13d] text-[#d8b13d] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#d8b13d]/5 transition-colors">
+              Edit Wallets
+            </button>
+            <button onClick={() => setShowLoadWalletModal(true)} className="border border-[#d8b13d] text-[#d8b13d] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#d8b13d]/5 transition-colors">
+              Load Saved Wallet
+            </button>
+          </div>
         </div>
 
-        {/* Selected Wallets Chips */}
+        {/* Your Wallets Section */}
         {wallets.length > 0 && (
-          <div className="mb-8 flex flex-wrap gap-2">
-            {selectedWallets.map((wallet) => (
-              <div key={wallet.id} className="rounded-lg border border-[#2a2a35] bg-[#101017] px-4 py-2">
-                <p className="font-sans text-xs font-semibold text-[#7c7a76]">{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}</p>
-                <p className="font-sans text-xs text-[#b8b6b1]">{wallet.name}</p>
+          <div className="mb-16 pb-12 border-b border-[rgba(255,255,255,0.08)]">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-serif text-2xl font-bold text-[#f4f4f4]">Your Wallets <span className="text-[#d8b13d]">({selectedWallets.length} selected)</span></h2>
+              <div className="flex gap-2">
+                <button onClick={() => {
+                  const allSelected = wallets.every(w => w.selected)
+                  if (allSelected) {
+                    setWallets(wallets.map(w => ({ ...w, selected: false })))
+                  } else {
+                    setWallets(wallets.map(w => ({ ...w, selected: true })))
+                  }
+                }} className="font-sans text-sm text-[#d8b13d] hover:text-[#e8c860]">
+                  {wallets.every(w => w.selected) ? 'Deselect All' : 'Select All'}
+                </button>
               </div>
-            ))}
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {wallets.map((wallet, idx) => {
+                const colors = ['#d8b13d', '#3b82f6', '#ef4444', '#10b981', '#f59e0b']
+                return (
+                  <button
+                    key={wallet.id}
+                    onClick={() => {
+                      const updated = wallets.map(w => 
+                        w.id === wallet.id ? { ...w, selected: !w.selected } : w
+                      )
+                      setWallets(updated)
+                    }}
+                    className="flex items-center gap-3 border border-[rgba(255,255,255,0.08)] rounded-lg px-4 py-3 bg-[#121218] hover:border-[#d8b13d]/50 transition-all text-left group"
+                  >
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className={`w-2 h-2 rounded-full ${wallet.selected ? 'bg-[#d8b13d]' : 'bg-[#3a3a40]'}`} style={{ backgroundColor: wallet.selected ? colors[idx % 5] : '#3a3a40' }}></div>
+                      <div>
+                        <p className="font-sans font-semibold text-[#f4f4f4] text-sm">{wallet.name}</p>
+                        <p className="font-sans text-xs text-[#9a9a9a]">{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-sans font-semibold text-[#f4f4f4] text-sm">${wallet.balance.toLocaleString('en-US', { maximumFractionDigits: 0 })}</p>
+                      <p className="font-sans text-xs text-[#d8b13d]">{wallet.percentage.toFixed(1)}%</p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
 
@@ -546,25 +601,50 @@ export function PortfolioDashboard() {
 
             {/* Overview Tab */}
             {activeTab === 'overview' && (
-              <div className="mb-12">
-                <h3 className="mb-6 font-serif text-xl font-bold text-[#d4af37]">Portfolio Overview</h3>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                    <p className="font-sans text-xs font-semibold text-[#7c7a76]">Total Assets</p>
-                    <p className="mt-2 font-serif font-bold text-[#d4af37]">${totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
-                    <p className="mt-1 font-sans text-xs font-semibold text-[#3fbf6f]">{change24h > 0 ? '+' : ''}{change24h}% (24h)</p>
+              <div className="grid grid-cols-2 gap-12 mb-12">
+                {/* Summary Section */}
+                <div>
+                  <h3 className="font-serif text-xl font-bold text-[#f4f4f4] mb-6">Summary</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center pb-3 border-b border-[rgba(255,255,255,0.08)]">
+                      <p className="font-sans text-sm text-[#9a9a9a]">Total Assets</p>
+                      <p className="font-sans font-semibold text-[#f4f4f4]">${totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[rgba(255,255,255,0.08)]">
+                      <p className="font-sans text-sm text-[#9a9a9a]">Total Tokens</p>
+                      <p className="font-sans font-semibold text-[#f4f4f4]">{assets.length}</p>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[rgba(255,255,255,0.08)]">
+                      <p className="font-sans text-sm text-[#9a9a9a]">HEX Staked</p>
+                      <p className="font-sans font-semibold text-[#f4f4f4]">{hexStakes.length} stakes</p>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[rgba(255,255,255,0.08)]">
+                      <p className="font-sans text-sm text-[#9a9a9a]">HSI Staked</p>
+                      <p className="font-sans font-semibold text-[#f4f4f4]">{hsiStakes.length} stakes</p>
+                    </div>
+                    <div className="flex justify-between items-center pt-2">
+                      <p className="font-sans text-sm text-[#9a9a9a]">Liquid Loans</p>
+                      <p className="font-sans font-semibold text-[#f4f4f4]">{liquidLoans.length} position{liquidLoans.length !== 1 ? 's' : ''}</p>
+                    </div>
                   </div>
-                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                    <p className="font-sans text-xs font-semibold text-[#7c7a76]">Selected Wallets</p>
-                    <p className="mt-2 font-serif font-bold text-[#d4af37]">{selectedWallets.length}</p>
-                  </div>
-                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                    <p className="font-sans text-xs font-semibold text-[#7c7a76]">Tokens Held</p>
-                    <p className="mt-2 font-serif font-bold text-[#d4af37]">{assets.length}</p>
-                  </div>
-                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                    <p className="font-sans text-xs font-semibold text-[#7c7a76]">HEX Stakes</p>
-                    <p className="mt-2 font-serif font-bold text-[#d4af37]">{hexStakes.length}</p>
+                </div>
+
+                {/* Holdings Section */}
+                <div>
+                  <h3 className="font-serif text-xl font-bold text-[#f4f4f4] mb-6">Holdings</h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {assets.slice(0, 8).map((asset) => (
+                      <div key={asset.symbol} className="flex justify-between items-center py-2 px-3 rounded hover:bg-[rgba(255,255,255,0.02)]">
+                        <div>
+                          <p className="font-sans text-sm font-medium text-[#f4f4f4]">{asset.symbol}</p>
+                          <p className="font-sans text-xs text-[#9a9a9a]">{Number(asset.balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <p className="font-sans font-semibold text-[#d8b13d]">${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                      </div>
+                    ))}
+                    {assets.length > 8 && (
+                      <p className="font-sans text-xs text-[#9a9a9a] text-center py-2">+{assets.length - 8} more</p>
+                    )}
                   </div>
                 </div>
               </div>
