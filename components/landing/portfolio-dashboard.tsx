@@ -674,7 +674,7 @@ export function PortfolioDashboard() {
                   { id: 'assets', label: 'Assets' },
                   { id: 'hexstakes', label: 'HEX Stakes' },
                   { id: 'hsistakes', label: 'HSI Stakes' },
-                  { id: 'liquidloans', label: 'Liquidity Positions' },
+                  { id: 'liquidloans', label: 'Liquid Loans Positions' },
                 ].map((tab) => (
                   <button
                     key={tab.id}
