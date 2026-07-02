@@ -34,13 +34,17 @@ export function useStakingData() {
 
   useEffect(() => {
     if (totalStakedData !== undefined) {
-      setTotalStaked(formatSmaugBalance(BigInt(totalStakedData)))
+      const staked = typeof totalStakedData === 'bigint' ? totalStakedData : BigInt(totalStakedData)
+      setTotalStaked(formatSmaugBalance(staked))
     }
     if (totalStakersData !== undefined) {
       setTotalStakers(Number(totalStakersData))
     }
     if (balanceData !== undefined) {
-      setBalance(formatSmaugBalance(BigInt(balanceData)))
+      const bal = typeof balanceData === 'bigint' ? balanceData : BigInt(balanceData)
+      const formatted = formatSmaugBalance(bal)
+      console.log('[v0] Balance data:', balanceData, 'Formatted:', formatted)
+      setBalance(formatted)
     }
     setIsLoading(false)
   }, [totalStakedData, totalStakersData, balanceData])

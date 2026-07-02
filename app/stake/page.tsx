@@ -115,17 +115,7 @@ export default function StakePage() {
               ))}
             </div>
 
-            {/* Your balance section */}
-            {isConnected && (
-              <div className="rounded-xl border border-white/10 bg-[#09090B] px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[#9a9a9a]">Available balance:</span>
-                  <span className="font-serif text-lg font-bold text-[#D8B13D]">
-                    {isLoading ? '—' : `${balance} SMAUG`}
-                  </span>
-                </div>
-              </div>
-            )}
+
           </header>
 
           {/* ── Create + Tiers ─────────────────────────────── */}
