@@ -24,13 +24,23 @@ export function useStakingData() {
   })
 
   // Fetch user's SMAUG balance
-  const { data: balanceData } = useReadContract({
+  const { data: balanceData, isLoading: balanceLoading, error: balanceError } = useReadContract({
     address: SMAUG_TOKEN as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: { enabled: !!address },
   })
+
+  // Debug balance fetch
+  useEffect(() => {
+    if (address) {
+      console.log('[v0] Balance query enabled for address:', address)
+      console.log('[v0] Balance loading:', balanceLoading)
+      console.log('[v0] Balance error:', balanceError)
+      console.log('[v0] Balance data:', balanceData)
+    }
+  }, [address, balanceLoading, balanceError, balanceData])
 
   useEffect(() => {
     console.log('[v0] useStakingData - address:', address)
