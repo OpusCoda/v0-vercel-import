@@ -646,7 +646,12 @@ export function PortfolioDashboard() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      navigator.clipboard.writeText(wallet.address)
+                      const textarea = document.createElement('textarea')
+                      textarea.value = wallet.address
+                      document.body.appendChild(textarea)
+                      textarea.select()
+                      document.execCommand('copy')
+                      document.body.removeChild(textarea)
                     }}
                     className="ml-2 p-1 rounded hover:bg-[rgba(255,255,255,0.05)] transition-colors"
                     title="Copy address"
@@ -674,7 +679,8 @@ export function PortfolioDashboard() {
                   { id: 'assets', label: 'Assets' },
                   { id: 'hexstakes', label: 'HEX Stakes' },
                   { id: 'hsistakes', label: 'HSI Stakes' },
-                  { id: 'liquidloans', label: 'Liquid Loans Positions' },
+                  { id: 'liquidloans', label: 'Liquidity Positions' },
+                  { id: 'pulsexlp', label: 'PulseX LP' },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -877,7 +883,18 @@ export function PortfolioDashboard() {
               </div>
             )}
 
-
+            {/* PulseX LP Tab */}
+            {activeTab === 'pulsexlp' && (
+              <div className="mb-12">
+                <div className="mb-6">
+                  <h3 className="font-serif text-xl font-bold text-[#d4af37]">PulseX Liquidity Positions</h3>
+                  <p className="font-sans text-sm text-[#7c7a76] mt-1">V1 and V2 liquidity positions</p>
+                </div>
+                <div className="text-center py-12">
+                  <p className="font-sans text-[#7c7a76]">No PulseX LP positions found</p>
+                </div>
+              </div>
+            )}
 
 
 
