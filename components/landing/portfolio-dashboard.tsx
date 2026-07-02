@@ -625,33 +625,38 @@ export function PortfolioDashboard() {
               </div>
             </div>
             <div className="flex flex-wrap gap-3">
-              {wallets.map((wallet, idx) => {
-                const colors = ['#d8b13d', '#3b82f6', '#ef4444', '#10b981', '#f59e0b']
-                return (
+              {wallets.map((wallet) => (
+                <button
+                  key={wallet.id}
+                  onClick={() => {
+                    const updated = wallets.map(w => 
+                      w.id === wallet.id ? { ...w, selected: !w.selected } : w
+                    )
+                    setWallets(updated)
+                  }}
+                  className="flex items-center gap-3 border border-[rgba(255,255,255,0.08)] rounded-lg px-4 py-3 bg-[#121218] hover:border-[#3b82f6]/50 transition-all text-left group"
+                >
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className={`w-2 h-2 rounded-full ${wallet.selected ? 'bg-[#3b82f6]' : 'bg-[#3a3a40]'}`}></div>
+                    <div>
+                      <p className="font-sans font-semibold text-[#f4f4f4] text-sm">{wallet.name}</p>
+                      <p className="font-sans text-xs text-[#9a9a9a]">{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}</p>
+                    </div>
+                  </div>
                   <button
-                    key={wallet.id}
-                    onClick={() => {
-                      const updated = wallets.map(w => 
-                        w.id === wallet.id ? { ...w, selected: !w.selected } : w
-                      )
-                      setWallets(updated)
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      navigator.clipboard.writeText(wallet.address)
                     }}
-                    className="flex items-center gap-3 border border-[rgba(255,255,255,0.08)] rounded-lg px-4 py-3 bg-[#121218] hover:border-[#d8b13d]/50 transition-all text-left group"
+                    className="ml-2 p-1 rounded hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                    title="Copy address"
                   >
-                    <div className="flex items-center gap-2 flex-1">
-                      <div className={`w-2 h-2 rounded-full ${wallet.selected ? 'bg-[#d8b13d]' : 'bg-[#3a3a40]'}`} style={{ backgroundColor: wallet.selected ? colors[idx % 5] : '#3a3a40' }}></div>
-                      <div>
-                        <p className="font-sans font-semibold text-[#f4f4f4] text-sm">{wallet.name}</p>
-                        <p className="font-sans text-xs text-[#9a9a9a]">{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-sans font-semibold text-[#f4f4f4] text-sm">${wallet.balance.toLocaleString('en-US', { maximumFractionDigits: 0 })}</p>
-                      <p className="font-sans text-xs text-[#d8b13d]">{wallet.percentage.toFixed(1)}%</p>
-                    </div>
+                    <svg className="w-4 h-4 text-[#9a9a9a] hover:text-[#f4f4f4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
                   </button>
-                )
-              })}
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -669,7 +674,7 @@ export function PortfolioDashboard() {
                   { id: 'assets', label: 'Assets' },
                   { id: 'hexstakes', label: 'HEX Stakes' },
                   { id: 'hsistakes', label: 'HSI Stakes' },
-                  { id: 'liquidloans', label: 'Liquid Loans positions' },
+                  { id: 'liquidloans', label: 'Liquidity Positions' },
                 ].map((tab) => (
                   <button
                     key={tab.id}
