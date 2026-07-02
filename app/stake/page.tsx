@@ -139,7 +139,7 @@ export default function StakePage() {
                 {/* Amount */}
                 <div>
                   <label className="mb-2 block text-sm font-medium text-[#cfcfcf]">
-                    Amount
+                    Amount <span className="text-xs text-[#7c7a76]">({balance || '0'} SMAUG available)</span>
                   </label>
                   <div className="flex rounded-xl border border-white/10 bg-[#09090B]">
                     <input

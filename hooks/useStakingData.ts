@@ -33,14 +33,14 @@ export function useStakingData() {
   })
 
   useEffect(() => {
-    if (totalStakedData) {
-      setTotalStaked(formatSmaugBalance(totalStakedData))
+    if (totalStakedData !== undefined) {
+      setTotalStaked(formatSmaugBalance(BigInt(totalStakedData)))
     }
-    if (totalStakersData) {
+    if (totalStakersData !== undefined) {
       setTotalStakers(Number(totalStakersData))
     }
-    if (balanceData) {
-      setBalance(formatSmaugBalance(balanceData))
+    if (balanceData !== undefined) {
+      setBalance(formatSmaugBalance(BigInt(balanceData)))
     }
     setIsLoading(false)
   }, [totalStakedData, totalStakersData, balanceData])

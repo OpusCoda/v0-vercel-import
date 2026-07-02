@@ -15,11 +15,16 @@ function getTier(days: number) {
   return TIERS.find((tier) => days >= tier.min && days <= tier.max) ?? null
 }
 
-export default function CreateStakeCard() {
+interface CreateStakeCardProps {
+  balance?: string
+  onStake?: (amount: string, days: number) => void
+  isLoading?: boolean
+}
+
+export default function CreateStakeCard({ balance = '0', onStake, isLoading = false }: CreateStakeCardProps) {
   const [amount, setAmount] = useState('10,000')
   const [days, setDays] = useState(365)
 
-  const walletBalance = 25430.72
   const tier = useMemo(() => getTier(days), [days])
 
   const estimatedAPY = tier
@@ -35,7 +40,7 @@ export default function CreateStakeCard() {
       <div className="space-y-5">
         <div>
           <label className="mb-2 block text-sm font-medium text-[#f4f4f4]">
-            1. Enter Amount
+            1. Enter Amount <span className="text-xs text-[#7c7a76]">({balance} SMAUG available)</span>
           </label>
 
           <div className="flex items-center rounded-xl border border-white/10 bg-[#09090B] px-4">
@@ -47,11 +52,8 @@ export default function CreateStakeCard() {
             <span className="font-semibold text-[#D8B13D]">SMAUG</span>
           </div>
 
-          <div className="mt-2 flex justify-between text-sm">
-            <span className="text-[#9a9a9a]">
-              Balance: {walletBalance.toLocaleString()} SMAUG
-            </span>
-            <button className="font-semibold text-[#D8B13D]">MAX</button>
+          <div className="mt-2 flex justify-end text-sm">
+            <button className="font-semibold text-[#D8B13D] hover:opacity-80">MAX</button>
           </div>
         </div>
 
@@ -119,8 +121,12 @@ export default function CreateStakeCard() {
           )}
         </div>
 
-        <button className="w-full rounded-xl bg-[#D8B13D] py-4 font-bold text-black transition hover:bg-[#D8B13D]/90">
-          Create Stake
+        <button 
+          onClick={() => onStake?.(amount, days)}
+          disabled={isLoading}
+          className="w-full rounded-xl bg-[#D8B13D] py-4 font-bold text-black transition hover:bg-[#D8B13D]/90 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? 'Creating Stake...' : 'Create Stake'}
         </button>
       </div>
     </div>
