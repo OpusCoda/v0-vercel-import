@@ -103,7 +103,7 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
       eHEX: data.hex?.usd || 0.04,
       OPUS: 0.0004037,
       CODA: 0.0004,
-      SMAUG: 0.00000001,
+      SMAUG: 0.0002213,
       PRVX: 0.00000001,
       INC: 0.01,
       WETH: data.ethereum?.usd || 2500,
@@ -115,7 +115,7 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
     return {
       OPUS: 0.0004037,
       CODA: 0.0004,
-      SMAUG: 0.00000001,
+      SMAUG: 0.0002213,
       PRVX: 0.00000001,
       PLS: 0.08,
       PLSX: 0.05,
