@@ -366,10 +366,11 @@ export function PortfolioDashboard() {
 
   // Save edited wallets and fetch real data
   const handleSaveEditedWallets = async () => {
+    // Update state with edited wallets
     setWallets(editingWallets)
     setShowEditWalletsModal(false)
 
-    // Save wallet list to localStorage if it was loaded from a saved list
+    // Save wallet list locally and to API if it was loaded from a saved list
     if (loadedWalletListName) {
       try {
         const walletsData = editingWallets.map(w => ({
@@ -377,18 +378,25 @@ export function PortfolioDashboard() {
           name: w.name,
           selected: w.selected
         }))
-        localStorage.setItem(`walletList_${loadedWalletListName}`, JSON.stringify(walletsData))
+        // Save to localStorage for quick retrieval
+        localStorage.setItem('currentWalletList', JSON.stringify({ name: loadedWalletListName, wallets: editingWallets }))
+        // Also send updated wallets to API to persist changes
+        await fetch(`/api/saved-wallets`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: loadedWalletListName, wallets: walletsData })
+        })
       } catch (error) {
-        console.error('Error saving wallets to localStorage:', error)
+        console.error('Error saving wallets:', error)
       }
     }
 
     // Fetch real data for selected wallets
     const selectedAddresses = editingWallets.filter(w => w.selected).map(w => w.address)
     if (selectedAddresses.length > 0) {
-      fetchTokenBalances(selectedAddresses)
-      fetchHexStakes(selectedAddresses)
-      fetchLiquidLoans(selectedAddresses)
+      await fetchTokenBalances(selectedAddresses)
+      await fetchHexStakes(selectedAddresses)
+      await fetchLiquidLoans(selectedAddresses)
     } else {
       setAssets([])
       setHexStakes([])
@@ -466,6 +474,9 @@ export function PortfolioDashboard() {
       setLoadWalletName('')
       setShowLoadWalletModal(false)
       
+      // Save to localStorage for quick restoration
+      localStorage.setItem('currentWalletList', JSON.stringify({ name: loadWalletName, wallets: loadedWallets }))
+      
       // Fetch real data for loaded wallets
       const selectedAddresses = loadedWallets.map(w => w.address)
       fetchTokenBalances(selectedAddresses)
@@ -490,6 +501,20 @@ export function PortfolioDashboard() {
       setChange24h(Math.round(avgChange * 100) / 100)
     }
   }, [assets])
+
+  // Load wallets from localStorage on mount
+  useEffect(() => {
+    const savedWallets = localStorage.getItem('currentWalletList')
+    if (savedWallets) {
+      try {
+        const parsed = JSON.parse(savedWallets)
+        setWallets(parsed.wallets)
+        setLoadedWalletListName(parsed.name)
+      } catch (e) {
+        console.error('Error loading saved wallets:', e)
+      }
+    }
+  }, [])
 
   // Fetch data when selected wallets change
   useEffect(() => {
