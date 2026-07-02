@@ -25,14 +25,19 @@ export function useStakingData() {
 
   // Fetch user's SMAUG balance
   const { data: balanceData } = useReadContract({
-  address: SMAUG_TOKEN as `0x${string}`,
-  abi: ERC20_ABI,
-  functionName: 'balanceOf',
-  args: [address!],
-  query: { enabled: !!address },
+    address: SMAUG_TOKEN as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
   })
 
   useEffect(() => {
+    console.log('[v0] useStakingData - address:', address)
+    console.log('[v0] useStakingData - totalStakedData:', totalStakedData)
+    console.log('[v0] useStakingData - totalStakersData:', totalStakersData)
+    console.log('[v0] useStakingData - balanceData:', balanceData)
+    
     if (totalStakedData !== undefined) {
       const staked = typeof totalStakedData === 'bigint' ? totalStakedData : BigInt(totalStakedData)
       setTotalStaked(formatSmaugBalance(staked))
@@ -43,11 +48,13 @@ export function useStakingData() {
     if (balanceData !== undefined) {
       const bal = typeof balanceData === 'bigint' ? balanceData : BigInt(balanceData)
       const formatted = formatSmaugBalance(bal)
-      console.log('[v0] Balance data:', balanceData, 'Formatted:', formatted)
+      console.log('[v0] Balance formatted:', formatted)
       setBalance(formatted)
+    } else {
+      console.log('[v0] balanceData is still undefined, address:', address)
     }
     setIsLoading(false)
-  }, [totalStakedData, totalStakersData, balanceData])
+  }, [totalStakedData, totalStakersData, balanceData, address])
 
   return {
     totalStaked,
