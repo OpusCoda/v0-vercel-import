@@ -42,6 +42,7 @@ interface LiquidLoan {
   wallet: string
   lockedPLS: number
   debt: number
+  icr: number
 }
 
 const TOKEN_CONTRACTS = [
@@ -54,9 +55,14 @@ const TOKEN_CONTRACTS = [
   { symbol: 'HEX', name: 'HEX', address: '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39', decimals: 8 },
 ]
 
+// Pulsechain contracts
 const HEX_PULSECHAIN_ADDRESS = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'
 const HSI_MANAGER_ADDRESS = '0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3'
 const LIQUID_LOANS_VAULT_MANAGER = '0xD79bfb86fA06e8782b401bC0197d92563602D2Ab'
+
+// Ethereum contracts
+const HEX_ETHEREUM_ADDRESS = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'
+const HSI_ETHEREUM_ADDRESS = '0xb3A6f6C4b6418F6e1198bb455c86b5bEeF6af329'
 
 const HEX_STAKING_ABI = [
   'function stakeCount(address) view returns (uint256)',
@@ -67,6 +73,7 @@ const HEX_STAKING_ABI = [
 const LIQUID_LOANS_ABI = [
   'function getVaultColl(address) view returns (uint256)',
   'function getVaultDebt(address) view returns (uint256)',
+  'function getCurrentICR(address _borrower, uint _price) view returns (uint256)',
 ]
 
 const ERC20_ABI = [
@@ -75,6 +82,7 @@ const ERC20_ABI = [
 ]
 
 const PULSECHAIN_RPC_URL = 'https://rpc.pulsechain.com'
+const ETHEREUM_RPC_URL = 'https://eth.llamarpc.com'
 
 // Coingecko API for fetching token prices
 const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
@@ -185,23 +193,24 @@ export function PortfolioDashboard() {
     }
   }
 
-  // Fetch HEX stakes for wallets
+  // Fetch HEX stakes from both Pulsechain and Ethereum
   const fetchHexStakes = async (addresses: string[]) => {
     try {
-      const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
-      const hexContract = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, provider)
-      const hsiContract = new ethers.Contract(HSI_MANAGER_ADDRESS, HEX_STAKING_ABI, provider)
-
-      const currentDay = await hexContract.currentDay()
       const allHexStakes: HexStake[] = []
       const allHsiStakes: HexStake[] = []
 
+      // Fetch from Pulsechain
+      const pulsechainProvider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
+      const hexContractPulse = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, pulsechainProvider)
+      const hsiContractPulse = new ethers.Contract(HSI_MANAGER_ADDRESS, HEX_STAKING_ABI, pulsechainProvider)
+      const currentDayPulse = await hexContractPulse.currentDay()
+
       for (const address of addresses) {
-        // Fetch HEX stakes
-        const hexStakeCount = await hexContract.stakeCount(address)
+        // Fetch HEX stakes from Pulsechain
+        const hexStakeCount = await hexContractPulse.stakeCount(address)
         for (let i = 0; i < Number(hexStakeCount); i++) {
-          const stake = await hexContract.stakeLists(address, i)
-          const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+          const stake = await hexContractPulse.stakeLists(address, i)
+          const daysPassed = Number(currentDayPulse) - Number(stake.lockedDay)
           const daysRemaining = Number(stake.stakedDays) - daysPassed
           const isActive = Number(stake.unlockedDay) === 0
           allHexStakes.push({
@@ -220,11 +229,11 @@ export function PortfolioDashboard() {
           })
         }
 
-        // Fetch HSI stakes
-        const hsiStakeCount = await hsiContract.stakeCount(address)
+        // Fetch HSI stakes from Pulsechain
+        const hsiStakeCount = await hsiContractPulse.stakeCount(address)
         for (let i = 0; i < Number(hsiStakeCount); i++) {
-          const stake = await hsiContract.stakeLists(address, i)
-          const daysPassed = Number(currentDay) - Number(stake.lockedDay)
+          const stake = await hsiContractPulse.stakeLists(address, i)
+          const daysPassed = Number(currentDayPulse) - Number(stake.lockedDay)
           const daysRemaining = Number(stake.stakedDays) - daysPassed
           const isActive = Number(stake.unlockedDay) === 0
           allHsiStakes.push({
@@ -244,6 +253,64 @@ export function PortfolioDashboard() {
         }
       }
 
+      // Fetch from Ethereum
+      const ethereumProvider = new ethers.JsonRpcProvider(ETHEREUM_RPC_URL)
+      const hexContractEth = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+      const hsiContractEth = new ethers.Contract(HSI_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
+      const currentDayEth = await hexContractEth.currentDay()
+
+      for (const address of addresses) {
+        // Fetch HEX stakes from Ethereum
+        const hexStakeCount = await hexContractEth.stakeCount(address)
+        for (let i = 0; i < Number(hexStakeCount); i++) {
+          const stake = await hexContractEth.stakeLists(address, i)
+          const daysPassed = Number(currentDayEth) - Number(stake.lockedDay)
+          const daysRemaining = Number(stake.stakedDays) - daysPassed
+          const isActive = Number(stake.unlockedDay) === 0
+          allHexStakes.push({
+            stakeId: stake.stakeId.toString(),
+            stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
+            stakeShares: ethers.formatUnits(stake.stakeShares, 12),
+            lockedDay: Number(stake.lockedDay),
+            stakedDays: Number(stake.stakedDays),
+            unlockedDay: Number(stake.unlockedDay),
+            isAutoStake: stake.isAutoStake,
+            daysPassed: Math.max(0, daysPassed),
+            daysRemaining: Math.max(0, daysRemaining),
+            isActive,
+            wallet: address,
+            chain: 'Ethereum',
+          })
+        }
+
+        // Fetch HSI stakes from Ethereum
+        const hsiStakeCount = await hsiContractEth.stakeCount(address)
+        for (let i = 0; i < Number(hsiStakeCount); i++) {
+          const stake = await hsiContractEth.stakeLists(address, i)
+          const daysPassed = Number(currentDayEth) - Number(stake.lockedDay)
+          const daysRemaining = Number(stake.stakedDays) - daysPassed
+          const isActive = Number(stake.unlockedDay) === 0
+          allHsiStakes.push({
+            stakeId: stake.stakeId.toString(),
+            stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
+            stakeShares: ethers.formatUnits(stake.stakeShares, 12),
+            lockedDay: Number(stake.lockedDay),
+            stakedDays: Number(stake.stakedDays),
+            unlockedDay: Number(stake.unlockedDay),
+            isAutoStake: stake.isAutoStake,
+            daysPassed: Math.max(0, daysPassed),
+            daysRemaining: Math.max(0, daysRemaining),
+            isActive,
+            wallet: address,
+            chain: 'Ethereum',
+          })
+        }
+      }
+
+      // Sort by daysRemaining (least first)
+      allHexStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
+      allHsiStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
+
       setHexStakes(allHexStakes)
       setHsiStakes(allHsiStakes)
     } catch (error) {
@@ -258,15 +325,29 @@ export function PortfolioDashboard() {
       const vaultManager = new ethers.Contract(LIQUID_LOANS_VAULT_MANAGER, LIQUID_LOANS_ABI, provider)
       const loans: LiquidLoan[] = []
 
+      // Fetch PLS price for ICR calculation (assuming $1 for simplicity, or fetch from API)
+      const plsPrice = 1 // Could be fetched from price API
+
       for (const address of addresses) {
         const coll = await vaultManager.getVaultColl(address)
         const debt = await vaultManager.getVaultDebt(address)
 
         if (coll > 0n || debt > 0n) {
+          let icr = 0
+          try {
+            // getCurrentICR expects price in wei format (e.g., 1 PLS = 10^18 wei)
+            const icrResult = await vaultManager.getCurrentICR(address, ethers.parseEther(plsPrice.toString()))
+            icr = Number(ethers.formatUnits(icrResult, 16)) // ICR is typically in basis points (10000 = 100%)
+          } catch (e) {
+            console.error('Error fetching ICR for address:', address, e)
+            icr = 0
+          }
+
           loans.push({
             wallet: address,
             lockedPLS: Number(ethers.formatUnits(coll, 18)),
             debt: Number(ethers.formatUnits(debt, 18)),
+            icr,
           })
         }
       }
@@ -530,8 +611,8 @@ export function PortfolioDashboard() {
                 </div>
                 <div className="space-y-2">
                   {hexStakes.map((stake) => (
-                    <div key={`${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
-                      Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                    <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
+                      [{stake.chain}] Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
                     </div>
                   ))}
                 </div>
@@ -547,8 +628,8 @@ export function PortfolioDashboard() {
                 </div>
                 <div className="space-y-2">
                   {hsiStakes.map((stake) => (
-                    <div key={`${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
-                      Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HSI — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
+                    <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
+                      [{stake.chain}] Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HSI — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
                     </div>
                   ))}
                 </div>
@@ -564,26 +645,26 @@ export function PortfolioDashboard() {
                 </div>
                 <div className="grid gap-4">
                   {liquidLoans.map((loan) => (
-                      <div key={loan.wallet} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                        <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <p className="font-sans text-xs text-[#7c7a76]">Collateral</p>
-                            <p className="font-serif font-semibold text-[#d4af37] mt-1">${loan.lockedPLS.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
-                            <p className="font-sans text-xs text-[#7c7a76] mt-1">PLS</p>
-                          </div>
-                          <div>
-                            <p className="font-sans text-xs text-[#7c7a76]">Debt</p>
-                            <p className="font-serif font-semibold text-[#d4af37] mt-1">${loan.debt.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
-                            <p className="font-sans text-xs text-[#7c7a76] mt-1">USDL</p>
-                          </div>
-                          <div>
-                            <p className="font-sans text-xs text-[#7c7a76]">Ratio</p>
-                            <p className="font-serif font-semibold text-[#3fbf6f] mt-1">{loan.lockedPLS > 0 ? ((loan.debt / loan.lockedPLS) * 100).toFixed(1) : '0'}%</p>
-                          </div>
+                    <div key={loan.wallet} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <p className="font-sans text-xs text-[#7c7a76]">Collateral</p>
+                          <p className="font-serif font-semibold text-[#d4af37] mt-1">${loan.lockedPLS.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                          <p className="font-sans text-xs text-[#7c7a76] mt-1">PLS</p>
                         </div>
-                        <p className="font-sans text-xs text-[#7c7a76] mt-4 truncate">{loan.wallet}</p>
+                        <div>
+                          <p className="font-sans text-xs text-[#7c7a76]">Debt</p>
+                          <p className="font-serif font-semibold text-[#d4af37] mt-1">${loan.debt.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                          <p className="font-sans text-xs text-[#7c7a76] mt-1">USDL</p>
+                        </div>
+                        <div>
+                          <p className="font-sans text-xs text-[#7c7a76]">ICR</p>
+                          <p className={`font-serif font-semibold mt-1 ${loan.icr >= 150 ? 'text-[#3fbf6f]' : loan.icr >= 110 ? 'text-[#f59e0b]' : 'text-[#ff6b4a]'}`}>{(loan.icr / 100).toFixed(2)}%</p>
+                        </div>
                       </div>
-                    ))}
+                      <p className="font-sans text-xs text-[#7c7a76] mt-4 truncate">{loan.wallet}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
