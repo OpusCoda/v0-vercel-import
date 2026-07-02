@@ -97,10 +97,10 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
     )
     const data = await response.json()
     return {
-      PLS: data.pulsechain?.usd || 0.08,
-      PLSX: data.pulsex?.usd || 0.05,
+      PLS: data.pulsechain?.usd || 0.0124159,
+      PLSX: data.pulsex?.usd || 0.056,
       HEX: data.hex?.usd || 0.04,
-      eHEX: data.hex?.usd || 0.04,
+      eHEX: 0.0004,
       OPUS: 0.0004037,
       CODA: 0.0004,
       SMAUG: 0.0002213,
@@ -117,10 +117,10 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
       CODA: 0.0004,
       SMAUG: 0.0002213,
       PRVX: 0.00000001,
-      PLS: 0.08,
-      PLSX: 0.05,
+      PLS: 0.0124159,
+      PLSX: 0.056,
       HEX: 0.04,
-      eHEX: 0.04,
+      eHEX: 0.0004,
       INC: 0.30,
       WETH: 2500,
       WBTC: 45000,
