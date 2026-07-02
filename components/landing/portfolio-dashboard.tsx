@@ -87,7 +87,7 @@ const ERC20_ABI = [
 ]
 
 const PULSECHAIN_RPC_URL = 'https://rpc.pulsechain.com'
-const ETHEREUM_RPC_URL = 'https://eth.llamarpc.com'
+const ETHEREUM_RPC_URL = 'https://ethereum-rpc.publicnode.com'
 
 // Token prices from DexScreener and market data
 const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
@@ -313,7 +313,7 @@ export function PortfolioDashboard() {
         const coll = await vaultManager.getVaultColl(address)
         const debt = await vaultManager.getVaultDebt(address)
 
-        if (coll > 0n || debt > 0n) {
+        if (coll > BigInt(0) || debt > BigInt(0)) {
           const collateralUSD = Number(ethers.formatUnits(coll, 18)) * plsPrice
           const debtUSD = Number(ethers.formatUnits(debt, 18))
           const icr = debtUSD > 0 ? (collateralUSD / debtUSD) * 100 : 0
