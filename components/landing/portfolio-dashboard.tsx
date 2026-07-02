@@ -437,6 +437,18 @@ export function PortfolioDashboard() {
     console.log('[v0] Calling setWallets with', editingWallets.length, 'wallets')
     setWallets(editingWallets)
     setShowEditWalletsModal(false)
+
+    const selectedAddresses = editingWallets.filter(w => w.selected).map(w => w.address)
+    if (selectedAddresses.length > 0) {
+      fetchTokenBalances(selectedAddresses)
+      fetchHexStakes(selectedAddresses)
+      fetchLiquidLoans(selectedAddresses)
+    } else {
+      setAssets([])
+      setHexStakes([])
+      setHsiStakes([])
+      setLiquidLoans([])
+    }
   }
 
   const handleOpenEditModal = () => {
