@@ -150,6 +150,7 @@ export function PortfolioDashboard() {
   // Load Wallet state
   const [loadWalletName, setLoadWalletName] = useState('')
   const [loadingWallets, setLoadingWallets] = useState(false)
+  const [loadedWalletListName, setLoadedWalletListName] = useState<string | null>(null)
 
   // Fetch token balances for wallets
   const fetchTokenBalances = async (addresses: string[]) => {
@@ -368,16 +369,17 @@ export function PortfolioDashboard() {
     setWallets(editingWallets)
     setShowEditWalletsModal(false)
 
-    // Save wallet list to API if it was loaded from a saved list
-    // (Check if wallets have consistent naming pattern from a loaded list)
-    const loadedWalletMatch = editingWallets.every((w, i) => w.name === `Wallet ${i + 1}`)
-    if (loadedWalletMatch && editingWallets.length > 0) {
+    // Save wallet list to localStorage if it was loaded from a saved list
+    if (loadedWalletListName) {
       try {
-        // Try to save back to the loaded wallet list name
-        const walletNames = editingWallets.map(w => w.address)
-        // We would need the original list name, so for now just update the state
+        const walletsData = editingWallets.map(w => ({
+          address: w.address,
+          name: w.name,
+          selected: w.selected
+        }))
+        localStorage.setItem(`walletList_${loadedWalletListName}`, JSON.stringify(walletsData))
       } catch (error) {
-        console.error('Error saving wallets:', error)
+        console.error('Error saving wallets to localStorage:', error)
       }
     }
 
@@ -460,6 +462,7 @@ export function PortfolioDashboard() {
       }))
 
       setWallets(loadedWallets)
+      setLoadedWalletListName(loadWalletName)
       setLoadWalletName('')
       setShowLoadWalletModal(false)
       
@@ -923,7 +926,7 @@ export function PortfolioDashboard() {
                   onClick={handleSaveEditedWallets}
                   className="flex-1 rounded-lg bg-[#d4af37] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]"
                 >
-                  Save Wallets
+                  {loadedWalletListName ? 'Save Changes' : 'Save Wallets'}
                 </button>
               </div>
             </div>
