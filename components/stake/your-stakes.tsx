@@ -54,12 +54,18 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
   const unsweptReflections = totalWeightedStakeRaw > 0n && unsweptPool > 0n
     ? unsweptPool * weightedAmount / totalWeightedStakeRaw
     : 0n
-  const unsweptFormatted = formatSmaugBalance(unsweptReflections)
 
   return (
     <tr className="hover:bg-[#09090B]">
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">#{stakeId}</td>
-      <td className="px-6 py-4 text-sm text-[#f4f4f4]">{amountFormatted} SMAUG</td>
+      <td className="px-6 py-4 text-sm text-[#f4f4f4]">
+        <div>{amountFormatted} SMAUG</div>
+        {unsweptReflections > 0n && (
+          <div className="text-xs text-[#9a9a9a] mt-0.5">
+            (+{Math.floor(Number(unsweptReflections) / 1e18).toLocaleString('en-US')} SMAUG in reflections)
+          </div>
+        )}
+      </td>
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">
         <div className="flex items-center gap-2">
           <EggIcon tier={eggTier} />
@@ -80,7 +86,6 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
         <div className="space-y-1">
           <div className="text-[#D8B13D] font-semibold">{plsFormatted} PLS</div>
           <div className="text-[#9a9a9a] text-xs">{smaugFormatted} SMAUG</div>
-          <div className="text-[#9a9a9a] text-xs">~{unsweptFormatted} SMAUG unswept</div>
         </div>
       </td>
       <td className="px-6 py-4 text-right">
@@ -109,13 +114,10 @@ export default function YourStakes({
 }: YourStakesProps) {
   return (
     <div className="rounded-2xl border border-white/10 bg-[#111116]">
-      <div className="flex items-center justify-between border-b border-white/10 p-6">
+      <div className="border-b border-white/10 p-6">
         <h2 className="font-serif text-2xl font-bold text-[#f4f4f4]">
           Your Stakes
         </h2>
-        <button className="text-sm font-semibold text-[#D8B13D]">
-          View All Stakes →
-        </button>
       </div>
 
       <div className="overflow-x-auto">
