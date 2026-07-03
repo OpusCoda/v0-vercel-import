@@ -115,7 +115,7 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
         {showConfirm ? (
           <div className="space-y-2 text-right">
             <div className="text-xs text-red-400">
-              You will keep {keepPct}% of rewards.{' '}
+              You will keep {keepPct}% of your rewards.{' '}
               {100 - keepPct}% will be forfeited.
             </div>
             <div className="flex justify-end gap-2">
