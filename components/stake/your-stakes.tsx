@@ -30,7 +30,9 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
   const plsReward = usePendingReward(stakeId, PLS_ADDRESS)
   const smaugReward = usePendingReward(stakeId, SMAUG_ADDRESS)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showUnstakeConfirm, setShowUnstakeConfirm] = useState(false)
   const { writeContract, isPending } = useWriteContract()
+  const { writeContract: unstakeWrite, isPending: unstakePending } = useWriteContract()
 
   const { data: penaltyData } = useReadContract({
     address: STAKING_CONTRACT as `0x${string}`,
@@ -50,6 +52,16 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
       args: [BigInt(stakeId)],
     })
     setShowConfirm(false)
+  }
+
+  const handleUnstake = () => {
+    unstakeWrite({
+      address: STAKING_CONTRACT as `0x${string}`,
+      abi: STAKING_ABI,
+      functionName: 'unstake',
+      args: [BigInt(stakeId)],
+    })
+    setShowUnstakeConfirm(false)
   }
 
   if (!stakeDetails) {
@@ -112,37 +124,76 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
         </div>
       </td>
       <td className="px-6 py-4 text-right">
-        {showConfirm ? (
-          <div className="space-y-2 text-right">
-            <div className="text-xs text-red-400">
-              You will keep {keepPct}% of your rewards.{' '}
-              {100 - keepPct}% will be forfeited.
+        <div className="space-y-2">
+
+          {/* Claim rewards */}
+          {showConfirm ? (
+            <div className="space-y-2 text-right">
+              <div className="text-xs text-red-400">
+                You will keep {keepPct}% of your rewards.{' '}
+                {100 - keepPct}% will be forfeited.
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-[#9a9a9a] hover:border-white/20 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleClaim}
+                  disabled={isPending}
+                  className="rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-xs font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors disabled:opacity-50"
+                >
+                  {isPending ? 'Claiming...' : 'Confirm'}
+                </button>
+              </div>
             </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowConfirm(false)}
-                className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-[#9a9a9a] hover:border-white/20 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleClaim}
-                disabled={isPending}
-                className="rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-xs font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors disabled:opacity-50"
-              >
-                {isPending ? 'Claiming...' : 'Confirm'}
-              </button>
+          ) : (
+            <button
+              onClick={() => isMature ? handleClaim() : setShowConfirm(true)}
+              disabled={isPending}
+              className="w-full rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors disabled:opacity-50"
+            >
+              {isPending ? 'Claiming...' : 'Claim rewards'}
+            </button>
+          )}
+
+          {/* End stake */}
+          {showUnstakeConfirm ? (
+            <div className="space-y-2 text-right">
+              <div className="text-xs text-red-400">
+                {isMature
+                  ? 'This will return your principal and all rewards.'
+                  : `Early exit applies 2× the normal penalty. You keep ${keepPct}% of rewards at double forfeit rate. Principal is returned in full.`}
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowUnstakeConfirm(false)}
+                  className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-[#9a9a9a] hover:border-white/20 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUnstake}
+                  disabled={unstakePending}
+                  className="rounded-lg border border-red-500/40 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                >
+                  {unstakePending ? 'Ending...' : 'Confirm end'}
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => isMature ? handleClaim() : setShowConfirm(true)}
-            disabled={isPending}
-            className="rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors disabled:opacity-50"
-          >
-            {isPending ? 'Claiming...' : 'Claim rewards'}
-          </button>
-        )}
+          ) : (
+            <button
+              onClick={() => setShowUnstakeConfirm(true)}
+              disabled={unstakePending}
+              className="w-full rounded-lg border border-red-500/20 px-3 py-1.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+            >
+              {unstakePending ? 'Ending...' : 'End stake'}
+            </button>
+          )}
+
+        </div>
       </td>
     </tr>
   )
