@@ -27,7 +27,7 @@ export function useApproveAndStake(address: `0x${string}` | undefined) {
         address: STAKING_CONTRACT as `0x${string}`,
         abi: STAKING_ABI,
         functionName: 'stake',
-        args: [pendingStake.amount, BigInt(pendingStake.days)],
+        args: [pendingStake.amount, BigInt(pendingStake.days * 86400)],
       })
     }
   }, [approveConfirmed, step, pendingStake, stakeWrite])
