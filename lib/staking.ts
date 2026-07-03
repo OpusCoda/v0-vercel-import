@@ -27,6 +27,13 @@ export const STAKING_ABI = [
     type: 'function',
   },
   {
+    inputs: [],
+    name: 'stakeCount',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [
       { name: 'user', type: 'address' },
       { name: 'index', type: 'uint256' },

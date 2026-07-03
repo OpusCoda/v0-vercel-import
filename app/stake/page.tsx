@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi'
 import { SiteNav } from '@/components/landing/site-nav'
 import { useStakingData } from '@/hooks/useStakingData'
 import { useApproveAndStake } from '@/hooks/useApproveAndStake'
+import { useTVLAndStakeCount } from '@/hooks/useTVLAndStakeCount'
 import YourStakes from '@/components/stake/your-stakes'
 import { parseSmaugAmount } from '@/lib/staking'
 
@@ -31,6 +32,7 @@ function formatNumberInput(value: string): string {
 export default function StakePage() {
   const { address, isConnected } = useAccount()
   const { totalStaked, totalStakers, balance, minStakeAmount, userStakeIds, isLoading, contractSmaugBalance, totalWeightedStakeRaw, totalStakedRaw, refetchStakeIds } = useStakingData()
+  const { tvl, stakeCount } = useTVLAndStakeCount()
   const { initiateApproveAndStake, isPending, step, approveTxHash, stakeTxHash } = useApproveAndStake(address)
 
   const [amount, setAmount] = useState('')
@@ -93,9 +95,9 @@ export default function StakePage() {
             <div className="flex divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-[#111116]">
               {[
                 { label: 'Current APR',   value: isLoading ? '—' : '38.42%' },
-                { label: 'TVL',           value: isLoading ? '—' : '$183,642' },
+                { label: 'TVL',           value: tvl },
                 { label: 'Total staked',  value: isLoading ? '—' : `${totalStaked} SMAUG` },
-                { label: 'Active stakers',value: isLoading ? '—' : totalStakers.toLocaleString() },
+                { label: 'Active stakes', value: stakeCount.toLocaleString() },
               ].map(({ label, value }) => (
                 <div key={label} className="flex-1 px-6 py-4">
                   <div className="text-xs font-semibold uppercase tracking-wide text-[#8f8f8f]">
