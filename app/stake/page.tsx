@@ -56,7 +56,8 @@ export default function StakePage() {
     }
 
     try {
-      const amountBn = parseSmaugAmount(amount)
+
+    const amountBn = parseSmaugAmount(amount.replace(/,/g, ''))
       initiateApproveAndStake(amountBn, days)
       setAmount('')
       setDays(365)
