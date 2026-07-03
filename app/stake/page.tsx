@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAccount, useWriteContract } from 'wagmi'
 import { SiteNav } from '@/components/landing/site-nav'
 import { useStakingData } from '@/hooks/useStakingData'
@@ -46,36 +46,28 @@ export default function StakePage() {
 
   const handleStake = async () => {
     if (!isConnected || !address) {
+      console.log('[v0] Not connected or no address')
       return
     }
     if (!amount || parseFloat(amount) <= 0) {
+      console.log('[v0] Invalid amount')
       return
     }
     if (!selectedTier) {
+      console.log('[v0] No selected tier')
       return
     }
 
     try {
       const amountBn = parseSmaugAmount(amount)
+      console.log('[v0] Staking with amount:', amountBn, 'days:', days)
       // TODO: Check allowance and approve if needed before calling stake
-      writeContract(
-        {
-          address: STAKING_CONTRACT as `0x${string}`,
-          abi: STAKING_ABI,
-          functionName: 'stake',
-          args: [amountBn, BigInt(days * 86400)],
-        },
-        {
-          onSuccess: (hash) => {
-            setStakeTxHash(hash)
-            setAmount('')
-            setDays(365)
-          },
-          onError: (error) => {
-            console.error('[v0] Stake failed:', error?.message)
-          },
-        }
-      )
+      writeContract({
+        address: STAKING_CONTRACT as `0x${string}`,
+        abi: STAKING_ABI,
+        functionName: 'stake',
+        args: [amountBn, BigInt(days)],
+      })
     } catch (err) {
       console.error('[v0] Stake error:', err)
     }
@@ -85,6 +77,16 @@ export default function StakePage() {
   const minStakeNum = parseFloat(minStakeAmount.replace(/,/g, '')) || 0
   const amountNum = parseFloat(amount.replace(/,/g, '')) || 0
   const isBelowMinimum = amountNum > 0 && amountNum < minStakeNum
+
+  // Watch for transaction completion
+  useEffect(() => {
+    if (!isPending && stakeTxHash) {
+      console.log('[v0] Transaction submitted:', stakeTxHash)
+      // Clear success message after 5 seconds
+      const timer = setTimeout(() => setStakeTxHash(''), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [isPending, stakeTxHash])
 
   return (
     <>
@@ -142,7 +144,7 @@ export default function StakePage() {
                     <input
                       value={amount}
                       onChange={(e) => setAmount(formatNumberInput(e.target.value))}
-                      placeholder="0.00"
+                      placeholder="0"
                       className="w-full bg-transparent py-4 text-lg outline-none"
                     />
                     <button
@@ -261,11 +263,8 @@ export default function StakePage() {
 
           {/* ── Your Stakes ────────────────────────────────── */}
           <section className="rounded-2xl border border-white/10 bg-[#111116] p-6">
-            <div className="mb-5 flex items-center justify-between">
+            <div className="mb-5">
               <h2 className="font-serif text-2xl font-bold">Your stakes</h2>
-              <button className="rounded-lg border border-white/10 px-4 py-2 text-sm text-[#cfcfcf] transition hover:border-white/20">
-                Load wallets
-              </button>
             </div>
 
             <div className="overflow-x-auto">
@@ -302,15 +301,10 @@ export default function StakePage() {
                       <td className="py-4 pr-4 whitespace-nowrap font-semibold text-[#D8B13D]">
                         {row.rewards} PLS
                       </td>
-                      <td className="py-4">
-                        <div className="flex justify-end gap-2">
-                          <button className="whitespace-nowrap rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-xs text-[#D8B13D] transition hover:bg-[#D8B13D]/10">
-                            Claim
-                          </button>
-                          <button className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-[#cfcfcf] transition hover:border-white/20">
-                            Details
-                          </button>
-                        </div>
+                      <td className="py-4 text-right">
+                        <button className="whitespace-nowrap rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-xs text-[#D8B13D] transition hover:bg-[#D8B13D]/10">
+                          Claim
+                        </button>
                       </td>
                     </tr>
                   ))}
