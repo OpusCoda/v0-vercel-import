@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useAccount, useReadContract } from 'wagmi'
+import { useAccount, useReadContract, useReadContracts } from 'wagmi'
 import { STAKING_CONTRACT, STAKING_ABI, SMAUG_TOKEN, ERC20_ABI, formatSmaugBalance } from '@/lib/staking'
 
 export function useStakingData() {
@@ -57,13 +57,14 @@ export function useStakingData() {
     query: { enabled: !!address, refetchInterval: 30000 },
   })
 
-  // Fetch user stake IDs - get first stake ID for the address
-  const { data: stakeIdsData, refetch: refetchStakeIds } = useReadContract({
-    address: STAKING_CONTRACT as `0x${string}`,
-    abi: STAKING_ABI,
-    functionName: 'userStakeIds',
-    args: address ? [address, BigInt(0)] : undefined,
-    query: { enabled: !!address, refetchInterval: 30000 },
+  const { data: stakeIdsData, refetch: refetchStakeIds } = useReadContracts({
+    contracts: address ? Array.from({ length: 20 }, (_, i) => ({
+      address: STAKING_CONTRACT as `0x${string}`,
+      abi: STAKING_ABI,
+      functionName: 'userStakeIds' as const,
+      args: [address, BigInt(i)] as const,
+    })) : [],
+    query: { enabled: !!address },
   })
 
   useEffect(() => {
@@ -91,9 +92,11 @@ export function useStakingData() {
       const min = typeof minStakeData === 'bigint' ? minStakeData : BigInt(minStakeData)
       setMinStakeAmount(formatSmaugBalance(min))
     }
-    if (stakeIdsData !== undefined && stakeIdsData !== 0n) {
-      // stakeIdsData is a single bigint from userStakeIds(address, 0)
-      setUserStakeIds([stakeIdsData.toString()])
+    if (stakeIdsData) {
+      const ids = stakeIdsData
+        .filter(result => result.status === 'success' && result.result !== undefined)
+        .map(result => (result.result as bigint).toString())
+      setUserStakeIds(ids)
     }
     setIsLoading(false)
   }, [totalStakedData, totalWeightedStakeData, contractSmaugBalanceData, totalStakersData, balanceData, minStakeData, stakeIdsData])
