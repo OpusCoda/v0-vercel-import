@@ -108,7 +108,7 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
       <td className="px-6 py-4 text-sm">
         <div className="space-y-1">
           <div className="text-[#D8B13D] font-semibold">{plsFormatted} PLS</div>
-          <div className="text-[#9a9a9a] font-semibold">{smaugFormatted} SMAUG</div>
+          <div className="text-[#D8B13D] font-semibold">{smaugFormatted} SMAUG</div>
         </div>
       </td>
       <td className="px-6 py-4 text-right">
