@@ -37,7 +37,7 @@ function formatNumberInput(value: string): string {
 export default function StakePage() {
   const { address, isConnected } = useAccount()
   const { totalStaked, totalStakers, balance, minStakeAmount, isLoading } = useStakingData()
-  const { initiateApproveAndStake, isPending, stakeTxHash } = useApproveAndStake(address)
+  const { initiateApproveAndStake, isPending, step, approveTxHash, stakeTxHash } = useApproveAndStake(address)
 
   const [amount, setAmount] = useState('')
   const [days, setDays] = useState(365)
@@ -192,11 +192,11 @@ export default function StakePage() {
                 </div>
 
                 {approveTxHash && (step === 'approving' || step === 'staking') && (
-  <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
+   <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
     SMAUG approved. Waiting for stake confirmation...
   </div>
 )}
-{stakeTxHash && step === 'idle' && (
+  {stakeTxHash && step === 'idle' && (
   <div className="mt-3 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm text-green-400">
     Stake created! Tx: {stakeTxHash.slice(0, 10)}...
   </div>
