@@ -1,18 +1,18 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 import { useReadContract, useWriteContract } from 'wagmi'
 import { useStakeDetails, usePendingReward, getMaturityInfo, formatDate } from '@/hooks/useStakeDetails'
 import { formatSmaugBalance, STAKING_CONTRACT, STAKING_ABI } from '@/lib/staking'
-import EggIcon from './egg-icon'
 
 const TIERS = ['Hatchling', 'Drake', 'Dragon', 'Elder Dragon', 'Smaug']
-const EGG_TIERS: Record<string, 'hatchling' | 'drake' | 'dragon' | 'elder-dragon' | 'smaug'> = {
-  'Hatchling': 'hatchling',
-  'Drake': 'drake',
-  'Dragon': 'dragon',
-  'Elder Dragon': 'elder-dragon',
-  'Smaug': 'smaug',
+const TIER_IMAGES: Record<string, string> = {
+  'Hatchling': '/tiers/hatchling.png',
+  'Drake': '/tiers/drake.png',
+  'Dragon': '/tiers/dragon.png',
+  'Elder Dragon': '/tiers/elder-dragon.png',
+  'Smaug': '/tiers/smaug.png',
 }
 
 const PLS_ADDRESS = '0x0000000000000000000000000000000000000000'
@@ -77,7 +77,7 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
   const { amount, startTime, endTime, tierIndex, multiplier, weightedAmount } = stakeDetails
 
   const tierName = TIERS[tierIndex] || 'Unknown'
-  const eggTier = EGG_TIERS[tierName] || 'hatchling'
+  const tierImagePath = TIER_IMAGES[tierName] || TIER_IMAGES['Hatchling']
 
   const maturityInfo = getMaturityInfo(startTime, endTime)
   const plsFormatted = formatSmaugBalance(plsReward)
@@ -100,8 +100,14 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
         <div>{amountFormatted} SMAUG</div>
       </td>
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">
-        <div className="flex items-center gap-2">
-          <EggIcon tier={eggTier} />
+        <div className="flex items-center gap-3">
+          <Image 
+            src={tierImagePath} 
+            alt={tierName} 
+            width={48} 
+            height={48} 
+            className="rounded-lg"
+          />
           <div>
             <div>{tierName}</div>
             <div className="text-xs text-[#9a9a9a]">{multiplierFormatted}x multiplier</div>
