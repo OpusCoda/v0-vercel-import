@@ -54,6 +54,13 @@ export const STAKING_ABI = [
     type: 'function',
   },
   {
+  inputs: [{ name: 'stakeId', type: 'uint256' }],
+  name: 'unstake',
+  outputs: [],
+  stateMutability: 'nonpayable',
+  type: 'function',
+},
+  {
     inputs: [{ name: 'stakeId', type: 'uint256' }],
     name: 'stakes',
     outputs: [
