@@ -26,33 +26,35 @@ const MOCK_STAKES = [
   { id: '#71', amount: '10,000', tier: 'Drake',        daysLeft: 51,  progress: 44, rewards: '241'   },
 ]
 
+// Format number with thousands separator
+function formatNumberInput(value: string): string {
+  const numberOnly = value.replace(/,/g, '')
+  if (!numberOnly) return ''
+  return parseFloat(numberOnly).toLocaleString('en-US', { maximumFractionDigits: 2 })
+}
+
 export default function StakePage() {
   const { address, isConnected } = useAccount()
-  const { totalStaked, totalStakers, balance, isLoading } = useStakingData()
+  const { totalStaked, totalStakers, balance, minStakeAmount, isLoading } = useStakingData()
   const { writeContract, isPending } = useWriteContract()
 
   const [amount, setAmount] = useState('')
   const [days, setDays] = useState(365)
-  const [stakeError, setStakeError] = useState('')
   const [stakeTxHash, setStakeTxHash] = useState('')
 
   const selectedTier = useMemo(() => getTier(days), [days])
 
   const handleStake = async () => {
     if (!isConnected || !address) {
-      setStakeError('Please connect your wallet')
       return
     }
     if (!amount || parseFloat(amount) <= 0) {
-      setStakeError('Please enter a valid amount')
       return
     }
     if (!selectedTier) {
-      setStakeError('Please select a valid duration (30-730 days)')
       return
     }
 
-    setStakeError('')
     try {
       const amountBn = parseSmaugAmount(amount)
       // TODO: Check allowance and approve if needed before calling stake
@@ -70,14 +72,19 @@ export default function StakePage() {
             setDays(365)
           },
           onError: (error) => {
-            setStakeError(error?.message || 'Failed to stake')
+            console.error('[v0] Stake failed:', error?.message)
           },
         }
       )
     } catch (err) {
-      setStakeError(err instanceof Error ? err.message : 'Failed to stake')
+      console.error('[v0] Stake error:', err)
     }
   }
+
+  // Get the numeric minimum stake amount for validation
+  const minStakeNum = parseFloat(minStakeAmount.replace(/,/g, '')) || 0
+  const amountNum = parseFloat(amount.replace(/,/g, '')) || 0
+  const isBelowMinimum = amountNum > 0 && amountNum < minStakeNum
 
   return (
     <>
@@ -134,17 +141,22 @@ export default function StakePage() {
                   <div className="flex items-center rounded-xl border border-white/10 bg-[#09090B] px-4">
                     <input
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      onChange={(e) => setAmount(formatNumberInput(e.target.value))}
                       placeholder="0.00"
                       className="w-full bg-transparent py-4 text-lg outline-none"
                     />
                     <button
-                      onClick={() => setAmount(balance.replace(/,/g, ''))}
+                      onClick={() => setAmount(formatNumberInput(balance))}
                       className="ml-2 rounded-lg px-3 py-2 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors"
                     >
                       Max
                     </button>
                   </div>
+                  {isBelowMinimum && (
+                    <p className="mt-2 text-sm text-red-400">
+                      Min. stake amount is {minStakeAmount} SMAUG
+                    </p>
+                  )}
                 </div>
 
                 {/* Duration */}
@@ -187,12 +199,6 @@ export default function StakePage() {
                   </div>
                 </div>
 
-                {stakeError && (
-                  <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">
-                    {stakeError}
-                  </div>
-                )}
-
                 {stakeTxHash && (
                   <div className="mt-3 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm text-green-400">
                     Stake created! Tx: {stakeTxHash.slice(0, 10)}...
@@ -201,7 +207,7 @@ export default function StakePage() {
 
                 <button
                   onClick={handleStake}
-                  disabled={!isConnected || isPending || !selectedTier || !amount}
+                  disabled={!isConnected || isPending || !selectedTier || !amount || isBelowMinimum}
                   className="mt-4 w-full rounded-xl bg-[#D8B13D] px-5 py-4 font-bold text-black transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {!isConnected ? 'Connect wallet' : isPending ? 'Staking...' : 'Create stake'}
