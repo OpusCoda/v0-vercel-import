@@ -57,7 +57,7 @@ export function useStakingData() {
     query: { enabled: !!address, refetchInterval: 30000 },
   })
 
-  const { data: stakeIdsData } = useReadContracts({
+  const { data: stakeIdsData, refetch: refetchStakeIds } = useReadContracts({
     contracts: address ? Array.from({ length: 20 }, (_, i) => ({
       address: STAKING_CONTRACT as `0x${string}`,
       abi: STAKING_ABI,
@@ -111,5 +111,6 @@ export function useStakingData() {
     minStakeAmount,
     userStakeIds,
     isLoading,
+    refetchStakeIds,
   }
 }

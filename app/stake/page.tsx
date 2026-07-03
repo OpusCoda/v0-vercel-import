@@ -30,7 +30,7 @@ function formatNumberInput(value: string): string {
 
 export default function StakePage() {
   const { address, isConnected } = useAccount()
-  const { totalStaked, totalStakers, balance, minStakeAmount, userStakeIds, isLoading, contractSmaugBalance, totalWeightedStakeRaw, totalStakedRaw } = useStakingData()
+  const { totalStaked, totalStakers, balance, minStakeAmount, userStakeIds, isLoading, contractSmaugBalance, totalWeightedStakeRaw, totalStakedRaw, refetchStakeIds } = useStakingData()
   const { initiateApproveAndStake, isPending, step, approveTxHash, stakeTxHash } = useApproveAndStake(address)
 
   const [amount, setAmount] = useState('')
@@ -67,10 +67,10 @@ export default function StakePage() {
 
   // Watch for transaction completion
   useEffect(() => {
-    if (!isPending && stakeTxHash) {
-      console.log('[v0] Transaction submitted:', stakeTxHash)
-    }
-  }, [isPending, stakeTxHash])
+  if (stakeTxHash && step === 'idle') {
+    refetchStakeIds()
+  }
+  }, [stakeTxHash, step])
 
   return (
     <>
