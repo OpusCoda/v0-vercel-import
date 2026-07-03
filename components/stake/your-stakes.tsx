@@ -85,7 +85,7 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
         <div>{amountFormatted} SMAUG</div>
         {unsweptReflections > 0n && (
           <div className="text-xs text-[#9a9a9a] mt-0.5">
-            (+{Math.floor(Number(unsweptReflections) / 1e18).toLocaleString('en-US')} SMAUG in reflections)
+            (+{(Number(unsweptReflections) / 1e18).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SMAUG in reflections)
           </div>
         )}
       </td>
