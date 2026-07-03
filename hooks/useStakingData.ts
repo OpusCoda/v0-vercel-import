@@ -45,13 +45,17 @@ export function useStakingData() {
   })
 
   // Fetch user's stake IDs
-  const { data: userStakeIdsData } = useReadContract({
-    address: STAKING_CONTRACT as `0x${string}`,
-    abi: STAKING_ABI,
-    functionName: 'userStakeIds',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address, refetchInterval: 30000 },
-  })
+  const { data: userStakeIdsData, error: stakeIdsError } = useReadContract({
+  address: STAKING_CONTRACT as `0x${string}`,
+  abi: STAKING_ABI,
+  functionName: 'userStakeIds',
+  args: address ? [address] : undefined,
+  query: { enabled: !!address, refetchInterval: 30000 },
+})
+
+console.log('[useStakingData] userStakeIdsData:', userStakeIdsData, 'error:', stakeIdsError)
+
+  console.log('[useStakingData] userStakeIdsData:', userStakeIdsData, 'error:', stakeIdsError)
 
   useEffect(() => {
     if (totalStakedData !== undefined) {
