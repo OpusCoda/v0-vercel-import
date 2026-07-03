@@ -1,6 +1,6 @@
 import { parseUnits } from 'viem'
 
-export const STAKING_CONTRACT = '0x1DafEa6eBDaFd2BD9c3fBf86DFccccAbBB0E3bda'
+export const STAKING_CONTRACT = '0x653B927b7C39DB1D128B1445c8911594FBcfd9eD'
 export const SMAUG_TOKEN = '0xf4754Aa585caBf38537A68660469A17E203D8632'
 
 // Minimal ABI for staking contract functions
