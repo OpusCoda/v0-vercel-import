@@ -4,9 +4,9 @@ import { STAKING_CONTRACT, STAKING_ABI } from '@/lib/staking'
 export interface StakeDetail {
   owner: `0x${string}`
   amount: bigint
-  startTime: bigint
-  duration: bigint
-  endTime: bigint
+  startTime: number
+  duration: number
+  endTime: number
   tierIndex: number
   multiplier: bigint
   weightedAmount: bigint
@@ -25,7 +25,7 @@ export function useStakeDetails(stakeId: string | undefined) {
 
   try {
     // Parse the returned tuple into our interface
-    const [owner, amount, startTime, duration, endTime, tierIndex, multiplier, weightedAmount] = stakeData as any[]
+    const [owner, amount, startTime, duration, endTime, tierIndex, multiplier, weightedAmount] = stakeData as unknown as any[]
     
     return {
       owner: owner as `0x${string}`,

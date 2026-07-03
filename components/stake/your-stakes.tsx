@@ -46,7 +46,7 @@ function StakeRow({ stakeId }: StakeRowProps) {
   const plsFormatted = formatSmaugBalance(plsReward)
   const smaugFormatted = formatSmaugBalance(smaugReward)
   const amountFormatted = formatSmaugBalance(amount)
-  const multiplierFormatted = (Number(multiplier) / 1e18).toFixed(2)
+  const multiplierFormatted = (Number(multiplier) / 100).toFixed(1)
 
   return (
     <tr className="hover:bg-[#09090B]">
