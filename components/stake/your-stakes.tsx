@@ -83,7 +83,10 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
   const plsFormatted = formatSmaugBalance(plsReward)
   const smaugFormatted = formatSmaugBalance(smaugReward)
   const amountFormatted = formatSmaugBalance(amount)
-  const multiplierFormatted = (Number(multiplier) / 100).toFixed(1)
+  const multiplierFormatted = (() => {
+  const val = Number(multiplier) / 100
+  return val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)
+})()
 
   const unsweptPool = contractSmaugBalance > totalStakedRaw ? contractSmaugBalance - totalStakedRaw : 0n
   const unsweptReflections = totalWeightedStakeRaw > 0n && unsweptPool > 0n
@@ -95,18 +98,13 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">#{stakeId}</td>
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">
         <div>{amountFormatted} SMAUG</div>
-        {unsweptReflections > 0n && (
-          <div className="text-xs text-[#9a9a9a] mt-0.5">
-            (+{(Number(unsweptReflections) / 1e18).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SMAUG in reflections)
-          </div>
-        )}
       </td>
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">
         <div className="flex items-center gap-2">
           <EggIcon tier={eggTier} />
           <div>
             <div>{tierName}</div>
-            <div className="text-xs text-[#9a9a9a]">{multiplierFormatted}x mult.</div>
+            <div className="text-xs text-[#9a9a9a]">{multiplierFormatted}x multiplier</div>
           </div>
         </div>
       </td>
