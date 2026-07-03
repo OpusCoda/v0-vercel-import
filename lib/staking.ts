@@ -29,7 +29,7 @@ export const STAKING_ABI = [
   {
     inputs: [{ name: 'user', type: 'address' }],
     name: 'userStakeIds',
-    outputs: [{ type: 'uint256[]' }],
+    outputs: [{ name: '', type: 'uint256[]' }],
     stateMutability: 'view',
     type: 'function',
   },
