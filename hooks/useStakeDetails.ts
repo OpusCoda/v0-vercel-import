@@ -52,6 +52,8 @@ export function usePendingReward(stakeId: string | undefined, tokenAddress: stri
     query: { enabled: stakeId !== undefined && stakeId !== null, refetchInterval: 30000 },
   })
 
+    console.log('[pendingReward] stakeId:', stakeId, 'token:', tokenAddress, 'data:', rewardData?.toString())
+
   return rewardData ? BigInt(rewardData) : BigInt(0)
 }
 
