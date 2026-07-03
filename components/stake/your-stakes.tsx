@@ -16,7 +16,7 @@ const EGG_TIERS: Record<string, 'hatchling' | 'drake' | 'dragon' | 'elder-dragon
 // PLS token address (address(0))
 const PLS_ADDRESS = '0x0000000000000000000000000000000000000000'
 // SMAUG token address
-const SMAUG_ADDRESS = '0x7b042f8f8afEbdc79e64a6b0E19F8B7bBD4eEE63'
+const SMAUG_ADDRESS = '0xf4754Aa585caBf38537A68660469A17E203D8632'
 
 interface StakeRowProps {
   stakeId: string
