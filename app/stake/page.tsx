@@ -37,11 +37,10 @@ function formatNumberInput(value: string): string {
 export default function StakePage() {
   const { address, isConnected } = useAccount()
   const { totalStaked, totalStakers, balance, minStakeAmount, isLoading } = useStakingData()
-  const { initiateApproveAndStake, isPending } = useApproveAndStake(address)
+  const { initiateApproveAndStake, isPending, stakeTxHash } = useApproveAndStake(address)
 
   const [amount, setAmount] = useState('')
   const [days, setDays] = useState(365)
-  const [stakeTxHash, setStakeTxHash] = useState('')
 
   const selectedTier = useMemo(() => getTier(days), [days])
 
@@ -75,9 +74,6 @@ export default function StakePage() {
   useEffect(() => {
     if (!isPending && stakeTxHash) {
       console.log('[v0] Transaction submitted:', stakeTxHash)
-      // Clear success message after 5 seconds
-      const timer = setTimeout(() => setStakeTxHash(''), 5000)
-      return () => clearTimeout(timer)
     }
   }, [isPending, stakeTxHash])
 
