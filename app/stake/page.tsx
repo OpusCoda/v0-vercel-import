@@ -41,24 +41,15 @@ export default function StakePage() {
   const selectedTier = useMemo(() => getTier(days), [days])
 
   const handleStake = async () => {
-    if (!isConnected || !address) {
-      return
-    }
-    if (!amount || parseFloat(amount) <= 0) {
-      return
-    }
-    if (!selectedTier) {
-      return
-    }
+  if (!isConnected || !address) return
+  if (!amount || parseFloat(amount) <= 0) return
+  if (!selectedTier) return
 
-    try {
-
+  try {
     const amountBn = parseSmaugAmount(amount.replace(/,/g, ''))
-      initiateApproveAndStake(amountBn, days)
-      setAmount('')
-      setDays(365)
-    } catch (err) {
-      console.error('[v0] Stake error:', err)
+    initiateApproveAndStake(amountBn, days)
+  } catch (err) {
+    console.error('[v0] Stake error:', err)
     }
   }
 
@@ -70,8 +61,10 @@ export default function StakePage() {
   // Watch for transaction completion
   useEffect(() => {
   if (stakeTxHash && step === 'idle') {
-      refetchStakeIds()
-    }
+    refetchStakeIds()
+    setAmount('')
+    setDays(365)
+   }
   }, [stakeTxHash, step, refetchStakeIds])
 
   return (
@@ -187,9 +180,14 @@ export default function StakePage() {
                   </div>
                 </div>
 
-                {approveTxHash && (step === 'approving' || step === 'staking') && (
-   <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
+                {approveTxHash && step === 'approving' && (
+  <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
     Waiting for SMAUG spending cap approval.
+    </div>
+  )}
+{approveTxHash && step === 'staking' && (
+  <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
+    Confirming stake...
   </div>
 )}
   {stakeTxHash && step === 'idle' && (
