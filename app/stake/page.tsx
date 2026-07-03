@@ -187,7 +187,7 @@ export default function StakePage() {
 
                 {approveTxHash && (step === 'approving' || step === 'staking') && (
    <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
-    SMAUG approved. Waiting for stake confirmation...
+    Waiting for SMAUG spending cap approval.
   </div>
 )}
   {stakeTxHash && step === 'idle' && (
