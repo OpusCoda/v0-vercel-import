@@ -7,47 +7,52 @@ export function useStakingData() {
   const [totalStaked, setTotalStaked] = useState<string>('0')
   const [totalStakers, setTotalStakers] = useState<number>(0)
   const [balance, setBalance] = useState<string>('0')
+  const [minStakeAmount, setMinStakeAmount] = useState<string>('0')
+  const [userStakeIds, setUserStakeIds] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Fetch totalStaked
+  // Fetch totalStaked with 30s refetch
   const { data: totalStakedData } = useReadContract({
     address: STAKING_CONTRACT as `0x${string}`,
     abi: STAKING_ABI,
     functionName: 'totalStaked',
+    query: { refetchInterval: 30000 },
   })
 
-  // Fetch totalStakers
+  // Fetch totalStakers with 30s refetch
   const { data: totalStakersData } = useReadContract({
     address: STAKING_CONTRACT as `0x${string}`,
     abi: STAKING_ABI,
     functionName: 'totalStakers',
+    query: { refetchInterval: 30000 },
   })
 
-  // Fetch user's SMAUG balance
-  const { data: balanceData, isLoading: balanceLoading, error: balanceError } = useReadContract({
+  // Fetch minStakeAmount
+  const { data: minStakeData } = useReadContract({
+    address: STAKING_CONTRACT as `0x${string}`,
+    abi: STAKING_ABI,
+    functionName: 'minStakeAmount',
+  })
+
+  // Fetch user's SMAUG balance with 30s refetch
+  const { data: balanceData } = useReadContract({
     address: SMAUG_TOKEN as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-    query: { enabled: !!address },
+    query: { enabled: !!address, refetchInterval: 30000 },
   })
 
-  // Debug balance fetch
-  useEffect(() => {
-    if (address) {
-      console.log('[v0] Balance query enabled for address:', address)
-      console.log('[v0] Balance loading:', balanceLoading)
-      console.log('[v0] Balance error:', balanceError)
-      console.log('[v0] Balance data:', balanceData)
-    }
-  }, [address, balanceLoading, balanceError, balanceData])
+  // Fetch user's stake IDs
+  const { data: userStakeIdsData } = useReadContract({
+    address: STAKING_CONTRACT as `0x${string}`,
+    abi: STAKING_ABI,
+    functionName: 'userStakeIds',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address, refetchInterval: 30000 },
+  })
 
   useEffect(() => {
-    console.log('[v0] useStakingData - address:', address)
-    console.log('[v0] useStakingData - totalStakedData:', totalStakedData)
-    console.log('[v0] useStakingData - totalStakersData:', totalStakersData)
-    console.log('[v0] useStakingData - balanceData:', balanceData)
-    
     if (totalStakedData !== undefined) {
       const staked = typeof totalStakedData === 'bigint' ? totalStakedData : BigInt(totalStakedData)
       setTotalStaked(formatSmaugBalance(staked))
@@ -57,19 +62,24 @@ export function useStakingData() {
     }
     if (balanceData !== undefined) {
       const bal = typeof balanceData === 'bigint' ? balanceData : BigInt(balanceData)
-      const formatted = formatSmaugBalance(bal)
-      console.log('[v0] Balance formatted:', formatted)
-      setBalance(formatted)
-    } else {
-      console.log('[v0] balanceData is still undefined, address:', address)
+      setBalance(formatSmaugBalance(bal))
+    }
+    if (minStakeData !== undefined) {
+      const min = typeof minStakeData === 'bigint' ? minStakeData : BigInt(minStakeData)
+      setMinStakeAmount(formatSmaugBalance(min))
+    }
+    if (userStakeIdsData && Array.isArray(userStakeIdsData)) {
+      setUserStakeIds(userStakeIdsData.map((id) => id.toString()))
     }
     setIsLoading(false)
-  }, [totalStakedData, totalStakersData, balanceData, address])
+  }, [totalStakedData, totalStakersData, balanceData, minStakeData, userStakeIdsData])
 
   return {
     totalStaked,
     totalStakers,
     balance,
+    minStakeAmount,
+    userStakeIds,
     isLoading,
   }
 }

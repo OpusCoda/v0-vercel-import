@@ -131,16 +131,19 @@ export default function StakePage() {
                   <label className="mb-2 block text-sm font-medium text-[#cfcfcf]">
                     Amount <span className="text-xs text-[#7c7a76]">({balance || '0'} SMAUG available)</span>
                   </label>
-                  <div className="flex rounded-xl border border-white/10 bg-[#09090B]">
+                  <div className="flex items-center rounded-xl border border-white/10 bg-[#09090B] px-4">
                     <input
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-full bg-transparent px-4 py-4 text-lg outline-none"
+                      className="w-full bg-transparent py-4 text-lg outline-none"
                     />
-                    <span className="flex items-center px-4 text-sm font-semibold text-[#D8B13D]">
-                      SMAUG
-                    </span>
+                    <button
+                      onClick={() => setAmount(balance.replace(/,/g, ''))}
+                      className="ml-2 rounded-lg px-3 py-2 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors"
+                    >
+                      Max
+                    </button>
                   </div>
                 </div>
 

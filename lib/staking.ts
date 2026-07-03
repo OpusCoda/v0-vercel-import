@@ -34,6 +34,13 @@ export const STAKING_ABI = [
     type: 'function',
   },
   {
+    inputs: [],
+    name: 'minStakeAmount',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [
       { name: 'amount', type: 'uint256' },
       { name: 'duration', type: 'uint256' },
@@ -41,6 +48,32 @@ export const STAKING_ABI = [
     name: 'stake',
     outputs: [{ type: 'uint256' }],
     stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'stakeId', type: 'uint256' }],
+    name: 'stakes',
+    outputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+      { name: 'startTime', type: 'uint256' },
+      { name: 'duration', type: 'uint256' },
+      { name: 'endTime', type: 'uint256' },
+      { name: 'tierIndex', type: 'uint8' },
+      { name: 'multiplier', type: 'uint256' },
+      { name: 'weightedAmount', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'stakeId', type: 'uint256' },
+      { name: 'tokenAddress', type: 'address' },
+    ],
+    name: 'pendingReward',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
     type: 'function',
   },
 ] as const
