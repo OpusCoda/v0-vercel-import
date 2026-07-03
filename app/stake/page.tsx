@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
 import { SiteNav } from '@/components/landing/site-nav'
@@ -213,34 +214,39 @@ export default function StakePage() {
                 Select a tier to set duration automatically.
               </p>
 
-              <div className="space-y-2">
+              <div className="grid grid-cols-5 gap-3">
                 {TIERS.map((tier) => {
                   const active = selectedTier?.name === tier.name
+                  const tierCardImages: Record<string, string> = {
+                    'Hatchling': '/tiers/hatchling-card.png',
+                    'Drake': '/tiers/drake-card.png',
+                    'Dragon': '/tiers/dragon-card.png',
+                    'Elder Dragon': '/tiers/elder-dragon-card.png',
+                    'Smaug': '/tiers/smaug-card.png',
+                  }
                   return (
                     <button
                       key={tier.name}
                       onClick={() => setDays(tier.min)}
-                      className={`w-full rounded-xl border p-4 text-left transition ${
+                      className={`relative rounded-xl overflow-hidden border transition group ${
                         active
-                          ? 'border-[#D8B13D] bg-[#D8B13D]/10'
-                          : 'border-white/10 bg-[#09090B] hover:border-white/20'
+                          ? 'border-[#D8B13D]'
+                          : 'border-white/10 hover:border-white/20'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className={`font-semibold ${active ? 'text-[#D8B13D]' : ''}`}>
-                            {tier.icon} {tier.name}
-                          </div>
-                          <div className="mt-0.5 text-sm text-[#9a9a9a]">
-                            {tier.min}
-                            {tier.max !== tier.min ? `–${tier.max}` : ''} days
-                          </div>
+                      <img
+                        src={tierCardImages[tier.name]}
+                        alt={tier.name}
+                        className="w-full aspect-square object-cover"
+                      />
+                      <div className={`absolute inset-0 flex flex-col justify-end p-3 bg-gradient-to-t from-black/80 to-transparent transition ${
+                        active ? 'bg-[#D8B13D]/20' : ''
+                      }`}>
+                        <div className={`font-semibold text-sm ${active ? 'text-[#D8B13D]' : 'text-white'}`}>
+                          {tier.name}
                         </div>
-                        <div className="space-y-0.5 text-right text-sm">
-                          <div className="font-semibold text-[#D8B13D]">
-                            {tier.multiplier}× multiplier
-                          </div>
-                          <div className="text-[#9a9a9a]">{tier.feeRebate}% fee rebate</div>
+                        <div className="text-xs text-[#9a9a9a]">
+                          {tier.multiplier}×
                         </div>
                       </div>
                     </button>
