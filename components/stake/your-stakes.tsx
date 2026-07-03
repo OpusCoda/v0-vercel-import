@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
+import { useReadContract, useWriteContract } from 'wagmi'
 import { useStakeDetails, usePendingReward, getMaturityInfo, formatDate } from '@/hooks/useStakeDetails'
-import { formatSmaugBalance } from '@/lib/staking'
+import { formatSmaugBalance, STAKING_CONTRACT, STAKING_ABI } from '@/lib/staking'
 import EggIcon from './egg-icon'
 
 const TIERS = ['Hatchling', 'Drake', 'Dragon', 'Elder Dragon', 'Smaug']
@@ -27,6 +29,28 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
   const stakeDetails = useStakeDetails(stakeId)
   const plsReward = usePendingReward(stakeId, PLS_ADDRESS)
   const smaugReward = usePendingReward(stakeId, SMAUG_ADDRESS)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const { writeContract, isPending } = useWriteContract()
+
+  const { data: penaltyData } = useReadContract({
+    address: STAKING_CONTRACT as `0x${string}`,
+    abi: STAKING_ABI,
+    functionName: 'estimateClaimPenalty',
+    args: [BigInt(stakeId)],
+  })
+
+  const keepPct = penaltyData ? Number((penaltyData as [bigint, bigint])[0]) : 100
+  const isMature = keepPct === 100
+
+  const handleClaim = () => {
+    writeContract({
+      address: STAKING_CONTRACT as `0x${string}`,
+      abi: STAKING_ABI,
+      functionName: 'claimRewards',
+      args: [BigInt(stakeId)],
+    })
+    setShowConfirm(false)
+  }
 
   if (!stakeDetails) {
     return (
@@ -49,7 +73,6 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
   const amountFormatted = formatSmaugBalance(amount)
   const multiplierFormatted = (Number(multiplier) / 100).toFixed(1)
 
-  // Unswept reflections for this stake
   const unsweptPool = contractSmaugBalance > totalStakedRaw ? contractSmaugBalance - totalStakedRaw : 0n
   const unsweptReflections = totalWeightedStakeRaw > 0n && unsweptPool > 0n
     ? unsweptPool * weightedAmount / totalWeightedStakeRaw
@@ -85,13 +108,41 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
       <td className="px-6 py-4 text-sm">
         <div className="space-y-1">
           <div className="text-[#D8B13D] font-semibold">{plsFormatted} PLS</div>
-          <div className="text-[#9a9a9a] text-xs">{smaugFormatted} SMAUG</div>
+          <div className="text-[#9a9a9a] font-semibold">{smaugFormatted} SMAUG</div>
         </div>
       </td>
       <td className="px-6 py-4 text-right">
-        <button className="rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors">
-          Claim
-        </button>
+        {showConfirm ? (
+          <div className="space-y-2 text-right">
+            <div className="text-xs text-red-400">
+              You will keep {keepPct}% of rewards.{' '}
+              {100 - keepPct}% will be forfeited.
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-[#9a9a9a] hover:border-white/20 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClaim}
+                disabled={isPending}
+                className="rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-xs font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors disabled:opacity-50"
+              >
+                {isPending ? 'Claiming...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => isMature ? handleClaim() : setShowConfirm(true)}
+            disabled={isPending}
+            className="rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors disabled:opacity-50"
+          >
+            {isPending ? 'Claiming...' : 'Claim rewards'}
+          </button>
+        )}
       </td>
     </tr>
   )
