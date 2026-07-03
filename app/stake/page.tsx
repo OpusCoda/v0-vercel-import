@@ -30,7 +30,7 @@ function formatNumberInput(value: string): string {
 
 export default function StakePage() {
   const { address, isConnected } = useAccount()
-  const { totalStaked, totalStakers, balance, minStakeAmount, userStakeIds, isLoading } = useStakingData()
+  const { totalStaked, totalStakers, balance, minStakeAmount, userStakeIds, isLoading, contractSmaugBalance, totalWeightedStakeRaw, totalStakedRaw } = useStakingData()
   const { initiateApproveAndStake, isPending, step, approveTxHash, stakeTxHash } = useApproveAndStake(address)
 
   const [amount, setAmount] = useState('')
@@ -252,7 +252,13 @@ export default function StakePage() {
 
           {/* ── Your Stakes ────────────────────────────────── */}
           <section>
-            <YourStakes userStakeIds={userStakeIds} isLoading={isLoading} />
+            <YourStakes 
+  userStakeIds={userStakeIds} 
+  isLoading={isLoading}
+  contractSmaugBalance={contractSmaugBalance}
+  totalWeightedStakeRaw={totalWeightedStakeRaw}
+  totalStakedRaw={totalStakedRaw}
+/>
           </section>
 
         </div>
