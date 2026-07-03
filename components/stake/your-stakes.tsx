@@ -1,6 +1,6 @@
 'use client'
 
-import { useStakeDetails, usePendingReward, getMaturityInfo, formatDate, formatAddress } from '@/hooks/useStakeDetails'
+import { useStakeDetails, usePendingReward, getMaturityInfo, formatDate } from '@/hooks/useStakeDetails'
 import { formatSmaugBalance } from '@/lib/staking'
 import EggIcon from './egg-icon'
 
@@ -13,16 +13,17 @@ const EGG_TIERS: Record<string, 'hatchling' | 'drake' | 'dragon' | 'elder-dragon
   'Smaug': 'smaug',
 }
 
-// PLS token address (address(0))
 const PLS_ADDRESS = '0x0000000000000000000000000000000000000000'
-// SMAUG token address
 const SMAUG_ADDRESS = '0xf4754Aa585caBf38537A68660469A17E203D8632'
 
 interface StakeRowProps {
   stakeId: string
+  contractSmaugBalance: bigint
+  totalWeightedStakeRaw: bigint
+  totalStakedRaw: bigint
 }
 
-function StakeRow({ stakeId }: StakeRowProps) {
+function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalStakedRaw }: StakeRowProps) {
   const stakeDetails = useStakeDetails(stakeId)
   const plsReward = usePendingReward(stakeId, PLS_ADDRESS)
   const smaugReward = usePendingReward(stakeId, SMAUG_ADDRESS)
@@ -37,16 +38,23 @@ function StakeRow({ stakeId }: StakeRowProps) {
     )
   }
 
-  const { owner, amount, startTime, endTime, tierIndex, multiplier } = stakeDetails
+  const { amount, startTime, endTime, tierIndex, multiplier, weightedAmount } = stakeDetails
 
   const tierName = TIERS[tierIndex] || 'Unknown'
   const eggTier = EGG_TIERS[tierName] || 'hatchling'
-  
+
   const maturityInfo = getMaturityInfo(startTime, endTime)
   const plsFormatted = formatSmaugBalance(plsReward)
   const smaugFormatted = formatSmaugBalance(smaugReward)
   const amountFormatted = formatSmaugBalance(amount)
   const multiplierFormatted = (Number(multiplier) / 100).toFixed(1)
+
+  // Unswept reflections for this stake
+  const unsweptPool = contractSmaugBalance > totalStakedRaw ? contractSmaugBalance - totalStakedRaw : 0n
+  const unsweptReflections = totalWeightedStakeRaw > 0n && unsweptPool > 0n
+    ? unsweptPool * weightedAmount / totalWeightedStakeRaw
+    : 0n
+  const unsweptFormatted = formatSmaugBalance(unsweptReflections)
 
   return (
     <tr className="hover:bg-[#09090B]">
@@ -72,6 +80,7 @@ function StakeRow({ stakeId }: StakeRowProps) {
         <div className="space-y-1">
           <div className="text-[#D8B13D] font-semibold">{plsFormatted} PLS</div>
           <div className="text-[#9a9a9a] text-xs">{smaugFormatted} SMAUG</div>
+          <div className="text-[#9a9a9a] text-xs">~{unsweptFormatted} SMAUG unswept</div>
         </div>
       </td>
       <td className="px-6 py-4 text-right">
@@ -86,18 +95,24 @@ function StakeRow({ stakeId }: StakeRowProps) {
 interface YourStakesProps {
   userStakeIds: string[]
   isLoading?: boolean
+  contractSmaugBalance: bigint
+  totalWeightedStakeRaw: bigint
+  totalStakedRaw: bigint
 }
 
-export default function YourStakes({ userStakeIds = [], isLoading = false }: YourStakesProps) {
-  console.log('[v0] YourStakes received userStakeIds:', userStakeIds, 'isLoading:', isLoading)
-  
+export default function YourStakes({ 
+  userStakeIds = [], 
+  isLoading = false,
+  contractSmaugBalance,
+  totalWeightedStakeRaw,
+  totalStakedRaw,
+}: YourStakesProps) {
   return (
     <div className="rounded-2xl border border-white/10 bg-[#111116]">
       <div className="flex items-center justify-between border-b border-white/10 p-6">
         <h2 className="font-serif text-2xl font-bold text-[#f4f4f4]">
           Your Stakes
         </h2>
-
         <button className="text-sm font-semibold text-[#D8B13D]">
           View All Stakes →
         </button>
@@ -125,7 +140,13 @@ export default function YourStakes({ userStakeIds = [], isLoading = false }: You
           <tbody className="divide-y divide-white/10">
             {userStakeIds.length > 0 ? (
               userStakeIds.map((stakeId) => (
-                <StakeRow key={stakeId} stakeId={stakeId} />
+                <StakeRow
+                  key={stakeId}
+                  stakeId={stakeId}
+                  contractSmaugBalance={contractSmaugBalance}
+                  totalWeightedStakeRaw={totalWeightedStakeRaw}
+                  totalStakedRaw={totalStakedRaw}
+                />
               ))
             ) : (
               <tr>
