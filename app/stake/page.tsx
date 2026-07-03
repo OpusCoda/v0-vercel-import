@@ -68,9 +68,9 @@ export default function StakePage() {
   // Watch for transaction completion
   useEffect(() => {
   if (stakeTxHash && step === 'idle') {
-    refetchStakeIds()
-  }
-  }, [stakeTxHash, step])
+      refetchStakeIds()
+    }
+  }, [stakeTxHash, step, refetchStakeIds])
 
   return (
     <>
