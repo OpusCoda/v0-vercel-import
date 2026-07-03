@@ -73,7 +73,8 @@ console.log('[useStakingData] userStakeIdsData:', userStakeIdsData, 'error:', st
       const min = typeof minStakeData === 'bigint' ? minStakeData : BigInt(minStakeData)
       setMinStakeAmount(formatSmaugBalance(min))
     }
-    if (userStakeIdsData && Array.isArray(userStakeIdsData)) {
+    if (userStakeIdsData) {
+  const idsArray = Array.from(userStakeIdsData as readonly bigint[])
       console.log('[v0] userStakeIdsData:', userStakeIdsData)
       const ids = userStakeIdsData.map((id) => {
         // Handle both bigint and string formats
