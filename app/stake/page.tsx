@@ -6,7 +6,7 @@ import { SiteNav } from '@/components/landing/site-nav'
 import { useStakingData } from '@/hooks/useStakingData'
 import { useApproveAndStake } from '@/hooks/useApproveAndStake'
 import YourStakes from '@/components/stake/your-stakes'
-import { STAKING_CONTRACT, STAKING_ABI, SMAUG_TOKEN, ERC20_ABI, parseSmaugAmount } from '@/lib/staking'
+import { parseSmaugAmount } from '@/lib/staking'
 
 export const TIERS = [
   { name: 'Hatchling',    min: 30,  max: 89,  multiplier: 1,   feeRebate: 5,  icon: '🥚' },
