@@ -207,7 +207,7 @@ export default function StakePage() {
                   disabled={!isConnected || isPending || !selectedTier || !amount || isBelowMinimum}
                   className="mt-4 w-full rounded-xl bg-[#D8B13D] px-5 py-4 font-bold text-black transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {!isConnected ? 'Connect wallet' : isPending ? 'Staking...' : 'Create stake'}
+                  {!isConnected ? 'Connect wallet' : step === 'approving' ? 'Approving...' : step === 'staking' ? 'Staking...' : 'Create stake'}
                 </button>
               </div>
             </div>
