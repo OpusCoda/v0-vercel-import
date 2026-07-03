@@ -1,15 +1,76 @@
 'use client'
 
+import { useStakeDetails, usePendingReward, getMaturityInfo } from '@/hooks/useStakeDetails'
+import { formatSmaugBalance } from '@/lib/staking'
 import EggIcon from './egg-icon'
 
-const mockStakes = [
-  { id: '#1247', amount: '10,000 SMAUG', tier: 'Smaug', eggTier: 'smaug' as const, duration: '730 days', daysRemaining: '612 days', progress: '83.8%', rewards: '1,842.72 SMAUG' },
-  { id: '#1189', amount: '5,000 SMAUG', tier: 'Elder Dragon', eggTier: 'elder-dragon' as const, duration: '365 days', daysRemaining: '195 days', progress: '53.4%', rewards: '542.18 SMAUG' },
-  { id: '#1083', amount: '2,500 SMAUG', tier: 'Dragon', eggTier: 'dragon' as const, duration: '180 days', daysRemaining: '96 days', progress: '46.7%', rewards: '186.45 SMAUG' },
-  { id: '#977', amount: '1,000 SMAUG', tier: 'Drake', eggTier: 'drake' as const, duration: '90 days', daysRemaining: '32 days', progress: '35.6%', rewards: '28.34 SMAUG' },
-]
+const TIERS = ['Hatchling', 'Drake', 'Dragon', 'Elder Dragon', 'Smaug']
+const EGG_TIERS: Record<string, 'hatchling' | 'drake' | 'dragon' | 'elder-dragon' | 'smaug'> = {
+  'Hatchling': 'hatchling',
+  'Drake': 'drake',
+  'Dragon': 'dragon',
+  'Elder Dragon': 'elder-dragon',
+  'Smaug': 'smaug',
+}
 
-export default function YourStakes() {
+// PLS token address (address(0))
+const PLS_ADDRESS = '0x0000000000000000000000000000000000000000'
+// SMAUG token address
+const SMAUG_ADDRESS = '0x7b042f8f8afEbdc79e64a6b0E19F8B7bBD4eEE63'
+
+interface StakeRowProps {
+  stakeId: string
+}
+
+function StakeRow({ stakeId }: StakeRowProps) {
+  const stakeDetails = useStakeDetails(stakeId)
+  const plsReward = usePendingReward(stakeId, PLS_ADDRESS)
+  const smaugReward = usePendingReward(stakeId, SMAUG_ADDRESS)
+
+  if (!stakeDetails) return null
+
+  const [owner, amount, startTime, duration, endTime, tierIndex, multiplier] = stakeDetails
+
+  const tierName = TIERS[Number(tierIndex)] || 'Unknown'
+  const eggTier = EGG_TIERS[tierName] || 'hatchling'
+  
+  const maturityInfo = getMaturityInfo(startTime, duration)
+  const plsFormatted = formatSmaugBalance(plsReward)
+  const smaugFormatted = formatSmaugBalance(smaugReward)
+  const amountFormatted = formatSmaugBalance(amount)
+
+  return (
+    <tr className="hover:bg-[#09090B]">
+      <td className="px-6 py-4 text-sm text-[#f4f4f4]">#{stakeId}</td>
+      <td className="px-6 py-4 text-sm text-[#f4f4f4]">{amountFormatted} SMAUG</td>
+      <td className="px-6 py-4 text-sm text-[#f4f4f4]">
+        <div className="flex items-center gap-2">
+          <EggIcon tier={eggTier} />
+          {tierName}
+        </div>
+      </td>
+      <td className="px-6 py-4 text-sm text-[#f4f4f4]">{maturityInfo}</td>
+      <td className="px-6 py-4 text-sm">
+        <div className="space-y-1">
+          <div className="text-[#D8B13D] font-semibold">{plsFormatted} PLS</div>
+          <div className="text-[#9a9a9a] text-xs">{smaugFormatted} SMAUG</div>
+        </div>
+      </td>
+      <td className="px-6 py-4 text-right">
+        <button className="rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors">
+          Claim
+        </button>
+      </td>
+    </tr>
+  )
+}
+
+interface YourStakesProps {
+  userStakeIds: string[]
+  isLoading?: boolean
+}
+
+export default function YourStakes({ userStakeIds = [], isLoading = false }: YourStakesProps) {
   return (
     <div className="rounded-2xl border border-white/10 bg-[#111116]">
       <div className="flex items-center justify-between border-b border-white/10 p-6">
@@ -30,10 +91,8 @@ export default function YourStakes() {
                 'Stake ID',
                 'Amount',
                 'Tier',
-                'Duration',
-                'Days Remaining',
-                'Progress',
-                'Rewards Earned',
+                'Maturity',
+                'Rewards (PLS / SMAUG)',
                 'Actions',
               ].map((heading) => (
                 <th key={heading} className="px-6 py-4 font-semibold">
@@ -44,37 +103,17 @@ export default function YourStakes() {
           </thead>
 
           <tbody className="divide-y divide-white/10">
-            {mockStakes.map((stake) => (
-              <tr key={stake.id} className="hover:bg-[#09090B]">
-                <td className="px-6 py-4 text-sm text-[#f4f4f4]">{stake.id}</td>
-                <td className="px-6 py-4 text-sm text-[#f4f4f4]">{stake.amount}</td>
-                <td className="px-6 py-4 text-sm text-[#f4f4f4]">
-                  <div className="flex items-center gap-2">
-                    <EggIcon tier={stake.eggTier} />
-                    {stake.tier}
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-[#f4f4f4]">{stake.duration}</td>
-                <td className="px-6 py-4 text-sm text-[#f4f4f4]">{stake.daysRemaining}</td>
-                <td className="px-6 py-4 text-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="h-2 w-24 rounded-full bg-[#1a1a20]">
-                      <div
-                        className="h-full rounded-full bg-[#D8B13D]"
-                        style={{ width: stake.progress }}
-                      />
-                    </div>
-                    <span className="text-[#9a9a9a]">{stake.progress}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm font-semibold text-[#D8B13D]">{stake.rewards}</td>
-                <td className="px-6 py-4 text-right">
-                  <button className="rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors">
-                    Manage
-                  </button>
+            {userStakeIds.length > 0 ? (
+              userStakeIds.map((stakeId) => (
+                <StakeRow key={stakeId} stakeId={stakeId} />
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="px-6 py-8 text-center text-sm text-[#9a9a9a]">
+                  {isLoading ? 'Loading stakes...' : 'No stakes yet. Create your first stake!'}
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

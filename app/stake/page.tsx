@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi'
 import { SiteNav } from '@/components/landing/site-nav'
 import { useStakingData } from '@/hooks/useStakingData'
 import { useApproveAndStake } from '@/hooks/useApproveAndStake'
+import YourStakes from '@/components/stake/your-stakes'
 import { STAKING_CONTRACT, STAKING_ABI, SMAUG_TOKEN, ERC20_ABI, parseSmaugAmount } from '@/lib/staking'
 
 export const TIERS = [
@@ -20,13 +21,6 @@ function getTier(days: number) {
   return TIERS.find((t) => days >= t.min && days <= t.max) ?? null
 }
 
-// Mock stake data — replace with on-chain reads
-const MOCK_STAKES = [
-  { id: '#41', amount: '50,000', tier: 'Elder Dragon', daysLeft: 214, progress: 41, rewards: '8,214' },
-  { id: '#52', amount: '20,000', tier: 'Dragon',       daysLeft: 88,  progress: 63, rewards: '1,983' },
-  { id: '#71', amount: '10,000', tier: 'Drake',        daysLeft: 51,  progress: 44, rewards: '241'   },
-]
-
 // Format number with thousands separator
 function formatNumberInput(value: string): string {
   const numberOnly = value.replace(/,/g, '')
@@ -36,7 +30,7 @@ function formatNumberInput(value: string): string {
 
 export default function StakePage() {
   const { address, isConnected } = useAccount()
-  const { totalStaked, totalStakers, balance, minStakeAmount, isLoading } = useStakingData()
+  const { totalStaked, totalStakers, balance, minStakeAmount, userStakeIds, isLoading } = useStakingData()
   const { initiateApproveAndStake, isPending, step, approveTxHash, stakeTxHash } = useApproveAndStake(address)
 
   const [amount, setAmount] = useState('')
@@ -257,55 +251,8 @@ export default function StakePage() {
           </section>
 
           {/* ── Your Stakes ────────────────────────────────── */}
-          <section className="rounded-2xl border border-white/10 bg-[#111116] p-6">
-            <div className="mb-5">
-              <h2 className="font-serif text-2xl font-bold">Your stakes</h2>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[600px] text-left text-sm">
-                <thead className="border-b border-white/10 text-xs uppercase text-[#9a9a9a]">
-                  <tr>
-                    <th className="pb-3">Stake</th>
-                    <th className="pb-3">Amount</th>
-                    <th className="pb-3">Tier</th>
-                    <th className="pb-3">Maturity</th>
-                    <th className="pb-3">Rewards</th>
-                    <th className="pb-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/10">
-                  {MOCK_STAKES.map((row) => (
-                    <tr key={row.id} className="text-[#f4f4f4]">
-                      <td className="py-4 pr-4 font-mono text-[#9a9a9a]">{row.id}</td>
-                      <td className="py-4 pr-4 whitespace-nowrap">{row.amount} SMAUG</td>
-                      <td className="py-4 pr-4 whitespace-nowrap">{row.tier}</td>
-                      <td className="py-4 pr-6">
-                        <div className="flex items-center gap-3">
-                          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
-                            <div
-                              className="h-full rounded-full bg-[#D8B13D]"
-                              style={{ width: `${row.progress}%` }}
-                            />
-                          </div>
-                          <span className="whitespace-nowrap text-xs text-[#9a9a9a]">
-                            {row.daysLeft}d left
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 pr-4 whitespace-nowrap font-semibold text-[#D8B13D]">
-                        {row.rewards} PLS
-                      </td>
-                      <td className="py-4 text-right">
-                        <button className="whitespace-nowrap rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-xs text-[#D8B13D] transition hover:bg-[#D8B13D]/10">
-                          Claim
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <section>
+            <YourStakes userStakeIds={userStakeIds} isLoading={isLoading} />
           </section>
 
         </div>
