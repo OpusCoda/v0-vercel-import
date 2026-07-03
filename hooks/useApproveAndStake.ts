@@ -18,6 +18,17 @@ export function useApproveAndStake(address: `0x${string}` | undefined) {
     query: { enabled: !!approveTxHash },
   })
 
+  const { isSuccess: stakeConfirmed } = useWaitForTransactionReceipt({
+  hash: stakeTxHash,
+  query: { enabled: !!stakeTxHash },
+})
+
+useEffect(() => {
+  if (stakeConfirmed) {
+    setStep('idle')
+  }
+}, [stakeConfirmed])
+
   // After approval is confirmed, proceed with staking
   useEffect(() => {
     if (approveConfirmed && step === 'approving' && pendingStake) {
