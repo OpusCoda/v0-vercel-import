@@ -17,7 +17,7 @@ export function useStakeDetails(stakeId: string | undefined) {
     address: STAKING_CONTRACT as `0x${string}`,
     abi: STAKING_ABI,
     functionName: 'stakes',
-    args: stakeId ? [BigInt(stakeId)] : undefined,
+    args: stakeId !== undefined && stakeId !== null ? [BigInt(stakeId)] : undefined,
     query: { enabled: stakeId !== undefined && stakeId !== null, refetchInterval: 30000 },
   })
 
@@ -48,7 +48,7 @@ export function usePendingReward(stakeId: string | undefined, tokenAddress: stri
     address: STAKING_CONTRACT as `0x${string}`,
     abi: STAKING_ABI,
     functionName: 'pendingReward',
-    args: stakeId && tokenAddress ? [BigInt(stakeId), tokenAddress as `0x${string}`] : undefined,
+    args: stakeId !== undefined && stakeId !== null && tokenAddress ? [BigInt(stakeId), tokenAddress as `0x${string}`] : undefined,
     query: { enabled: stakeId !== undefined && stakeId !== null, refetchInterval: 30000 },
   })
 
