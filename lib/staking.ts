@@ -27,12 +27,15 @@ export const STAKING_ABI = [
     type: 'function',
   },
   {
-    inputs: [{ name: 'user', type: 'address' }],
-    name: 'userStakeIds',
-    outputs: [{ name: '', type: 'uint256[]' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
+  inputs: [
+    { name: 'user', type: 'address' },
+    { name: 'index', type: 'uint256' },
+  ],
+  name: 'userStakeIds',
+  outputs: [{ name: '', type: 'uint256' }],
+  stateMutability: 'view',
+  type: 'function',
+},
   {
     inputs: [],
     name: 'minStakeAmount',

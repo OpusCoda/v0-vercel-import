@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useAccount, useReadContract } from 'wagmi'
+import { useAccount, useReadContract, useReadContracts } from 'wagmi'
 import { STAKING_CONTRACT, STAKING_ABI, SMAUG_TOKEN, ERC20_ABI, formatSmaugBalance } from '@/lib/staking'
 
 export function useStakingData() {
@@ -44,18 +44,16 @@ export function useStakingData() {
     query: { enabled: !!address, refetchInterval: 30000 },
   })
 
-  // Fetch user's stake IDs
-  const { data: userStakeIdsData, error: stakeIdsError } = useReadContract({
-  address: STAKING_CONTRACT as `0x${string}`,
-  abi: STAKING_ABI,
-  functionName: 'userStakeIds',
-  args: address ? [address] : undefined,
-  query: { enabled: !!address, refetchInterval: 30000 },
+  // Fetch user's stake IDs by index
+const { data: stakeIdsData } = useReadContracts({
+  contracts: address ? Array.from({ length: 20 }, (_, i) => ({
+    address: STAKING_CONTRACT as `0x${string}`,
+    abi: STAKING_ABI,
+    functionName: 'userStakeIds' as const,
+    args: [address, BigInt(i)] as const,
+  })) : [],
+  query: { enabled: !!address },
 })
-
-console.log('[useStakingData] userStakeIdsData:', userStakeIdsData, 'error:', stakeIdsError)
-
-  console.log('[useStakingData] userStakeIdsData:', userStakeIdsData, 'error:', stakeIdsError)
 
   useEffect(() => {
     if (totalStakedData !== undefined) {
@@ -73,21 +71,14 @@ console.log('[useStakingData] userStakeIdsData:', userStakeIdsData, 'error:', st
       const min = typeof minStakeData === 'bigint' ? minStakeData : BigInt(minStakeData)
       setMinStakeAmount(formatSmaugBalance(min))
     }
-    if (userStakeIdsData) {
-  const idsArray = Array.from(userStakeIdsData as readonly bigint[])
-      console.log('[v0] userStakeIdsData:', userStakeIdsData)
-      const ids = userStakeIdsData.map((id) => {
-        // Handle both bigint and string formats
-        const idStr = typeof id === 'bigint' ? id.toString() : String(id)
-        return idStr
-      })
-      console.log('[v0] Mapped userStakeIds:', ids)
-      setUserStakeIds(ids)
-    } else {
-      console.log('[v0] userStakeIdsData is not array:', userStakeIdsData, 'Type:', typeof userStakeIdsData)
-    }
-    setIsLoading(false)
-  }, [totalStakedData, totalStakersData, balanceData, minStakeData, userStakeIdsData])
+    if (stakeIdsData) {
+  const ids = stakeIdsData
+    .filter(result => result.status === 'success' && result.result !== undefined)
+    .map(result => (result.result as bigint).toString())
+  setUserStakeIds(ids)
+}
+setIsLoading(false)
+}, [totalStakedData, totalStakersData, balanceData, minStakeData, stakeIdsData])
 
   return {
     totalStaked,
