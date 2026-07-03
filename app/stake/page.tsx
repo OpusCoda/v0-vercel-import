@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useAccount, useWriteContract } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { SiteNav } from '@/components/landing/site-nav'
 import { useStakingData } from '@/hooks/useStakingData'
+import { useApproveAndStake } from '@/hooks/useApproveAndStake'
 import { STAKING_CONTRACT, STAKING_ABI, SMAUG_TOKEN, ERC20_ABI, parseSmaugAmount } from '@/lib/staking'
 
 export const TIERS = [
@@ -36,7 +37,7 @@ function formatNumberInput(value: string): string {
 export default function StakePage() {
   const { address, isConnected } = useAccount()
   const { totalStaked, totalStakers, balance, minStakeAmount, isLoading } = useStakingData()
-  const { writeContract, isPending } = useWriteContract()
+  const { initiateApproveAndStake, isPending } = useApproveAndStake(address)
 
   const [amount, setAmount] = useState('')
   const [days, setDays] = useState(365)
@@ -46,28 +47,20 @@ export default function StakePage() {
 
   const handleStake = async () => {
     if (!isConnected || !address) {
-      console.log('[v0] Not connected or no address')
       return
     }
     if (!amount || parseFloat(amount) <= 0) {
-      console.log('[v0] Invalid amount')
       return
     }
     if (!selectedTier) {
-      console.log('[v0] No selected tier')
       return
     }
 
     try {
       const amountBn = parseSmaugAmount(amount)
-      console.log('[v0] Staking with amount:', amountBn, 'days:', days)
-      // TODO: Check allowance and approve if needed before calling stake
-      writeContract({
-        address: STAKING_CONTRACT as `0x${string}`,
-        abi: STAKING_ABI,
-        functionName: 'stake',
-        args: [amountBn, BigInt(days * 86400)],
-      })
+      initiateApproveAndStake(amountBn, days)
+      setAmount('')
+      setDays(365)
     } catch (err) {
       console.error('[v0] Stake error:', err)
     }
