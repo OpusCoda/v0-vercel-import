@@ -4,6 +4,7 @@ import { STAKING_CONTRACT, STAKING_ABI, SMAUG_TOKEN, ERC20_ABI, formatSmaugBalan
 
 export function useStakingData() {
   const { address } = useAccount()
+  console.log('[useStakingData] address:', address)
   const [totalStaked, setTotalStaked] = useState<string>('0')
   const [totalStakers, setTotalStakers] = useState<number>(0)
   const [balance, setBalance] = useState<string>('0')
