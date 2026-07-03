@@ -1,6 +1,6 @@
 'use client'
 
-import { useStakeDetails, usePendingReward, getMaturityInfo } from '@/hooks/useStakeDetails'
+import { useStakeDetails, usePendingReward, getMaturityInfo, formatDate, formatAddress } from '@/hooks/useStakeDetails'
 import { formatSmaugBalance } from '@/lib/staking'
 import EggIcon from './egg-icon'
 
@@ -27,17 +27,26 @@ function StakeRow({ stakeId }: StakeRowProps) {
   const plsReward = usePendingReward(stakeId, PLS_ADDRESS)
   const smaugReward = usePendingReward(stakeId, SMAUG_ADDRESS)
 
-  if (!stakeDetails) return null
+  if (!stakeDetails) {
+    return (
+      <tr>
+        <td colSpan={6} className="px-6 py-4 text-center text-sm text-[#9a9a9a]">
+          Loading stake details...
+        </td>
+      </tr>
+    )
+  }
 
-  const [owner, amount, startTime, duration, endTime, tierIndex, multiplier] = stakeDetails
+  const { owner, amount, startTime, endTime, tierIndex, multiplier } = stakeDetails
 
-  const tierName = TIERS[Number(tierIndex)] || 'Unknown'
+  const tierName = TIERS[tierIndex] || 'Unknown'
   const eggTier = EGG_TIERS[tierName] || 'hatchling'
   
-  const maturityInfo = getMaturityInfo(startTime, duration)
+  const maturityInfo = getMaturityInfo(startTime, endTime)
   const plsFormatted = formatSmaugBalance(plsReward)
   const smaugFormatted = formatSmaugBalance(smaugReward)
   const amountFormatted = formatSmaugBalance(amount)
+  const multiplierFormatted = (Number(multiplier) / 1e18).toFixed(2)
 
   return (
     <tr className="hover:bg-[#09090B]">
@@ -46,10 +55,19 @@ function StakeRow({ stakeId }: StakeRowProps) {
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">
         <div className="flex items-center gap-2">
           <EggIcon tier={eggTier} />
-          {tierName}
+          <div>
+            <div>{tierName}</div>
+            <div className="text-xs text-[#9a9a9a]">{multiplierFormatted}x mult.</div>
+          </div>
         </div>
       </td>
-      <td className="px-6 py-4 text-sm text-[#f4f4f4]">{maturityInfo}</td>
+      <td className="px-6 py-4 text-sm text-[#f4f4f4]">
+        <div className="space-y-1">
+          <div>{maturityInfo}</div>
+          <div className="text-xs text-[#9a9a9a]">Started: {formatDate(startTime)}</div>
+          <div className="text-xs text-[#9a9a9a]">Ends: {formatDate(endTime)}</div>
+        </div>
+      </td>
       <td className="px-6 py-4 text-sm">
         <div className="space-y-1">
           <div className="text-[#D8B13D] font-semibold">{plsFormatted} PLS</div>
