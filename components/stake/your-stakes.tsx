@@ -89,6 +89,8 @@ interface YourStakesProps {
 }
 
 export default function YourStakes({ userStakeIds = [], isLoading = false }: YourStakesProps) {
+  console.log('[v0] YourStakes received userStakeIds:', userStakeIds, 'isLoading:', isLoading)
+  
   return (
     <div className="rounded-2xl border border-white/10 bg-[#111116]">
       <div className="flex items-center justify-between border-b border-white/10 p-6">

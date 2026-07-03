@@ -69,7 +69,16 @@ export function useStakingData() {
       setMinStakeAmount(formatSmaugBalance(min))
     }
     if (userStakeIdsData && Array.isArray(userStakeIdsData)) {
-      setUserStakeIds(userStakeIdsData.map((id) => id.toString()))
+      console.log('[v0] userStakeIdsData:', userStakeIdsData)
+      const ids = userStakeIdsData.map((id) => {
+        // Handle both bigint and string formats
+        const idStr = typeof id === 'bigint' ? id.toString() : String(id)
+        return idStr
+      })
+      console.log('[v0] Mapped userStakeIds:', ids)
+      setUserStakeIds(ids)
+    } else {
+      console.log('[v0] userStakeIdsData is not array:', userStakeIdsData, 'Type:', typeof userStakeIdsData)
     }
     setIsLoading(false)
   }, [totalStakedData, totalStakersData, balanceData, minStakeData, userStakeIdsData])
