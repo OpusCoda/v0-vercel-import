@@ -7,11 +7,11 @@ export const TIERS = [
   { name: 'Drake', min: 90, max: 179, multiplier: 1.5, feeRebate: 10, icon: '🟢' },
   { name: 'Dragon', min: 180, max: 364, multiplier: 2, feeRebate: 20, icon: '🔵' },
   { name: 'Elder Dragon', min: 365, max: 729, multiplier: 3, feeRebate: 30, icon: '🟣' },
-  { name: 'Smaug', min: 730, max: 1095, multiplier: 5, feeRebate: 40, icon: '🟡' },
+  { name: 'Smaug', min: 730, max: 730, multiplier: 5, feeRebate: 40, icon: '🟡' },
 ]
 
 function getTier(days: number) {
-  if (days < 30 || days > 1095) return null
+  if (days < 30 || days > 730) return null
   return TIERS.find((tier) => days >= tier.min && days <= tier.max) ?? null
 }
 
@@ -66,7 +66,7 @@ export default function CreateStakeCard({ balance = '0', onStake, isLoading = fa
             <input
               type="number"
               min={30}
-              max={1095}
+              max={730}
               value={days}
               onChange={(e) => setDays(Number(e.target.value))}
               className="w-full bg-transparent py-4 text-lg text-[#f4f4f4] outline-none"
@@ -75,7 +75,7 @@ export default function CreateStakeCard({ balance = '0', onStake, isLoading = fa
           </div>
 
           <p className="mt-2 text-sm text-[#9a9a9a]">
-            Minimum 30 days · Maximum 1095 days
+            Minimum 30 days · Maximum 730 days
           </p>
         </div>
 
@@ -116,7 +116,7 @@ export default function CreateStakeCard({ balance = '0', onStake, isLoading = fa
             </div>
           ) : (
             <p className="text-sm text-red-400">
-              Enter a duration between 30 and 1095 days.
+              Enter a duration between 30 and 730 days.
             </p>
           )}
         </div>
