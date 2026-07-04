@@ -13,7 +13,7 @@ const DURATIONS: DurationOption[] = [
   { label: '90 days (Drake)', days: 90, tier: 'Drake' },
   { label: '180 days (Dragon)', days: 180, tier: 'Dragon' },
   { label: '365 days (Elder Dragon)', days: 365, tier: 'Elder Dragon' },
-  { label: '730 days (Smaug)', days: 730, tier: 'Smaug' },
+  { label: '730 days (Smaug)', days: 1095, tier: 'Smaug' },
 ]
 
 const TIER_MULTIPLIERS: { [key: string]: { multiplier: number; feeRebate: number } } = {
@@ -28,7 +28,7 @@ export default function RewardSimulator() {
   // TODO: Connect to actual contract for APR
   const baseAPR = 38.42
   const [amount, setAmount] = useState('10,000')
-  const [selectedDuration, setSelectedDuration] = useState(4) // Smaug (730 days)
+  const [selectedDuration, setSelectedDuration] = useState(4) // Smaug (1095 days)
 
   const durationData = DURATIONS[selectedDuration]
   const tierData = TIER_MULTIPLIERS[durationData.tier]
