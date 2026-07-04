@@ -15,11 +15,11 @@ export const TIERS = [
   { name: 'Drake',        min: 90,  max: 179, multiplier: 1.5, feeRebate: 10, icon: '🥚' },
   { name: 'Dragon',       min: 180, max: 364, multiplier: 2,   feeRebate: 20, icon: '🥚' },
   { name: 'Elder Dragon', min: 365, max: 729, multiplier: 3,   feeRebate: 30, icon: '🥚' },
-  { name: 'Smaug',        min: 730, max: 730, multiplier: 5,   feeRebate: 40, icon: '🥚' },
+  { name: 'Smaug',        min: 730, max: 1095, multiplier: 5,   feeRebate: 40, icon: '🥚' },
 ]
 
 function getTier(days: number) {
-  if (!days || days < 30 || days > 730) return null
+  if (!days || days < 30 || days > 1095) return null
   return TIERS.find((t) => days >= t.min && days <= t.max) ?? null
 }
 
@@ -153,7 +153,7 @@ export default function StakePage() {
                     <input
                       type="number"
                       min={30}
-                      max={730}
+                      max={1095}
                       value={days}
                       onChange={(e) => setDays(Number(e.target.value))}
                       className="w-full bg-transparent px-4 py-4 text-lg outline-none"
@@ -166,8 +166,8 @@ export default function StakePage() {
                     {days < 30 && (
                       <p className="text-sm text-red-400">Minimum duration is 30 days.</p>
                     )}
-                    {days > 730 && (
-                      <p className="text-sm text-red-400">Maximum duration is 730 days.</p>
+                    {days > 1095 && (
+                      <p className="text-sm text-red-400">Maximum duration is 1095 days.</p>
                     )}
                     {selectedTier && (
                       <div className="flex items-center gap-2 text-sm">
