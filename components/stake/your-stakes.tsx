@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { useReadContract, useWriteContract } from 'wagmi'
-import { useStakeDetails, usePendingReward, getMaturityInfo, formatDate } from '@/hooks/useStakeDetails'
+import { useStakeDetails, usePendingPLS, usePendingSmaugReward, usePendingSmaugReflection, getMaturityInfo, formatDate } from '@/hooks/useStakeDetails'
 import { formatSmaugBalance, STAKING_CONTRACT, STAKING_ABI } from '@/lib/staking'
 
 const TIERS = ['Hatchling', 'Drake', 'Dragon', 'Elder Dragon', 'Smaug']
@@ -14,21 +14,17 @@ const TIER_IMAGES: Record<string, string> = {
   'Elder Dragon': '/tiers/elder-dragon.png',
   'Smaug': '/tiers/smaug.png',
 }
-
-const PLS_ADDRESS = '0x0000000000000000000000000000000000000000'
-const SMAUG_ADDRESS = '0xf4754Aa585caBf38537A68660469A17E203D8632'
+const TIER_MULTIPLIERS = ['1', '1.5', '2', '3', '5']
 
 interface StakeRowProps {
   stakeId: string
-  contractSmaugBalance: bigint
-  totalWeightedStakeRaw: bigint
-  totalStakedRaw: bigint
 }
 
-function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalStakedRaw }: StakeRowProps) {
+function StakeRow({ stakeId }: StakeRowProps) {
   const stakeDetails = useStakeDetails(stakeId)
-  const plsReward = usePendingReward(stakeId, PLS_ADDRESS)
-  const smaugReward = usePendingReward(stakeId, SMAUG_ADDRESS)
+  const plsReward = usePendingPLS(stakeId)
+  const smaugReward = usePendingSmaugReward(stakeId)
+  const reflectionReward = usePendingSmaugReflection(stakeId)
   const [showConfirm, setShowConfirm] = useState(false)
   const [showUnstakeConfirm, setShowUnstakeConfirm] = useState(false)
   const { writeContract, isPending } = useWriteContract()
@@ -74,24 +70,16 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
     )
   }
 
-  const { amount, startTime, endTime, tierIndex, multiplier, weightedAmount } = stakeDetails
+  const { amount, startTime, endTime, tierIndex, weightedAmount } = stakeDetails
 
   const tierName = TIERS[tierIndex] || 'Unknown'
   const tierImagePath = TIER_IMAGES[tierName] || TIER_IMAGES['Hatchling']
+  const multiplierFormatted = TIER_MULTIPLIERS[tierIndex] || '1'
 
   const maturityInfo = getMaturityInfo(startTime, endTime)
   const plsFormatted = formatSmaugBalance(plsReward)
-  const smaugFormatted = formatSmaugBalance(smaugReward)
+  const totalSmaugFormatted = formatSmaugBalance(smaugReward + reflectionReward)
   const amountFormatted = formatSmaugBalance(amount)
-  const multiplierFormatted = (() => {
-  const val = Number(multiplier) / 100
-  return val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)
-})()
-
-  const unsweptPool = contractSmaugBalance > totalStakedRaw ? contractSmaugBalance - totalStakedRaw : 0n
-  const unsweptReflections = totalWeightedStakeRaw > 0n && unsweptPool > 0n
-    ? unsweptPool * weightedAmount / totalWeightedStakeRaw
-    : 0n
 
   return (
     <tr className="hover:bg-[#09090B]">
@@ -101,11 +89,11 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
       </td>
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">
         <div className="flex items-center gap-3">
-          <Image 
-            src={tierImagePath} 
-            alt={tierName} 
-            width={48} 
-            height={48} 
+          <Image
+            src={tierImagePath}
+            alt={tierName}
+            width={48}
+            height={48}
             className="rounded-lg"
           />
           <div>
@@ -124,7 +112,7 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
       <td className="px-6 py-4 text-sm">
         <div className="space-y-1">
           <div className="text-[#D8B13D] font-semibold">{plsFormatted} PLS</div>
-          <div className="text-[#D8B13D] font-semibold">{smaugFormatted} SMAUG</div>
+          <div className="text-[#D8B13D] font-semibold">{totalSmaugFormatted} SMAUG</div>
         </div>
       </td>
       <td className="px-6 py-4 text-right">
@@ -169,7 +157,7 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
               <div className="text-xs text-red-400">
                 {isMature
                   ? 'This will return your principal and all rewards.'
-                  : `Early exit applies 2× the normal penalty. You keep ${keepPct}% of rewards at double forfeit rate. Principal is returned in full.`}
+                  : `You keep ${keepPct}% of rewards. Principal is returned in full.`}
               </div>
               <div className="flex justify-end gap-2">
                 <button
@@ -206,17 +194,11 @@ function StakeRow({ stakeId, contractSmaugBalance, totalWeightedStakeRaw, totalS
 interface YourStakesProps {
   userStakeIds: string[]
   isLoading?: boolean
-  contractSmaugBalance: bigint
-  totalWeightedStakeRaw: bigint
-  totalStakedRaw: bigint
 }
 
-export default function YourStakes({ 
-  userStakeIds = [], 
+export default function YourStakes({
+  userStakeIds = [],
   isLoading = false,
-  contractSmaugBalance,
-  totalWeightedStakeRaw,
-  totalStakedRaw,
 }: YourStakesProps) {
   return (
     <div className="rounded-2xl border border-white/10 bg-[#111116]">
@@ -251,9 +233,6 @@ export default function YourStakes({
                 <StakeRow
                   key={stakeId}
                   stakeId={stakeId}
-                  contractSmaugBalance={contractSmaugBalance}
-                  totalWeightedStakeRaw={totalWeightedStakeRaw}
-                  totalStakedRaw={totalStakedRaw}
                 />
               ))
             ) : (
