@@ -8,7 +8,8 @@ import { useStakingData } from '@/hooks/useStakingData'
 import { useApproveAndStake } from '@/hooks/useApproveAndStake'
 import { useTVLAndStakeCount } from '@/hooks/useTVLAndStakeCount'
 import YourStakes from '@/components/stake/your-stakes'
-import { parseSmaugAmount } from '@/lib/staking'
+import { useReadContract } from 'wagmi'
+import { STAKING_CONTRACT, STAKING_ABI, parseSmaugAmount } from '@/lib/staking'
 
 export const TIERS = [
   { name: 'Hatchling',    min: 30,  max: 89,  multiplier: 1,   feeRebate: 5,  icon: '🥚' },
