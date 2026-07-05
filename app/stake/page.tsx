@@ -59,23 +59,25 @@ export default function StakePage() {
   const amountNum = parseFloat(amount.replace(/,/g, '')) || 0
   const isBelowMinimum = amountNum > 0 && amountNum < minStakeNum
 
-  // Watch for transaction completion
-  useEffect(() => {
-  if (stakeTxHash && step === 'idle') {
-    refetchStakeIds()
-    setAmount('')
-    setDays(365)
-   }
-  }, [stakeTxHash, step, refetchStakeIds])
+  const [showSuccess, setShowSuccess] = useState(false)
 
   useEffect(() => {
   if (stakeTxHash && step === 'idle') {
+    setShowSuccess(true)
+    refetchStakeIds()
+    setAmount('')
+    setDays(365)
+    }
+  }, [stakeTxHash, step, refetchStakeIds])
+
+  useEffect(() => {
+  if (showSuccess) {
     const timer = setTimeout(() => {
-      reset()
-    }, 5000) // clears after 5 seconds
+      setShowSuccess(false)
+    }, 5000)
     return () => clearTimeout(timer)
     }
-  }, [stakeTxHash, step, reset])
+  }, [showSuccess])
 
   return (
     <>
@@ -200,7 +202,7 @@ export default function StakePage() {
     Confirming stake...
   </div>
 )}
-  {stakeTxHash && step === 'idle' && (
+  {showSuccess && (
   <div className="mt-3 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm text-green-400">
     Stake created! Tx: {stakeTxHash.slice(0, 10)}...
   </div>
