@@ -16,11 +16,11 @@ export function useApproveAndStake(address: `0x${string}` | undefined) {
   })
 
   // For approval
-  const { writeContract: approveWrite, data: approveTxHash, isPending: approveIsPending } = useWriteContract()
-  
+  const { writeContract: approveWrite, data: approveTxHash, isPending: approveIsPending, error: approveError } = useWriteContract()
+
   // For staking
-  const { writeContract: stakeWrite, data: stakeTxHash, isPending: stakeIsPending } = useWriteContract()
-  
+  const { writeContract: stakeWrite, data: stakeTxHash, isPending: stakeIsPending, error: stakeError } = useWriteContract()
+
   // Wait for approval to be confirmed
   const { isSuccess: approveConfirmed } = useWaitForTransactionReceipt({
     hash: approveTxHash,
@@ -37,6 +37,22 @@ export function useApproveAndStake(address: `0x${string}` | undefined) {
       setStep('idle')
     }
   }, [stakeConfirmed])
+
+  // Reset if user cancels or rejects approval
+  useEffect(() => {
+    if (approveError && step === 'approving') {
+      setStep('idle')
+      setPendingStake(null)
+    }
+  }, [approveError, step])
+
+  // Reset if user cancels or rejects stake
+  useEffect(() => {
+    if (stakeError && step === 'staking') {
+      setStep('idle')
+      setPendingStake(null)
+    }
+  }, [stakeError, step])
 
   // After approval is confirmed, proceed with staking
   useEffect(() => {
@@ -58,7 +74,6 @@ export function useApproveAndStake(address: `0x${string}` | undefined) {
 
     const currentAllowance = (allowanceData as bigint) ?? 0n
     if (currentAllowance >= amount) {
-      // Allowance already sufficient — skip approval
       console.log('[v0] Allowance sufficient, skipping approval')
       setStep('staking')
       stakeWrite({
@@ -68,7 +83,6 @@ export function useApproveAndStake(address: `0x${string}` | undefined) {
         args: [amount, BigInt(days * 86400)],
       })
     } else {
-      // Request approval first
       setStep('approving')
       approveWrite({
         address: SMAUG_TOKEN as `0x${string}`,
