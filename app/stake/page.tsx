@@ -41,6 +41,21 @@ export default function StakePage() {
 
   const selectedTier = useMemo(() => getTier(days), [days])
 
+  const { data: previewMultiplier } = useReadContract({
+  address: STAKING_CONTRACT as `0x${string}`,
+  abi: STAKING_ABI,
+  functionName: 'multiplierForDuration',
+  args: [BigInt(days * 86400)],
+  query: { enabled: !!selectedTier },
+  })
+
+  const multiplierPreview = previewMultiplier
+  ? (() => {
+      const val = Number(previewMultiplier) / 100
+      return val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)
+    })()
+  : null
+
   const handleStake = async () => {
   if (!isConnected || !address) return
   if (!amount || parseFloat(amount) <= 0) return
@@ -181,14 +196,14 @@ export default function StakePage() {
                       <p className="text-sm text-red-400">Maximum duration is 730 days.</p>
                     )}
                     {selectedTier && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="font-semibold text-[#D8B13D]">{selectedTier.name}</span>
-                        <span className="text-[#9a9a9a]">·</span>
-                        <span className="text-[#9a9a9a]">{selectedTier.multiplier}× multiplier</span>
-                        <span className="text-[#9a9a9a]">·</span>
-                        <span className="text-[#9a9a9a]">{selectedTier.feeRebate}% fee rebate</span>
-                      </div>
-                    )}
+    <div className="flex items-center gap-2 text-sm">
+      <span className="font-semibold text-[#D8B13D]">{selectedTier.name}</span>
+      <span className="text-[#9a9a9a]">·</span>
+      <span className="text-[#9a9a9a]">{multiplierPreview ?? selectedTier.multiplier}× multiplier</span>
+     <span className="text-[#9a9a9a]">·</span>
+      <span className="text-[#9a9a9a]">{selectedTier.feeRebate}% fee rebate</span>
+    </div>
+  )}
                   </div>
                 </div>
 
