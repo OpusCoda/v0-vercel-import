@@ -3,7 +3,6 @@ import { parseUnits } from 'viem'
 export const STAKING_CONTRACT = '0xf8D685d7ABD92E7225D09f13088C5c420aff3b3C'
 export const SMAUG_TOKEN = '0xf4754Aa585caBf38537A68660469A17E203D8632'
 
-// Minimal ABI for staking contract functions
 export const STAKING_ABI = [
   {
     inputs: [],
@@ -61,12 +60,12 @@ export const STAKING_ABI = [
     type: 'function',
   },
   {
-  inputs: [{ name: 'stakeId', type: 'uint256' }],
-  name: 'unstake',
-  outputs: [],
-  stateMutability: 'nonpayable',
-  type: 'function',
-},
+    inputs: [{ name: 'stakeId', type: 'uint256' }],
+    name: 'unstake',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
   {
     inputs: [{ name: 'stakeId', type: 'uint256' }],
     name: 'stakes',
@@ -74,21 +73,30 @@ export const STAKING_ABI = [
       { name: 'owner', type: 'address' },
       { name: 'amountStaked', type: 'uint256' },
       { name: 'stakeStartTime', type: 'uint256' },
-      { name: 'intendedDuration', type: 'uint256' },
       { name: 'endTime', type: 'uint256' },
       { name: 'tierIndex', type: 'uint256' },
-      { name: 'multiplierBps', type: 'uint256' },
       { name: 'weightedAmount', type: 'uint256' },
     ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [
-      { name: 'stakeId', type: 'uint256' },
-      { name: 'tokenAddress', type: 'address' },
-    ],
-    name: 'pendingReward',
+    inputs: [{ name: 'stakeId', type: 'uint256' }],
+    name: 'pendingPLS',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'stakeId', type: 'uint256' }],
+    name: 'pendingSmaugReward',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'stakeId', type: 'uint256' }],
+    name: 'pendingSmaugReflection',
     outputs: [{ type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
@@ -110,9 +118,43 @@ export const STAKING_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
+  {
+    inputs: [{ name: 'stakeId', type: 'uint256' }],
+    name: 'processBurn',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'stakeId', type: 'uint256' }],
+    name: 'principalRemaining',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'd', type: 'uint256' }],
+    name: 'multiplierForDuration',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'smaugBurnReserve',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'minBurnThreshold',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
 ] as const
 
-// Minimal ERC20 ABI for SMAUG token
 export const ERC20_ABI = [
   {
     inputs: [{ name: 'account', type: 'address' }],

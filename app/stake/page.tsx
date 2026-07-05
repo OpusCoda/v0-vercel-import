@@ -34,7 +34,7 @@ export default function StakePage() {
   const { address, isConnected } = useAccount()
   const { totalStaked, totalStakers, balance, minStakeAmount, userStakeIds, isLoading, contractSmaugBalance, totalWeightedStakeRaw, totalStakedRaw, refetchStakeIds } = useStakingData()
   const { tvl, stakeCount } = useTVLAndStakeCount()
-  const { initiateApproveAndStake, isPending, step, approveTxHash, stakeTxHash } = useApproveAndStake(address)
+  const { initiateApproveAndStake, isPending, step, approveTxHash, stakeTxHash, reset } = useApproveAndStake(address)
 
   const [amount, setAmount] = useState('')
   const [days, setDays] = useState(365)
@@ -67,6 +67,15 @@ export default function StakePage() {
     setDays(365)
    }
   }, [stakeTxHash, step, refetchStakeIds])
+
+  useEffect(() => {
+  if (stakeTxHash && step === 'idle') {
+    const timer = setTimeout(() => {
+      reset()
+    }, 5000) // clears after 5 seconds
+    return () => clearTimeout(timer)
+    }
+  }, [stakeTxHash, step, reset])
 
   return (
     <>
