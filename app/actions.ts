@@ -233,6 +233,8 @@ const RESERVED_REFERRAL_NAMES = new Set([
   "system",
   "vault",
   "oath",
+  "chris",
+  "dev",
   "coda",
   "richardheart",
 ])

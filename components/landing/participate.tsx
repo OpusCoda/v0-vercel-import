@@ -21,8 +21,8 @@ const ways = [
     title: "Wager",
     art: "/landing/wager-book.png",
     accent: "#9b7fc4",
-    body: "Challenge the community in Oath Market. Create or accept wagers and let the outcome decide.",
-    cta: "Enter the Oath Market",
+    body: "Challenge the community in P2P Market. Create or accept wagers and let the outcome decide.",
+    cta: "Enter the P2P Market",
     href: "#wager",
   },
 ]

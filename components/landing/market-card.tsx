@@ -5,7 +5,7 @@ export type ProbabilityOutcome = {
   odds: number // percentage 0-100
 }
 
-export type OathSide = {
+export type P2PSide = {
   label: string // "YES (taken)" or "NO (open)"
   staked: number // e.g., 2000
   wins: number // e.g., 1000
@@ -14,22 +14,22 @@ export type OathSide = {
 
 export type MarketCardProps =
   | {
-      type: "probability"
-      icon?: string
-      title: string
-      outcomes: ProbabilityOutcome[]
-    }
+    type: "probability"
+    icon?: string
+    title: string
+    outcomes: ProbabilityOutcome[]
+  }
   | {
-      type: "oath"
-      icon?: string
-      betType: string // e.g., "PRICE BET"
-      description: string // e.g., "PLS above $0.0001"
-      deadline: string // e.g., "by March 15, 2027"
-      category: string
-      yesData: OathSide
-      noData: OathSide
-      closesIn: string // e.g., "4 days"
-    }
+    type: "p2p"
+    icon?: string
+    betType: string // e.g., "PRICE BET"
+    description: string // e.g., "PLS above $0.0001"
+    deadline: string // e.g., "by March 15, 2027"
+    category: string
+    yesData: P2PSide
+    noData: P2PSide
+    closesIn: string // e.g., "4 days"
+  }
 
 export function MarketCard(props: MarketCardProps) {
   if (props.type === "probability") {
@@ -62,7 +62,7 @@ export function MarketCard(props: MarketCardProps) {
     )
   }
 
-  // Oath Market card
+  // P2P Market card
   return (
     <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#d4af37]/30">
       {/* Header: icon, bet type, category */}

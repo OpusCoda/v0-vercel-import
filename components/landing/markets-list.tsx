@@ -5,7 +5,7 @@ import { Search, X } from "lucide-react"
 import { MarketCard, type MarketCardProps } from "./market-card"
 
 type Category = "Crypto" | "Politics" | "Sports" | "Macro" | "PulseChain" | "Misc"
-type OathStatus = "active" | "open"
+type P2PStatus = "active" | "open"
 
 interface ProbabilityMarket {
   type: "probability"
@@ -15,8 +15,8 @@ interface ProbabilityMarket {
   outcomes: Array<{ label: string; odds: number }>
 }
 
-interface OathMarket {
-  type: "oath"
+interface P2PMarket {
+  type: "p2p"
   icon: string
   betType: string
   description: string
@@ -25,7 +25,7 @@ interface OathMarket {
   yesData: { label: string; staked: number; wins: number; isTaken: boolean }
   noData: { label: string; staked: number; wins: number; isTaken: boolean }
   closesIn: string
-  status: OathStatus
+  status: P2PStatus
 }
 
 // Mock Probability Shop markets (always "Active")
@@ -76,10 +76,10 @@ const probabilityMarkets: ProbabilityMarket[] = [
   },
 ]
 
-// Mock Oath Market (P2P) bets with Active/Open status
-const oathMarkets: OathMarket[] = [
+// Mock P2P Market (P2P) bets with Active/Open status
+const p2pMarkets: P2PMarket[] = [
   {
-    type: "oath",
+    type: "p2p",
     icon: "💰",
     betType: "PRICE BET",
     description: "PLS above $0.0001",
@@ -91,7 +91,7 @@ const oathMarkets: OathMarket[] = [
     status: "open",
   },
   {
-    type: "oath",
+    type: "p2p",
     icon: "⚽",
     betType: "SPORTS BET",
     description: "Man United wins next match",
@@ -103,7 +103,7 @@ const oathMarkets: OathMarket[] = [
     status: "active",
   },
   {
-    type: "oath",
+    type: "p2p",
     icon: "📈",
     betType: "INDEX BET",
     description: "S&P 500 above 6,000",
@@ -115,7 +115,7 @@ const oathMarkets: OathMarket[] = [
     status: "active",
   },
   {
-    type: "oath",
+    type: "p2p",
     icon: "🎬",
     betType: "ENTERTAINMENT BET",
     description: "Oscar Best Picture 2027 winner announced",
@@ -127,7 +127,7 @@ const oathMarkets: OathMarket[] = [
     status: "open",
   },
   {
-    type: "oath",
+    type: "p2p",
     icon: "🏛️",
     betType: "ELECTION BET",
     description: "Trump wins 2028 US election",
@@ -165,7 +165,7 @@ function parsePrice(str: string): number {
 export function MarketsList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategories, setSelectedCategories] = useState<Set<Category>>(new Set())
-  const [oathFilter, setOathFilter] = useState<"All" | "Active" | "Open">("All")
+  const [p2pFilter, setP2PFilter] = useState<"All" | "Active" | "Open">("All")
   const [priceMin, setPriceMin] = useState(MIN_PRICE)
   const [priceMax, setPriceMax] = useState(MAX_PRICE)
 
@@ -178,21 +178,21 @@ export function MarketsList() {
     })
   }, [searchQuery, selectedCategories])
 
-  // Filter Oath Market
-  const filteredOathMarkets = useMemo(() => {
-    return oathMarkets.filter((market) => {
+  // Filter P2P Market
+  const filteredP2PMarkets = useMemo(() => {
+    return p2pMarkets.filter((market) => {
       const matchesSearch =
         market.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         market.betType.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesCategory = selectedCategories.size === 0 || selectedCategories.has(market.category)
       const matchesStatus =
-        oathFilter === "All" || (oathFilter === "Active" && market.status === "active") || (oathFilter === "Open" && market.status === "open")
+        p2pFilter === "All" || (p2pFilter === "Active" && market.status === "active") || (p2pFilter === "Open" && market.status === "open")
       // Check if the max of (yes staked, no staked) falls within price range
       const maxStaked = Math.max(market.yesData.staked, market.noData.staked)
       const matchesPrice = maxStaked >= priceMin && maxStaked <= priceMax
       return matchesSearch && matchesCategory && matchesStatus && matchesPrice
     })
-  }, [searchQuery, selectedCategories, oathFilter, priceMin, priceMax])
+  }, [searchQuery, selectedCategories, p2pFilter, priceMin, priceMax])
 
   const toggleCategory = (cat: Category) => {
     const newCats = new Set(selectedCategories)
@@ -231,11 +231,10 @@ export function MarketsList() {
             <button
               key={cat}
               onClick={() => toggleCategory(cat)}
-              className={`rounded-full px-3 py-1 font-sans text-xs font-semibold transition-colors ${
-                selectedCategories.has(cat)
-                  ? "bg-[#d4af37] text-[#0a0a0c]"
-                  : "border border-[#2a2a35] bg-[#101017] text-[#b8b6b1] hover:border-[#d4af37]/50"
-              }`}
+              className={`rounded-full px-3 py-1 font-sans text-xs font-semibold transition-colors ${selectedCategories.has(cat)
+                ? "bg-[#d4af37] text-[#0a0a0c]"
+                : "border border-[#2a2a35] bg-[#101017] text-[#b8b6b1] hover:border-[#d4af37]/50"
+                }`}
             >
               {cat}
             </button>
@@ -273,23 +272,22 @@ export function MarketsList() {
           </div>
         </div>
 
-        {/* Right column: Oath Market */}
+        {/* Right column: P2P Market */}
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Oath Market</h3>
+              <h3 className="font-serif text-lg font-semibold text-[#d4af37]">P2P Market</h3>
               <p className="font-sans text-xs text-[#7c7a76]">Peer-to-peer wager escrow</p>
             </div>
             <div className="flex gap-1 flex-shrink-0">
               {["All", "Active", "Open"].map((status) => (
                 <button
                   key={status}
-                  onClick={() => setOathFilter(status as "All" | "Active" | "Open")}
-                  className={`rounded px-2 py-1 font-sans text-xs font-semibold transition-colors ${
-                    oathFilter === status
-                      ? "bg-[#d4af37] text-[#0a0a0c]"
-                      : "border border-[#2a2a35] bg-[#101017] text-[#b8b6b1] hover:border-[#d4af37]/50"
-                  }`}
+                  onClick={() => setP2PFilter(status as "All" | "Active" | "Open")}
+                  className={`rounded px-2 py-1 font-sans text-xs font-semibold transition-colors ${p2pFilter === status
+                    ? "bg-[#d4af37] text-[#0a0a0c]"
+                    : "border border-[#2a2a35] bg-[#101017] text-[#b8b6b1] hover:border-[#d4af37]/50"
+                    }`}
                 >
                   {status}
                 </button>
@@ -410,11 +408,11 @@ export function MarketsList() {
           </div>
 
           <div className="flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2">
-            {filteredOathMarkets.length > 0 ? (
-              filteredOathMarkets.map((market, idx) => (
+            {filteredP2PMarkets.length > 0 ? (
+              filteredP2PMarkets.map((market, idx) => (
                 <MarketCard
                   key={idx}
-                  type="oath"
+                  type="p2p"
                   icon={market.icon}
                   betType={market.betType}
                   description={market.description}

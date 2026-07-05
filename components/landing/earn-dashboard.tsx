@@ -84,7 +84,7 @@ export function EarnDashboard() {
     { label: "Total Smaug Staked", value: "412M", change: "+3.1% (7D)", icon: "🔥" },
     { label: "Total Rewards Paid", value: "2.34M SMAUG", change: "All time", icon: "💰" },
     { label: "Treasury Value", value: "$1.28M", change: "+2.8% (7D)", icon: "🏛️" },
-    { label: "Oath Locked", value: "18.4M", change: "+5.7% (7D)", icon: "🔐" },
+    { label: "P2P Locked", value: "18.4M", change: "+5.7% (7D)", icon: "🔐" },
   ]
 
   return (
@@ -136,11 +136,10 @@ export function EarnDashboard() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-4 font-sans text-sm font-semibold uppercase transition-colors ${
-                  activeTab === tab
+                className={`pb-4 font-sans text-sm font-semibold uppercase transition-colors ${activeTab === tab
                     ? "border-b-2 border-[#d4af37] text-[#d4af37]"
                     : "text-[#7c7a76] hover:text-[#b8b6b1]"
-                }`}
+                  }`}
               >
                 {tab === "overview" && "Overview"}
                 {tab === "staking" && "Staking"}

@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/landing/site-footer"
 
 export const metadata = {
   title: "Portfolio - OpusEco",
-  description: "Manage your portfolio and view your positions across Probability Shop and Oath Market",
+  description: "Manage your portfolio and view your positions across Probability Shop and P2P Market",
 }
 
 export default function PortfolioPage() {
