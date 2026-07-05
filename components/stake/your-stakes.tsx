@@ -37,6 +37,15 @@ function StakeRow({ stakeId }: StakeRowProps) {
     args: [BigInt(stakeId)],
   })
 
+  // Move this hook to top level - must be called unconditionally
+  const { data: multiplierData } = useReadContract({
+    address: STAKING_CONTRACT as `0x${string}`,
+    abi: STAKING_ABI,
+    functionName: 'multiplierForDuration',
+    args: stakeDetails ? [BigInt(stakeDetails.endTime - stakeDetails.startTime)] : undefined,
+    query: { enabled: !!stakeDetails && (stakeDetails.endTime - stakeDetails.startTime) > 0 },
+  })
+
   const keepPct = penaltyData ? Number((penaltyData as [bigint, bigint])[0]) : 100
   const isMature = keepPct === 100
 
@@ -71,15 +80,6 @@ function StakeRow({ stakeId }: StakeRowProps) {
   }
 
   const { amount, startTime, endTime, tierIndex, weightedAmount } = stakeDetails
-  const duration = endTime - startTime
-
-  const { data: multiplierData } = useReadContract({
-  address: STAKING_CONTRACT as `0x${string}`,
-  abi: STAKING_ABI,
-  functionName: 'multiplierForDuration',
-  args: [BigInt(duration)],
-  query: { enabled: duration > 0 },
-  })
 
   const multiplierFormatted = (() => {
   if (!multiplierData) return TIER_MULTIPLIERS[tierIndex] || '1'
