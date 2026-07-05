@@ -71,10 +71,24 @@ function StakeRow({ stakeId }: StakeRowProps) {
   }
 
   const { amount, startTime, endTime, tierIndex, weightedAmount } = stakeDetails
+  const duration = endTime - startTime
+
+  const { data: multiplierData } = useReadContract({
+  address: STAKING_CONTRACT as `0x${string}`,
+  abi: STAKING_ABI,
+  functionName: 'multiplierForDuration',
+  args: [BigInt(duration)],
+  query: { enabled: duration > 0 },
+  })
+
+  const multiplierFormatted = (() => {
+  if (!multiplierData) return TIER_MULTIPLIERS[tierIndex] || '1'
+  const val = Number(multiplierData) / 100
+  return val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)
+})()
 
   const tierName = TIERS[tierIndex] || 'Unknown'
   const tierImagePath = TIER_IMAGES[tierName] || TIER_IMAGES['Hatchling']
-  const multiplierFormatted = TIER_MULTIPLIERS[tierIndex] || '1'
 
   const maturityInfo = getMaturityInfo(startTime, endTime)
   const plsFormatted = formatSmaugBalance(plsReward)
