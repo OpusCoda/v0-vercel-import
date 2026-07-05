@@ -202,9 +202,9 @@ export default function StakePage() {
     Confirming stake...
   </div>
 )}
-  {showSuccess && (
+  {showSuccess && stakeTxHash && (
   <div className="mt-3 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm text-green-400">
-    Stake created! Tx: {stakeTxHash.slice(0, 10)}...
+    Stake created! Tx: {stakeTxHash?.slice(0, 10)}...
   </div>
 )}
 
@@ -281,9 +281,6 @@ export default function StakePage() {
             <YourStakes 
   userStakeIds={userStakeIds} 
   isLoading={isLoading}
-  contractSmaugBalance={contractSmaugBalance}
-  totalWeightedStakeRaw={totalWeightedStakeRaw}
-  totalStakedRaw={totalStakedRaw}
 />
           </section>
 
