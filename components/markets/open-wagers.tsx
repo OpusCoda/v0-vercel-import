@@ -43,76 +43,66 @@ function getStatusColor(status: number): string {
 export function OpenWagers() {
   const { wagers, isLoading } = useOpenWagers()
 
-  if (isLoading) {
-    return (
-      <div className="rounded-2xl border border-white/10 bg-[#111116] p-6">
-        <h2 className="font-serif text-2xl font-bold mb-6">Open Wagers</h2>
-        <div className="text-center text-[#9a9a9a] py-8">Loading wagers...</div>
-      </div>
-    )
-  }
-
-  if (wagers.length === 0) {
-    return (
-      <div className="rounded-2xl border border-white/10 bg-[#111116] p-6">
-        <h2 className="font-serif text-2xl font-bold mb-6">Open Wagers</h2>
-        <div className="text-center text-[#9a9a9a] py-8">No open wagers at the moment</div>
-      </div>
-    )
-  }
-
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#111116] p-6">
-      <h2 className="font-serif text-2xl font-bold mb-6">Open Wagers</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-left text-sm">
-          <thead className="border-b border-white/10 text-xs uppercase text-[#9a9a9a]">
-            <tr>
-              <th className="pb-4 px-4">ID</th>
-              <th className="pb-4 px-4">Type</th>
-              <th className="pb-4 px-4">Creator</th>
-              <th className="pb-4 px-4">Amount</th>
-              <th className="pb-4 px-4">Odds</th>
-              <th className="pb-4 px-4">Status</th>
-              <th className="pb-4 px-4">Expires At</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/10">
-            {wagers.map((wager) => {
-              const expiresDate = new Date(Number(wager.expiresAt) * 1000)
-              const isExpired = expiresDate < new Date()
+    <div className="rounded-2xl border border-white/10 bg-[#111116]/40 backdrop-blur-sm p-6">
+      <h2 className="font-serif text-xl font-bold text-[#e8e6e3] mb-4">Open Wagers</h2>
+      
+      {isLoading ? (
+        <div className="text-center text-[#9a9a9a] py-6 text-sm">Loading wagers...</div>
+      ) : wagers.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-[#9a9a9a] text-sm mb-1">No open wagers yet</div>
+          <div className="text-[#666] text-xs">Be the first to create one</div>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left text-sm">
+            <thead className="border-b border-white/10 text-xs uppercase text-[#9a9a9a]">
+              <tr>
+                <th className="pb-3 px-4">ID</th>
+                <th className="pb-3 px-4">Type</th>
+                <th className="pb-3 px-4">Creator</th>
+                <th className="pb-3 px-4">Amount</th>
+                <th className="pb-3 px-4">Odds</th>
+                <th className="pb-3 px-4">Status</th>
+                <th className="pb-3 px-4">Expires</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10">
+              {wagers.map((wager) => {
+                const expiresDate = new Date(Number(wager.expiresAt) * 1000)
+                const isExpired = expiresDate < new Date()
 
-              return (
-                <tr key={wager.id.toString()} className="text-[#f4f4f4] hover:bg-[#09090B]">
-                  <td className="py-4 px-4 font-mono text-sm">#{wager.id.toString()}</td>
-                  <td className="py-4 px-4">{getWagerTypeLabel(wager.wagerType)}</td>
-                  <td className="py-4 px-4 text-[#9a9a9a]">{formatAddress(wager.creator)}</td>
-                  <td className="py-4 px-4">{formatAmount(wager.amount)} PLS</td>
-                  <td className="py-4 px-4">{Number(wager.odds) / 100}:1</td>
-                  <td className="py-4 px-4">
-                    <span
-                      className={`inline-block px-2.5 py-1 rounded-full border text-xs font-semibold ${getStatusColor(
-                        wager.status
-                      )}`}
-                    >
-                      {getStatusLabel(wager.status)}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 text-[#9a9a9a]">
-                    {expiresDate.toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                    {isExpired && <span className="text-red-400 ml-2">(Expired)</span>}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+                return (
+                  <tr key={wager.id.toString()} className="text-[#f4f4f4] hover:bg-white/5 transition">
+                    <td className="py-3 px-4 font-mono text-xs">#{wager.id.toString()}</td>
+                    <td className="py-3 px-4 text-sm">{getWagerTypeLabel(wager.wagerType)}</td>
+                    <td className="py-3 px-4 text-[#9a9a9a] text-sm">{formatAddress(wager.creator)}</td>
+                    <td className="py-3 px-4 text-sm font-semibold">{formatAmount(wager.amount)} PLS</td>
+                    <td className="py-3 px-4 text-sm">{Number(wager.odds) / 100}:1</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full border text-xs font-semibold ${getStatusColor(
+                          wager.status
+                        )}`}
+                      >
+                        {getStatusLabel(wager.status)}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-[#9a9a9a] text-sm">
+                      {expiresDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                      {isExpired && <span className="text-red-400 ml-1 text-xs">(Expired)</span>}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
