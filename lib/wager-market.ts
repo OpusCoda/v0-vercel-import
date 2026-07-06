@@ -97,4 +97,50 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
+  {
+    inputs: [{ name: 'user', type: 'address' }],
+    name: 'getUserFeeInfo',
+    outputs: [
+      {
+        components: [
+          { name: 'protocolFeePercent', type: 'uint256' },
+          { name: 'stakerFeePercent', type: 'uint256' },
+          { name: 'totalFeePercent', type: 'uint256' },
+        ],
+        name: 'feeInfo',
+        type: 'tuple',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'description', type: 'string' },
+      { name: 'eventDate', type: 'uint256' },
+      { name: 'depositWindow', type: 'uint256' },
+      { name: 'creatorStake', type: 'uint256' },
+      { name: 'challengerStake', type: 'uint256' },
+      { name: 'challengerAddress', type: 'address' },
+      { name: 'category', type: 'uint8' },
+    ],
+    name: 'createWager',
+    outputs: [{ name: 'wagerId', type: 'uint256' }],
+    stateMutability: 'payable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'description', type: 'string' },
+      { name: 'tokenId', type: 'uint256' },
+      { name: 'targetPrice', type: 'uint256' },
+      { name: 'isAbove', type: 'bool' },
+      { name: 'creatorStake', type: 'uint256' },
+      { name: 'challengerAddress', type: 'address' },
+    ],
+    name: 'createPriceBet',
+    outputs: [{ name: 'wagerId', type: 'uint256' }],
+    stateMutability: 'payable',
+    type: 'function',
+  },
 ] as const
