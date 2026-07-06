@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useAccount, useWriteContract } from 'wagmi'
+import { useState, useEffect } from 'react'
+import { useAccount, useWriteContract, useReadContract } from 'wagmi'
 import { parseEther } from 'viem'
 import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from '@/lib/wager-market'
 
@@ -44,7 +44,23 @@ export function CreateWager() {
   const [targetPrice, setTargetPrice] = useState('')
   const [direction, setDirection] = useState<'above' | 'below'>('above')
   const [showConfirm, setShowConfirm] = useState(false)
-  const [estimatedFee, setEstimatedFee] = useState<string>('')
+  const [protocolFeePercent, setProtocolFeePercent] = useState<number>(0)
+
+  // Fetch fee info
+  const { data: feeInfoData } = useReadContract({
+    address: WAGER_MARKET_ADDRESS,
+    abi: WAGER_MARKET_ABI,
+    functionName: 'getUserFeeInfo',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address, refetchInterval: 60000 },
+  })
+
+  useEffect(() => {
+    if (feeInfoData) {
+      const feeData = feeInfoData as any
+      setProtocolFeePercent(Number(feeData.protocolFeePercent) / 100) // Convert to percentage
+    }
+  }, [feeInfoData])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,13 +70,14 @@ export function CreateWager() {
       return
     }
 
-    // Calculate msg.value
-    let msgValue = BigInt(0)
-    if (wagerType === 'standard') {
-      const stake = parseEther(myStake)
-      msgValue = (stake * BigInt(10500)) / BigInt(10000) // stake + 5% vote deposit
-    } else {
-      msgValue = parseEther(myStake) // exact stake for price bet
+    // Validate required fields
+    const requiredFields = wagerType === 'standard'
+      ? [description, eventDate, myStake, challengerStake, category]
+      : [description, eventDate, depositWindow, myStake, challengerStake, token, targetPrice]
+    
+    if (requiredFields.some(f => !f)) {
+      alert('Please fill in all required fields')
+      return
     }
 
     // Show confirmation
@@ -71,14 +88,17 @@ export function CreateWager() {
     if (!isConnected || !address) return
 
     try {
+      const eventTimestamp = Math.floor(new Date(eventDate).getTime() / 1000)
+      const depositWindowSeconds = parseInt(depositWindow) * 86400
+      const stake = parseEther(myStake)
+      
+      // Calculate msg.value with protocol fees
+      const protocolFeeMultiplier = BigInt(Math.floor(protocolFeePercent * 100))
       let msgValue = BigInt(0)
       
       if (wagerType === 'standard') {
-        const stake = parseEther(myStake)
-        msgValue = (stake * BigInt(10500)) / BigInt(10000)
-
-        const eventTimestamp = Math.floor(new Date(eventDate).getTime() / 1000)
-        const depositWindowSeconds = parseInt(depositWindow) * 86400
+        // Standard wager: stake + 5% vote deposit + protocol fee
+        msgValue = stake + (stake * BigInt(500)) / BigInt(10000) + (stake * protocolFeeMultiplier) / BigInt(10000)
 
         writeContract({
           address: WAGER_MARKET_ADDRESS,
@@ -88,7 +108,7 @@ export function CreateWager() {
             description,
             BigInt(eventTimestamp),
             BigInt(depositWindowSeconds),
-            parseEther(myStake),
+            stake,
             parseEther(challengerStake),
             (challengerAddress === '' ? '0x0000000000000000000000000000000000000000' : challengerAddress) as `0x${string}`,
             BigInt(parseInt(category)),
@@ -96,7 +116,8 @@ export function CreateWager() {
           value: msgValue,
         })
       } else {
-        msgValue = parseEther(myStake)
+        // Price bet: exact stake (no additional fees)
+        msgValue = stake
 
         writeContract({
           address: WAGER_MARKET_ADDRESS,
@@ -107,7 +128,7 @@ export function CreateWager() {
             BigInt(parseInt(token)),
             parseEther(targetPrice),
             direction === 'above',
-            parseEther(myStake),
+            stake,
             (challengerAddress === '' ? '0x0000000000000000000000000000000000000000' : challengerAddress) as `0x${string}`,
           ],
           value: msgValue,
@@ -257,6 +278,32 @@ export function CreateWager() {
           ) : (
             <>
               <div>
+                <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Event Date</label>
+                <input
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Deposit Window</label>
+                <select
+                  value={depositWindow}
+                  onChange={(e) => setDepositWindow(e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
+                >
+                  {DEPOSIT_WINDOWS.map((w) => (
+                    <option key={w.value} value={w.value}>
+                      {w.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Token</label>
                 <select
                   value={token}
@@ -311,6 +358,19 @@ export function CreateWager() {
                   </button>
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Challenger Stake (PLS)</label>
+                <input
+                  type="number"
+                  value={challengerStake}
+                  onChange={(e) => setChallengerStake(e.target.value)}
+                  placeholder="0.00"
+                  step="0.01"
+                  className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
+                  required
+                />
+              </div>
             </>
           )}
 
@@ -327,12 +387,27 @@ export function CreateWager() {
 
           {/* Fee Info */}
           <div className="rounded-lg border border-white/20 bg-[#09090B] p-4">
-            <div className="text-sm text-[#9a9a9a] mb-2">Estimated Fee</div>
-            <div className="text-xl font-semibold text-[#D8B13D]">
-              {wagerType === 'standard'
-                ? `${(parseFloat(myStake || '0') * 0.05).toFixed(4)} PLS (5% vote deposit)`
-                : 'No additional fee (exact stake)'}
-            </div>
+            <div className="text-sm text-[#9a9a9a] mb-3">Estimated Fees</div>
+            {wagerType === 'standard' ? (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#9a9a9a]">Vote Deposit (5%):</span>
+                  <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * 0.05).toFixed(4)} PLS</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#9a9a9a]">Protocol Fee ({protocolFeePercent.toFixed(2)}%):</span>
+                  <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * (protocolFeePercent / 100)).toFixed(4)} PLS</span>
+                </div>
+                <div className="flex justify-between text-sm pt-2 border-t border-white/10">
+                  <span className="text-[#D8B13D] font-semibold">Total Additional:</span>
+                  <span className="text-[#D8B13D] font-semibold">
+                    {(parseFloat(myStake || '0') * (0.05 + protocolFeePercent / 100)).toFixed(4)} PLS
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-[#D8B13D] font-semibold">No additional fee (exact stake)</div>
+            )}
           </div>
 
           <button
@@ -359,23 +434,27 @@ export function CreateWager() {
                 <span className="text-[#9a9a9a]">Your Stake:</span>
                 <span className="text-[#f4f4f4]">{myStake} PLS</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-[#9a9a9a]">Challenger Stake:</span>
+                <span className="text-[#f4f4f4]">{challengerStake} PLS</span>
+              </div>
               {wagerType === 'standard' && (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-[#9a9a9a]">Challenger Stake:</span>
-                    <span className="text-[#f4f4f4]">{challengerStake} PLS</span>
+                    <span className="text-[#9a9a9a]">Vote Deposit (5%):</span>
+                    <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * 0.05).toFixed(4)} PLS</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#9a9a9a]">Vote Deposit:</span>
-                    <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * 0.05).toFixed(4)} PLS</span>
+                    <span className="text-[#9a9a9a]">Protocol Fee ({protocolFeePercent.toFixed(2)}%):</span>
+                    <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * (protocolFeePercent / 100)).toFixed(4)} PLS</span>
                   </div>
                 </>
               )}
               <div className="flex justify-between pt-3 border-t border-white/10">
-                <span className="text-[#9a9a9a]">Total to Send:</span>
+                <span className="text-[#D8B13D] font-semibold">Total to Send:</span>
                 <span className="text-[#D8B13D] font-semibold">
                   {wagerType === 'standard'
-                    ? (parseFloat(myStake || '0') * 1.05).toFixed(4)
+                    ? (parseFloat(myStake || '0') * (1 + 0.05 + protocolFeePercent / 100)).toFixed(4)
                     : myStake}{' '}
                   PLS
                 </span>
