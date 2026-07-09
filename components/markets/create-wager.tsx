@@ -97,8 +97,8 @@ export function CreateWager() {
       let msgValue = BigInt(0)
       
       if (wagerType === 'standard') {
-        // Standard wager: stake + 5% vote deposit + protocol fee
-        msgValue = stake + (stake * BigInt(500)) / BigInt(10000) + (stake * protocolFeeMultiplier) / BigInt(10000)
+        // Standard wager: only stake + 5% vote deposit sent upfront (protocol fee deducted at resolution)
+        msgValue = stake + (stake * BigInt(500)) / BigInt(10000)
 
         writeContract({
           address: WAGER_MARKET_ADDRESS,
@@ -385,29 +385,67 @@ export function CreateWager() {
             />
           </div>
 
-          {/* Fee Info */}
-          <div className="rounded-lg border border-white/20 bg-[#09090B] p-4">
-            <div className="text-sm text-[#9a9a9a] mb-3">Estimated Fees</div>
-            {wagerType === 'standard' ? (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#9a9a9a]">Vote Deposit (5%):</span>
-                  <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * 0.05).toFixed(4)} PLS</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#9a9a9a]">Protocol Fee ({protocolFeePercent.toFixed(2)}%):</span>
-                  <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * (protocolFeePercent / 100)).toFixed(4)} PLS</span>
-                </div>
-                <div className="flex justify-between text-sm pt-2 border-t border-white/10">
-                  <span className="text-[#D8B13D] font-semibold">Total Additional:</span>
-                  <span className="text-[#D8B13D] font-semibold">
-                    {(parseFloat(myStake || '0') * (0.05 + protocolFeePercent / 100)).toFixed(4)} PLS
-                  </span>
+          {/* Fee & Odds Info */}
+          <div className="space-y-3">
+            {/* Odds */}
+            {myStake && challengerStake && (
+              <div className="rounded-lg border border-white/20 bg-[#09090B] p-4">
+                <div className="text-sm text-[#9a9a9a] mb-2">Implied Odds</div>
+                <div className="space-y-1">
+                  <div className="text-lg font-semibold text-[#D8B13D]">
+                    {(parseFloat(myStake) / parseFloat(challengerStake)).toFixed(2)}×
+                  </div>
+                  <div className="text-xs text-[#9a9a9a]">
+                    If you win: +{parseFloat(challengerStake).toLocaleString()} PLS
+                  </div>
                 </div>
               </div>
-            ) : (
-              <div className="text-[#D8B13D] font-semibold">No additional fee (exact stake)</div>
             )}
+
+            {/* Fee Info */}
+            <div className="rounded-lg border border-white/20 bg-[#09090B] p-4">
+              <div className="text-sm text-[#9a9a9a] mb-3">Transaction Details</div>
+              {wagerType === 'standard' ? (
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[#9a9a9a]">Your Stake:</span>
+                    <span className="text-[#f4f4f4]">{parseFloat(myStake || '0').toLocaleString()} PLS</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#9a9a9a]">Vote Deposit (5%):</span>
+                    <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * 0.05).toFixed(2)} PLS</span>
+                  </div>
+                  <div className="border-t border-white/10 pt-2 mt-2">
+                    <div className="flex justify-between font-semibold">
+                      <span className="text-[#D8B13D]">Total to Send:</span>
+                      <span className="text-[#D8B13D]">{(parseFloat(myStake || '0') * 1.05).toFixed(2)} PLS</span>
+                    </div>
+                  </div>
+                  <div className="pt-2 mt-2 border-t border-white/10">
+                    <div className="flex justify-between text-[#9a9a9a]">
+                      <span>Protocol Fee ({protocolFeePercent.toFixed(2)}%):</span>
+                      <span className="text-xs">Deducted at resolution</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[#9a9a9a]">Stake:</span>
+                    <span className="text-[#f4f4f4]">{parseFloat(myStake || '0').toLocaleString()} PLS</span>
+                  </div>
+                  <div className="border-t border-white/10 pt-2 mt-2">
+                    <div className="flex justify-between font-semibold">
+                      <span className="text-[#D8B13D]">Total to Send:</span>
+                      <span className="text-[#D8B13D]">{parseFloat(myStake || '0').toLocaleString()} PLS</span>
+                    </div>
+                  </div>
+                  <div className="pt-2 mt-2 text-[#9a9a9a] text-xs">
+                    No additional fees (exact stake)
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <button
@@ -423,41 +461,100 @@ export function CreateWager() {
       {/* Confirmation Modal */}
       {showConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="rounded-2xl border border-white/10 bg-[#111116] p-8 max-w-md w-full">
+          <div className="rounded-2xl border border-white/10 bg-[#111116] p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h3 className="font-serif text-2xl font-bold mb-6">Confirm Wager</h3>
-            <div className="space-y-3 mb-6 text-sm">
-              <div className="flex justify-between">
-                <span className="text-[#9a9a9a]">Type:</span>
-                <span className="text-[#f4f4f4]">{wagerType === 'standard' ? 'Standard' : 'Price Bet'}</span>
+            <div className="space-y-4 mb-6 text-sm">
+              {/* Basic Info */}
+              <div className="space-y-2 pb-3 border-b border-white/10">
+                <div className="flex justify-between">
+                  <span className="text-[#9a9a9a]">Type:</span>
+                  <span className="text-[#f4f4f4] font-semibold">{wagerType === 'standard' ? 'Standard Wager' : 'Price Bet'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#9a9a9a]">Description:</span>
+                  <span className="text-[#f4f4f4] text-right">{description}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#9a9a9a]">Event Date:</span>
+                  <span className="text-[#f4f4f4]">{new Date(eventDate).toLocaleDateString()}</span>
+                </div>
+                {wagerType === 'standard' ? (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-[#9a9a9a]">Category:</span>
+                      <span className="text-[#f4f4f4]">{CATEGORIES.find(c => c.value.toString() === category)?.label}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#9a9a9a]">Deposit Window:</span>
+                      <span className="text-[#f4f4f4]">{DEPOSIT_WINDOWS.find(w => w.value.toString() === depositWindow)?.label}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-[#9a9a9a]">Target Price:</span>
+                      <span className="text-[#f4f4f4]">${targetPrice}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#9a9a9a]">Direction:</span>
+                      <span className="text-[#f4f4f4] capitalize">{direction}</span>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="flex justify-between">
-                <span className="text-[#9a9a9a]">Your Stake:</span>
-                <span className="text-[#f4f4f4]">{myStake} PLS</span>
+
+              {/* Stakes and Odds */}
+              <div className="space-y-2 pb-3 border-b border-white/10">
+                <div className="flex justify-between">
+                  <span className="text-[#9a9a9a]">Your Stake:</span>
+                  <span className="text-[#f4f4f4]">{parseFloat(myStake || '0').toLocaleString()} PLS</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#9a9a9a]">Challenger Stake:</span>
+                  <span className="text-[#f4f4f4]">{parseFloat(challengerStake || '0').toLocaleString()} PLS</span>
+                </div>
+                <div className="flex justify-between font-semibold text-[#D8B13D]">
+                  <span>Odds:</span>
+                  <span>{(parseFloat(myStake || '1') / parseFloat(challengerStake || '1')).toFixed(2)}×</span>
+                </div>
+                <div className="text-xs text-[#9a9a9a]">
+                  If you win: +{parseFloat(challengerStake || '0').toLocaleString()} PLS
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-[#9a9a9a]">Challenger Stake:</span>
-                <span className="text-[#f4f4f4]">{challengerStake} PLS</span>
-              </div>
-              {wagerType === 'standard' && (
-                <>
+
+              {/* Fees */}
+              {wagerType === 'standard' ? (
+                <div className="space-y-2 pb-3 border-b border-white/10">
+                  <div className="text-xs font-semibold text-[#9a9a9a] uppercase">Fees & Deposits</div>
                   <div className="flex justify-between">
                     <span className="text-[#9a9a9a]">Vote Deposit (5%):</span>
-                    <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * 0.05).toFixed(4)} PLS</span>
+                    <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * 0.05).toFixed(2)} PLS</span>
+                  </div>
+                  <div className="text-xs text-[#9a9a9a] flex justify-between">
+                    <span>└─ Returned if you vote correctly</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#9a9a9a]">Protocol Fee ({protocolFeePercent.toFixed(2)}%):</span>
-                    <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * (protocolFeePercent / 100)).toFixed(4)} PLS</span>
+                    <span className="text-[#9a9a9a] text-xs">~{(parseFloat(myStake || '0') * (protocolFeePercent / 100)).toFixed(2)} PLS</span>
                   </div>
-                </>
-              )}
-              <div className="flex justify-between pt-3 border-t border-white/10">
-                <span className="text-[#D8B13D] font-semibold">Total to Send:</span>
-                <span className="text-[#D8B13D] font-semibold">
-                  {wagerType === 'standard'
-                    ? (parseFloat(myStake || '0') * (1 + 0.05 + protocolFeePercent / 100)).toFixed(4)
-                    : myStake}{' '}
-                  PLS
-                </span>
+                  <div className="text-xs text-[#9a9a9a] flex justify-between">
+                    <span>└─ Deducted from winnings at resolution</span>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Transaction Summary */}
+              <div className="space-y-2 pt-2">
+                <div className="text-xs font-semibold text-[#9a9a9a] uppercase">Transaction</div>
+                <div className="flex justify-between font-semibold">
+                  <span className="text-[#D8B13D]">Total to Send Now:</span>
+                  <span className="text-[#D8B13D]">
+                    {wagerType === 'standard'
+                      ? (parseFloat(myStake || '0') * 1.05).toFixed(2)
+                      : parseFloat(myStake || '0').toLocaleString()}{' '}
+                    PLS
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex gap-3">
