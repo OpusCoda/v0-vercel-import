@@ -533,9 +533,9 @@ export function CreateWager() {
                 <div className="text-xs text-[#9a9a9a] leading-relaxed">
                   {wagerType === 'standard' ? (
                     <>
-                      (includes {(parseFloat(myStake || '0') * 0.05).toFixed(0)} vote deposit, returned if you vote correctly)
+                      (includes a {(parseFloat(myStake || '0') * 0.05).toFixed(0)} vote deposit which will be returned if you submit a vote for the correct outcome at the closing of the bet.)
                       <br />
-                      Protocol fee {protocolFeePercent.toFixed(2)}% deducted at resolution.
+                      Protocol fee {protocolFeePercent.toFixed(2)}%, deducted at resolution.
                     </>
                   ) : (
                     <>
