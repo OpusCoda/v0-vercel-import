@@ -223,13 +223,26 @@ export function CreateWager() {
             <>
               <div>
                 <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Event Date</label>
-                <input
-                  type="date"
-                  value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
-                  required
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    className="flex-1 rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const today = new Date().toISOString().split('T')[0]
+                      setEventDate(today)
+                    }}
+                    className="rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#9a9a9a] hover:border-[#D8B13D] hover:text-[#D8B13D] transition"
+                    title="Set to today"
+                  >
+                    📅
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -279,13 +292,26 @@ export function CreateWager() {
             <>
               <div>
                 <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Event Date</label>
-                <input
-                  type="date"
-                  value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
-                  required
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    className="flex-1 rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const today = new Date().toISOString().split('T')[0]
+                      setEventDate(today)
+                    }}
+                    className="rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#9a9a9a] hover:border-[#D8B13D] hover:text-[#D8B13D] transition"
+                    title="Set to today"
+                  >
+                    📅
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -461,50 +487,21 @@ export function CreateWager() {
       {/* Confirmation Modal */}
       {showConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="rounded-2xl border border-white/10 bg-[#111116] p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="font-serif text-2xl font-bold mb-6">Confirm Wager</h3>
-            <div className="space-y-4 mb-6 text-sm">
-              {/* Basic Info */}
-              <div className="space-y-2 pb-3 border-b border-white/10">
-                <div className="flex justify-between">
-                  <span className="text-[#9a9a9a]">Type:</span>
-                  <span className="text-[#f4f4f4] font-semibold">{wagerType === 'standard' ? 'Standard Wager' : 'Price Bet'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#9a9a9a]">Description:</span>
-                  <span className="text-[#f4f4f4] text-right">{description}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#9a9a9a]">Event Date:</span>
-                  <span className="text-[#f4f4f4]">{new Date(eventDate).toLocaleDateString()}</span>
-                </div>
-                {wagerType === 'standard' ? (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-[#9a9a9a]">Category:</span>
-                      <span className="text-[#f4f4f4]">{CATEGORIES.find(c => c.value.toString() === category)?.label}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#9a9a9a]">Deposit Window:</span>
-                      <span className="text-[#f4f4f4]">{DEPOSIT_WINDOWS.find(w => w.value.toString() === depositWindow)?.label}</span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-[#9a9a9a]">Target Price:</span>
-                      <span className="text-[#f4f4f4]">${targetPrice}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#9a9a9a]">Direction:</span>
-                      <span className="text-[#f4f4f4] capitalize">{direction}</span>
-                    </div>
-                  </>
-                )}
-              </div>
+          <div className="rounded-2xl border border-white/10 bg-[#111116] p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <h3 className="font-serif text-xl font-bold text-[#e8e6e3] mb-1">
+                {wagerType === 'standard' ? 'Standard Wager' : 'Price Bet'} — {wagerType === 'standard' ? CATEGORIES.find(c => c.value.toString() === category)?.label : 'Crypto'}
+              </h3>
+              <p className="text-[#9a9a9a] text-sm">
+                "{description}" · {new Date(eventDate).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}
+              </p>
+            </div>
 
-              {/* Stakes and Odds */}
-              <div className="space-y-2 pb-3 border-b border-white/10">
+            {/* Main Content */}
+            <div className="space-y-6 text-sm font-mono">
+              {/* Stakes */}
+              <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-[#9a9a9a]">Your Stake:</span>
                   <span className="text-[#f4f4f4]">{parseFloat(myStake || '0').toLocaleString()} PLS</span>
@@ -513,63 +510,53 @@ export function CreateWager() {
                   <span className="text-[#9a9a9a]">Challenger Stake:</span>
                   <span className="text-[#f4f4f4]">{parseFloat(challengerStake || '0').toLocaleString()} PLS</span>
                 </div>
-                <div className="flex justify-between font-semibold text-[#D8B13D]">
-                  <span>Odds:</span>
-                  <span>{(parseFloat(myStake || '1') / parseFloat(challengerStake || '1')).toFixed(2)}×</span>
-                </div>
-                <div className="text-xs text-[#9a9a9a]">
-                  If you win: +{parseFloat(challengerStake || '0').toLocaleString()} PLS
+                <div className="flex justify-between">
+                  <span className="text-[#9a9a9a]">If you win:</span>
+                  <span className="text-[#D8B13D] font-semibold">+{parseFloat(challengerStake || '0').toLocaleString()} PLS</span>
                 </div>
               </div>
 
-              {/* Fees */}
-              {wagerType === 'standard' ? (
-                <div className="space-y-2 pb-3 border-b border-white/10">
-                  <div className="text-xs font-semibold text-[#9a9a9a] uppercase">Fees & Deposits</div>
-                  <div className="flex justify-between">
-                    <span className="text-[#9a9a9a]">Vote Deposit (5%):</span>
-                    <span className="text-[#f4f4f4]">{(parseFloat(myStake || '0') * 0.05).toFixed(2)} PLS</span>
-                  </div>
-                  <div className="text-xs text-[#9a9a9a] flex justify-between">
-                    <span>└─ Returned if you vote correctly</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#9a9a9a]">Protocol Fee ({protocolFeePercent.toFixed(2)}%):</span>
-                    <span className="text-[#9a9a9a] text-xs">~{(parseFloat(myStake || '0') * (protocolFeePercent / 100)).toFixed(2)} PLS</span>
-                  </div>
-                  <div className="text-xs text-[#9a9a9a] flex justify-between">
-                    <span>└─ Deducted from winnings at resolution</span>
-                  </div>
-                </div>
-              ) : null}
-
-              {/* Transaction Summary */}
-              <div className="space-y-2 pt-2">
-                <div className="text-xs font-semibold text-[#9a9a9a] uppercase">Transaction</div>
-                <div className="flex justify-between font-semibold">
-                  <span className="text-[#D8B13D]">Total to Send Now:</span>
-                  <span className="text-[#D8B13D]">
+              {/* Total to Send */}
+              <div className="border-t border-white/10 pt-6">
+                <div className="flex justify-between mb-2">
+                  <span className="text-[#D8B13D] font-bold">Total to Send Now:</span>
+                  <span className="text-[#D8B13D] font-bold">
                     {wagerType === 'standard'
-                      ? (parseFloat(myStake || '0') * 1.05).toFixed(2)
+                      ? (parseFloat(myStake || '0') * 1.05).toFixed(0)
                       : parseFloat(myStake || '0').toLocaleString()}{' '}
                     PLS
                   </span>
                 </div>
+                <div className="text-xs text-[#9a9a9a] leading-relaxed">
+                  {wagerType === 'standard' ? (
+                    <>
+                      (includes {(parseFloat(myStake || '0') * 0.05).toFixed(0)} vote deposit, returned if you vote correctly)
+                      <br />
+                      Protocol fee {protocolFeePercent.toFixed(2)}% deducted at resolution.
+                    </>
+                  ) : (
+                    <>
+                      No additional fees (exact stake)
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="flex gap-3">
+
+            {/* Buttons */}
+            <div className="flex gap-3 mt-8">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 rounded-lg border border-white/10 px-4 py-2 font-semibold text-[#f4f4f4] hover:border-white/20"
+                className="flex-1 rounded-lg border border-white/10 px-4 py-3 font-semibold text-[#f4f4f4] hover:border-white/20 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirm}
                 disabled={isPending}
-                className="flex-1 rounded-lg bg-[#D8B13D] px-4 py-2 font-semibold text-black hover:bg-[#D8B13D]/90 disabled:opacity-50"
+                className="flex-1 rounded-lg bg-[#D8B13D] px-4 py-3 font-semibold text-black hover:bg-[#D8B13D]/90 disabled:opacity-50 transition"
               >
-                {isPending ? 'Creating...' : 'Confirm'}
+                {isPending ? 'Creating...' : 'Confirm & Create'}
               </button>
             </div>
           </div>
