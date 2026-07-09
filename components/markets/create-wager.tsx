@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAccount, useWriteContract, useReadContract } from 'wagmi'
 import { parseEther } from 'viem'
 import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from '@/lib/wager-market'
@@ -31,6 +31,7 @@ const DEPOSIT_WINDOWS = [
 export function CreateWager() {
   const { address, isConnected } = useAccount()
   const { writeContract, isPending } = useWriteContract()
+  const dateInputRef = useRef<HTMLInputElement>(null)
 
   const [wagerType, setWagerType] = useState<WagerType>('standard')
   const [description, setDescription] = useState('')
@@ -45,6 +46,12 @@ export function CreateWager() {
   const [direction, setDirection] = useState<'above' | 'below'>('above')
   const [showConfirm, setShowConfirm] = useState(false)
   const [protocolFeePercent, setProtocolFeePercent] = useState<number>(0)
+
+  // Initialize eventDate to today on mount
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+    setEventDate(today)
+  }, [])
 
   // Fetch fee info
   const { data: feeInfoData } = useReadContract({
@@ -225,6 +232,7 @@ export function CreateWager() {
                 <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Event Date</label>
                 <div className="flex gap-2">
                   <input
+                    ref={dateInputRef}
                     type="date"
                     value={eventDate}
                     onChange={(e) => setEventDate(e.target.value)}
@@ -233,12 +241,9 @@ export function CreateWager() {
                   />
                   <button
                     type="button"
-                    onClick={() => {
-                      const today = new Date().toISOString().split('T')[0]
-                      setEventDate(today)
-                    }}
+                    onClick={() => dateInputRef.current?.showPicker?.()}
                     className="rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#9a9a9a] hover:border-[#D8B13D] hover:text-[#D8B13D] transition"
-                    title="Set to today"
+                    title="Open calendar"
                   >
                     📅
                   </button>
@@ -294,6 +299,7 @@ export function CreateWager() {
                 <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Event Date</label>
                 <div className="flex gap-2">
                   <input
+                    ref={dateInputRef}
                     type="date"
                     value={eventDate}
                     onChange={(e) => setEventDate(e.target.value)}
@@ -302,12 +308,9 @@ export function CreateWager() {
                   />
                   <button
                     type="button"
-                    onClick={() => {
-                      const today = new Date().toISOString().split('T')[0]
-                      setEventDate(today)
-                    }}
+                    onClick={() => dateInputRef.current?.showPicker?.()}
                     className="rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#9a9a9a] hover:border-[#D8B13D] hover:text-[#D8B13D] transition"
-                    title="Set to today"
+                    title="Open calendar"
                   >
                     📅
                   </button>
