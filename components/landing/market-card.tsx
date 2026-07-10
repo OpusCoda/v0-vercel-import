@@ -114,7 +114,7 @@ export function MarketCard(props: MarketCardProps) {
       </button>
 
       {/* Closes in */}
-      <p className="font-sans text-xs text-[#7c7a76]">Closes in {props.closesIn}</p>
+      <p className="font-sans text-xs text-[#7c7a76]">Time left to accept: {props.closesIn}</p>
     </div>
   )
 }
