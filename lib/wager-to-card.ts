@@ -38,7 +38,7 @@ export interface P2PCardData {
   yesData: { label: string; staked: number; wins: number; isTaken: boolean }
   noData: { label: string; staked: number; wins: number; isTaken: boolean }
   closesIn: string
-  status: 'active' | 'open'
+  status: 'active' | 'open' | 'closed'
   id: string
   creator: string
   isPriceBet: boolean
@@ -92,7 +92,8 @@ export function wagerToCard(w: WagerDetails): P2PCardData {
     yesData,
     noData,
     closesIn: closesIn(w.depositDeadline),
-    status: w.status === 0 ? 'open' : 'active', // Created = open, else active
+    // 0 Created = open; 1 Active / 2 Voting = active; 3+ = closed/resolved.
+    status: w.status === 0 ? 'open' : w.status === 1 || w.status === 2 ? 'active' : 'closed',
     id: w.id.toString(),
     creator: w.creator,
     isPriceBet,

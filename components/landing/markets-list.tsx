@@ -2,8 +2,8 @@
 import { useState, useMemo } from "react"
 import { Search, X } from "lucide-react"
 import { MarketCard, type MarketCardProps } from "./market-card"
-import { useOpenWagers } from "@/hooks/useOpenWagers"
-import { wagerToCard } from "@/lib/wager-to-card"
+import { useAllWagers } from "@/hooks/useAllWagers"
+import { wagerToCard, type P2PCardData } from "@/lib/wager-to-card"
 type Category = "Crypto" | "Politics" | "Sports" | "Macro" | "PulseChain" | "Misc"
 type P2PStatus = "active" | "open"
 interface ProbabilityMarket {
@@ -85,8 +85,8 @@ export function MarketsList() {
   const [priceMin, setPriceMin] = useState(MIN_PRICE)
   const [priceMax, setPriceMax] = useState(MAX_PRICE)
   // Live P2P wagers from chain (open wagers only — see note below).
-  const { wagers, isLoading: wagersLoading } = useOpenWagers()
-  const p2pMarkets = useMemo(() => wagers.map(wagerToCard), [wagers])
+  const { wagers, isLoading: wagersLoading } = useAllWagers()
+  const p2pMarkets: P2PCardData[] = useMemo(() => wagers.map(wagerToCard), [wagers])
   // Filter Probability Shop markets
   const filteredProbabilityMarkets = useMemo(() => {
     return probabilityMarkets.filter((market) => {
@@ -104,7 +104,7 @@ export function MarketsList() {
       const matchesCategory =
         selectedCategories.size === 0 || selectedCategories.has(market.category as Category)
       const matchesStatus =
-        p2pFilter === "All" ||
+        (p2pFilter === "All" && (market.status === "open" || market.status === "active")) ||
         (p2pFilter === "Active" && market.status === "active") ||
         (p2pFilter === "Open" && market.status === "open")
       // Check if the max of (yes staked, no staked) falls within price range
