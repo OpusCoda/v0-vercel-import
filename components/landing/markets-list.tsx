@@ -337,6 +337,10 @@ export function MarketsList() {
                   noData={market.noData}
                   closesIn={market.closesIn}
                   creator={market.creator}
+                  isPriceBet={market.isPriceBet}
+                  creatorBetsAbove={market.creatorBetsAbove}
+                  targetPrice={market.targetPrice}
+                  tokenLabel={market.tokenLabel}
                 />
               ))
             ) : (

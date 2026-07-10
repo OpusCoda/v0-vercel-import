@@ -41,6 +41,10 @@ export interface P2PCardData {
   status: 'active' | 'open'
   id: string
   creator: string
+  isPriceBet: boolean
+  creatorBetsAbove: boolean
+  targetPrice: number
+  tokenLabel: string
 }
 
 export function wagerToCard(w: WagerDetails): P2PCardData {
@@ -91,5 +95,9 @@ export function wagerToCard(w: WagerDetails): P2PCardData {
     status: w.status === 0 ? 'open' : 'active', // Created = open, else active
     id: w.id.toString(),
     creator: w.creator,
+    isPriceBet,
+    creatorBetsAbove: w.creatorBetsAbove,
+    targetPrice: pls(w.targetPrice),
+    tokenLabel: isPriceBet ? (QUERY_LABELS[w.queryId?.toLowerCase()] ?? 'Token') : '',
   }
 }
