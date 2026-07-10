@@ -58,13 +58,15 @@ export default function MarketsPage() {
           </div>
         </div>
 
-        {/* Probability Shop */}
+        {/* Market Browse Section */}
         <div className="py-12 border-t border-[#2a2a35]">
+          <div className="mb-8">
+            <h2 className="font-serif text-2xl font-bold text-[#e8e6e3] mb-1">Market Explore</h2>
+            <p className="text-sm text-[#9a9a9a]">Browse featured predictions and market categories</p>
+          </div>
           <MarketsList />
+          <MarketsOverview />
         </div>
-
-        {/* Markets Overview */}
-        <MarketsOverview />
       </div>
 
       <SiteFooter />

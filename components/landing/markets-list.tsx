@@ -242,9 +242,9 @@ export function MarketsList() {
         </div>
       </div>
 
-      {/* Probability Shop - Full Width */}
-      <div>
-        {/* Probability Shop */}
+      {/* Two-column layout: 50/50 split */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Left column: Probability Shop */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
@@ -272,8 +272,7 @@ export function MarketsList() {
           </div>
         </div>
 
-        {/* P2P Market - removed to show live wagers from contract instead */}
-        {false && (
+        {/* Right column: P2P Market */}
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -431,7 +430,6 @@ export function MarketsList() {
             )}
           </div>
         </div>
-        )}
       </div>
     </section>
   )
