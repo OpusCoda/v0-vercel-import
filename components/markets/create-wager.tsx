@@ -80,7 +80,9 @@ export function CreateWager() {
       return
     }
     try {
-      const eventTimestamp = Math.floor(new Date(eventDate).getTime() / 1000)
+      console.log('[v0] raw eventDate:', JSON.stringify(eventDate))
+  const [y, m, d] = eventDate.split('-').map(Number)
+  const eventTimestamp = Math.floor(Date.UTC(y, m - 1, d, 12, 0, 0) / 1000)
       const stake = parseEther(myStake)
       const challengerStakeWei = parseEther(challengerStake)
       // depositWindow and category are uint8 enums -> plain numbers, not BigInt.
