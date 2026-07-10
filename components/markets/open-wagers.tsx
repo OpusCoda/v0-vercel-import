@@ -69,24 +69,26 @@ export function OpenWagers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {wagers.map((wager) => {
-                const expiresDate = new Date(Number(wager.expiresAt) * 1000)
+              {wagers.map((wager, idx) => {
+                if (!wager || !wager.id) return null
+                
+                const expiresDate = new Date(Number(wager.expiresAt || 0) * 1000)
                 const isExpired = expiresDate < new Date()
 
                 return (
-                  <tr key={wager.id.toString()} className="text-[#f4f4f4] hover:bg-white/5 transition">
+                  <tr key={`wager-${idx}`} className="text-[#f4f4f4] hover:bg-white/5 transition">
                     <td className="py-3 px-4 font-mono text-xs">#{wager.id.toString()}</td>
-                    <td className="py-3 px-4 text-sm">{getWagerTypeLabel(wager.wagerType)}</td>
-                    <td className="py-3 px-4 text-[#9a9a9a] text-sm">{formatAddress(wager.creator)}</td>
-                    <td className="py-3 px-4 text-sm font-semibold">{formatAmount(wager.amount)} PLS</td>
-                    <td className="py-3 px-4 text-sm">{Number(wager.odds) / 100}:1</td>
+                    <td className="py-3 px-4 text-sm">{getWagerTypeLabel(wager.wagerType || 0)}</td>
+                    <td className="py-3 px-4 text-[#9a9a9a] text-sm">{formatAddress(wager.creator || '0x0000000000000000000000000000000000000000')}</td>
+                    <td className="py-3 px-4 text-sm font-semibold">{formatAmount(wager.amount || BigInt(0))} PLS</td>
+                    <td className="py-3 px-4 text-sm">{Number(wager.odds || 0) / 100}:1</td>
                     <td className="py-3 px-4">
                       <span
                         className={`inline-block px-2 py-0.5 rounded-full border text-xs font-semibold ${getStatusColor(
-                          wager.status
+                          wager.status || 0
                         )}`}
                       >
-                        {getStatusLabel(wager.status)}
+                        {getStatusLabel(wager.status || 0)}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-[#9a9a9a] text-sm">
