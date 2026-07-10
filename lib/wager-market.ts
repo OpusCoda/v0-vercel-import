@@ -102,6 +102,7 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
+  { inputs: [], name: 'wagerCount', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },
   // --- submitVote(uint256,address) ---
   {
     inputs: [
