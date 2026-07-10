@@ -1,8 +1,6 @@
 import Image from "next/image"
 import { SiteNav } from "@/components/landing/site-nav"
 import { SiteFooter } from "@/components/landing/site-footer"
-import { MarketsOverview } from "@/components/landing/markets-overview"
-import { MarketsList } from "@/components/landing/markets-list"
 import { WagerMarketStats } from "@/components/markets/wager-market-stats"
 import { OpenWagers } from "@/components/markets/open-wagers"
 import { CreateWager } from "@/components/markets/create-wager"
@@ -56,16 +54,6 @@ export default function MarketsPage() {
           <div>
             <OpenWagers />
           </div>
-        </div>
-
-        {/* Market Browse Section */}
-        <div className="py-12 border-t border-[#2a2a35]">
-          <div className="mb-8">
-            <h2 className="font-serif text-2xl font-bold text-[#e8e6e3] mb-1">Market Explore</h2>
-            <p className="text-sm text-[#9a9a9a]">Browse featured predictions and market categories</p>
-          </div>
-          <MarketsList />
-          <MarketsOverview />
         </div>
       </div>
 
