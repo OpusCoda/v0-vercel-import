@@ -81,13 +81,28 @@ export function CreateWager() {
     }
     try {
       console.log('[v0] raw eventDate:', JSON.stringify(eventDate))
-  const [y, m, d] = eventDate.split('-').map(Number)
-  const eventTimestamp = Math.floor(Date.UTC(y, m - 1, d, 12, 0, 0) / 1000)
-      const stake = parseEther(myStake)
-      const challengerStakeWei = parseEther(challengerStake)
+      const [y, m, d] = eventDate.split('-').map(Number)
+      const eventTimestamp = Math.floor(Date.UTC(y, m - 1, d, 12, 0, 0) / 1000)
+
       // depositWindow and category are uint8 enums -> plain numbers, not BigInt.
       const depositWindowEnum = parseInt(depositWindow, 10)
       const categoryEnum = parseInt(category, 10)
+
+      const now = Math.floor(Date.now() / 1000)
+      const windowSecondsMap = [24 * 3600, 48 * 3600, 7 * 86400, 30 * 86400] // H24,H48,W1,M1
+      const windowSeconds = windowSecondsMap[depositWindowEnum]
+      if (eventTimestamp <= now) {
+        alert('Event date must be in the future')
+        return
+      }
+      if (now + windowSeconds >= eventTimestamp) {
+        alert('Event date is too soon for this deposit window — pick a later date')
+        return
+      }
+
+      const stake = parseEther(myStake)
+      const challengerStakeWei = parseEther(challengerStake)
+
       if (wagerType === 'standard') {
         // creatorStake is derived on-chain from msg.value:
         //   voteDeposit  = msg.value * 500 / 10500
