@@ -3,7 +3,7 @@ import { useState, useMemo } from "react"
 import { Search, X } from "lucide-react"
 import { MarketCard, type MarketCardProps } from "./market-card"
 import { useOpenWagers } from "@/hooks/useOpenWagers"
-import { wagerToCard, type P2PCardData } from "@/lib/wager-to-card"
+import { wagerToCard } from "@/lib/wager-to-card"
 type Category = "Crypto" | "Politics" | "Sports" | "Macro" | "PulseChain" | "Misc"
 type P2PStatus = "active" | "open"
 interface ProbabilityMarket {
@@ -86,7 +86,7 @@ export function MarketsList() {
   const [priceMax, setPriceMax] = useState(MAX_PRICE)
   // Live P2P wagers from chain (open wagers only — see note below).
   const { wagers, isLoading: wagersLoading } = useOpenWagers()
-  const p2pMarkets: P2PCardData[] = useMemo(() => wagers.map(wagerToCard), [wagers])
+  const p2pMarkets = useMemo(() => wagers.map(wagerToCard), [wagers])
   // Filter Probability Shop markets
   const filteredProbabilityMarkets = useMemo(() => {
     return probabilityMarkets.filter((market) => {
@@ -327,6 +327,7 @@ export function MarketsList() {
                 <MarketCard
                   key={market.id}
                   type="p2p"
+                  id={market.id}
                   icon={market.icon}
                   betType={market.betType}
                   description={market.description}
@@ -335,6 +336,7 @@ export function MarketsList() {
                   yesData={market.yesData}
                   noData={market.noData}
                   closesIn={market.closesIn}
+                  creator={market.creator}
                 />
               ))
             ) : (

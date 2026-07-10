@@ -40,6 +40,7 @@ export interface P2PCardData {
   closesIn: string
   status: 'active' | 'open'
   id: string
+  creator: string
 }
 
 export function wagerToCard(w: WagerDetails): P2PCardData {
@@ -89,5 +90,6 @@ export function wagerToCard(w: WagerDetails): P2PCardData {
     closesIn: closesIn(w.depositDeadline),
     status: w.status === 0 ? 'open' : 'active', // Created = open, else active
     id: w.id.toString(),
+    creator: w.creator,
   }
 }
