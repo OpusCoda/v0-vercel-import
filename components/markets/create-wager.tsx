@@ -1,28 +1,16 @@
 'use client'
-
 import { useState, useEffect, useRef } from 'react'
 import { useAccount, useWriteContract, useReadContract } from 'wagmi'
 import { parseEther, isAddress } from 'viem'
-import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from '@/lib/wager-market'
+import {
+  WAGER_MARKET_ADDRESS,
+  WAGER_MARKET_ABI,
+  CATEGORIES,
+  DEPOSIT_WINDOWS,
+  PRICE_BET_TOKENS,
+} from '@/lib/wager-market'
 type WagerType = 'standard' | 'price-bet'
-const CATEGORIES = [
-  { value: 0, label: 'Sports' },
-  { value: 1, label: 'Crypto' },
-  { value: 2, label: 'Politics' },
-  { value: 3, label: 'Entertainment' },
-  { value: 4, label: 'Other' },
-]
-const TOKENS = [
-  { id: 0, label: 'PLS', symbol: 'PLS' },
-  { id: 1, label: 'PLSX', symbol: 'PLSX' },
-  { id: 2, label: 'HEX', symbol: 'HEX' },
-  { id: 3, label: 'INC', symbol: 'INC' },
-]
-const DEPOSIT_WINDOWS = [
-  { value: 1, label: '1 day' },
-  { value: 3, label: '3 days' },
-  { value: 7, label: '7 days' },
-]
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 export function CreateWager() {
   const { address, isConnected } = useAccount()
   const { writeContract, isPending } = useWriteContract()
@@ -30,22 +18,24 @@ export function CreateWager() {
   const [wagerType, setWagerType] = useState<WagerType>('standard')
   const [description, setDescription] = useState('')
   const [eventDate, setEventDate] = useState('')
-  const [depositWindow, setDepositWindow] = useState('1')
+  const [depositWindow, setDepositWindow] = useState('0') // enum index
   const [myStake, setMyStake] = useState('')
   const [challengerStake, setChallengerStake] = useState('')
   const [challengerAddress, setChallengerAddress] = useState('')
-  const [category, setCategory] = useState('0')
-  const [token, setToken] = useState('0')
+  const [category, setCategory] = useState('0') // enum index
+  const [tokenIdx, setTokenIdx] = useState('0') // index into PRICE_BET_TOKENS
   const [targetPrice, setTargetPrice] = useState('')
   const [direction, setDirection] = useState<'above' | 'below'>('above')
+  const [referrer, setReferrer] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
-  const [protocolFeePercent, setProtocolFeePercent] = useState<number>(0)
+  const [effectiveFeePercent, setEffectiveFeePercent] = useState<number>(0)
   // Initialize eventDate to today on mount
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
     setEventDate(today)
   }, [])
-  // Fetch fee info
+  // Fetch fee info — getUserFeeInfo returns 4 flat values:
+  // [baseFeeBps, stakingRebate, referralRebate, effectiveFeeBps]
   const { data: feeInfoData } = useReadContract({
     address: WAGER_MARKET_ADDRESS,
     abi: WAGER_MARKET_ABI,
@@ -55,101 +45,103 @@ export function CreateWager() {
   })
   useEffect(() => {
     if (feeInfoData) {
-      const feeData = feeInfoData as any
-      setProtocolFeePercent(Number(feeData.protocolFeePercent) / 100) // Convert to percentage
+      const [, , , effectiveFeeBps] = feeInfoData as readonly bigint[]
+      setEffectiveFeePercent(Number(effectiveFeeBps) / 100) // BPS -> percent
     }
   }, [feeInfoData])
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!isConnected || !address) {
       alert('Please connect your wallet')
       return
     }
-    // Validate required fields
+    // Both wager types require the same core fields (contract enforces this).
     const requiredFields = wagerType === 'standard'
-      ? [description, eventDate, myStake, challengerStake, category]
-      : [description, myStake, challengerStake, token, targetPrice]
-
+      ? [description, eventDate, depositWindow, myStake, challengerStake, category]
+      : [description, eventDate, depositWindow, myStake, challengerStake, targetPrice, category]
     if (requiredFields.some(f => !f)) {
       alert('Please fill in all required fields')
       return
     }
-    // Show confirmation
     setShowConfirm(true)
   }
   const handleConfirm = async () => {
     if (!isConnected || !address) return
-
-    // Validate optional challenger address before building the tx
-    const resolvedChallenger =
-      challengerAddress === ''
-        ? '0x0000000000000000000000000000000000000000'
-        : challengerAddress
+    // Validate optional challenger address
+    const resolvedChallenger = challengerAddress === '' ? ZERO_ADDRESS : challengerAddress
     if (challengerAddress !== '' && !isAddress(challengerAddress)) {
       alert('Challenger address is not a valid wallet address')
       return
     }
-
+    // Validate optional referrer address
+    const resolvedReferrer = referrer === '' ? ZERO_ADDRESS : referrer
+    if (referrer !== '' && !isAddress(referrer)) {
+      alert('Referrer address is not a valid wallet address')
+      return
+    }
     try {
       const eventTimestamp = Math.floor(new Date(eventDate).getTime() / 1000)
-      const depositWindowSeconds = parseInt(depositWindow) * 86400
       const stake = parseEther(myStake)
-
-      let msgValue = BigInt(0)
-
+      const challengerStakeWei = parseEther(challengerStake)
+      // depositWindow and category are uint8 enums -> plain numbers, not BigInt.
+      const depositWindowEnum = parseInt(depositWindow, 10)
+      const categoryEnum = parseInt(category, 10)
       if (wagerType === 'standard') {
-        // Standard wager: stake + 5% vote deposit sent upfront (protocol fee deducted at resolution)
-        // Arg order verified against ABI. msg.value amount (stake + 5%) still assumes the contract
-        // requires exactly that at creation — verify against the createWager body if unsure.
-        msgValue = stake + (stake * BigInt(500)) / BigInt(10000)
+        // creatorStake is derived on-chain from msg.value:
+        //   voteDeposit  = msg.value * 500 / 10500
+        //   creatorStake = msg.value - voteDeposit
+        // So sending stake + 5% makes creatorStake == stake.
+        const msgValue = stake + (stake * BigInt(500)) / BigInt(10000)
         writeContract({
           address: WAGER_MARKET_ADDRESS,
           abi: WAGER_MARKET_ABI,
           functionName: 'createWager',
           args: [
+            resolvedChallenger as `0x${string}`,
             description,
             BigInt(eventTimestamp),
-            BigInt(depositWindowSeconds),
-            stake,
-            parseEther(challengerStake),
-            resolvedChallenger as `0x${string}`,
-            parseInt(category, 10),
+            depositWindowEnum,
+            challengerStakeWei,
+            categoryEnum,
+            resolvedReferrer as `0x${string}`,
           ],
           value: msgValue,
         })
       } else {
-        // Price bet: exact stake (no additional fees)
-        // Args verified against ABI: createPriceBet takes no eventDate/depositWindow.
-        msgValue = stake
+        // Price bet: no vote deposit -- creatorStake == msg.value exactly.
+        const queryId = PRICE_BET_TOKENS[parseInt(tokenIdx, 10)].queryId
         writeContract({
           address: WAGER_MARKET_ADDRESS,
           abi: WAGER_MARKET_ABI,
           functionName: 'createPriceBet',
           args: [
+            resolvedChallenger as `0x${string}`,
             description,
-            BigInt(parseInt(token)),
+            BigInt(eventTimestamp),
+            depositWindowEnum,
+            challengerStakeWei,
+            queryId,
             parseEther(targetPrice),
             direction === 'above',
-            stake,
-            resolvedChallenger as `0x${string}`,
+            categoryEnum,
+            resolvedReferrer as `0x${string}`,
           ],
-          value: msgValue,
+          value: stake,
         })
       }
-
       setShowConfirm(false)
       // Reset form
       setDescription('')
       setEventDate(new Date().toISOString().split('T')[0])
-      setDepositWindow('1')
+      setDepositWindow('0')
       setMyStake('')
       setChallengerStake('')
       setChallengerAddress('')
       setCategory('0')
-      setToken('0')
+      setTokenIdx('0')
       setTargetPrice('')
       setDirection('above')
+      setReferrer('')
     } catch (error) {
       console.error('[v0] Error creating wager:', error)
     }
@@ -192,7 +184,7 @@ export function CreateWager() {
           </div>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Common Fields */}
+          {/* Description */}
           <div>
             <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Description</label>
             <input
@@ -204,6 +196,7 @@ export function CreateWager() {
               required
             />
           </div>
+          {/* My Stake */}
           <div>
             <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">My Stake (PLS)</label>
             <input
@@ -216,81 +209,68 @@ export function CreateWager() {
               required
             />
           </div>
-          {wagerType === 'standard' ? (
-            <>
-              <div>
-                <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Event Date</label>
-                <div className="flex gap-2">
-                  <input
-                    ref={dateInputRef}
-                    type="date"
-                    value={eventDate}
-                    onChange={(e) => setEventDate(e.target.value)}
-                    className="flex-1 rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => dateInputRef.current?.showPicker?.()}
-                    className="rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#9a9a9a] hover:border-[#D8B13D] hover:text-[#D8B13D] transition"
-                    title="Open calendar"
-                  >
-                    📅
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Deposit Window</label>
-                <select
-                  value={depositWindow}
-                  onChange={(e) => setDepositWindow(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
-                >
-                  {DEPOSIT_WINDOWS.map((w) => (
-                    <option key={w.value} value={w.value}>
-                      {w.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Challenger Stake (PLS)</label>
-                <input
-                  type="number"
-                  value={challengerStake}
-                  onChange={(e) => setChallengerStake(e.target.value)}
-                  placeholder="0.00"
-                  step="0.01"
-                  className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
-          ) : (
+          {/* Event Date -- required for BOTH types */}
+          <div>
+            <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Event Date</label>
+            <div className="flex gap-2">
+              <input
+                ref={dateInputRef}
+                type="date"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                className="flex-1 rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => dateInputRef.current?.showPicker?.()}
+                className="rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#9a9a9a] hover:border-[#D8B13D] hover:text-[#D8B13D] transition"
+                title="Open calendar"
+              >
+                📅
+              </button>
+            </div>
+          </div>
+          {/* Deposit Window -- required for BOTH types */}
+          <div>
+            <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Deposit Window</label>
+            <select
+              value={depositWindow}
+              onChange={(e) => setDepositWindow(e.target.value)}
+              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
+            >
+              {DEPOSIT_WINDOWS.map((w) => (
+                <option key={w.value} value={w.value}>
+                  {w.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* Challenger Stake -- required for BOTH types */}
+          <div>
+            <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Challenger Stake (PLS)</label>
+            <input
+              type="number"
+              value={challengerStake}
+              onChange={(e) => setChallengerStake(e.target.value)}
+              placeholder="0.00"
+              step="0.01"
+              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
+              required
+            />
+          </div>
+          {/* Price-bet-only fields */}
+          {wagerType === 'price-bet' && (
             <>
               <div>
                 <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Token</label>
                 <select
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
+                  value={tokenIdx}
+                  onChange={(e) => setTokenIdx(e.target.value)}
                   className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
                 >
-                  {TOKENS.map((t) => (
-                    <option key={t.id} value={t.id}>
+                  {PRICE_BET_TOKENS.map((t, i) => (
+                    <option key={t.queryId} value={i}>
                       {t.label}
                     </option>
                   ))}
@@ -335,20 +315,24 @@ export function CreateWager() {
                   </button>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Challenger Stake (PLS)</label>
-                <input
-                  type="number"
-                  value={challengerStake}
-                  onChange={(e) => setChallengerStake(e.target.value)}
-                  placeholder="0.00"
-                  step="0.01"
-                  className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
-                  required
-                />
-              </div>
             </>
           )}
+          {/* Category -- required for BOTH types */}
+          <div>
+            <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Category</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* Challenger Address (optional) */}
           <div>
             <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Challenger Address (Optional)</label>
             <input
@@ -359,15 +343,25 @@ export function CreateWager() {
               className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
             />
           </div>
+          {/* Referrer Address (optional) */}
+          <div>
+            <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Referrer Address (Optional)</label>
+            <input
+              type="text"
+              value={referrer}
+              onChange={(e) => setReferrer(e.target.value)}
+              placeholder="0x0000... (leave empty for none)"
+              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
+            />
+          </div>
           {/* Fee & Odds Info */}
           <div className="space-y-3">
-            {/* Odds */}
             {parseFloat(myStake) > 0 && parseFloat(challengerStake) > 0 && (
               <div className="rounded-lg border border-white/20 bg-[#09090B] p-4">
                 <div className="text-sm text-[#9a9a9a] mb-2">Implied Odds</div>
                 <div className="space-y-1">
                   <div className="text-lg font-semibold text-[#D8B13D]">
-                    {(parseFloat(myStake) / parseFloat(challengerStake)).toFixed(2)}×
+                    {(parseFloat(myStake) / parseFloat(challengerStake)).toFixed(2)}x
                   </div>
                   <div className="text-xs text-[#9a9a9a]">
                     If you win: +{parseFloat(challengerStake).toLocaleString()} PLS
@@ -375,7 +369,6 @@ export function CreateWager() {
                 </div>
               </div>
             )}
-            {/* Fee Info */}
             <div className="rounded-lg border border-white/20 bg-[#09090B] p-4">
               <div className="text-sm text-[#9a9a9a] mb-3">Transaction Details</div>
               {wagerType === 'standard' ? (
@@ -396,7 +389,7 @@ export function CreateWager() {
                   </div>
                   <div className="pt-2 mt-2 border-t border-white/10">
                     <div className="flex justify-between text-[#9a9a9a]">
-                      <span>Protocol Fee ({protocolFeePercent.toFixed(2)}%):</span>
+                      <span>Your Fee ({effectiveFeePercent.toFixed(2)}%):</span>
                       <span className="text-xs">Deducted at resolution</span>
                     </div>
                   </div>
@@ -414,7 +407,7 @@ export function CreateWager() {
                     </div>
                   </div>
                   <div className="pt-2 mt-2 text-[#9a9a9a] text-xs">
-                    No additional fees (exact stake)
+                    No vote deposit (oracle-resolved). Fee of {effectiveFeePercent.toFixed(2)}% deducted at resolution.
                   </div>
                 </div>
               )}
@@ -433,20 +426,15 @@ export function CreateWager() {
       {showConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="rounded-2xl border border-white/10 bg-[#111116] p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            {/* Header */}
             <div className="mb-8">
               <h3 className="font-serif text-xl font-bold text-[#e8e6e3] mb-1">
-                {wagerType === 'standard' ? 'Standard Wager' : 'Price Bet'} — {wagerType === 'standard' ? CATEGORIES.find(c => c.value.toString() === category)?.label : 'Crypto'}
+                {wagerType === 'standard' ? 'Standard Wager' : 'Price Bet'} -- {CATEGORIES.find(c => c.value.toString() === category)?.label}
               </h3>
               <p className="text-[#9a9a9a] text-sm">
-                "{description}"
-                {wagerType === 'standard' &&
-                  ` · ${new Date(eventDate).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}`}
+                "{description}" - {new Date(eventDate).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}
               </p>
             </div>
-            {/* Main Content */}
             <div className="space-y-6 text-sm font-mono">
-              {/* Stakes */}
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-[#9a9a9a]">Your Stake:</span>
@@ -461,7 +449,6 @@ export function CreateWager() {
                   <span className="text-[#D8B13D] font-semibold">+{parseFloat(challengerStake || '0').toLocaleString()} PLS</span>
                 </div>
               </div>
-              {/* Total to Send */}
               <div className="border-t border-white/10 pt-6">
                 <div className="flex justify-between mb-2">
                   <span className="text-[#D8B13D] font-bold">Total to Send Now:</span>
@@ -477,17 +464,16 @@ export function CreateWager() {
                     <>
                       (includes a {(parseFloat(myStake || '0') * 0.05).toFixed(0)} vote deposit which will be returned if you submit a vote for the correct outcome at the resolution of the bet.)
                       <br />
-                      Protocol fee of {protocolFeePercent.toFixed(2)}%, deducted at resolution.
+                      Fee of {effectiveFeePercent.toFixed(2)}%, deducted at resolution.
                     </>
                   ) : (
                     <>
-                      No additional fees (exact stake)
+                      No vote deposit (oracle-resolved). Fee of {effectiveFeePercent.toFixed(2)}%, deducted at resolution.
                     </>
                   )}
                 </div>
               </div>
             </div>
-            {/* Buttons */}
             <div className="flex gap-3 mt-8">
               <button
                 onClick={() => setShowConfirm(false)}
