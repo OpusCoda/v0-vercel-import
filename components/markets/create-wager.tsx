@@ -11,13 +11,24 @@ import {
 } from '@/lib/wager-market'
 type WagerType = 'standard' | 'price-bet'
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
+// Seconds for each DepositWindow enum index: H24, H48, W1, M1
+const WINDOW_SECONDS = [24 * 3600, 48 * 3600, 7 * 86400, 30 * 86400]
+// Format a "YYYY-MM-DDTHH:mm" local datetime-local string a few days out.
+function defaultEventDateTime(daysAhead: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() + daysAhead)
+  d.setHours(12, 0, 0, 0)
+  // Build a local-time string (not ISO/UTC) for the datetime-local input.
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 export function CreateWager() {
   const { address, isConnected } = useAccount()
   const { writeContract, isPending } = useWriteContract()
   const dateInputRef = useRef<HTMLInputElement>(null)
   const [wagerType, setWagerType] = useState<WagerType>('standard')
   const [description, setDescription] = useState('')
-  const [eventDate, setEventDate] = useState('')
+  const [eventDateTime, setEventDateTime] = useState('') // "YYYY-MM-DDTHH:mm" local time
   const [depositWindow, setDepositWindow] = useState('0') // enum index
   const [myStake, setMyStake] = useState('')
   const [challengerStake, setChallengerStake] = useState('')
@@ -29,10 +40,9 @@ export function CreateWager() {
   const [referrer, setReferrer] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
   const [effectiveFeePercent, setEffectiveFeePercent] = useState<number>(0)
-  // Initialize eventDate to today on mount
+  // Initialize eventDateTime to a few days out so the smallest window fits.
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0]
-    setEventDate(today)
+    setEventDateTime(defaultEventDateTime(3))
   }, [])
   // Fetch fee info — getUserFeeInfo returns 4 flat values:
   // [baseFeeBps, stakingRebate, referralRebate, effectiveFeeBps]
@@ -49,18 +59,29 @@ export function CreateWager() {
       setEffectiveFeePercent(Number(effectiveFeeBps) / 100) // BPS -> percent
     }
   }, [feeInfoData])
+  // --- Live event-time validity (mirrors the contract's two requires) ---
+  const windowSeconds = WINDOW_SECONDS[Number(depositWindow)]
+  const eventTs = eventDateTime ? Math.floor(new Date(eventDateTime).getTime() / 1000) : 0
+  const nowTs = Math.floor(Date.now() / 1000)
+  const isEventDateValid = eventTs > nowTs + windowSeconds
+  // Earliest valid moment = now + window (+1h margin), shown in UTC.
+  const earliestValidLabel = new Date((nowTs + windowSeconds + 3600) * 1000).toUTCString()
+  const eventUtcLabel = eventDateTime ? new Date(eventDateTime).toUTCString() : ''
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!isConnected || !address) {
       alert('Please connect your wallet')
       return
     }
-    // Both wager types require the same core fields (contract enforces this).
     const requiredFields = wagerType === 'standard'
-      ? [description, eventDate, depositWindow, myStake, challengerStake, category]
-      : [description, eventDate, depositWindow, myStake, challengerStake, targetPrice, category]
+      ? [description, eventDateTime, depositWindow, myStake, challengerStake, category]
+      : [description, eventDateTime, depositWindow, myStake, challengerStake, targetPrice, category]
     if (requiredFields.some(f => !f)) {
       alert('Please fill in all required fields')
+      return
+    }
+    if (!isEventDateValid) {
+      alert(`Event date is too soon for the selected deposit window. Earliest valid (UTC): ${earliestValidLabel}`)
       return
     }
     setShowConfirm(true)
@@ -80,29 +101,23 @@ export function CreateWager() {
       return
     }
     try {
-      console.log('[v0] raw eventDate:', JSON.stringify(eventDate))
-      const [y, m, d] = eventDate.split('-').map(Number)
-      const eventTimestamp = Math.floor(Date.UTC(y, m - 1, d, 12, 0, 0) / 1000)
-
-      // depositWindow and category are uint8 enums -> plain numbers, not BigInt.
+      // datetime-local is local time; new Date() parses it unambiguously to a UTC instant.
+      const eventTimestamp = Math.floor(new Date(eventDateTime).getTime() / 1000)
+      // uint8 enums -> plain numbers, not BigInt. Declared before use in the guard.
       const depositWindowEnum = parseInt(depositWindow, 10)
       const categoryEnum = parseInt(category, 10)
-
+      // Final safety guard (mirrors contract requires) before spending gas.
       const now = Math.floor(Date.now() / 1000)
-      const windowSecondsMap = [24 * 3600, 48 * 3600, 7 * 86400, 30 * 86400] // H24,H48,W1,M1
-      const windowSeconds = windowSecondsMap[depositWindowEnum]
       if (eventTimestamp <= now) {
         alert('Event date must be in the future')
         return
       }
-      if (now + windowSeconds >= eventTimestamp) {
-        alert('Event date is too soon for this deposit window — pick a later date')
+      if (now + WINDOW_SECONDS[depositWindowEnum] >= eventTimestamp) {
+        alert('Event date is too soon for this deposit window — pick a later date/time')
         return
       }
-
       const stake = parseEther(myStake)
       const challengerStakeWei = parseEther(challengerStake)
-
       if (wagerType === 'standard') {
         // creatorStake is derived on-chain from msg.value:
         //   voteDeposit  = msg.value * 500 / 10500
@@ -149,7 +164,7 @@ export function CreateWager() {
       setShowConfirm(false)
       // Reset form
       setDescription('')
-      setEventDate(new Date().toISOString().split('T')[0])
+      setEventDateTime(defaultEventDateTime(3))
       setDepositWindow('0')
       setMyStake('')
       setChallengerStake('')
@@ -226,15 +241,17 @@ export function CreateWager() {
               required
             />
           </div>
-          {/* Event Date -- required for BOTH types */}
+          {/* Event Date & Time -- required for BOTH types. Local time, UTC echo shown. */}
           <div>
-            <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Event Date</label>
+            <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">
+              Event Date &amp; Time <span className="text-[#9a9a9a] font-normal">(your local time)</span>
+            </label>
             <div className="flex gap-2">
               <input
                 ref={dateInputRef}
-                type="date"
-                value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
+                type="datetime-local"
+                value={eventDateTime}
+                onChange={(e) => setEventDateTime(e.target.value)}
                 className="flex-1 rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
                 required
               />
@@ -247,6 +264,17 @@ export function CreateWager() {
                 📅
               </button>
             </div>
+            {eventDateTime && (
+              <div className="text-xs mt-2 leading-relaxed">
+                <span className="text-[#9a9a9a]">UTC: {eventUtcLabel}</span>
+                {!isEventDateValid && (
+                  <span className="block text-red-400 mt-1">
+                    Too soon for a {DEPOSIT_WINDOWS[Number(depositWindow)].label} deposit window.
+                    Earliest valid (UTC): {earliestValidLabel}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           {/* Deposit Window -- required for BOTH types */}
           <div>
@@ -262,6 +290,9 @@ export function CreateWager() {
                 </option>
               ))}
             </select>
+            <p className="text-xs text-[#9a9a9a] mt-1">
+              How long the challenger has to accept. The event date must be later than this window.
+            </p>
           </div>
           {/* Challenger Stake -- required for BOTH types */}
           <div>
@@ -432,10 +463,10 @@ export function CreateWager() {
           </div>
           <button
             type="submit"
-            disabled={isPending}
-            className="w-full rounded-lg bg-[#D8B13D] px-6 py-3 font-semibold text-black transition hover:bg-[#D8B13D]/90 disabled:opacity-50"
+            disabled={isPending || !isEventDateValid}
+            className="w-full rounded-lg bg-[#D8B13D] px-6 py-3 font-semibold text-black transition hover:bg-[#D8B13D]/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isPending ? 'Creating...' : 'Review & Create Wager'}
+            {isPending ? 'Creating...' : !isEventDateValid ? 'Pick a later event date' : 'Review & Create Wager'}
           </button>
         </form>
       </div>
@@ -448,7 +479,7 @@ export function CreateWager() {
                 {wagerType === 'standard' ? 'Standard Wager' : 'Price Bet'} -- {CATEGORIES.find(c => c.value.toString() === category)?.label}
               </h3>
               <p className="text-[#9a9a9a] text-sm">
-                "{description}" - {new Date(eventDate).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}
+                "{description}" - {eventUtcLabel} (UTC)
               </p>
             </div>
             <div className="space-y-6 text-sm font-mono">
