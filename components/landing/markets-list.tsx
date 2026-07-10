@@ -162,7 +162,11 @@ function parsePrice(str: string): number {
   return num
 }
 
-export function MarketsList() {
+interface MarketsListProps {
+  showOnlyProbability?: boolean
+}
+
+export function MarketsList({ showOnlyProbability = false }: MarketsListProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategories, setSelectedCategories] = useState<Set<Category>>(new Set())
   const [p2pFilter, setP2PFilter] = useState<"All" | "Active" | "Open">("All")
@@ -242,9 +246,9 @@ export function MarketsList() {
         </div>
       </div>
 
-      {/* Two-column layout: 50/50 split */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left column: Probability Shop */}
+      {/* Layout: conditional single or two-column */}
+      <div className={`grid gap-6 ${showOnlyProbability ? "lg:grid-cols-1" : "lg:grid-cols-2"}`}>
+        {/* Probability Shop */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
@@ -272,7 +276,8 @@ export function MarketsList() {
           </div>
         </div>
 
-        {/* Right column: P2P Market */}
+        {/* P2P Market - only show if showOnlyProbability is false */}
+        {!showOnlyProbability && (
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -430,6 +435,7 @@ export function MarketsList() {
             )}
           </div>
         </div>
+        )}
       </div>
     </section>
   )
