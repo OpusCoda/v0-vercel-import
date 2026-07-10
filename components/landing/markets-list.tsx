@@ -341,6 +341,7 @@ export function MarketsList() {
                   creatorBetsAbove={market.creatorBetsAbove}
                   targetPrice={market.targetPrice}
                   tokenLabel={market.tokenLabel}
+                  status={market.status}
                 />
               ))
             ) : (

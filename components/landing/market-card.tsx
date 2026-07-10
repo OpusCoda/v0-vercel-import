@@ -35,6 +35,7 @@ export type MarketCardProps =
     creatorBetsAbove?: boolean
     targetPrice?: number
     tokenLabel?: string
+    status?: 'open' | 'active' | 'closed'
   }
 function pls(v: bigint): number {
   return Number(v) / 1e18
@@ -209,18 +210,28 @@ export function MarketCard(props: MarketCardProps) {
         </div>
       </div>
       <div className="border-t border-[#2a2a35] my-3" />
-      {/* Payout + accept */}
-      <AcceptSection
-        id={props.id}
-        creatorStake={creatorStake}
-        takerStake={takerStake}
-        creator={props.creator}
-        isPriceBet={props.isPriceBet}
-        creatorBetsAbove={props.creatorBetsAbove}
-        targetPrice={props.targetPrice}
-        tokenLabel={props.tokenLabel}
-      />
-      <p className="font-sans text-xs text-[#7c7a76]">Time left to accept: {props.closesIn}</p>
+      {props.status === "open" ? (
+        <>
+          {/* Payout + accept */}
+          <AcceptSection
+            id={props.id}
+            creatorStake={creatorStake}
+            takerStake={takerStake}
+            creator={props.creator}
+            isPriceBet={props.isPriceBet}
+            creatorBetsAbove={props.creatorBetsAbove}
+            targetPrice={props.targetPrice}
+            tokenLabel={props.tokenLabel}
+          />
+          <p className="font-sans text-xs text-[#7c7a76]">Time left to accept: {props.closesIn}</p>
+        </>
+      ) : (
+        <div className="mb-1 text-center">
+          <span className="inline-block rounded-full border border-[#2a2a35] bg-[#1a1a20] px-3 py-1 font-sans text-xs font-semibold text-[#b8b6b1]">
+            {props.status === "active" ? "Matched — awaiting resolution" : "Closed"}
+          </span>
+        </div>
+      )}
     </div>
   )
 }
