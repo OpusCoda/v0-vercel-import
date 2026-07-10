@@ -60,7 +60,7 @@ export default function MarketsPage() {
 
         {/* Probability Shop */}
         <div className="py-12 border-t border-[#2a2a35]">
-          <MarketsList showOnlyProbability={true} />
+          <MarketsList />
         </div>
 
         {/* Markets Overview */}
