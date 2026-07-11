@@ -38,7 +38,16 @@ export function CreateWager() {
   const [targetPrice, setTargetPrice] = useState('')
   const [direction, setDirection] = useState<'above' | 'below'>('above')
   const [referrer, setReferrer] = useState('')
+  // Pull the referrer captured from a ?ref= link (stored by the referral page).
+  // Not a visible field — bound on-chain on the user's first wager.
+  useEffect(() => {
+    try {
+      const pending = localStorage.getItem('opus_pending_referrer')
+      if (pending) setReferrer(pending)
+    } catch {}
+  }, [])
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showOddsHelp, setShowOddsHelp] = useState(false)
   const [effectiveFeePercent, setEffectiveFeePercent] = useState<number>(0)
   // Initialize eventDateTime to a few days out so the smallest window fits.
   useEffect(() => {
@@ -94,12 +103,10 @@ export function CreateWager() {
       alert('Challenger address is not a valid wallet address')
       return
     }
-    // Validate optional referrer address
-    const resolvedReferrer = referrer === '' ? ZERO_ADDRESS : referrer
-    if (referrer !== '' && !isAddress(referrer)) {
-      alert('Referrer address is not a valid wallet address')
-      return
-    }
+    // Referrer comes from localStorage (?ref= capture), not user input.
+    // If it's missing or malformed, just fall back to zero — don't block the user.
+    const resolvedReferrer =
+      referrer !== '' && isAddress(referrer) ? referrer : ZERO_ADDRESS
     try {
       // datetime-local is local time; new Date() parses it unambiguously to a UTC instant.
       const eventTimestamp = Math.floor(new Date(eventDateTime).getTime() / 1000)
@@ -173,7 +180,7 @@ export function CreateWager() {
       setTokenIdx('0')
       setTargetPrice('')
       setDirection('above')
-      setReferrer('')
+      // Keep referrer — it's the captured referral, bound once on-chain.
     } catch (error) {
       console.error('[v0] Error creating wager:', error)
     }
@@ -391,30 +398,46 @@ export function CreateWager() {
               className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
             />
           </div>
-          {/* Referrer Address (optional) */}
-          <div>
-            <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Referrer Address (Optional)</label>
-            <input
-              type="text"
-              value={referrer}
-              onChange={(e) => setReferrer(e.target.value)}
-              placeholder="0x0000... (leave empty for none)"
-              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
-            />
-          </div>
           {/* Fee & Odds Info */}
           <div className="space-y-3">
             {parseFloat(myStake) > 0 && parseFloat(challengerStake) > 0 && (
               <div className="rounded-lg border border-white/20 bg-[#09090B] p-4">
-                <div className="text-sm text-[#9a9a9a] mb-2">Implied Odds</div>
-                <div className="space-y-1">
-                  <div className="text-lg font-semibold text-[#D8B13D]">
-                    {(parseFloat(myStake) / parseFloat(challengerStake)).toFixed(2)}x
-                  </div>
-                  <div className="text-xs text-[#9a9a9a]">
-                    If you win: +{parseFloat(challengerStake).toLocaleString()} PLS
-                  </div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-[#9a9a9a]">If your wager is accepted and you win</div>
+                  <button
+                    type="button"
+                    onClick={() => setShowOddsHelp((v) => !v)}
+                    className="text-xs text-[#9a9a9a] hover:text-[#D8B13D] transition underline decoration-dotted"
+                  >
+                    How is this calculated?
+                  </button>
                 </div>
+                {(() => {
+                  const myStakeNum = parseFloat(myStake)
+                  const challengerStakeNum = parseFloat(challengerStake)
+                  const pot = myStakeNum + challengerStakeNum
+                  const estFee = pot * 0.005 // base 0.5% estimate
+                  const totalBack = pot - estFee
+                  const netProfit = totalBack - myStakeNum
+                  return (
+                    <div className="space-y-1">
+                      <div className="text-lg font-semibold text-[#D8B13D]">
+                        {totalBack.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS back
+                      </div>
+                      <div className="text-xs text-[#9a9a9a]">
+                        (+{netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })} profit, estimated)
+                      </div>
+                      {showOddsHelp && (
+                        <div className="mt-2 pt-2 border-t border-white/10 text-xs text-[#9a9a9a] leading-relaxed">
+                          The winner takes the whole pot — your stake ({myStakeNum.toLocaleString()} PLS)
+                          plus the challenger's ({challengerStakeNum.toLocaleString()} PLS) —
+                          minus a protocol fee. This estimate uses the base 0.5% fee; your actual fee
+                          may be lower with a staking or referral discount, and is deducted at resolution.
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
             )}
             <div className="rounded-lg border border-white/20 bg-[#09090B] p-4">
