@@ -45,6 +45,7 @@ export interface P2PCardData {
   creatorBetsAbove: boolean
   targetPrice: number
   tokenLabel: string
+  eventDateTs: number
 }
 
 export function wagerToCard(w: WagerDetails): P2PCardData {
@@ -100,5 +101,6 @@ export function wagerToCard(w: WagerDetails): P2PCardData {
     creatorBetsAbove: w.creatorBetsAbove,
     targetPrice: pls(w.targetPrice),
     tokenLabel: isPriceBet ? (QUERY_LABELS[w.queryId?.toLowerCase()] ?? 'Token') : '',
+    eventDateTs: Number(w.eventDate),
   }
 }

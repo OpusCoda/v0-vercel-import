@@ -36,9 +36,26 @@ export type MarketCardProps =
     targetPrice?: number
     tokenLabel?: string
     status?: 'open' | 'active' | 'closed'
+    eventDateTs?: number
   }
 function pls(v: bigint): number {
   return Number(v) / 1e18
+}
+// Human label for time until resolution opens (the event date).
+// Standard wagers open VOTING at eventDate; price bets become RESOLVABLE.
+function resolutionLabel(eventDateTs: number | undefined, isPriceBet: boolean | undefined): string {
+  if (!eventDateTs) return "Matched — awaiting resolution"
+  const secs = eventDateTs - Math.floor(Date.now() / 1000)
+  if (secs <= 0) {
+    return isPriceBet ? "Ready to resolve" : "Voting open"
+  }
+  const days = Math.floor(secs / 86400)
+  const hours = Math.floor((secs % 86400) / 3600)
+  let left: string
+  if (days >= 1) left = `${days}d ${hours}h`
+  else if (hours >= 1) left = `${hours}h`
+  else left = `${Math.max(1, Math.floor(secs / 60))}m`
+  return isPriceBet ? `Resolves in ${left}` : `Voting opens in ${left}`
 }
 // Live accept button + accurate payout via quoteWager.
 function AcceptSection({
@@ -200,13 +217,13 @@ export function MarketCard(props: MarketCardProps) {
         <div className="flex flex-col">
           <span className="font-sans text-xs font-bold text-[#e8e6e3] mb-1">Creator's position</span>
           <span className="font-sans text-xs text-[#b8b6b1]">{creatorPosition}</span>
-          <span className="font-sans text-xs text-[#9ca3af] mt-1">Put in: {creatorStake.toLocaleString()} PLS</span>
+          <span className="font-sans text-xs text-[#9ca3af] mt-1">Bet: {creatorStake.toLocaleString()} PLS</span>
         </div>
         {/* You */}
         <div className="flex flex-col">
           <span className="font-sans text-xs font-bold text-[#e8e6e3] mb-1">Your position if you accept</span>
           <span className="font-sans text-xs text-[#b8b6b1]">{takerPosition}</span>
-          <span className="font-sans text-xs text-[#9ca3af] mt-1">You put in: {takerStake.toLocaleString()} PLS</span>
+          <span className="font-sans text-xs text-[#9ca3af] mt-1">Bet: {takerStake.toLocaleString()} PLS</span>
         </div>
       </div>
       <div className="border-t border-[#2a2a35] my-3" />
@@ -228,7 +245,9 @@ export function MarketCard(props: MarketCardProps) {
       ) : (
         <div className="mb-1 text-center">
           <span className="inline-block rounded-full border border-[#2a2a35] bg-[#1a1a20] px-3 py-1 font-sans text-xs font-semibold text-[#b8b6b1]">
-            {props.status === "active" ? "Matched — awaiting resolution" : "Closed"}
+            {props.status === "active"
+              ? resolutionLabel(props.eventDateTs, props.isPriceBet)
+              : "Closed"}
           </span>
         </div>
       )}
