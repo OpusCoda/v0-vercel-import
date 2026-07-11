@@ -1,6 +1,7 @@
 "use client"
 import { useAccount, useReadContract } from "wagmi"
 import { useAcceptWager } from "@/hooks/useAcceptWager"
+import { useCancelWager } from "@/hooks/useCancelWager"
 import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from "@/lib/wager-market"
 export type ProbabilityOutcome = {
   label: string
@@ -99,6 +100,13 @@ function AcceptSection({
     requiredLoading,
     writeError,
   } = useAcceptWager(wagerId)
+  const {
+    cancel,
+    isPending: cancelPending,
+    isConfirming: cancelConfirming,
+    isSuccess: cancelSuccess,
+    writeError: cancelError,
+  } = useCancelWager(wagerId)
   const isCreator =
     !!address && !!creator && address.toLowerCase() === creator.toLowerCase()
   const disabled =
@@ -113,44 +121,76 @@ function AcceptSection({
   else btnLabel = `Accept — put in ${takerStake.toLocaleString()} PLS`
   // Profit = payout minus what the taker puts in.
   const profit = winnerPayout !== undefined ? winnerPayout - takerStake : undefined
+  // Cancel button state (creator only)
+  let cancelLabel = "Cancel wager (refund)"
+  if (cancelSuccess) cancelLabel = "Cancelled ✓"
+  else if (cancelPending) cancelLabel = "Confirm in wallet..."
+  else if (cancelConfirming) cancelLabel = "Cancelling..."
+  const cancelDisabled = cancelPending || cancelConfirming || cancelSuccess
   return (
     <div className="mb-3">
-      {/* Payout line */}
-      <div className="mb-2 text-center">
-        {winnerPayout !== undefined ? (
-          <p className="font-sans text-xs text-[#b8b6b1]">
-            If you win, you receive{" "}
-            <span className="text-[#d4af37] font-semibold">
-              {winnerPayout.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
-            </span>
-            {profit !== undefined && profit > 0 && (
-              <> (+{profit.toLocaleString(undefined, { maximumFractionDigits: 0 })} profit)</>
-            )}
+      {isCreator ? (
+        // Creator view: offer cancellation (only possible while unaccepted).
+        <>
+          <button
+            onClick={() => cancel()}
+            disabled={cancelDisabled}
+            className="w-full bg-[#1a1a20] hover:bg-red-500/10 text-red-400 font-sans text-xs font-semibold py-2 rounded transition-colors border border-red-500/30 hover:border-red-500/60 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {cancelLabel}
+          </button>
+          <p className="mt-1 text-center font-sans text-[10px] text-[#7c7a76]">
+            You created this wager. You can cancel and be refunded until someone accepts.
           </p>
-        ) : (
-          <p className="font-sans text-xs text-[#7c7a76]">Calculating payout…</p>
-        )}
-      </div>
-      <button
-        onClick={() => accept()}
-        disabled={disabled}
-        className="w-full bg-[#1a1a20] hover:bg-[#2a2a35] text-[#d4af37] font-sans text-xs font-semibold py-2 rounded transition-colors border border-[#d4af37]/30 hover:border-[#d4af37]/60 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {btnLabel}
-      </button>
-      <p className="mt-1 text-center font-sans text-[10px] text-[#7c7a76]">
-        A small protocol fee is deducted from winnings at resolution.
-      </p>
-      {writeError && (
-        <p className="mt-1 font-sans text-[10px] text-red-400">
-          {writeError.message.includes("Creator cannot accept")
-            ? "You can't accept your own wager."
-            : writeError.message.includes("Arbitration panel not ready")
-            ? "Arbitration panel not ready (needs 3 arbitrators)."
-            : writeError.message.includes("Deposit window expired")
-            ? "This wager's acceptance window has expired."
-            : "Transaction failed — see wallet for details."}
-        </p>
+          {cancelError && (
+            <p className="mt-1 font-sans text-[10px] text-red-400">
+              {cancelError.message.includes("already accepted")
+                ? "Too late — this wager has already been accepted."
+                : "Cancel failed — see wallet for details."}
+            </p>
+          )}
+        </>
+      ) : (
+        // Taker view: payout + accept.
+        <>
+          {/* Payout line */}
+          <div className="mb-2 text-center">
+            {winnerPayout !== undefined ? (
+              <p className="font-sans text-xs text-[#b8b6b1]">
+                If you win, you receive{" "}
+                <span className="text-[#d4af37] font-semibold">
+                  {winnerPayout.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
+                </span>
+                {profit !== undefined && profit > 0 && (
+                  <> (+{profit.toLocaleString(undefined, { maximumFractionDigits: 0 })} profit)</>
+                )}
+              </p>
+            ) : (
+              <p className="font-sans text-xs text-[#7c7a76]">Calculating payout…</p>
+            )}
+          </div>
+          <button
+            onClick={() => accept()}
+            disabled={disabled}
+            className="w-full bg-[#1a1a20] hover:bg-[#2a2a35] text-[#d4af37] font-sans text-xs font-semibold py-2 rounded transition-colors border border-[#d4af37]/30 hover:border-[#d4af37]/60 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {btnLabel}
+          </button>
+          <p className="mt-1 text-center font-sans text-[10px] text-[#7c7a76]">
+            A small protocol fee is deducted from winnings at resolution.
+          </p>
+          {writeError && (
+            <p className="mt-1 font-sans text-[10px] text-red-400">
+              {writeError.message.includes("Creator cannot accept")
+                ? "You can't accept your own wager."
+                : writeError.message.includes("Arbitration panel not ready")
+                ? "Arbitration panel not ready (needs 3 arbitrators)."
+                : writeError.message.includes("Deposit window expired")
+                ? "This wager's acceptance window has expired."
+                : "Transaction failed — see wallet for details."}
+            </p>
+          )}
+        </>
       )}
     </div>
   )
@@ -219,9 +259,11 @@ export function MarketCard(props: MarketCardProps) {
           <span className="font-sans text-xs text-[#b8b6b1]">{creatorPosition}</span>
           <span className="font-sans text-xs text-[#9ca3af] mt-1">Bet: {creatorStake.toLocaleString()} PLS</span>
         </div>
-        {/* You */}
+        {/* You / acceptor */}
         <div className="flex flex-col">
-          <span className="font-sans text-xs font-bold text-[#e8e6e3] mb-1">Your position if you accept</span>
+          <span className="font-sans text-xs font-bold text-[#e8e6e3] mb-1">
+            {props.status === "open" ? "Your position if you accept" : "Acceptor's side"}
+          </span>
           <span className="font-sans text-xs text-[#b8b6b1]">{takerPosition}</span>
           <span className="font-sans text-xs text-[#9ca3af] mt-1">Bet: {takerStake.toLocaleString()} PLS</span>
         </div>
