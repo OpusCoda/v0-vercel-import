@@ -56,7 +56,7 @@ function resolutionLabel(eventDateTs: number | undefined, isPriceBet: boolean | 
   if (days >= 1) left = `${days}d ${hours}h`
   else if (hours >= 1) left = `${hours}h`
   else left = `${Math.max(1, Math.floor(secs / 60))}m`
-  return isPriceBet ? `Resolves in ${left}` : `Voting opens in ${left}`
+  return isPriceBet ? `Resolves automatically by price oracle in ${left}` : `Voting opens in ${left}`
 }
 // Live accept button + accurate payout via quoteWager.
 function AcceptSection({

@@ -20,7 +20,7 @@ export function useAllWagers() {
   const { data: countData, isLoading: countLoading } = useReadContract({
     address: WAGER_MARKET_ADDRESS,
     abi: WAGER_MARKET_ABI,
-    functionName: 'wagerCount',
+    functionName: 'totalWagerCount',
     query: { refetchInterval: 30000 },
   })
 
