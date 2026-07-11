@@ -63,6 +63,7 @@ export function useAllWagers() {
           status: Number(w.status),
           creatorVote: w.creatorVote,
           challengerVote: w.challengerVote,
+          winner: w.winner,
           queryId: pb?.queryId ?? '0x',
           targetPrice: pb?.targetPrice ?? 0n,
           creatorBetsAbove: pb?.creatorBetsAbove ?? false,

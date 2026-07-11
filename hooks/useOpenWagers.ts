@@ -20,6 +20,7 @@ export interface WagerDetails {
   status: number              // Status enum: 0 Created,1 Active,2 Voting,3 Resolved,4 Arbitration,5 Cancelled,6 Voided
   creatorVote: string
   challengerVote: string
+  winner: string              // address(0) = unresolved/voided; else the winning party
   // Price-bet extras (zeroed for standard wagers)
   queryId: string
   targetPrice: bigint
@@ -86,6 +87,7 @@ export function useOpenWagers() {
             status: Number(w.status),
             creatorVote: w.creatorVote,
             challengerVote: w.challengerVote,
+            winner: w.winner,
             queryId: pb?.queryId ?? '0x',
             targetPrice: pb?.targetPrice ?? 0n,
             creatorBetsAbove: pb?.creatorBetsAbove ?? false,
