@@ -1,4 +1,4 @@
-export const WAGER_MARKET_ADDRESS = '0x0629464b2ecA0C6F7CB1412EC9a40FC3da8550f3' as const
+export const WAGER_MARKET_ADDRESS = '0x5e1c42cd48718D090b8fB5269A202BaA84E1d2c0' as const
 
 // -----------------------------------------------------------------------------
 // Enums — MUST match the on-chain declaration order exactly.
