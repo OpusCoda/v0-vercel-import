@@ -229,6 +229,35 @@ export const WAGER_MARKET_ABI = [
   // --- aggregate stat getters ---
   { inputs: [], name: 'totalVolume', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },
   { inputs: [], name: 'totalResolved', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },
+  { inputs: [], name: 'totalWagerCount', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },
+  {
+    inputs: [
+      { name: 'start', type: 'uint256' },
+      { name: 'count', type: 'uint256' },
+    ],
+    name: 'getWagersPaginated',
+    outputs: [{ type: 'uint256[]' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'user', type: 'address' }],
+    name: 'userWagerCount',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'user', type: 'address' },
+      { name: 'start', type: 'uint256' },
+      { name: 'count', type: 'uint256' },
+    ],
+    name: 'getUserWagers',
+    outputs: [{ type: 'uint256[]' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
   { inputs: [], name: 'totalVoided', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },
   { inputs: [], name: 'totalStandardWagers', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },
   { inputs: [], name: 'totalPriceBets', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },

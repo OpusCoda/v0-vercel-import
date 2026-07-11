@@ -248,11 +248,14 @@ export function CreateWager() {
           <div>
             <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">My Stake (PLS)</label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={myStake}
-              onChange={(e) => setMyStake(e.target.value)}
+              onChange={(e) => {
+                const raw = e.target.value.replace(',', '.')
+                if (raw === '' || /^\d*\.?\d*$/.test(raw)) setMyStake(raw)
+              }}
               placeholder="0.00"
-              step="0.01"
               className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
               required
             />
@@ -314,11 +317,14 @@ export function CreateWager() {
           <div>
             <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Challenger Stake (PLS)</label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={challengerStake}
-              onChange={(e) => setChallengerStake(e.target.value)}
+              onChange={(e) => {
+                const raw = e.target.value.replace(',', '.')
+                if (raw === '' || /^\d*\.?\d*$/.test(raw)) setChallengerStake(raw)
+              }}
               placeholder="0.00"
-              step="0.01"
               className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
               required
             />
@@ -343,14 +349,24 @@ export function CreateWager() {
               <div>
                 <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Target Price (USD)</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={targetPrice}
-                  onChange={(e) => setTargetPrice(e.target.value)}
+                  onChange={(e) => {
+                    // Normalize comma decimal separator to period (locale-safe),
+                    // and allow only digits + a single period.
+                    const raw = e.target.value.replace(',', '.')
+                    if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+                      setTargetPrice(raw)
+                    }
+                  }}
                   placeholder="0.00"
-                  step="0.0001"
                   className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
                   required
                 />
+                {targetPrice && (
+                  <p className="text-xs text-[#9a9a9a] mt-1">Parsed as ${targetPrice} USD</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Direction</label>
@@ -534,7 +550,7 @@ export function CreateWager() {
               ? 'Collateralizing…'
               : !isEventDateValid
               ? 'Pick a later event date'
-              : 'Review and create wager'}
+              : 'Review & Create Wager'}
           </button>
         </form>
       </div>
