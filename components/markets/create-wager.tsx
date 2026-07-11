@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { useAccount, useWriteContract, useReadContract } from 'wagmi'
+import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi'
 import { parseEther, isAddress } from 'viem'
 import {
   WAGER_MARKET_ADDRESS,
@@ -24,7 +24,11 @@ function defaultEventDateTime(daysAhead: number): string {
 }
 export function CreateWager() {
   const { address, isConnected } = useAccount()
-  const { writeContract, isPending } = useWriteContract()
+  const { writeContract, isPending, data: txHash, error: writeError, reset: resetWrite } = useWriteContract()
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+    query: { enabled: !!txHash },
+  })
   const dateInputRef = useRef<HTMLInputElement>(null)
   const [wagerType, setWagerType] = useState<WagerType>('standard')
   const [description, setDescription] = useState('')
@@ -93,6 +97,7 @@ export function CreateWager() {
       alert(`Event date is too soon for the selected deposit window. Earliest valid (UTC): ${earliestValidLabel}`)
       return
     }
+    resetWrite() // clear any prior success/error banner
     setShowConfirm(true)
   }
   const handleConfirm = async () => {
@@ -168,8 +173,15 @@ export function CreateWager() {
           value: stake,
         })
       }
+      // Close the confirm modal — the status banner on the form now drives feedback.
       setShowConfirm(false)
-      // Reset form
+    } catch (error) {
+      console.error('[v0] Error creating wager:', error)
+    }
+  }
+  // On confirmation, reset the form (keep referrer — bound once on-chain).
+  useEffect(() => {
+    if (isConfirmed) {
       setDescription('')
       setEventDateTime(defaultEventDateTime(3))
       setDepositWindow('0')
@@ -180,11 +192,8 @@ export function CreateWager() {
       setTokenIdx('0')
       setTargetPrice('')
       setDirection('above')
-      // Keep referrer — it's the captured referral, bound once on-chain.
-    } catch (error) {
-      console.error('[v0] Error creating wager:', error)
     }
-  }
+  }, [isConfirmed])
   if (!isConnected) {
     return (
       <div className="rounded-2xl border border-white/10 bg-[#111116] p-8 text-center">
@@ -484,12 +493,48 @@ export function CreateWager() {
               )}
             </div>
           </div>
+          {/* Transaction status */}
+          {(isConfirming || isConfirmed || writeError) && (
+            <div
+              className={`rounded-lg border p-4 text-sm ${
+                isConfirmed
+                  ? 'border-green-500/30 bg-green-500/10 text-green-400'
+                  : writeError
+                  ? 'border-red-500/30 bg-red-500/10 text-red-400'
+                  : 'border-[#D8B13D]/30 bg-[#D8B13D]/10 text-[#D8B13D]'
+              }`}
+            >
+              {isConfirmed ? (
+                <div className="flex items-center gap-2">
+                  <span>✓</span>
+                  <span>Wager successfully created — your opinion is now collateralized on-chain.</span>
+                </div>
+              ) : writeError ? (
+                <div>
+                  {writeError.message.includes('User rejected') || writeError.message.includes('denied')
+                    ? 'Transaction rejected in wallet.'
+                    : 'Transaction failed — see your wallet for details.'}
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <div>Your opinion will be collateralized as soon as the blockchain concurs.</div>
+                  <div className="text-xs opacity-80">Waiting for confirmation…</div>
+                </div>
+              )}
+            </div>
+          )}
           <button
             type="submit"
-            disabled={isPending || !isEventDateValid}
+            disabled={isPending || isConfirming || !isEventDateValid}
             className="w-full rounded-lg bg-[#D8B13D] px-6 py-3 font-semibold text-black transition hover:bg-[#D8B13D]/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isPending ? 'Creating...' : !isEventDateValid ? 'Pick a later event date' : 'Review & Create Wager'}
+            {isPending
+              ? 'Confirm in wallet…'
+              : isConfirming
+              ? 'Collateralizing…'
+              : !isEventDateValid
+              ? 'Pick a later event date'
+              : 'Review and create wager'}
           </button>
         </form>
       </div>
