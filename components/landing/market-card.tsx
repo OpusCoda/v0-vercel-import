@@ -3,6 +3,7 @@ import { useAccount, useReadContract } from "wagmi"
 import { useAcceptWager } from "@/hooks/useAcceptWager"
 import { useCancelWager } from "@/hooks/useCancelWager"
 import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from "@/lib/wager-market"
+import { WagerActions } from "@/components/markets/wager-actions"
 export type ProbabilityOutcome = {
   label: string
   odds: number // percentage 0-100
@@ -56,7 +57,7 @@ function resolutionLabel(eventDateTs: number | undefined, isPriceBet: boolean | 
   if (days >= 1) left = `${days}d ${hours}h`
   else if (hours >= 1) left = `${hours}h`
   else left = `${Math.max(1, Math.floor(secs / 60))}m`
-  return isPriceBet ? `Resolves automatically by price oracle in ${left}` : `Voting opens in ${left}`
+  return isPriceBet ? `Resolves in ${left}` : `Voting opens in ${left}`
 }
 // Live accept button + accurate payout via quoteWager.
 function AcceptSection({
@@ -286,11 +287,23 @@ export function MarketCard(props: MarketCardProps) {
         </>
       ) : (
         <div className="mb-1 text-center">
-          <span className="inline-block rounded-full border border-[#2a2a35] bg-[#1a1a20] px-3 py-1 font-sans text-xs font-semibold text-[#b8b6b1]">
-            {props.status === "active"
-              ? resolutionLabel(props.eventDateTs, props.isPriceBet)
-              : "Closed"}
-          </span>
+          {props.status === "active" ? (
+            (() => {
+              let wid: bigint | undefined
+              try { wid = BigInt(props.id) } catch { wid = undefined }
+              return wid !== undefined ? (
+                <WagerActions wagerId={wid} />
+              ) : (
+                <span className="inline-block rounded-full border border-[#2a2a35] bg-[#1a1a20] px-3 py-1 font-sans text-xs font-semibold text-[#b8b6b1]">
+                  {resolutionLabel(props.eventDateTs, props.isPriceBet)}
+                </span>
+              )
+            })()
+          ) : (
+            <span className="inline-block rounded-full border border-[#2a2a35] bg-[#1a1a20] px-3 py-1 font-sans text-xs font-semibold text-[#b8b6b1]">
+              Closed
+            </span>
+          )}
         </div>
       )}
     </div>

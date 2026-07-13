@@ -1,5 +1,9 @@
 export const WAGER_MARKET_ADDRESS = '0x5e1c42cd48718D090b8fB5269A202BaA84E1d2c0' as const
 
+// Set to true ONLY when the deployed contract at WAGER_MARKET_ADDRESS includes
+// proposeEarlyResolution(). The current address does NOT — leave false until redeploy.
+export const EARLY_RESOLUTION_ENABLED = false
+
 // -----------------------------------------------------------------------------
 // Enums — MUST match the on-chain declaration order exactly.
 // -----------------------------------------------------------------------------
@@ -109,6 +113,17 @@ export const WAGER_MARKET_ABI = [
       { name: 'winner', type: 'address' },
     ],
     name: 'submitVote',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  // --- proposeEarlyResolution(uint256,address) --- (only on early-resolution contract) ---
+  {
+    inputs: [
+      { name: 'wagerId', type: 'uint256' },
+      { name: 'winner', type: 'address' },
+    ],
+    name: 'proposeEarlyResolution',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
