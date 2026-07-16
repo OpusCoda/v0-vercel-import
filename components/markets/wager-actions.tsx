@@ -1,6 +1,6 @@
 'use client'
 import { useAccount, useReadContract } from 'wagmi'
-import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI, EARLY_RESOLUTION_ENABLED } from '@/lib/wager-market'
+import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from '@/lib/wager-market'
 import { useWagerActions } from '@/hooks/useWagerActions'
 
 const ZERO = '0x0000000000000000000000000000000000000000'
@@ -140,7 +140,6 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
 
   // ---- STANDARD: early resolution (before eventDate), gated by flag + party ----
   if (
-    EARLY_RESOLUTION_ENABLED &&
     wagerType === 0 &&
     status === 1 &&
     now < eventDate &&

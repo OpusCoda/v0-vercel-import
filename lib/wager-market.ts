@@ -1,13 +1,5 @@
 export const WAGER_MARKET_ADDRESS = '0x07288D62D7f8499e30832fb2Fff1c572Ad539192' as const
 
-// Set to true ONLY when the deployed contract at WAGER_MARKET_ADDRESS includes
-// proposeEarlyResolution(). The current address does NOT — leave false until redeploy.
-export const EARLY_RESOLUTION_ENABLED = false
-
-// -----------------------------------------------------------------------------
-// Enums — MUST match the on-chain declaration order exactly.
-// -----------------------------------------------------------------------------
-
 // enum DepositWindow { H24, H48, W1, M1 }
 export const DEPOSIT_WINDOWS = [
   { value: 0, label: '24 hours' },
