@@ -20,7 +20,6 @@ export const CATEGORIES = [
 
 // -----------------------------------------------------------------------------
 // Fetch Oracle query IDs — price bets take a bytes32 queryId, NOT a token index.
-// These are the four hardcoded, admin-approved feeds in the contract.
 // -----------------------------------------------------------------------------
 export const QUERY_PLS_USD =
   '0x83245f6a6a2f6458558a706270fbcc35ac3a81917602c1313d3bfa998dcc2d4b' as const
@@ -31,7 +30,6 @@ export const QUERY_HEX_USD =
 export const QUERY_INC_USD =
   '0x4a7e4a0f0c3ddff451d40e9b2c17e3050bc412794a5e53de9bf4db692611381c' as const
 
-// Token picker options for the price-bet form. `queryId` is what goes on-chain.
 export const PRICE_BET_TOKENS = [
   { label: 'PLS', queryId: QUERY_PLS_USD },
   { label: 'PLSX', queryId: QUERY_PLSX_USD },
@@ -40,11 +38,9 @@ export const PRICE_BET_TOKENS = [
 ] as const
 
 // -----------------------------------------------------------------------------
-// ABI — subset matching the DEPLOYED contract. Regenerate from the Remix
-// artifact / verified explorer source if you need every function.
+// ABI — subset matching the DEPLOYED contract.
 // -----------------------------------------------------------------------------
 export const WAGER_MARKET_ABI = [
-  // --- createWager(address,string,uint256,uint8,uint256,uint8,address) payable ---
   {
     inputs: [
       { name: 'challenger', type: 'address' },
@@ -60,7 +56,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'payable',
     type: 'function',
   },
-  // --- createPriceBet(address,string,uint256,uint8,uint256,bytes32,uint256,bool,uint8,address) payable ---
   {
     inputs: [
       { name: 'challenger', type: 'address' },
@@ -79,7 +74,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'payable',
     type: 'function',
   },
-  // --- acceptWager(uint256,address) payable ---
   {
     inputs: [
       { name: 'wagerId', type: 'uint256' },
@@ -90,7 +84,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'payable',
     type: 'function',
   },
-  // --- resolvePriceBet(uint256) ---
   {
     inputs: [{ name: 'wagerId', type: 'uint256' }],
     name: 'resolvePriceBet',
@@ -98,7 +91,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-  // --- submitVote(uint256,address) ---
   {
     inputs: [
       { name: 'wagerId', type: 'uint256' },
@@ -109,7 +101,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-  // --- proposeEarlyResolution(uint256,address) --- (only on early-resolution contract) ---
   {
     inputs: [
       { name: 'wagerId', type: 'uint256' },
@@ -120,7 +111,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-  // --- cancelWager(uint256) ---
   {
     inputs: [{ name: 'wagerId', type: 'uint256' }],
     name: 'cancelWager',
@@ -128,7 +118,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-  // --- voidWager(uint256) ---
   {
     inputs: [{ name: 'wagerId', type: 'uint256' }],
     name: 'voidWager',
@@ -136,7 +125,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-  // --- requiredAcceptanceAmount(uint256) view ---
   {
     inputs: [{ name: 'wagerId', type: 'uint256' }],
     name: 'requiredAcceptanceAmount',
@@ -148,7 +136,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-  // --- getUserFeeInfo(address) view — NOTE: returns 4 flat values, not a tuple ---
   {
     inputs: [{ name: 'user', type: 'address' }],
     name: 'getUserFeeInfo',
@@ -161,7 +148,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-  // --- quoteWager(uint256) view ---
   {
     inputs: [{ name: 'wagerId', type: 'uint256' }],
     name: 'quoteWager',
@@ -174,7 +160,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-  // --- getOpenWagers() view ---
   {
     inputs: [],
     name: 'getOpenWagers',
@@ -182,7 +167,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-  // --- openWagerCount() view ---
   {
     inputs: [],
     name: 'openWagerCount',
@@ -190,7 +174,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-  // --- getWagerDetails(uint256) view ---
   {
     inputs: [{ name: 'wagerId', type: 'uint256' }],
     name: 'getWagerDetails',
@@ -233,7 +216,6 @@ export const WAGER_MARKET_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-  // --- aggregate stat getters ---
   { inputs: [], name: 'totalVolume', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },
   { inputs: [], name: 'totalResolved', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },
   { inputs: [], name: 'totalWagerCount', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },
@@ -264,6 +246,25 @@ export const WAGER_MARKET_ABI = [
     outputs: [{ type: 'uint256[]' }],
     stateMutability: 'view',
     type: 'function',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'wagerId', type: 'uint256' },
+      { indexed: true, name: 'party', type: 'address' },
+      { indexed: true, name: 'proposedWinner', type: 'address' },
+    ],
+    name: 'EarlyResolutionProposed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'wagerId', type: 'uint256' },
+      { indexed: true, name: 'winner', type: 'address' },
+    ],
+    name: 'WagerResolvedEarly',
+    type: 'event',
   },
   { inputs: [], name: 'totalVoided', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },
   { inputs: [], name: 'totalStandardWagers', outputs: [{ type: 'uint256' }], stateMutability: 'view', type: 'function' },
