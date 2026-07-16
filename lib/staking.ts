@@ -32,13 +32,18 @@ export const STAKING_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
+  // Active stake IDs for a wallet — one call, no index probing.
   {
-    inputs: [
-      { name: 'user', type: 'address' },
-      { name: 'index', type: 'uint256' },
-    ],
-    name: 'userStakeIds',
-    outputs: [{ name: '', type: 'uint256' }],
+    inputs: [{ name: 'user', type: 'address' }],
+    name: 'getUserStakeIds',
+    outputs: [{ type: 'uint256[]' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'user', type: 'address' }],
+    name: 'userStakeCount',
+    outputs: [{ type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
   },
@@ -102,6 +107,48 @@ export const STAKING_ABI = [
     type: 'function',
   },
   {
+    inputs: [{ name: 'sid', type: 'uint256' }],
+    name: 'pendingSmaugTotal',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  // Lifetime kept/forfeited rollups (survive unstake).
+  {
+    inputs: [{ name: 'sid', type: 'uint256' }],
+    name: 'rewardTotalsByStake',
+    outputs: [
+      { name: 'plsClaimed', type: 'uint256' },
+      { name: 'smaugClaimed', type: 'uint256' },
+      { name: 'plsForfeited', type: 'uint256' },
+      { name: 'smaugForfeited', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'user', type: 'address' }],
+    name: 'rewardTotalsByUser',
+    outputs: [
+      { name: 'plsClaimed', type: 'uint256' },
+      { name: 'smaugClaimed', type: 'uint256' },
+      { name: 'plsForfeited', type: 'uint256' },
+      { name: 'smaugForfeited', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'user', type: 'address' }],
+    name: 'totalPendingByUser',
+    outputs: [
+      { name: 'plsPending', type: 'uint256' },
+      { name: 'smaugPending', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [{ name: 'stakeId', type: 'uint256' }],
     name: 'estimateClaimPenalty',
     outputs: [
@@ -154,6 +201,13 @@ export const STAKING_ABI = [
     type: 'function',
   },
   {
+    inputs: [{ name: 'u', type: 'address' }],
+    name: 'stakingRebateBps',
+    outputs: [{ name: 'max', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     anonymous: false,
     inputs: [
       { indexed: true, name: 'user', type: 'address' },
@@ -166,6 +220,17 @@ export const STAKING_ABI = [
       { indexed: false, name: 'reflectionForfeited', type: 'uint256' },
     ],
     name: 'RewardClaimed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'user', type: 'address' },
+      { indexed: true, name: 'stakeId', type: 'uint256' },
+      { indexed: false, name: 'principal', type: 'uint256' },
+      { indexed: false, name: 'smaugRewards', type: 'uint256' },
+    ],
+    name: 'Unstaked',
     type: 'event',
   },
 ] as const

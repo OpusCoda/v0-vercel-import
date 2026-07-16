@@ -2,10 +2,11 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
-import { useReadContract, useWriteContract } from 'wagmi'
+import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { useStakeDetails, usePendingPLS, usePendingSmaugReward, usePendingSmaugReflection, getMaturityInfo, formatDate } from '@/hooks/useStakeDetails'
 import { formatSmaugBalance, STAKING_CONTRACT, STAKING_ABI } from '@/lib/staking'
 import { useClaimedRewards } from '@/hooks/useClaimedRewards'
+import { useCompletedStakes } from '@/hooks/useCompletedStakes'
 
 const TIERS = ['Hatchling', 'Drake', 'Dragon', 'Elder Dragon', 'Smaug']
 const TIER_IMAGES: Record<string, string> = {
@@ -80,6 +81,9 @@ function StakeRow({ stakeId }: StakeRowProps) {
       </tr>
     )
   }
+
+  // Unstaked stakes are deleted on-chain (amount 0) — don't render as active rows.
+  if (stakeDetails.amount === 0n) return null
 
   const { amount, startTime, endTime, tierIndex, weightedAmount } = stakeDetails
 
@@ -219,15 +223,56 @@ function StakeRow({ stakeId }: StakeRowProps) {
   )
 }
 
-interface YourStakesProps {
-  userStakeIds: string[]
-  isLoading?: boolean
+// A completed (unstaked) stake — the on-chain struct is deleted, so we show
+// reward history (which survives) plus the principal returned from the event.
+function CompletedStakeRow({ stakeId, principalReturned }: { stakeId: string; principalReturned: bigint }) {
+  const { data } = useReadContract({
+    address: STAKING_CONTRACT as `0x${string}`,
+    abi: STAKING_ABI,
+    functionName: 'rewardTotalsByStake',
+    args: [BigInt(stakeId)],
+  })
+
+  const [plsClaimed, smaugClaimed, plsForfeited, smaugForfeited] =
+    (data as [bigint, bigint, bigint, bigint]) ?? [0n, 0n, 0n, 0n]
+
+  return (
+    <tr className="hover:bg-[#09090B]">
+      <td className="px-6 py-4 text-sm text-[#9a9a9a]">#{stakeId}</td>
+      <td className="px-6 py-4 text-sm text-[#9a9a9a]">
+        {formatSmaugBalance(principalReturned)} SMAUG returned
+      </td>
+      <td className="px-6 py-4 text-sm">
+        <div className="space-y-1">
+          <div className="text-[#6ea8fe]">{formatSmaugBalance(plsClaimed)} PLS</div>
+          <div className="text-[#6ea8fe]">{formatSmaugBalance(smaugClaimed)} SMAUG</div>
+        </div>
+      </td>
+      <td className="px-6 py-4 text-sm">
+        <div className="space-y-1">
+          <div className="text-[#8a8a8a]">{formatSmaugBalance(plsForfeited)} PLS</div>
+          <div className="text-[#8a8a8a]">{formatSmaugBalance(smaugForfeited)} SMAUG</div>
+        </div>
+      </td>
+    </tr>
+  )
 }
 
-export default function YourStakes({
-  userStakeIds = [],
-  isLoading = false,
-}: YourStakesProps) {
+export default function YourStakes() {
+  const { address } = useAccount()
+
+  // Self-fetch active stake IDs (one call, no index probing).
+  const { data: stakeIdsData, isLoading } = useReadContract({
+    address: STAKING_CONTRACT as `0x${string}`,
+    abi: STAKING_ABI,
+    functionName: 'getUserStakeIds',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address, refetchInterval: 30000 },
+  })
+  const userStakeIds = ((stakeIdsData as bigint[]) ?? []).map((id) => id.toString())
+
+  const { completed } = useCompletedStakes()
+
   return (
     <div className="rounded-2xl border border-white/10 bg-[#111116]">
       <div className="border-b border-white/10 p-6">
@@ -275,6 +320,32 @@ export default function YourStakes({
           </tbody>
         </table>
       </div>
+
+      {/* Completed (unstaked) stakes — reward history only */}
+      {completed.length > 0 && (
+        <div className="border-t border-white/10">
+          <div className="p-6 pb-3">
+            <h3 className="font-serif text-lg font-semibold text-[#9a9a9a]">Completed Stakes</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px] text-left">
+              <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-[#9a9a9a]">
+                <tr>
+                  <th className="px-6 py-4 font-semibold">Stake ID</th>
+                  <th className="px-6 py-4 font-semibold">Principal</th>
+                  <th className="px-6 py-4 font-semibold">Claimed</th>
+                  <th className="px-6 py-4 font-semibold">Forfeited</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                {completed.map((c) => (
+                  <CompletedStakeRow key={`done-${c.stakeId}`} stakeId={c.stakeId} principalReturned={c.principalReturned} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
