@@ -5,10 +5,21 @@ import { useWagerActions } from '@/hooks/useWagerActions'
 
 const ZERO = '0x0000000000000000000000000000000000000000'
 
+// On-chain Status enum: 0 Created,1 Active,2 Voting,3 Resolved,4 Arbitration,5 Cancelled,6 Voided
+// WagerType: 0 STANDARD, 1 PRICE_BET
+
 function short(a?: string) {
   return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : ''
 }
 
+/**
+ * Self-contained resolution controls for a single wager.
+ * Reads live state from getWagerDetails and shows the right action:
+ *   - Price bet, past eventDate, Active         → "Resolve now" (anyone)
+ *   - Standard, in voting window, party         → vote buttons
+ *   - Standard, before eventDate, party         → early-resolution buttons (if enabled)
+ *   - otherwise                                 → a small status line
+ */
 export function WagerActions({ wagerId }: { wagerId: bigint }) {
   const { address } = useAccount()
   const {
@@ -86,6 +97,7 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
     )
   }
 
+  // ---- STANDARD: voting window (after eventDate, before votingDeadline) ----
   if (
     wagerType === 0 &&
     (status === 1 || status === 2) &&
@@ -111,14 +123,14 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
             disabled={busy}
             className="rounded-lg border border-[#D8B13D] px-4 py-2 text-sm font-semibold text-[#D8B13D] transition hover:bg-[#D8B13D]/10 disabled:opacity-50"
           >
-            {isCreator ? 'I won' : 'Creator won'}
+            {'Creator won'}
           </button>
           <button
             onClick={() => submitVote(wagerId, challenger as `0x${string}`)}
             disabled={busy}
             className="rounded-lg border border-[#D8B13D] px-4 py-2 text-sm font-semibold text-[#D8B13D] transition hover:bg-[#D8B13D]/10 disabled:opacity-50"
           >
-            {isChallenger ? 'I won' : 'Acceptor won'}
+            {'Acceptor won'}
           </button>
         </div>
         {statusLine}
@@ -126,7 +138,7 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
     )
   }
 
-  // ---- STANDARD: early resolution (before eventDate), gated by flag + party ----
+  // ---- STANDARD: early resolution (before eventDate), party only ----
   if (
     wagerType === 0 &&
     status === 1 &&
@@ -142,14 +154,14 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
             disabled={busy}
             className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-[#f4f4f4] transition hover:bg-white/5 disabled:opacity-50"
           >
-            {isCreator ? 'I won' : 'Creator won'}
+            {'Creator wins'}
           </button>
           <button
             onClick={() => proposeEarlyResolution(wagerId, challenger as `0x${string}`)}
             disabled={busy}
             className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-[#f4f4f4] transition hover:bg-white/5 disabled:opacity-50"
           >
-            {isChallenger ? 'I won' : 'Acceptor won'}
+            {'Acceptor wins'}
           </button>
         </div>
         {statusLine}
