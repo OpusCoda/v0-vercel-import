@@ -1,4 +1,4 @@
-export const WAGER_MARKET_ADDRESS = '0x5e1c42cd48718D090b8fB5269A202BaA84E1d2c0' as const
+export const WAGER_MARKET_ADDRESS = '0x07288D62D7f8499e30832fb2Fff1c572Ad539192' as const
 
 // Set to true ONLY when the deployed contract at WAGER_MARKET_ADDRESS includes
 // proposeEarlyResolution(). The current address does NOT — leave false until redeploy.
