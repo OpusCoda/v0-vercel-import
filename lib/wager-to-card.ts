@@ -34,7 +34,7 @@ function closesIn(depositDeadline: bigint): string {
 }
 
 // The card's P2PMarket shape (mirror of the interface in markets-list.tsx)
-export interface P2PCardData {
+export type P2PCardData = {
   type: 'p2p'
   icon: string
   betType: string
