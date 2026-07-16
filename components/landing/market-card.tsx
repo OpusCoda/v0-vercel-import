@@ -39,6 +39,7 @@ export type MarketCardProps =
     tokenLabel?: string
     status?: 'open' | 'active' | 'closed'
     eventDateTs?: number
+    winnerShort?: string
   }
 function pls(v: bigint): number {
   return Number(v) / 1e18
@@ -300,9 +301,16 @@ export function MarketCard(props: MarketCardProps) {
               )
             })()
           ) : (
-            <span className="inline-block rounded-full border border-[#2a2a35] bg-[#1a1a20] px-3 py-1 font-sans text-xs font-semibold text-[#b8b6b1]">
-              Closed
-            </span>
+            <div className="flex flex-col items-center gap-1">
+              <span className="inline-block rounded-full border border-[#2a2a35] bg-[#1a1a20] px-3 py-1 font-sans text-xs font-semibold text-[#b8b6b1]">
+                Closed
+              </span>
+              {props.winnerShort && (
+                <span className="font-sans text-[10px] text-[#7c7a76]">
+                  Winner: <span className="font-mono text-[#d4af37]">{props.winnerShort}</span>
+                </span>
+              )}
+            </div>
           )}
         </div>
       )}

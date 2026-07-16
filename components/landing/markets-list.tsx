@@ -344,6 +344,7 @@ export function MarketsList() {
                   tokenLabel={market.tokenLabel}
                   status={market.status}
                   eventDateTs={market.eventDateTs}
+                  winnerShort={market.winnerShort}
                 />
               ))
             ) : (

@@ -13,6 +13,12 @@ function pls(v: bigint): number {
   return Number(v) / 1e18
 }
 
+const ZERO = '0x0000000000000000000000000000000000000000'
+function shortAddr(a?: string): string {
+  if (!a || a === ZERO) return ''
+  return `${a.slice(0, 4)}...${a.slice(-4)}`
+}
+
 function formatDeadline(eventDate: bigint): string {
   const d = new Date(Number(eventDate) * 1000)
   return `by ${d.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
@@ -46,7 +52,7 @@ export interface P2PCardData {
   targetPrice: number
   tokenLabel: string
   eventDateTs: number
-}
+  winnerShort: string  // '' if unresolved
 
 export function wagerToCard(w: WagerDetails): P2PCardData {
   const isPriceBet = w.wagerType === 1
@@ -102,5 +108,6 @@ export function wagerToCard(w: WagerDetails): P2PCardData {
     targetPrice: pls(w.targetPrice),
     tokenLabel: isPriceBet ? (QUERY_LABELS[w.queryId?.toLowerCase()] ?? 'Token') : '',
     eventDateTs: Number(w.eventDate),
+    winnerShort: shortAddr(w.winner),
   }
 }
