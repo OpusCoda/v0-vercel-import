@@ -40,6 +40,10 @@ export function CreateWager() {
   const [challengerAddress, setChallengerAddress] = useState('')
   const [category, setCategory] = useState('0') // enum index
   const [tokenIdx, setTokenIdx] = useState('0') // index into PRICE_BET_TOKENS
+  // Price bets are always categorized as PulseChain (enum index 4).
+  useEffect(() => {
+    if (wagerType === 'price-bet') setCategory('4')
+  }, [wagerType])
   const livePrice = usePlsPrice(PRICE_BET_TOKENS[parseInt(tokenIdx, 10)]?.label)
   const [targetPrice, setTargetPrice] = useState('')
   const [direction, setDirection] = useState<'above' | 'below'>('above')
@@ -373,9 +377,6 @@ export function CreateWager() {
                   className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
                   required
                 />
-                {targetPrice && (
-                  <p className="text-xs text-[#9a9a9a] mt-1">Parsed as ${targetPrice} USD</p>
-                )}
                 <p className="text-xs text-[#666] mt-1">
                   Live price shown for reference only. Bets resolve using the Fetch Oracle price at the event date.
                 </p>
@@ -409,21 +410,23 @@ export function CreateWager() {
               </div>
             </>
           )}
-          {/* Category -- required for BOTH types */}
-          <div>
-            <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Category</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Category -- selectable for standard; price bets are always PulseChain */}
+          {wagerType === 'standard' && (
+            <div>
+              <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Category</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {/* Challenger Address (optional) */}
           <div>
             <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Challenger Address (Optional)</label>
