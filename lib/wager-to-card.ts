@@ -15,7 +15,7 @@ function pls(v: bigint): number {
 
 function formatDeadline(eventDate: bigint): string {
   const d = new Date(Number(eventDate) * 1000)
-  return `by ${d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+  return `by ${d.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
 }
 
 function closesIn(depositDeadline: bigint): string {

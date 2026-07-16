@@ -81,7 +81,7 @@ function parsePrice(str: string): number {
 export function MarketsList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategories, setSelectedCategories] = useState<Set<Category>>(new Set())
-  const [p2pFilter, setP2PFilter] = useState<"All" | "Active" | "Open">("All")
+  const [p2pFilter, setP2PFilter] = useState<"All" | "Active" | "Open" | "Completed">("All")
   const [priceMin, setPriceMin] = useState(MIN_PRICE)
   const [priceMax, setPriceMax] = useState(MAX_PRICE)
   // Live P2P wagers from chain (open wagers only — see note below).
@@ -104,9 +104,10 @@ export function MarketsList() {
       const matchesCategory =
         selectedCategories.size === 0 || selectedCategories.has(market.category as Category)
       const matchesStatus =
-        (p2pFilter === "All" && (market.status === "open" || market.status === "active")) ||
+        (p2pFilter === "All") ||
         (p2pFilter === "Active" && market.status === "active") ||
-        (p2pFilter === "Open" && market.status === "open")
+        (p2pFilter === "Open" && market.status === "open") ||
+        (p2pFilter === "Completed" && market.status === "closed")
       // Check if the max of (yes staked, no staked) falls within price range
       const maxStaked = Math.max(market.yesData.staked, market.noData.staked)
       const matchesPrice = maxStaked >= priceMin && maxStaked <= priceMax
@@ -194,10 +195,10 @@ export function MarketsList() {
               <p className="font-sans text-xs text-[#7c7a76]">Peer-to-peer wager escrow</p>
             </div>
             <div className="flex gap-1 flex-shrink-0">
-              {["All", "Active", "Open"].map((status) => (
+              {["All", "Active", "Open", "Completed"].map((status) => (
                 <button
                   key={status}
-                  onClick={() => setP2PFilter(status as "All" | "Active" | "Open")}
+                  onClick={() => setP2PFilter(status as "All" | "Active" | "Open" | "Completed")}
                   className={`rounded px-2 py-1 font-sans text-xs font-semibold transition-colors ${p2pFilter === status
                     ? "bg-[#d4af37] text-[#0a0a0c]"
                     : "border border-[#2a2a35] bg-[#101017] text-[#b8b6b1] hover:border-[#d4af37]/50"
@@ -347,7 +348,7 @@ export function MarketsList() {
               ))
             ) : (
               <div className="py-8 text-center text-[#7c7a76]">
-                <p className="font-sans text-sm">No open wagers match your filters</p>
+                <p className="font-sans text-sm">No wagers match your filters</p>
               </div>
             )}
           </div>
