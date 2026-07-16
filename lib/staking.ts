@@ -153,6 +153,21 @@ export const STAKING_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'user', type: 'address' },
+      { indexed: true, name: 'stakeId', type: 'uint256' },
+      { indexed: false, name: 'plsKept', type: 'uint256' },
+      { indexed: false, name: 'plsForfeited', type: 'uint256' },
+      { indexed: false, name: 'smaugKept', type: 'uint256' },
+      { indexed: false, name: 'smaugForfeited', type: 'uint256' },
+      { indexed: false, name: 'reflectionKept', type: 'uint256' },
+      { indexed: false, name: 'reflectionForfeited', type: 'uint256' },
+    ],
+    name: 'RewardClaimed',
+    type: 'event',
+  },
 ] as const
 
 export const ERC20_ABI = [

@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useReadContract, useWriteContract } from 'wagmi'
 import { useStakeDetails, usePendingPLS, usePendingSmaugReward, usePendingSmaugReflection, getMaturityInfo, formatDate } from '@/hooks/useStakeDetails'
 import { formatSmaugBalance, STAKING_CONTRACT, STAKING_ABI } from '@/lib/staking'
+import { useClaimedRewards } from '@/hooks/useClaimedRewards'
 
 const TIERS = ['Hatchling', 'Drake', 'Dragon', 'Elder Dragon', 'Smaug']
 const TIER_IMAGES: Record<string, string> = {
@@ -25,6 +26,7 @@ function StakeRow({ stakeId }: StakeRowProps) {
   const plsReward = usePendingPLS(stakeId)
   const smaugReward = usePendingSmaugReward(stakeId)
   const reflectionReward = usePendingSmaugReflection(stakeId)
+  const claimed = useClaimedRewards(stakeId)
   const [showConfirm, setShowConfirm] = useState(false)
   const [showUnstakeConfirm, setShowUnstakeConfirm] = useState(false)
   const { writeContract, isPending } = useWriteContract()
@@ -72,7 +74,7 @@ function StakeRow({ stakeId }: StakeRowProps) {
   if (!stakeDetails) {
     return (
       <tr>
-        <td colSpan={6} className="px-6 py-4 text-center text-sm text-[#9a9a9a]">
+        <td colSpan={8} className="px-6 py-4 text-center text-sm text-[#9a9a9a]">
           Loading stake details...
         </td>
       </tr>
@@ -127,6 +129,18 @@ function StakeRow({ stakeId }: StakeRowProps) {
         <div className="space-y-1">
           <div className="text-[#D8B13D] font-semibold">{plsFormatted} PLS</div>
           <div className="text-[#D8B13D] font-semibold">{totalSmaugFormatted} SMAUG</div>
+        </div>
+      </td>
+      <td className="px-6 py-4 text-sm">
+        <div className="space-y-1">
+          <div className="text-[#6ea8fe]">{formatSmaugBalance(claimed.plsKept)} PLS</div>
+          <div className="text-[#6ea8fe]">{formatSmaugBalance(claimed.smaugKept)} SMAUG</div>
+        </div>
+      </td>
+      <td className="px-6 py-4 text-sm">
+        <div className="space-y-1">
+          <div className="text-[#8a8a8a]">{formatSmaugBalance(claimed.plsForfeited)} PLS</div>
+          <div className="text-[#8a8a8a]">{formatSmaugBalance(claimed.smaugForfeited)} SMAUG</div>
         </div>
       </td>
       <td className="px-6 py-4 text-right">
@@ -223,7 +237,7 @@ export default function YourStakes({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] text-left">
+        <table className="w-full min-w-[1100px] text-left">
           <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-[#9a9a9a]">
             <tr>
               {[
@@ -231,7 +245,9 @@ export default function YourStakes({
                 'Amount',
                 'Tier',
                 'Maturity',
-                'Rewards (PLS / SMAUG)',
+                'Pending',
+                'Claimed',
+                'Forfeited',
                 'Actions',
               ].map((heading) => (
                 <th key={heading} className="px-6 py-4 font-semibold">
@@ -251,7 +267,7 @@ export default function YourStakes({
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-sm text-[#9a9a9a]">
+                <td colSpan={8} className="px-6 py-8 text-center text-sm text-[#9a9a9a]">
                   {isLoading ? 'Loading stakes...' : 'No stakes yet. Create your first stake!'}
                 </td>
               </tr>
