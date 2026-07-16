@@ -53,6 +53,7 @@ export type P2PCardData = {
   tokenLabel: string
   eventDateTs: number
   winnerShort: string  // '' if unresolved
+  }
 
 export function wagerToCard(w: WagerDetails): P2PCardData {
   const isPriceBet = w.wagerType === 1
