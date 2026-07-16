@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { usePlsPrice } from '@/hooks/usePlsPrice'
 import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi'
 import { parseEther, isAddress } from 'viem'
 import {
@@ -39,6 +40,7 @@ export function CreateWager() {
   const [challengerAddress, setChallengerAddress] = useState('')
   const [category, setCategory] = useState('0') // enum index
   const [tokenIdx, setTokenIdx] = useState('0') // index into PRICE_BET_TOKENS
+  const livePrice = usePlsPrice(PRICE_BET_TOKENS[parseInt(tokenIdx, 10)]?.label)
   const [targetPrice, setTargetPrice] = useState('')
   const [direction, setDirection] = useState<'above' | 'below'>('above')
   const [referrer, setReferrer] = useState('')
@@ -77,8 +79,8 @@ export function CreateWager() {
   const eventTs = eventDateTime ? Math.floor(new Date(eventDateTime).getTime() / 1000) : 0
   const nowTs = Math.floor(Date.now() / 1000)
   const isEventDateValid = eventTs > nowTs + windowSeconds
-  // Earliest valid moment = now + window (+1h margin), shown in UTC.
-  const earliestValidLabel = new Date((nowTs + windowSeconds + 3600) * 1000).toUTCString()
+  // Earliest valid moment = now + window, shown in UTC (matches the contract rule).
+  const earliestValidLabel = new Date((nowTs + windowSeconds) * 1000).toUTCString()
   const eventUtcLabel = eventDateTime ? new Date(eventDateTime).toUTCString() : ''
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -347,7 +349,14 @@ export function CreateWager() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Target Price (USD)</label>
+                <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">
+                  Target Price (USD)
+                  {livePrice != null && (
+                    <span className="ml-2 font-normal text-[#9a9a9a]">
+                      (current: ${livePrice.toLocaleString('en-US', { maximumSignificantDigits: 6 })})
+                    </span>
+                  )}
+                </label>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -367,6 +376,9 @@ export function CreateWager() {
                 {targetPrice && (
                   <p className="text-xs text-[#9a9a9a] mt-1">Parsed as ${targetPrice} USD</p>
                 )}
+                <p className="text-xs text-[#666] mt-1">
+                  Live price shown for reference only. Bets resolve using the Fetch Oracle price at the event date.
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Direction</label>
