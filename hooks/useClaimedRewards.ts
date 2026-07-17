@@ -27,14 +27,16 @@ export function useClaimedRewards(stakeId: string | undefined): ClaimedTotals {
 
   useEffect(() => {
     if (!client || stakeId === undefined) return
+    const publicClient = client
+    const sid = stakeId
     let cancelled = false
 
     async function load() {
       try {
-        const logs = await client.getLogs({
+        const logs = await publicClient.getLogs({
           address: STAKING_CONTRACT as `0x${string}`,
           event: REWARD_CLAIMED_EVENT,
-          args: { stakeId: BigInt(stakeId) },
+          args: { stakeId: BigInt(sid) },
           fromBlock: 'earliest',
           toBlock: 'latest',
         })

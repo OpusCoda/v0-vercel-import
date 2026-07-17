@@ -48,6 +48,16 @@ export const STAKING_ABI = [
     type: 'function',
   },
   {
+    inputs: [
+      { name: 'start', type: 'uint256' },
+      { name: 'count', type: 'uint256' },
+    ],
+    name: 'getProcessableStakes',
+    outputs: [{ type: 'uint256[]' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [],
     name: 'minStakeAmount',
     outputs: [{ type: 'uint256' }],

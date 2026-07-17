@@ -23,11 +23,12 @@ export function useCompletedStakes(): { completed: CompletedStake[]; loaded: boo
 
   useEffect(() => {
     if (!client || !address) return
+    const publicClient = client
     let cancelled = false
 
     async function load() {
       try {
-        const logs = await client.getLogs({
+        const logs = await publicClient.getLogs({
           address: STAKING_CONTRACT as `0x${string}`,
           event: UNSTAKED_EVENT,
           args: { user: address },
