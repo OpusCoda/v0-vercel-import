@@ -124,7 +124,13 @@ function StakeRow({ stakeId }: StakeRowProps) {
       </td>
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">
         <div className="space-y-1">
-          <div>{maturityInfo}</div>
+          {isMature ? (
+            <span className="inline-block rounded-full border border-green-500/40 bg-green-500/10 px-2 py-0.5 text-xs font-semibold text-green-400">
+              Matured
+            </span>
+          ) : (
+            <div>{maturityInfo}</div>
+          )}
           <div className="text-xs text-[#9a9a9a]">Started: {formatDate(startTime)}</div>
           <div className="text-xs text-[#9a9a9a]">Ends: {formatDate(endTime)}</div>
         </div>
@@ -186,9 +192,9 @@ function StakeRow({ stakeId }: StakeRowProps) {
           {/* End stake */}
           {showUnstakeConfirm ? (
             <div className="space-y-2 text-right">
-              <div className="text-xs text-red-400">
+              <div className={isMature ? "text-xs text-green-400" : "text-xs text-red-400"}>
                 {isMature
-                  ? 'This will return your principal and all rewards.'
+                  ? 'Matured — returns your principal and all rewards, no penalty.'
                   : `You keep ${keepPct}% of rewards. Principal is returned in full.`}
               </div>
               <div className="flex justify-end gap-2">
@@ -211,9 +217,11 @@ function StakeRow({ stakeId }: StakeRowProps) {
             <button
               onClick={() => setShowUnstakeConfirm(true)}
               disabled={unstakePending}
-              className="w-full rounded-lg border border-red-500/20 px-3 py-1.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+              className={isMature
+                ? "w-full rounded-lg border border-green-500/40 px-3 py-1.5 text-sm font-semibold text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-50"
+                : "w-full rounded-lg border border-red-500/20 px-3 py-1.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"}
             >
-              {unstakePending ? 'Ending...' : 'End stake'}
+              {unstakePending ? 'Ending...' : isMature ? 'End stake (no penalty)' : 'End stake'}
             </button>
           )}
 

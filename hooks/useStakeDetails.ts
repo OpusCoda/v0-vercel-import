@@ -74,11 +74,15 @@ export function usePendingSmaugReflection(stakeId: string | undefined) {
   return data ? BigInt(data) : 0n
 }
 
+// Includes time — useful for short stakes, and for knowing the exact hour a
+// long stake matures.
 export function formatDate(unixTimestamp: number): string {
-  return new Date(unixTimestamp * 1000).toLocaleDateString('en-US', {
+  return new Date(unixTimestamp * 1000).toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
@@ -94,8 +98,20 @@ export function getDaysRemaining(endTime: number): number {
 
 export function getMaturityInfo(startTime: number, endTime: number): string {
   const now = Math.floor(Date.now() / 1000)
+  if (now >= endTime) return 'Matured'
+
   const secondsElapsed = Math.max(0, now - startTime)
   const totalSeconds = endTime - startTime
+  const secondsLeft = endTime - now
+
+  // Sub-day durations render in minutes; longer ones in days.
+  if (totalSeconds < 86400) {
+    const minsElapsed = Math.floor(secondsElapsed / 60)
+    const totalMins = Math.round(totalSeconds / 60)
+    const minsLeft = Math.max(1, Math.ceil(secondsLeft / 60))
+    return `Min ${minsElapsed}/${totalMins} (${minsLeft} min left)`
+  }
+
   const daysElapsed = Math.floor(secondsElapsed / 86400)
   const totalDays = Math.floor(totalSeconds / 86400)
   const daysRemaining = getDaysRemaining(endTime)
