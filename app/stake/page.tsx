@@ -11,7 +11,7 @@ import YourStakes from '@/components/stake/your-stakes'
 import { useReadContract } from 'wagmi'
 import { STAKING_CONTRACT, STAKING_ABI, parseSmaugAmount } from '@/lib/staking'
 
-export const TIERS = [
+const TIERS = [
   { name: 'Hatchling',    min: 30,  max: 89,  multiplier: 1,   feeRebate: 5,  icon: '🥚' },
   { name: 'Drake',        min: 90,  max: 179, multiplier: 1.5, feeRebate: 10, icon: '🥚' },
   { name: 'Dragon',       min: 180, max: 364, multiplier: 2,   feeRebate: 20, icon: '🥚' },
@@ -294,10 +294,7 @@ export default function StakePage() {
 
           {/* ── Your Stakes ────────────────────────────────── */}
           <section>
-            <YourStakes 
-  userStakeIds={userStakeIds} 
-  isLoading={isLoading}
-/>
+            <YourStakes />
           </section>
 
         </div>
