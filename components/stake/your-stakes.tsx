@@ -224,7 +224,7 @@ function StakeRow({ stakeId }: StakeRowProps) {
                 ? "w-full rounded-lg border border-green-500/40 px-3 py-1.5 text-sm font-semibold text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-50"
                 : "w-full rounded-lg border border-red-500/20 px-3 py-1.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"}
             >
-              {unstakePending ? 'Ending...' : isMature ? 'End stake (no penalty)' : 'End stake'}
+              {unstakePending ? 'Ending...' : inBurnPhase ? 'End stake' : isMature ? 'End stake (no penalty)' : 'End stake'}
             </button>
           )}
         </div>
