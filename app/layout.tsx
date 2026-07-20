@@ -1,15 +1,9 @@
 import type React from "react"
 import "./globals.css"
 import "@rainbow-me/rainbowkit/styles.css"
-import { Sacramento, Inter, Merriweather, Roboto, Marcellus_SC } from "next/font/google"
+import { Inter, Merriweather } from "next/font/google"
 import { Providers } from "@/components/providers"
 import { ReferralCapture } from "@/components/referral-capture"
-
-const sacramento = Sacramento({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-sacramento",
-})
 
 const merriweather = Merriweather({
   subsets: ["latin"],
@@ -20,19 +14,8 @@ const merriweather = Merriweather({
 
 const inter = Inter({
   subsets: ["latin"],
+  display: "swap",
   variable: "--font-inter",
-})
-
-const roboto = Roboto({
-  subsets: ["latin"],
-  weight: ["700"],
-  variable: "--font-roboto",
-})
-
-const marcellusSC = Marcellus_SC({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-marcellus-sc",
 })
 
 export const metadata = {
@@ -56,7 +39,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${merriweather.variable} ${sacramento.variable} ${inter.variable} ${roboto.variable} ${marcellusSC.variable}`}>
+      <body className={`${merriweather.variable} ${inter.variable}`}>
         <Providers>
           <ReferralCapture />
           {children}
