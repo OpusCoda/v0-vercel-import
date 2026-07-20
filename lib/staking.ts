@@ -211,6 +211,13 @@ export const STAKING_ABI = [
     type: 'function',
   },
   {
+    inputs: [],
+    name: 'BURN_GRACE',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [{ name: 'u', type: 'address' }],
     name: 'stakingRebateBps',
     outputs: [{ name: 'max', type: 'uint256' }],

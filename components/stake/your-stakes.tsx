@@ -1,5 +1,4 @@
 'use client'
-
 import Image from 'next/image'
 import { useState } from 'react'
 import { useReadContract, useWriteContract, useAccount } from 'wagmi'
@@ -7,7 +6,6 @@ import { useStakeDetails, usePendingPLS, usePendingSmaugReward, usePendingSmaugR
 import { formatSmaugBalance, STAKING_CONTRACT, STAKING_ABI } from '@/lib/staking'
 import { useClaimedRewards } from '@/hooks/useClaimedRewards'
 import { useCompletedStakes } from '@/hooks/useCompletedStakes'
-
 const TIERS = ['Hatchling', 'Drake', 'Dragon', 'Elder Dragon', 'Smaug']
 const TIER_IMAGES: Record<string, string> = {
   'Hatchling': '/tiers/hatchling.png',
@@ -17,11 +15,9 @@ const TIER_IMAGES: Record<string, string> = {
   'Smaug': '/tiers/smaug.png',
 }
 const TIER_MULTIPLIERS = ['1', '1.5', '2', '3', '5']
-
 interface StakeRowProps {
   stakeId: string
 }
-
 function StakeRow({ stakeId }: StakeRowProps) {
   const stakeDetails = useStakeDetails(stakeId)
   const plsReward = usePendingPLS(stakeId)
@@ -32,14 +28,19 @@ function StakeRow({ stakeId }: StakeRowProps) {
   const [showUnstakeConfirm, setShowUnstakeConfirm] = useState(false)
   const { writeContract, isPending } = useWriteContract()
   const { writeContract: unstakeWrite, isPending: unstakePending } = useWriteContract()
-
   const { data: penaltyData } = useReadContract({
     address: STAKING_CONTRACT as `0x${string}`,
     abi: STAKING_ABI,
     functionName: 'estimateClaimPenalty',
     args: [BigInt(stakeId)],
   })
-
+  // BURN_GRACE constant, read from the contract so the UI stays correct across
+  // test/production constant changes.
+  const { data: burnGraceData } = useReadContract({
+    address: STAKING_CONTRACT as `0x${string}`,
+    abi: STAKING_ABI,
+    functionName: 'BURN_GRACE',
+  })
   // Move this hook to top level - must be called unconditionally
   const { data: multiplierData } = useReadContract({
     address: STAKING_CONTRACT as `0x${string}`,
@@ -48,10 +49,14 @@ function StakeRow({ stakeId }: StakeRowProps) {
     args: stakeDetails ? [BigInt(stakeDetails.endTime - stakeDetails.startTime)] : undefined,
     query: { enabled: !!stakeDetails && (stakeDetails.endTime - stakeDetails.startTime) > 0 },
   })
-
   const keepPct = penaltyData ? Number((penaltyData as [bigint, bigint])[0]) : 100
   const isMature = keepPct === 100
-
+  // A stake past endTime + BURN_GRACE is in the burn phase: its principal is
+  // being forfeited over time. It is technically "matured" (no reward penalty),
+  // but unstaking will NOT return full principal — so it needs its own state.
+  const burnGrace = burnGraceData ? Number(burnGraceData) : 0
+  const nowSec = Math.floor(Date.now() / 1000)
+  const inBurnPhase = !!stakeDetails && burnGrace > 0 && nowSec >= stakeDetails.endTime + burnGrace
   const handleClaim = () => {
     writeContract({
       address: STAKING_CONTRACT as `0x${string}`,
@@ -61,7 +66,6 @@ function StakeRow({ stakeId }: StakeRowProps) {
     })
     setShowConfirm(false)
   }
-
   const handleUnstake = () => {
     unstakeWrite({
       address: STAKING_CONTRACT as `0x${string}`,
@@ -71,7 +75,6 @@ function StakeRow({ stakeId }: StakeRowProps) {
     })
     setShowUnstakeConfirm(false)
   }
-
   if (!stakeDetails) {
     return (
       <tr>
@@ -81,26 +84,20 @@ function StakeRow({ stakeId }: StakeRowProps) {
       </tr>
     )
   }
-
   // Unstaked stakes are deleted on-chain (amount 0) — don't render as active rows.
   if (stakeDetails.amount === 0n) return null
-
   const { amount, startTime, endTime, tierIndex, weightedAmount } = stakeDetails
-
   const multiplierFormatted = (() => {
   if (!multiplierData) return TIER_MULTIPLIERS[tierIndex] || '1'
   const val = Number(multiplierData) / 100
   return val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)
 })()
-
   const tierName = TIERS[tierIndex] || 'Unknown'
   const tierImagePath = TIER_IMAGES[tierName] || TIER_IMAGES['Hatchling']
-
   const maturityInfo = getMaturityInfo(startTime, endTime)
   const plsFormatted = formatSmaugBalance(plsReward)
   const totalSmaugFormatted = formatSmaugBalance(smaugReward + reflectionReward)
   const amountFormatted = formatSmaugBalance(amount)
-
   return (
     <tr className="hover:bg-[#09090B]">
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">#{stakeId}</td>
@@ -124,7 +121,11 @@ function StakeRow({ stakeId }: StakeRowProps) {
       </td>
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">
         <div className="space-y-1">
-          {isMature ? (
+          {inBurnPhase ? (
+            <span className="inline-block rounded-full border border-orange-500/40 bg-orange-500/10 px-2 py-0.5 text-xs font-semibold text-orange-400">
+              Burn phase
+            </span>
+          ) : isMature ? (
             <span className="inline-block rounded-full border border-green-500/40 bg-green-500/10 px-2 py-0.5 text-xs font-semibold text-green-400">
               Matured
             </span>
@@ -155,9 +156,12 @@ function StakeRow({ stakeId }: StakeRowProps) {
       </td>
       <td className="px-6 py-4 text-right">
         <div className="space-y-2">
-
-          {/* Claim rewards */}
-          {showConfirm ? (
+          {/* Claim rewards — blocked on-chain during burn phase, so hide it there */}
+          {inBurnPhase ? (
+            <div className="text-xs text-orange-400 text-right">
+              In burn phase — principal is being forfeited. End the stake to recover remaining rewards.
+            </div>
+          ) : showConfirm ? (
             <div className="space-y-2 text-right">
               <div className="text-xs text-red-400">
                 You will keep {keepPct}% of your rewards.{' '}
@@ -188,12 +192,13 @@ function StakeRow({ stakeId }: StakeRowProps) {
               {isPending ? 'Claiming...' : 'Claim rewards'}
             </button>
           )}
-
           {/* End stake */}
           {showUnstakeConfirm ? (
             <div className="space-y-2 text-right">
-              <div className={isMature ? "text-xs text-green-400" : "text-xs text-red-400"}>
-                {isMature
+              <div className={inBurnPhase ? "text-xs text-orange-400" : isMature ? "text-xs text-green-400" : "text-xs text-red-400"}>
+                {inBurnPhase
+                  ? 'In burn phase — most or all principal has been forfeited. This returns only the remaining principal and rewards.'
+                  : isMature
                   ? 'Matured — returns your principal and all rewards, no penalty.'
                   : `You keep ${keepPct}% of rewards. Principal is returned in full.`}
               </div>
@@ -217,20 +222,20 @@ function StakeRow({ stakeId }: StakeRowProps) {
             <button
               onClick={() => setShowUnstakeConfirm(true)}
               disabled={unstakePending}
-              className={isMature
+              className={inBurnPhase
+                ? "w-full rounded-lg border border-orange-500/40 px-3 py-1.5 text-sm font-semibold text-orange-400 hover:bg-orange-500/10 transition-colors disabled:opacity-50"
+                : isMature
                 ? "w-full rounded-lg border border-green-500/40 px-3 py-1.5 text-sm font-semibold text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-50"
                 : "w-full rounded-lg border border-red-500/20 px-3 py-1.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"}
             >
-              {unstakePending ? 'Ending...' : isMature ? 'End stake (no penalty)' : 'End stake'}
+              {unstakePending ? 'Ending...' : inBurnPhase ? 'End stake (recover rewards)' : isMature ? 'End stake (no penalty)' : 'End stake'}
             </button>
           )}
-
         </div>
       </td>
     </tr>
   )
 }
-
 // A completed (unstaked) stake — the on-chain struct is deleted, so we show
 // reward history (which survives) plus the principal returned from the event.
 function CompletedStakeRow({ stakeId, principalReturned }: { stakeId: string; principalReturned: bigint }) {
@@ -240,10 +245,8 @@ function CompletedStakeRow({ stakeId, principalReturned }: { stakeId: string; pr
     functionName: 'rewardTotalsByStake',
     args: [BigInt(stakeId)],
   })
-
   const [plsClaimed, smaugClaimed, plsForfeited, smaugForfeited] =
     (data as [bigint, bigint, bigint, bigint]) ?? [0n, 0n, 0n, 0n]
-
   return (
     <tr className="hover:bg-[#09090B]">
       <td className="px-6 py-4 text-sm text-[#9a9a9a]">#{stakeId}</td>
@@ -265,10 +268,8 @@ function CompletedStakeRow({ stakeId, principalReturned }: { stakeId: string; pr
     </tr>
   )
 }
-
 export default function YourStakes() {
   const { address } = useAccount()
-
   // Self-fetch active stake IDs (one call, no index probing).
   const { data: stakeIdsData, isLoading } = useReadContract({
     address: STAKING_CONTRACT as `0x${string}`,
@@ -278,9 +279,7 @@ export default function YourStakes() {
     query: { enabled: !!address, refetchInterval: 30000 },
   })
   const userStakeIds = ((stakeIdsData as bigint[]) ?? []).map((id) => id.toString())
-
   const { completed } = useCompletedStakes()
-
   return (
     <div className="rounded-2xl border border-white/10 bg-[#111116]">
       <div className="border-b border-white/10 p-6">
@@ -288,7 +287,6 @@ export default function YourStakes() {
           Your Stakes
         </h2>
       </div>
-
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1100px] text-left">
           <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-[#9a9a9a]">
@@ -309,7 +307,6 @@ export default function YourStakes() {
               ))}
             </tr>
           </thead>
-
           <tbody className="divide-y divide-white/10">
             {userStakeIds.length > 0 ? (
               userStakeIds.map((stakeId) => (
@@ -328,7 +325,6 @@ export default function YourStakes() {
           </tbody>
         </table>
       </div>
-
       {/* Completed (unstaked) stakes — reward history only */}
       {completed.length > 0 && (
         <div className="border-t border-white/10">
