@@ -284,7 +284,7 @@ export default function YourStakes() {
         </h2>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-275 text-left">
+        <table className="w-full min-w-[1100px] text-left">
           <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-[#9a9a9a]">
             <tr>
               {[
@@ -328,7 +328,7 @@ export default function YourStakes() {
             <h3 className="font-serif text-lg font-semibold text-[#9a9a9a]">Completed Stakes</h3>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-175 text-left">
+            <table className="w-full min-w-[700px] text-left">
               <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-[#9a9a9a]">
                 <tr>
                   <th className="px-6 py-4 font-semibold">Stake ID</th>
