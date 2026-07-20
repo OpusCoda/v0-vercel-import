@@ -3,11 +3,7 @@
 import { connectorsForWallets, type Wallet } from "@rainbow-me/rainbowkit"
 import {
   metaMaskWallet,
-  rainbowWallet,
-  walletConnectWallet,
   injectedWallet,
-  trustWallet,
-  argentWallet,
 } from "@rainbow-me/rainbowkit/wallets"
 import { createConfig, createConnector, http } from "wagmi"
 import { injected } from "wagmi/connectors"
@@ -150,11 +146,7 @@ const connectors = connectorsForWallets(
     },
     {
       groupName: "Popular",
-      wallets: [injectedWallet, metaMaskWallet, rainbowWallet, walletConnectWallet],
-    },
-    {
-      groupName: "More",
-      wallets: [argentWallet, trustWallet],
+      wallets: [injectedWallet, metaMaskWallet],
     },
   ],
   { appName: "OpusEco", projectId },
