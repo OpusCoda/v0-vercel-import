@@ -156,12 +156,8 @@ function StakeRow({ stakeId }: StakeRowProps) {
       </td>
       <td className="px-6 py-4 text-right">
         <div className="space-y-2">
-          {/* Claim rewards — blocked on-chain during burn phase, so hide it there */}
-          {inBurnPhase ? (
-            <div className="text-xs text-orange-400 text-right">
-              In burn phase — principal is being forfeited. End the stake to recover remaining rewards.
-            </div>
-          ) : showConfirm ? (
+          {/* Claim rewards — reverts on-chain during burn phase, so hide it there */}
+          {inBurnPhase ? null : showConfirm ? (
             <div className="space-y-2 text-right">
               <div className="text-xs text-red-400">
                 You will keep {keepPct}% of your rewards.{' '}
@@ -197,7 +193,7 @@ function StakeRow({ stakeId }: StakeRowProps) {
             <div className="space-y-2 text-right">
               <div className={inBurnPhase ? "text-xs text-orange-400" : isMature ? "text-xs text-green-400" : "text-xs text-red-400"}>
                 {inBurnPhase
-                  ? 'In burn phase — most or all principal has been forfeited. This returns only the remaining principal and rewards.'
+                  ? 'Returns remaining principal and rewards.'
                   : isMature
                   ? 'Matured — returns your principal and all rewards, no penalty.'
                   : `You keep ${keepPct}% of rewards. Principal is returned in full.`}
@@ -228,7 +224,7 @@ function StakeRow({ stakeId }: StakeRowProps) {
                 ? "w-full rounded-lg border border-green-500/40 px-3 py-1.5 text-sm font-semibold text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-50"
                 : "w-full rounded-lg border border-red-500/20 px-3 py-1.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"}
             >
-              {unstakePending ? 'Ending...' : inBurnPhase ? 'End stake (recover rewards)' : isMature ? 'End stake (no penalty)' : 'End stake'}
+              {unstakePending ? 'Ending...' : isMature ? 'End stake (no penalty)' : 'End stake'}
             </button>
           )}
         </div>
