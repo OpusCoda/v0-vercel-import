@@ -27,21 +27,18 @@ const socials = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-[#2a2a35] bg-[#0a0a0c]">
-      <div className="mx-auto max-w-7xl px-6 py-6">
-        <div className="flex flex-col items-center justify-center gap-4 md:flex-row md:justify-between">
-          <p className="font-sans text-xs text-[#7c7a76]">
-            © Opus Ecosystem — on-chain markets and staking on PulseChain.
-          </p>
-          <div className="flex gap-4">
-            {socials.map((social) => (
-              <Link
-                key={social.label}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={social.label}
-                className="group"
-              >
+      <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
+        <div className="flex justify-center gap-6">
+          {socials.map((social) => (
+            <Link
+              key={social.label}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={social.label}
+              className="group"
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#2a2a35] bg-[#0d0d12] shadow-lg transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#1a1a22]">
                 <svg
                   className={`${social.size} text-[#9ca3af] transition-colors group-hover:text-[#d4af37]`}
                   fill="currentColor"
@@ -50,9 +47,13 @@ export function SiteFooter() {
                 >
                   <path d={social.path} />
                 </svg>
-              </Link>
-            ))}
-          </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-10 border-t border-[#2a2a35] pt-6">
+          <p className="text-center font-sans text-xs text-[#7c7a76]">© since deployment.</p>
         </div>
       </div>
     </footer>
