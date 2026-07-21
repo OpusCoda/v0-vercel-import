@@ -1,10 +1,8 @@
 'use client'
-
 import { useState, useEffect } from 'react'
-import { TrendingUp, Trash2, ExternalLink, X, ChevronDown } from 'lucide-react'
+import { Trash2, X } from 'lucide-react'
 import { ConnectWalletButton } from './connect-wallet-button'
 import { ethers } from 'ethers'
-
 interface Wallet {
   id: string
   name: string
@@ -13,7 +11,6 @@ interface Wallet {
   percentage: number
   selected: boolean
 }
-
 interface Asset {
   symbol: string
   name: string
@@ -22,29 +19,6 @@ interface Asset {
   value: number
   change24h: number
 }
-
-interface HexStake {
-  stakeId: string
-  stakedHearts: string
-  stakeShares: string
-  lockedDay: number
-  stakedDays: number
-  unlockedDay: number
-  isAutoStake: boolean
-  daysPassed: number
-  daysRemaining: number
-  isActive: boolean
-  wallet: string
-  chain: string
-}
-
-interface LiquidLoan {
-  wallet: string
-  lockedPLS: number
-  debt: number
-  icr: number
-}
-
 const TOKEN_CONTRACTS = [
   { symbol: 'OPUS', name: 'Opus', address: '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a', decimals: 18 },
   { symbol: 'CODA', name: 'Coda', address: '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28', decimals: 18 },
@@ -59,36 +33,11 @@ const TOKEN_CONTRACTS = [
   { symbol: 'WBTC', name: 'Wrapped Bitcoin', address: '0xb17D901469B9208B17d916112988A3FeD19b5cA1', decimals: 8 },
   { symbol: 'eBTC', name: 'eBTC (WBTC from Ethereum)', address: '0xb17D901469B9208B17d916112988A3FeD19b5cA1', decimals: 8 },
 ]
-
-// Pulsechain contracts
-const HEX_PULSECHAIN_ADDRESS = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'
-const HSI_MANAGER_ADDRESS = '0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3'
-const LIQUID_LOANS_VAULT_MANAGER = '0xD79bfb86fA06e8782b401bC0197d92563602D2Ab'
-
-// Ethereum contracts
-const HEX_ETHEREUM_ADDRESS = '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39'
-const HSI_ETHEREUM_ADDRESS = '0x8bd3d1472a656e312e94fb1bbdd599b8c51d18e3'
-
-const HEX_STAKING_ABI = [
-  'function stakeCount(address) view returns (uint256)',
-  'function stakeLists(address, uint256) view returns (uint40 stakeId, uint72 stakedHearts, uint72 stakeShares, uint16 lockedDay, uint16 stakedDays, uint16 unlockedDay, bool isAutoStake)',
-  'function currentDay() view returns (uint256)',
-]
-
-const LIQUID_LOANS_ABI = [
-  'function getVaultColl(address) view returns (uint256)',
-  'function getVaultDebt(address) view returns (uint256)',
-  'function getCurrentICR(address _borrower, uint _price) view returns (uint256)',
-]
-
 const ERC20_ABI = [
   'function balanceOf(address) view returns (uint256)',
   'function decimals() view returns (uint8)',
 ]
-
 const PULSECHAIN_RPC_URL = 'https://rpc.pulsechain.com'
-const ETHEREUM_RPC_URL = 'https://ethereum-rpc.publicnode.com'
-
 // Token prices from DexScreener and market data
 const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
   try {
@@ -128,33 +77,24 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
     }
   }
 }
-
 export function PortfolioDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
-  const [hexStakes, setHexStakes] = useState<HexStake[]>([])
-  const [hsiStakes, setHsiStakes] = useState<HexStake[]>([])
-  const [liquidLoans, setLiquidLoans] = useState<LiquidLoan[]>([])
   const [totalPortfolioValue, setTotalPortfolioValue] = useState(0)
   const [change24h, setChange24h] = useState(0)
-  const [expandedStakes, setExpandedStakes] = useState<Set<string>>(new Set())
-
   // Modal states
   const [showConnectModal, setShowConnectModal] = useState(false)
   const [showEditWalletsModal, setShowEditWalletsModal] = useState(false)
   const [showLoadWalletModal, setShowLoadWalletModal] = useState(false)
-
   // Edit wallets state
   const [editingWallets, setEditingWallets] = useState<Wallet[]>([])
   const [newWalletAddress, setNewWalletAddress] = useState('')
   const [newWalletName, setNewWalletName] = useState('')
-
   // Load Wallet state
   const [loadWalletName, setLoadWalletName] = useState('')
   const [loadingWallets, setLoadingWallets] = useState(false)
   const [loadedWalletListName, setLoadedWalletListName] = useState<string | null>(null)
-
   // Fetch token balances for wallets
   const fetchTokenBalances = async (addresses: string[]) => {
     try {
@@ -163,7 +103,6 @@ export function PortfolioDashboard() {
       
       // Aggregate balances by token across all wallets
       const tokenBalances: { [symbol: string]: { balance: number; token: typeof TOKEN_CONTRACTS[0] } } = {}
-
       for (const token of TOKEN_CONTRACTS) {
         let totalBalance = 0
         
@@ -185,7 +124,6 @@ export function PortfolioDashboard() {
           tokenBalances[token.symbol] = { balance: totalBalance, token }
         }
       }
-
       // Convert to assets and filter by balance > 0 and value > 0
       const fetchedAssets: Asset[] = Object.entries(tokenBalances)
         .map(([symbol, { balance, token }]) => {
@@ -202,7 +140,6 @@ export function PortfolioDashboard() {
         })
         .filter(asset => asset.balance > 0 && asset.value > 0)
         .sort((a, b) => b.value - a.value)
-
       setAssets(fetchedAssets)
       console.log('[v0] Fetched', fetchedAssets.length, 'assets for', addresses.length, 'wallets')
     } catch (error) {
@@ -210,203 +147,6 @@ export function PortfolioDashboard() {
       setAssets([])
     }
   }
-
-  // Fetch HEX stakes from both Pulsechain and Ethereum
-  const fetchHexStakes = async (addresses: string[]) => {
-    const allHexStakes: HexStake[] = []
-    const allHsiStakes: HexStake[] = []
-
-    // Fetch Pulsechain HEX stakes
-    try {
-      const pulsechainProvider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
-      const hexContractPulse = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, pulsechainProvider)
-      const currentDayPulse = await hexContractPulse.currentDay()
-
-      for (const address of addresses) {
-        try {
-          const hexStakeCount = await hexContractPulse.stakeCount(address)
-          for (let i = 0; i < Number(hexStakeCount); i++) {
-            const stake = await hexContractPulse.stakeLists(address, i)
-            const daysPassed = Number(currentDayPulse) - Number(stake.lockedDay)
-            const daysRemaining = Number(stake.stakedDays) - daysPassed
-            const isActive = Number(stake.unlockedDay) === 0
-            allHexStakes.push({
-              stakeId: stake.stakeId.toString(),
-              stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
-              stakeShares: ethers.formatUnits(stake.stakeShares, 12),
-              lockedDay: Number(stake.lockedDay),
-              stakedDays: Number(stake.stakedDays),
-              unlockedDay: Number(stake.unlockedDay),
-              isAutoStake: stake.isAutoStake,
-              daysPassed: Math.max(0, daysPassed),
-              daysRemaining: Math.max(0, daysRemaining),
-              isActive,
-              wallet: address,
-              chain: 'Pulsechain',
-            })
-          }
-        } catch (e) {
-          console.error(`Error fetching Pulsechain HEX stakes for ${address}:`, e)
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching Pulsechain HEX data:', error)
-    }
-
-    // Fetch Ethereum HEX stakes
-    try {
-      const ethereumProvider = new ethers.JsonRpcProvider(ETHEREUM_RPC_URL)
-      const hexContractEth = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
-      const currentDayEth = await hexContractEth.currentDay()
-
-      for (const address of addresses) {
-        try {
-          const hexStakeCount = await hexContractEth.stakeCount(address)
-          for (let i = 0; i < Number(hexStakeCount); i++) {
-            const stake = await hexContractEth.stakeLists(address, i)
-            const daysPassed = Number(currentDayEth) - Number(stake.lockedDay)
-            const daysRemaining = Number(stake.stakedDays) - daysPassed
-            const isActive = Number(stake.unlockedDay) === 0
-            allHexStakes.push({
-              stakeId: stake.stakeId.toString(),
-              stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
-              stakeShares: ethers.formatUnits(stake.stakeShares, 12),
-              lockedDay: Number(stake.lockedDay),
-              stakedDays: Number(stake.stakedDays),
-              unlockedDay: Number(stake.unlockedDay),
-              isAutoStake: stake.isAutoStake,
-              daysPassed: Math.max(0, daysPassed),
-              daysRemaining: Math.max(0, daysRemaining),
-              isActive,
-              wallet: address,
-              chain: 'Ethereum',
-            })
-          }
-        } catch (e) {
-          console.error(`Error fetching Ethereum HEX stakes for ${address}:`, e)
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching Ethereum HEX data:', error)
-    }
-
-    // Fetch Pulsechain HSI stakes
-    try {
-      const pulsechainProvider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
-      const hsiContractPulse = new ethers.Contract(HSI_MANAGER_ADDRESS, HEX_STAKING_ABI, pulsechainProvider)
-      const hexContractPulse = new ethers.Contract(HEX_PULSECHAIN_ADDRESS, HEX_STAKING_ABI, pulsechainProvider)
-      const currentDayPulse = await hexContractPulse.currentDay()
-
-      for (const address of addresses) {
-        try {
-          const hsiStakeCount = await hsiContractPulse.stakeCount(address)
-          for (let i = 0; i < Number(hsiStakeCount); i++) {
-            const stake = await hsiContractPulse.stakeLists(address, i)
-            const daysPassed = Number(currentDayPulse) - Number(stake.lockedDay)
-            const daysRemaining = Number(stake.stakedDays) - daysPassed
-            const isActive = Number(stake.unlockedDay) === 0
-            allHsiStakes.push({
-              stakeId: stake.stakeId.toString(),
-              stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
-              stakeShares: ethers.formatUnits(stake.stakeShares, 12),
-              lockedDay: Number(stake.lockedDay),
-              stakedDays: Number(stake.stakedDays),
-              unlockedDay: Number(stake.unlockedDay),
-              isAutoStake: stake.isAutoStake,
-              daysPassed: Math.max(0, daysPassed),
-              daysRemaining: Math.max(0, daysRemaining),
-              isActive,
-              wallet: address,
-              chain: 'Pulsechain',
-            })
-          }
-        } catch (e) {
-          console.error(`Error fetching Pulsechain HSI stakes for ${address}:`, e)
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching Pulsechain HSI data:', error)
-    }
-
-    // Fetch Ethereum HSI stakes
-    try {
-      const ethereumProvider = new ethers.JsonRpcProvider(ETHEREUM_RPC_URL)
-      const hsiEthContract = new ethers.Contract(HSI_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
-      const hexEthContract = new ethers.Contract(HEX_ETHEREUM_ADDRESS, HEX_STAKING_ABI, ethereumProvider)
-      const currentDayEth = await hexEthContract.currentDay()
-
-      for (const address of addresses) {
-        try {
-          const hsiStakeCount = await hsiEthContract.stakeCount(address)
-          for (let i = 0; i < Number(hsiStakeCount); i++) {
-            const stake = await hsiEthContract.stakeLists(address, i)
-            const daysPassed = Number(currentDayEth) - Number(stake.lockedDay)
-            const daysRemaining = Number(stake.stakedDays) - daysPassed
-            const isActive = Number(stake.unlockedDay) === 0
-            allHsiStakes.push({
-              stakeId: stake.stakeId.toString(),
-              stakedHearts: ethers.formatUnits(stake.stakedHearts, 8),
-              stakeShares: ethers.formatUnits(stake.stakeShares, 12),
-              lockedDay: Number(stake.lockedDay),
-              stakedDays: Number(stake.stakedDays),
-              unlockedDay: Number(stake.unlockedDay),
-              isAutoStake: stake.isAutoStake,
-              daysPassed: Math.max(0, daysPassed),
-              daysRemaining: Math.max(0, daysRemaining),
-              isActive,
-              wallet: address,
-              chain: 'Ethereum',
-            })
-          }
-        } catch (e) {
-          console.error(`Error fetching Ethereum HSI stakes for ${address}:`, e)
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching Ethereum HSI data:', error)
-    }
-
-    // Sort by daysRemaining (least first)
-    allHexStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
-    allHsiStakes.sort((a, b) => a.daysRemaining - b.daysRemaining)
-
-    setHexStakes(allHexStakes)
-    setHsiStakes(allHsiStakes)
-  }
-
-  // Fetch Liquid Loans positions
-  const fetchLiquidLoans = async (addresses: string[]) => {
-    try {
-      const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
-      const vaultManager = new ethers.Contract(LIQUID_LOANS_VAULT_MANAGER, LIQUID_LOANS_ABI, provider)
-      const prices = await fetchTokenPrices()
-      const plsPrice = prices.PLS || 0.08
-      const loans: LiquidLoan[] = []
-
-      for (const address of addresses) {
-        const coll = await vaultManager.getVaultColl(address)
-        const debt = await vaultManager.getVaultDebt(address)
-
-        if (coll > BigInt(0) || debt > BigInt(0)) {
-          const collateralUSD = Number(ethers.formatUnits(coll, 18)) * plsPrice
-          const debtUSD = Number(ethers.formatUnits(debt, 18))
-          const icr = debtUSD > 0 ? (collateralUSD / debtUSD) * 100 : 0
-
-          loans.push({
-            wallet: address,
-            lockedPLS: Number(ethers.formatUnits(coll, 18)),
-            debt: debtUSD,
-            icr,
-          })
-        }
-      }
-
-      setLiquidLoans(loans)
-    } catch (error) {
-      console.error('Error fetching Liquid Loans:', error)
-    }
-  }
-
   // Save edited wallets and fetch real data
   const handleSaveEditedWallets = async () => {
     console.log('[v0] handleSaveEditedWallets called with', editingWallets.length, 'wallets')
@@ -432,25 +172,17 @@ export function PortfolioDashboard() {
         console.error('Error saving wallets:', error)
       }
     }
-
     // Update state with edited wallets - this will trigger the useEffect to fetch data
     console.log('[v0] Calling setWallets with', editingWallets.length, 'wallets')
     setWallets(editingWallets)
     setShowEditWalletsModal(false)
-
     const selectedAddresses = editingWallets.filter(w => w.selected).map(w => w.address)
     if (selectedAddresses.length > 0) {
       fetchTokenBalances(selectedAddresses)
-      fetchHexStakes(selectedAddresses)
-      fetchLiquidLoans(selectedAddresses)
     } else {
       setAssets([])
-      setHexStakes([])
-      setHsiStakes([])
-      setLiquidLoans([])
     }
   }
-
   const handleOpenEditModal = () => {
     // Auto-select all wallets when opening Edit modal for convenience (only if wallets exist)
     if (wallets.length > 0) {
@@ -461,33 +193,27 @@ export function PortfolioDashboard() {
     }
     setShowEditWalletsModal(true)
   }
-
   const handleUpdateWalletName = (id: string, newName: string) => {
     setEditingWallets(editingWallets.map((w) => (w.id === id ? { ...w, name: newName } : w)))
   }
-
   const handleDeleteWallet = (id: string) => {
     setEditingWallets(editingWallets.filter((w) => w.id !== id))
   }
-
   const handleToggleWalletSelection = (id: string) => {
     setEditingWallets(
       editingWallets.map((w) => (w.id === id ? { ...w, selected: !w.selected } : w))
     )
   }
-
   const handleAddNewWallet = () => {
     if (!newWalletAddress) {
       alert('Please enter a wallet address')
       return
     }
-
     // Validate wallet address format
     if (!ethers.isAddress(newWalletAddress)) {
       alert('Invalid wallet address format')
       return
     }
-
     const newWallet: Wallet = {
       id: Math.random().toString(36).substr(2, 9),
       name: newWalletName || 'Wallet',
@@ -496,27 +222,21 @@ export function PortfolioDashboard() {
       percentage: 0,
       selected: true,
     }
-
     setEditingWallets([...editingWallets, newWallet])
     setNewWalletAddress('')
     setNewWalletName('')
   }
-
-
-
   const handleLoadWallets = async () => {
     if (!loadWalletName) {
       alert('Please enter a wallet list name')
       return
     }
-
     setLoadingWallets(true)
     try {
       const response = await fetch(`/api/saved-wallets?name=${encodeURIComponent(loadWalletName)}`)
       if (!response.ok) {
         throw new Error('Wallet list not found')
       }
-
       const data = await response.json()
       const loadedWallets: Wallet[] = data.addresses.map((address: string, index: number) => ({
         id: Math.random().toString(36).substr(2, 9),
@@ -526,7 +246,6 @@ export function PortfolioDashboard() {
         percentage: 0,
         selected: true,
       }))
-
       setWallets(loadedWallets)
       setLoadedWalletListName(loadWalletName)
       setLoadWalletName('')
@@ -538,8 +257,6 @@ export function PortfolioDashboard() {
       // Fetch real data for loaded wallets
       const selectedAddresses = loadedWallets.map(w => w.address)
       fetchTokenBalances(selectedAddresses)
-      fetchHexStakes(selectedAddresses)
-      fetchLiquidLoans(selectedAddresses)
     } catch (error) {
       console.error('Error loading wallet list:', error)
       alert('Failed to load wallet list. Please check the name and try again.')
@@ -547,9 +264,7 @@ export function PortfolioDashboard() {
       setLoadingWallets(false)
     }
   }
-
   const selectedWallets = wallets.filter((w) => w.selected)
-
   // Calculate total portfolio value from assets
   useEffect(() => {
     if (assets.length > 0) {
@@ -559,7 +274,6 @@ export function PortfolioDashboard() {
       setChange24h(Math.round(avgChange * 100) / 100)
     }
   }, [assets])
-
   // Load wallets from localStorage on mount
   useEffect(() => {
     const savedWallets = localStorage.getItem('currentWalletList')
@@ -573,7 +287,6 @@ export function PortfolioDashboard() {
       }
     }
   }, [])
-
   // Fetch data when selected wallets change
   useEffect(() => {
     const selectedAddresses = wallets.filter(w => w.selected).map(w => w.address)
@@ -581,19 +294,11 @@ export function PortfolioDashboard() {
     if (selectedAddresses.length > 0) {
       console.log('[v0] Fetching portfolio data')
       fetchTokenBalances(selectedAddresses)
-      fetchHexStakes(selectedAddresses)
-      fetchLiquidLoans(selectedAddresses)
     } else {
       console.log('[v0] No selected wallets, clearing data')
       setAssets([])
-      setHexStakes([])
-      setHsiStakes([])
-      setLiquidLoans([])
     }
   }, [wallets])
-
-
-
   return (
     <main className="min-h-screen bg-[#0b0b0e] px-6 py-12 md:px-8 md:py-16">
       <div className="mx-auto max-w-7xl">
@@ -611,7 +316,6 @@ export function PortfolioDashboard() {
               </div>
             </div>
           )}
-
           {/* Action Buttons */}
           <div className="flex gap-4">
             <button onClick={() => setShowConnectModal(true)} className="bg-[#d8b13d] text-[#0b0b0e] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#e8c860] transition-colors">
@@ -625,7 +329,6 @@ export function PortfolioDashboard() {
             </button>
           </div>
         </div>
-
         {/* Your Wallets Section */}
         {wallets.length > 0 && (
           <div className="mb-16 pb-12 border-b border-[rgba(255,255,255,0.08)]">
@@ -685,9 +388,6 @@ export function PortfolioDashboard() {
             </div>
           </div>
         )}
-
-
-
         {/* Content shown only when wallets are connected */}
         {selectedWallets.length > 0 && (
           <>
@@ -697,9 +397,6 @@ export function PortfolioDashboard() {
                 {[
                   { id: 'overview', label: 'Overview' },
                   { id: 'assets', label: 'Assets' },
-                  { id: 'hexstakes', label: 'HEX Stakes' },
-                  { id: 'hsistakes', label: 'HSI Stakes' },
-                  { id: 'liquidloans', label: 'Liquidity Positions' },
                   { id: 'pulsexlp', label: 'PulseX LP' },
                 ].map((tab) => (
                   <button
@@ -716,7 +413,6 @@ export function PortfolioDashboard() {
                 ))}
               </div>
             </div>
-
             {/* Overview Tab */}
             {activeTab === 'overview' && (
               <div className="mb-12">
@@ -737,7 +433,6 @@ export function PortfolioDashboard() {
                 </div>
               </div>
             )}
-
             {/* Assets Tab */}
             {activeTab === 'assets' && (
               <div className="mb-12">
@@ -778,131 +473,6 @@ export function PortfolioDashboard() {
                 </div>
               </div>
             )}
-
-            {/* HEX Stakes Tab */}
-            {activeTab === 'hexstakes' && (
-              <div className="mb-12">
-                <div className="mb-6">
-                  <h3 className="font-serif text-xl font-bold text-[#d4af37]">HEX Stakes</h3>
-                  <p className="font-sans text-sm text-[#7c7a76] mt-1">{hexStakes.length} stake{hexStakes.length !== 1 ? 's' : ''}</p>
-                </div>
-                <div className="space-y-6">
-                  {/* Pulsechain Stakes */}
-                  {hexStakes.filter(s => s.chain === 'Pulsechain').length > 0 && (
-                    <div>
-                      <h4 className="font-sans text-sm font-semibold text-[#d4af37] mb-2">Pulsechain</h4>
-                      <div className="space-y-2">
-                        {hexStakes.filter(s => s.chain === 'Pulsechain').map((stake) => (
-                          <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
-                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {/* Ethereum Stakes */}
-                  {hexStakes.filter(s => s.chain === 'Ethereum').length > 0 && (
-                    <div>
-                      <h4 className="font-sans text-sm font-semibold text-[#d4af37] mb-2">Ethereum</h4>
-                      <div className="space-y-2">
-                        {hexStakes.filter(s => s.chain === 'Ethereum').map((stake) => (
-                          <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
-                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HEX — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {hexStakes.length === 0 && (
-                  <div className="text-center py-12">
-                    <p className="font-sans text-[#7c7a76]">No HEX stakes found</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* HSI Stakes Tab */}
-            {activeTab === 'hsistakes' && (
-              <div className="mb-12">
-                <div className="mb-6">
-                  <h3 className="font-serif text-xl font-bold text-[#d4af37]">HSI Stakes</h3>
-                  <p className="font-sans text-sm text-[#7c7a76] mt-1">{hsiStakes.length} stake{hsiStakes.length !== 1 ? 's' : ''}</p>
-                </div>
-                <div className="space-y-6">
-                  {/* Pulsechain Stakes */}
-                  {hsiStakes.filter(s => s.chain === 'Pulsechain').length > 0 && (
-                    <div>
-                      <h4 className="font-sans text-sm font-semibold text-[#d4af37] mb-2">Pulsechain</h4>
-                      <div className="space-y-2">
-                        {hsiStakes.filter(s => s.chain === 'Pulsechain').map((stake) => (
-                          <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
-                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HSI — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {/* Ethereum Stakes */}
-                  {hsiStakes.filter(s => s.chain === 'Ethereum').length > 0 && (
-                    <div>
-                      <h4 className="font-sans text-sm font-semibold text-[#d4af37] mb-2">Ethereum</h4>
-                      <div className="space-y-2">
-                        {hsiStakes.filter(s => s.chain === 'Ethereum').map((stake) => (
-                          <div key={`${stake.chain}-${stake.wallet}-${stake.stakeId}`} className={`rounded-lg border px-4 py-3 font-sans text-sm font-medium ${stake.isActive ? 'border-[#2a2a35] bg-[#101017] text-green-400' : 'border-[#2a2a35] bg-[#0a0a0c] text-slate-400'}`}>
-                            Day {stake.daysPassed}/{stake.stakedDays} ({stake.daysRemaining} days left) — {Number(stake.stakedHearts).toLocaleString(undefined, { maximumFractionDigits: 0 })} HSI — {Number(stake.stakeShares).toLocaleString(undefined, { maximumFractionDigits: 2 })} T-shares{stake.isAutoStake ? ' (Auto)' : ''} — {stake.wallet.slice(0, 4)}…{stake.wallet.slice(-4)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {hsiStakes.length === 0 && (
-                  <div className="text-center py-12">
-                    <p className="font-sans text-[#7c7a76]">No HSI stakes found</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Liquid Loans Tab */}
-            {activeTab === 'liquidloans' && (
-              <div className="mb-12">
-                <div className="mb-6">
-                  <h3 className="font-serif text-xl font-bold text-[#d4af37]">Liquid Loans Positions</h3>
-                  <p className="font-sans text-sm text-[#7c7a76] mt-1">{liquidLoans.length} active position{liquidLoans.length !== 1 ? 's' : ''}</p>
-                </div>
-                <div className="grid gap-4">
-                  {liquidLoans.map((loan) => (
-                    <div key={loan.wallet} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <p className="font-sans text-xs text-[#7c7a76]">Collateral</p>
-                          <p className="font-serif font-semibold text-[#d4af37] mt-1">${loan.lockedPLS.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
-                          <p className="font-sans text-xs text-[#7c7a76] mt-1">PLS</p>
-                        </div>
-                        <div>
-                          <p className="font-sans text-xs text-[#7c7a76]">Debt</p>
-                          <p className="font-serif font-semibold text-[#d4af37] mt-1">${loan.debt.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
-                          <p className="font-sans text-xs text-[#7c7a76] mt-1">USDL</p>
-                        </div>
-                        <div>
-                          <p className="font-sans text-xs text-[#7c7a76]">ICR</p>
-                          <p className={`font-serif font-semibold mt-1 ${loan.icr >= 150 ? 'text-[#3fbf6f]' : loan.icr >= 110 ? 'text-[#f59e0b]' : 'text-[#ff6b4a]'}`}>{loan.icr.toFixed(2)}%</p>
-                        </div>
-                      </div>
-                      <p className="font-sans text-xs text-[#7c7a76] mt-4 truncate">{loan.wallet}</p>
-                    </div>
-                  ))}
-                </div>
-                {liquidLoans.length === 0 && (
-                  <div className="text-center py-12">
-                    <p className="font-sans text-[#7c7a76]">No Liquid Loans positions found</p>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* PulseX LP Tab */}
             {activeTab === 'pulsexlp' && (
               <div className="mb-12">
@@ -915,13 +485,8 @@ export function PortfolioDashboard() {
                 </div>
               </div>
             )}
-
-
-
-
           </>
         )}
-
         {/* Connect Wallet Modal */}
         {showConnectModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -941,7 +506,6 @@ export function PortfolioDashboard() {
             </div>
           </div>
         )}
-
         {/* Edit Wallets Modal */}
         {showEditWalletsModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -952,13 +516,11 @@ export function PortfolioDashboard() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-
               <div className="mb-6 flex gap-2 border-b border-[#2a2a35] pb-4">
                 <button className="rounded-lg bg-[#2a2a35] px-4 py-2 font-sans text-sm font-semibold text-[#d4af37]">
                   {editingWallets.length} Addresses
                 </button>
               </div>
-
               {/* Existing Wallets */}
               <div className="space-y-4 mb-8">
                 {editingWallets.map((wallet) => (
@@ -988,7 +550,6 @@ export function PortfolioDashboard() {
                   </div>
                 ))}
               </div>
-
               {/* Add New Address */}
               <div className="mb-6 border-t border-[#2a2a35] pt-6">
                 <p className="mb-4 font-sans text-sm font-semibold text-[#d4af37]">Add new Address</p>
@@ -1015,7 +576,6 @@ export function PortfolioDashboard() {
                   </button>
                 </div>
               </div>
-
               {/* Actions */}
               <div className="flex gap-3 border-t border-[#2a2a35] pt-6">
                 <button
@@ -1034,7 +594,6 @@ export function PortfolioDashboard() {
             </div>
           </div>
         )}
-
         {/* Load Saved Wallet Modal */}
         {showLoadWalletModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -1045,7 +604,6 @@ export function PortfolioDashboard() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="block font-sans text-xs font-semibold text-[#7c7a76] mb-2">Wallet List Name</label>
@@ -1058,7 +616,6 @@ export function PortfolioDashboard() {
                   />
                 </div>
               </div>
-
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowLoadWalletModal(false)}
