@@ -25,7 +25,7 @@ export default function MarketsPage() {
       <SiteNav />
       
       {/* Tab Navigation */}
-      <div className="py-6">
+      <div className="py-3">
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex justify-center gap-3">
             {tabs.map((tab) => (
@@ -47,7 +47,7 @@ export default function MarketsPage() {
 
       <div className="mx-auto max-w-7xl px-6">
         {/* Market Browse Section - Moved to Top */}
-        <div className="py-6">
+        <div className="py-3">
           <MarketsList />
         </div>
 
