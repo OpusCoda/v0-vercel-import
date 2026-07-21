@@ -25,17 +25,17 @@ export default function MarketsPage() {
       <SiteNav />
       
       {/* Tab Navigation */}
-      <div className="border-b border-[#2a2a35]">
+      <div className="py-6">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="flex gap-6">
+          <div className="flex justify-center gap-3">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-1 py-4 text-sm font-medium transition-colors border-b-2 ${
+                className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
                   activeTab === tab.id
-                    ? 'border-[#d8b13d] text-[#d8b13d]'
-                    : 'border-transparent text-[#9a9a9a] hover:text-[#b8b6b1]'
+                    ? 'border-[#d8b13d] bg-[#d8b13d]/10 text-[#d8b13d]'
+                    : 'border-[#2a2a35] text-[#9a9a9a] hover:border-[#3a3a45] hover:text-[#b8b6b1]'
                 }`}
               >
                 {tab.label}
@@ -47,7 +47,7 @@ export default function MarketsPage() {
 
       <div className="mx-auto max-w-7xl px-6">
         {/* Market Browse Section - Moved to Top */}
-        <div className="py-12">
+        <div className="py-6">
           <MarketsList />
         </div>
 
