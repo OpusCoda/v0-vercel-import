@@ -397,7 +397,6 @@ export function PortfolioDashboard() {
                 {[
                   { id: 'overview', label: 'Overview' },
                   { id: 'assets', label: 'Assets' },
-                  { id: 'pulsexlp', label: 'PulseX LP' },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -470,18 +469,6 @@ export function PortfolioDashboard() {
                       })}
                     </tbody>
                   </table>
-                </div>
-              </div>
-            )}
-            {/* PulseX LP Tab */}
-            {activeTab === 'pulsexlp' && (
-              <div className="mb-12">
-                <div className="mb-6">
-                  <h3 className="font-serif text-xl font-bold text-[#d4af37]">PulseX Liquidity Positions</h3>
-                  <p className="font-sans text-sm text-[#7c7a76] mt-1">V1 and V2 liquidity positions</p>
-                </div>
-                <div className="text-center py-12">
-                  <p className="font-sans text-[#7c7a76]">No PulseX LP positions found</p>
                 </div>
               </div>
             )}

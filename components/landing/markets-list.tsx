@@ -6,6 +6,7 @@ import { useAllWagers } from "@/hooks/useAllWagers"
 import { wagerToCard, type P2PCardData } from "@/lib/wager-to-card"
 type Category = "Crypto" | "Politics" | "Sports" | "Macro" | "PulseChain" | "Misc"
 type P2PStatus = "active" | "open"
+type MarketsVariant = "all" | "p2p" | "probability"
 interface ProbabilityMarket {
   type: "probability"
   icon: string
@@ -61,13 +62,13 @@ const probabilityMarkets: ProbabilityMarket[] = [
   },
 ]
 const CATEGORIES: Category[] = ["Crypto", "Politics", "Sports", "Macro", "PulseChain", "Misc"]
-const MIN_PRICE = 1
+const MIN_PRICE = 100_000
 const MAX_PRICE = 1_000_000_000
 // Format large numbers with K, M, B suffixes
 function formatPrice(value: number): string {
-  if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(1) + "B"
-  if (value >= 1_000_000) return (value / 1_000_000).toFixed(1) + "M"
-  if (value >= 1_000) return (value / 1_000).toFixed(1) + "K"
+  if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(0) + "B"
+  if (value >= 1_000_000) return (value / 1_000_000).toFixed(0) + "M"
+  if (value >= 1_000) return (value / 1_000).toFixed(0) + "K"
   return value.toString()
 }
 // Parse formatted strings back to numbers
@@ -78,12 +79,14 @@ function parsePrice(str: string): number {
   if (str.endsWith("K")) return num * 1_000
   return num
 }
-export function MarketsList() {
+export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategories, setSelectedCategories] = useState<Set<Category>>(new Set())
   const [p2pFilter, setP2PFilter] = useState<"All" | "Active" | "Open" | "Completed">("All")
   const [priceMin, setPriceMin] = useState(MIN_PRICE)
   const [priceMax, setPriceMax] = useState(MAX_PRICE)
+  const showProbability = variant !== "p2p"
+  const showP2P = variant !== "probability"
   // Live P2P wagers from chain (open wagers only — see note below).
   const { wagers, isLoading: wagersLoading } = useAllWagers()
   const p2pMarkets: P2PCardData[] = useMemo(() => wagers.map(wagerToCard), [wagers])
@@ -154,9 +157,10 @@ export function MarketsList() {
           ))}
         </div>
       </div>
-      {/* Two-column layout: 50/50 split */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Layout: two columns for "all", single full-width column otherwise */}
+      <div className={variant === "all" ? "grid gap-6 lg:grid-cols-2" : "grid gap-6"}>
         {/* Left column: Probability Shop */}
+        {showProbability && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
@@ -165,7 +169,7 @@ export function MarketsList() {
             </div>
             <span className="font-sans text-xs text-[#7c7a76]">{filteredProbabilityMarkets.length} markets</span>
           </div>
-          <div className="flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2">
+          <div className={`flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2 ${variant === "probability" ? "lg:grid lg:grid-cols-2 lg:gap-3" : ""}`}>
             {filteredProbabilityMarkets.length > 0 ? (
               filteredProbabilityMarkets.map((market, idx) => (
                 <MarketCard
@@ -183,14 +187,16 @@ export function MarketsList() {
             )}
           </div>
         </div>
+        )}
         {/* Right column: P2P Market */}
+        {showP2P && (
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="font-serif text-lg font-semibold text-[#d4af37]">P2P Market</h3>
               <p className="font-sans text-xs text-[#7c7a76]">Peer-to-peer wager escrow</p>
             </div>
-            <div className="flex gap-1 flex-shrink-0">
+            <div className="flex gap-1 shrink-0">
               {["All", "Active", "Open", "Completed"].map((status) => (
                 <button
                   key={status}
@@ -314,7 +320,7 @@ export function MarketsList() {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2">
+          <div className={`flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2 ${variant === "p2p" ? "lg:grid lg:grid-cols-2 lg:gap-3" : ""}`}>
             {wagersLoading ? (
               <div className="py-8 text-center text-[#7c7a76]">
                 <p className="font-sans text-sm">Loading wagers...</p>
@@ -350,6 +356,7 @@ export function MarketsList() {
             )}
           </div>
         </div>
+        )}
       </div>
     </section>
   )
