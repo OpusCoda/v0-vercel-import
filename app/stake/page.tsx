@@ -1,5 +1,4 @@
 'use client'
-
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
@@ -10,38 +9,32 @@ import { useTVLAndStakeCount } from '@/hooks/useTVLAndStakeCount'
 import YourStakes from '@/components/stake/your-stakes'
 import { useReadContract } from 'wagmi'
 import { STAKING_CONTRACT, STAKING_ABI, parseSmaugAmount } from '@/lib/staking'
-
-export const TIERS = [
+import { WalletContextPrompt } from '@/components/wallet-context-prompt'
+const TIERS = [
   { name: 'Hatchling',    min: 30,  max: 89,  multiplier: 1,   feeRebate: 5,  icon: '🥚' },
   { name: 'Drake',        min: 90,  max: 179, multiplier: 1.5, feeRebate: 10, icon: '🥚' },
   { name: 'Dragon',       min: 180, max: 364, multiplier: 2,   feeRebate: 20, icon: '🥚' },
   { name: 'Elder Dragon', min: 365, max: 729, multiplier: 3,   feeRebate: 30, icon: '🥚' },
   { name: 'Smaug',        min: 730, max: 730, multiplier: 5,   feeRebate: 40, icon: '🥚' },
 ]
-
 function getTier(days: number) {
   if (!days || days < 30 || days > 730) return null
   return TIERS.find((t) => days >= t.min && days <= t.max) ?? null
 }
-
 // Format number with thousands separator
 function formatNumberInput(value: string): string {
   const numberOnly = value.replace(/,/g, '')
   if (!numberOnly) return ''
   return parseFloat(numberOnly).toLocaleString('en-US', { maximumFractionDigits: 2 })
 }
-
 export default function StakePage() {
   const { address, isConnected } = useAccount()
   const { totalStaked, totalStakers, balance, minStakeAmount, userStakeIds, isLoading, contractSmaugBalance, totalWeightedStakeRaw, totalStakedRaw, refetchStakeIds } = useStakingData()
   const { tvl, stakeCount } = useTVLAndStakeCount()
   const { initiateApproveAndStake, isPending, step, approveTxHash, stakeTxHash, reset } = useApproveAndStake(address)
-
   const [amount, setAmount] = useState('')
   const [days, setDays] = useState(365)
-
   const selectedTier = useMemo(() => getTier(days), [days])
-
   const { data: previewMultiplier } = useReadContract({
   address: STAKING_CONTRACT as `0x${string}`,
   abi: STAKING_ABI,
@@ -49,19 +42,16 @@ export default function StakePage() {
   args: [BigInt(days * 86400)],
   query: { enabled: !!selectedTier },
   })
-
   const multiplierPreview = previewMultiplier
   ? (() => {
       const val = Number(previewMultiplier) / 100
       return val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)
     })()
   : null
-
   const handleStake = async () => {
   if (!isConnected || !address) return
   if (!amount || parseFloat(amount) <= 0) return
   if (!selectedTier) return
-
   try {
     const amountBn = parseSmaugAmount(amount.replace(/,/g, ''))
     initiateApproveAndStake(amountBn, days)
@@ -69,14 +59,11 @@ export default function StakePage() {
     console.error('[v0] Stake error:', err)
     }
   }
-
   // Get the numeric minimum stake amount for validation
   const minStakeNum = parseFloat(minStakeAmount.replace(/,/g, '')) || 0
   const amountNum = parseFloat(amount.replace(/,/g, '')) || 0
   const isBelowMinimum = amountNum > 0 && amountNum < minStakeNum
-
   const [showSuccess, setShowSuccess] = useState(false)
-
   useEffect(() => {
   if (stakeTxHash && step === 'idle') {
     setShowSuccess(true)
@@ -85,7 +72,6 @@ export default function StakePage() {
     setDays(365)
     }
   }, [stakeTxHash, step, refetchStakeIds])
-
   useEffect(() => {
   if (showSuccess) {
     const timer = setTimeout(() => {
@@ -94,13 +80,12 @@ export default function StakePage() {
     return () => clearTimeout(timer)
     }
   }, [showSuccess])
-
   return (
     <>
       <SiteNav />
       <main className="min-h-screen bg-[#09090B] px-6 py-12 text-[#f4f4f4]">
         <div className="mx-auto max-w-7xl space-y-8">
-
+          <WalletContextPrompt />
           {/* ── Header ─────────────────────────────────────── */}
           <header className="space-y-6">
             <div>
@@ -111,7 +96,6 @@ export default function StakePage() {
                 Lock SMAUG to earn PLS rewards, weighted multipliers, and fee rebates across the ecosystem.
               </p>
             </div>
-
             {/* Stats strip — single bordered row, no individual cards */}
             <div className="flex divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-[#111116]">
               {[
@@ -130,17 +114,12 @@ export default function StakePage() {
                 </div>
               ))}
             </div>
-
-
           </header>
-
           {/* ── Create + Tiers ─────────────────────────────── */}
           <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-
             {/* Create Stake */}
             <div className="rounded-2xl border border-white/10 bg-[#111116] p-6">
               <h2 className="mb-6 font-serif text-2xl font-bold">Create stake</h2>
-
               <div className="space-y-5">
                 {/* Amount */}
                 <div>
@@ -167,7 +146,6 @@ export default function StakePage() {
                     </p>
                   )}
                 </div>
-
                 {/* Duration */}
                 <div>
                   <label className="mb-2 block text-sm font-medium text-[#cfcfcf]">
@@ -187,7 +165,6 @@ export default function StakePage() {
                     />
                     <span className="flex items-center px-4 text-sm text-[#9a9a9a]">days</span>
                   </div>
-
                   {/* Inline tier summary — replaces the heavy Selected Tier card */}
                   <div className="mt-2 h-6">
                     {days < 30 && (
@@ -207,7 +184,6 @@ export default function StakePage() {
   )}
                   </div>
                 </div>
-
                 {approveTxHash && step === 'approving' && (
   <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
     Waiting for SMAUG spending cap approval.
@@ -223,7 +199,6 @@ export default function StakePage() {
     Stake created! Tx: {stakeTxHash?.slice(0, 10)}...
   </div>
 )}
-
                 <button
                   onClick={handleStake}
                   disabled={!isConnected || isPending || !selectedTier || !amount || isBelowMinimum}
@@ -233,14 +208,12 @@ export default function StakePage() {
                 </button>
               </div>
             </div>
-
             {/* Tier Progression — clickable to set duration */}
             <div className="rounded-2xl border border-white/10 bg-[#111116] p-6">
               <h2 className="font-serif text-2xl font-bold">Tier progression</h2>
               <p className="mb-5 mt-1 text-sm text-[#9a9a9a]">
                 Select a tier to set duration automatically.
               </p>
-
               <div className="space-y-2">
                 {TIERS.map((tier) => {
                   const active = selectedTier?.name === tier.name
@@ -291,15 +264,10 @@ export default function StakePage() {
               </div>
             </div>
           </section>
-
           {/* ── Your Stakes ────────────────────────────────── */}
           <section>
-            <YourStakes 
-  userStakeIds={userStakeIds} 
-  isLoading={isLoading}
-/>
+            <YourStakes />
           </section>
-
         </div>
       </main>
     </>

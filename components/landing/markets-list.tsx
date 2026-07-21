@@ -127,7 +127,7 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
     setSelectedCategories(newCats)
   }
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
+    <section className="mx-auto max-w-7xl px-4 pt-4 pb-16 md:px-6 md:pt-6 md:pb-20">
       {/* Search and Filter Bar */}
       <div className="mb-8 space-y-4">
         {/* Search */}
@@ -169,7 +169,7 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
             </div>
             <span className="font-sans text-xs text-[#7c7a76]">{filteredProbabilityMarkets.length} markets</span>
           </div>
-          <div className={`flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2 ${variant === "probability" ? "lg:grid lg:grid-cols-2 lg:gap-3" : ""}`}>
+          <div className={`flex flex-col gap-3 max-h-200 overflow-y-auto pr-2 ${variant === "probability" ? "lg:grid lg:grid-cols-2 lg:gap-3" : ""}`}>
             {filteredProbabilityMarkets.length > 0 ? (
               filteredProbabilityMarkets.map((market, idx) => (
                 <MarketCard
@@ -320,7 +320,7 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
               </div>
             </div>
           </div>
-          <div className={`flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2 ${variant === "p2p" ? "lg:grid lg:grid-cols-2 lg:gap-3" : ""}`}>
+          <div className={`flex flex-col gap-3 max-h-200 overflow-y-auto pr-2 ${variant === "p2p" ? "lg:grid lg:grid-cols-2 lg:gap-3" : ""}`}>
             {wagersLoading ? (
               <div className="py-8 text-center text-[#7c7a76]">
                 <p className="font-sans text-sm">Loading wagers...</p>

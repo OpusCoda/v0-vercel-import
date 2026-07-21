@@ -1,6 +1,7 @@
 import { SiteNav } from "@/components/landing/site-nav"
 import { SiteFooter } from "@/components/landing/site-footer"
 import { ReferralsDashboard } from "@/components/landing/referrals-dashboard"
+import { WalletContextPrompt } from '@/components/wallet-context-prompt'
 
 export const metadata = {
   title: "Referrals · The Opus Ecosystem",
@@ -12,6 +13,9 @@ export default function ReferralsPage() {
     <main className="min-h-screen bg-[#0a0a0c]">
       <SiteNav />
       <div className="pt-24 md:pt-28">
+        <div className="mx-auto max-w-7xl px-6 pb-4">
+          <WalletContextPrompt />
+        </div>
         <ReferralsDashboard />
       </div>
       <SiteFooter />

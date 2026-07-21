@@ -8,6 +8,7 @@ import { WagerMarketStats } from "@/components/markets/wager-market-stats"
 import { OpenWagers } from "@/components/markets/open-wagers"
 import { CreateWager } from "@/components/markets/create-wager"
 import { MyWagers } from "@/components/markets/my-wagers"
+import { WalletContextPrompt } from '@/components/wallet-context-prompt'
 type Tab = 'all' | 'p2p' | 'probability' | 'my-wagers'
 export default function MarketsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('all')
@@ -26,7 +27,9 @@ export default function MarketsPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0c]">
       <SiteNav />
-      
+      <div className="mx-auto max-w-7xl px-6 pt-4">
+        <WalletContextPrompt />
+      </div>
       {/* Tab Navigation */}
       <div className="py-3">
         <div className="mx-auto max-w-7xl px-6">
