@@ -13,7 +13,6 @@ const navLinks = [
   { label: "Stake", href: "/stake" },
   { label: "Referrals", href: "/referrals" },
   { label: "Portfolio", href: "/portfolio" },
-  { label: "Dashboard", href: "/dashboard" },
   { label: "Tokens", href: "/tokens" },
 ]
 
