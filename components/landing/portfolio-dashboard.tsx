@@ -304,17 +304,17 @@ export function PortfolioDashboard() {
       <div className="mx-auto max-w-7xl">
         {/* Header with Title and Stats */}
         <div className="mb-16">
-          <h1 className="font-serif text-5xl font-bold text-[#f4f4f4] mb-2">Portfolio dashboard</h1>
-          
-          {/* Quick Stats Row - Only show when wallets exist */}
-          {wallets.length > 0 && (
-            <div className="mb-12">
-              <div>
+          <div className="flex items-end justify-between mb-8">
+            <h1 className="font-serif text-5xl font-bold text-[#f4f4f4]">Portfolio dashboard</h1>
+            
+            {/* Total Portfolio Value - Positioned to the right */}
+            {wallets.length > 0 && (
+              <div className="text-right">
                 <p className="font-sans text-xs font-medium text-[#9a9a9a] mb-1">Total Portfolio Value</p>
                 <p className="font-serif text-3xl font-bold text-[#f4f4f4]">${totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
           {/* Action Buttons */}
           <div className="flex gap-4">
             <button onClick={() => setShowConnectModal(true)} className="bg-[#d8b13d] text-[#0b0b0e] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#e8c860] transition-colors">
