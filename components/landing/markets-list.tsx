@@ -61,13 +61,13 @@ const probabilityMarkets: ProbabilityMarket[] = [
   },
 ]
 const CATEGORIES: Category[] = ["Crypto", "Politics", "Sports", "Macro", "PulseChain", "Misc"]
-const MIN_PRICE = 1
-const MAX_PRICE = 1_000_000_000
+const MIN_PRICE = 100_000
+const MAX_PRICE = 100_000_000
 // Format large numbers with K, M, B suffixes
 function formatPrice(value: number): string {
-  if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(1) + "B"
-  if (value >= 1_000_000) return (value / 1_000_000).toFixed(1) + "M"
-  if (value >= 1_000) return (value / 1_000).toFixed(1) + "K"
+  if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(0) + "B"
+  if (value >= 1_000_000) return (value / 1_000_000).toFixed(0) + "M"
+  if (value >= 1_000) return (value / 1_000).toFixed(0) + "K"
   return value.toString()
 }
 // Parse formatted strings back to numbers
@@ -190,7 +190,7 @@ export function MarketsList() {
               <h3 className="font-serif text-lg font-semibold text-[#d4af37]">P2P Market</h3>
               <p className="font-sans text-xs text-[#7c7a76]">Peer-to-peer wager escrow</p>
             </div>
-            <div className="flex gap-1 flex-shrink-0">
+            <div className="flex gap-1 shrink-0">
               {["All", "Active", "Open", "Completed"].map((status) => (
                 <button
                   key={status}
@@ -314,7 +314,7 @@ export function MarketsList() {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-3 max-h-[800px] overflow-y-auto pr-2">
+          <div className="flex flex-col gap-3 max-h-200 overflow-y-auto pr-2">
             {wagersLoading ? (
               <div className="py-8 text-center text-[#7c7a76]">
                 <p className="font-sans text-sm">Loading wagers...</p>
