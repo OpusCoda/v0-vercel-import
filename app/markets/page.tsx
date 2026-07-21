@@ -30,7 +30,7 @@ export default function MarketsPage() {
         <div className="relative mx-auto max-w-7xl px-6 py-16 md:py-20">
           <div className="max-w-2xl">
             <h1 className="font-serif text-4xl md:text-5xl font-bold text-[#e8e6e3] mb-3">
-              Opus Markets
+              Markets
             </h1>
             <p className="text-lg text-[#b8b6b1] max-w-md">
               Create and accept peer-to-peer wagers on real-world outcomes.

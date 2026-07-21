@@ -219,7 +219,7 @@ export function CreateWager() {
   return (
     <>
       <div className="rounded-2xl border border-white/10 bg-[#111116] p-8 mb-8">
-        <h2 className="font-serif text-2xl font-bold mb-6">Create a Wager</h2>
+        <h2 className="font-serif text-2xl font-bold mb-6">Create P2P Wager</h2>
         {/* Wager Type Selection */}
         <div className="mb-8">
           <label className="block text-sm font-semibold text-[#f4f4f4] mb-3">Wager Type</label>
