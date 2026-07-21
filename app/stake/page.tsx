@@ -89,11 +89,8 @@ export default function StakePage() {
           {/* ── Header ─────────────────────────────────────── */}
           <header className="space-y-6">
             <div>
-              <h1 className="font-serif text-5xl font-bold tracking-tight md:text-6xl">
-                Stake Smaug
-              </h1>
               <p className="mt-3 max-w-xl text-lg text-[#9a9a9a]">
-                Lock SMAUG to earn PLS rewards, weighted multipliers, and fee rebates across the ecosystem.
+                Stake SMAUG to earn rewards and fee rebates across the ecosystem.
               </p>
             </div>
             {/* Stats strip — single bordered row, no individual cards */}

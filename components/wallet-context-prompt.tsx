@@ -51,8 +51,6 @@ export function WalletContextPrompt() {
 
   return (
     <div className="mb-6 rounded-lg border border-[#2a2a35] bg-[#101017] p-4 text-center">
-      <p className="font-sans text-sm text-[#b8b6b1]">Connect your wallet to see your positions.</p>
-      <div className="mt-2 flex items-center justify-center gap-4">
         <button
           onClick={() => openConnectModal?.()}
           className="rounded-lg bg-[#d4af37] px-4 py-2 font-sans text-xs font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]"
@@ -60,7 +58,7 @@ export function WalletContextPrompt() {
           Connect wallet
         </button>
         <Link href="/portfolio" className="font-sans text-xs text-[#d4af37] hover:underline">
-          or track wallets in Portfolio →
+          or add or load your wallets in the Portfolio section →
         </Link>
       </div>
     </div>
