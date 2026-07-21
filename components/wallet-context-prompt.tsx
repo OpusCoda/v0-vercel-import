@@ -4,15 +4,6 @@ import { useAccount } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { useSavedWallets } from '@/hooks/useSavedWallets'
 
-/**
- * Drop-in banner for /stake, /earn and /markets.
- *
- *   connected                  → thin line: tracked-wallet count + Manage link (or nothing)
- *   not connected, saved list  → read-only notice + Connect button
- *   neither                    → Connect prompt + link to Portfolio for watch-only tracking
- *
- * Management (add/edit/load) lives ONLY in /portfolio — this component links there.
- */
 export function WalletContextPrompt() {
   const { isConnected } = useAccount()
   const { openConnectModal } = useConnectModal()
@@ -22,7 +13,7 @@ export function WalletContextPrompt() {
     if (!hasSavedWallets) return null
     return (
       <div className="mb-4 text-center font-sans text-xs text-[#7c7a76]">
-        Also tracking {selectedAddresses.length} wallet{selectedAddresses.length === 1 ? '' : 's'} (read-only) ·{' '}
+        Also tracking {selectedAddresses.length} wallet{selectedAddresses.length === 1 ? '' : 's'} ·{' '}
         <Link href="/portfolio" className="text-[#d4af37] hover:underline">Manage in Portfolio</Link>
       </div>
     )
@@ -32,17 +23,17 @@ export function WalletContextPrompt() {
     return (
       <div className="mb-6 rounded-lg border border-[#2a2a35] bg-[#101017] p-4 text-center">
         <p className="font-sans text-sm text-[#b8b6b1]">
-          Viewing {selectedAddresses.length} tracked wallet{selectedAddresses.length === 1 ? '' : 's'} (read-only).
+          Rendering {selectedAddresses.length} tracked wallet{selectedAddresses.length === 1 ? '' : 's'}.
         </p>
         <div className="mt-2 flex items-center justify-center gap-4">
           <button
             onClick={() => openConnectModal?.()}
             className="rounded-lg bg-[#d4af37] px-4 py-2 font-sans text-xs font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]"
           >
-            Connect wallet to act
+            Connect to a wallet
           </button>
           <Link href="/portfolio" className="font-sans text-xs text-[#d4af37] hover:underline">
-            Manage wallets →
+            Manage wallets in Portfolio section →
           </Link>
         </div>
       </div>

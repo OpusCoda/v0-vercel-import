@@ -99,7 +99,7 @@ export default function StakePage() {
                 { label: 'Current APR',   value: isLoading ? '—' : '38.42%' },
                 { label: 'TVL',           value: tvl },
                 { label: 'Total staked',  value: isLoading ? '—' : `${totalStaked} SMAUG` },
-                { label: 'Active stakes', value: stakeCount.toLocaleString() },
+                { label: 'Your active stakes', value: isConnected ? userStakeIds.length.toLocaleString() : '—' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex-1 px-6 py-4">
                   <div className="text-xs font-semibold uppercase tracking-wide text-[#8f8f8f]">
