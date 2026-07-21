@@ -14,6 +14,8 @@ type WagerType = 'standard' | 'price-bet'
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 // Seconds for each DepositWindow enum index: H24, H48, W1, M1
 const WINDOW_SECONDS = [24 * 3600, 48 * 3600, 7 * 86400, 30 * 86400]
+// Minimum stake per side (frontend-only guard; the contract has no minimum).
+const MIN_STAKE_PLS = 100_000
 // Format a "YYYY-MM-DDTHH:mm" local datetime-local string a few days out.
 function defaultEventDateTime(daysAhead: number): string {
   const d = new Date()
@@ -86,6 +88,9 @@ export function CreateWager() {
   // Earliest valid moment = now + window, shown in UTC (matches the contract rule).
   const earliestValidLabel = new Date((nowTs + windowSeconds) * 1000).toUTCString()
   const eventUtcLabel = eventDateTime ? new Date(eventDateTime).toUTCString() : ''
+  // Stake minimums (both sides must meet the floor).
+  const myStakeBelowMin = !!myStake && parseFloat(myStake) < MIN_STAKE_PLS
+  const challengerStakeBelowMin = !!challengerStake && parseFloat(challengerStake) < MIN_STAKE_PLS
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!isConnected || !address) {
@@ -101,6 +106,10 @@ export function CreateWager() {
     }
     if (!isEventDateValid) {
       alert(`Event date is too soon for the selected deposit window. Earliest valid (UTC): ${earliestValidLabel}`)
+      return
+    }
+    if (parseFloat(myStake) < MIN_STAKE_PLS || parseFloat(challengerStake) < MIN_STAKE_PLS) {
+      alert(`Minimum stake is ${MIN_STAKE_PLS.toLocaleString()} PLS on each side.`)
       return
     }
     resetWrite() // clear any prior success/error banner
@@ -262,9 +271,16 @@ export function CreateWager() {
                 if (raw === '' || /^\d*\.?\d*$/.test(raw)) setMyStake(raw)
               }}
               placeholder="0.00"
-              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
+              className={`w-full rounded-lg border bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:outline-none ${
+                myStakeBelowMin
+                  ? 'border-red-500/50 focus:border-red-500'
+                  : 'border-white/10 focus:border-[#D8B13D]'
+              }`}
               required
             />
+            {myStakeBelowMin && (
+              <p className="text-xs text-red-400 mt-1">Minimum {MIN_STAKE_PLS.toLocaleString()} PLS.</p>
+            )}
           </div>
           {/* Event Date & Time -- required for BOTH types. Local time, UTC echo shown. */}
           <div>
@@ -331,9 +347,16 @@ export function CreateWager() {
                 if (raw === '' || /^\d*\.?\d*$/.test(raw)) setChallengerStake(raw)
               }}
               placeholder="0.00"
-              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
+              className={`w-full rounded-lg border bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:outline-none ${
+                challengerStakeBelowMin
+                  ? 'border-red-500/50 focus:border-red-500'
+                  : 'border-white/10 focus:border-[#D8B13D]'
+              }`}
               required
             />
+            {challengerStakeBelowMin && (
+              <p className="text-xs text-red-400 mt-1">Minimum {MIN_STAKE_PLS.toLocaleString()} PLS.</p>
+            )}
           </div>
           {/* Price-bet-only fields */}
           {wagerType === 'price-bet' && (
@@ -556,7 +579,11 @@ export function CreateWager() {
           )}
           <button
             type="submit"
-            disabled={isPending || isConfirming || !isEventDateValid}
+            disabled={
+              isPending || isConfirming || !isEventDateValid ||
+              parseFloat(myStake || '0') < MIN_STAKE_PLS ||
+              parseFloat(challengerStake || '0') < MIN_STAKE_PLS
+            }
             className="w-full rounded-lg bg-[#D8B13D] px-6 py-3 font-semibold text-black transition hover:bg-[#D8B13D]/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending
@@ -565,6 +592,8 @@ export function CreateWager() {
               ? 'Collateralizing…'
               : !isEventDateValid
               ? 'Pick a later event date'
+              : (parseFloat(myStake || '0') < MIN_STAKE_PLS || parseFloat(challengerStake || '0') < MIN_STAKE_PLS)
+              ? `Minimum ${MIN_STAKE_PLS.toLocaleString()} PLS per side`
               : 'Review & Create Wager'}
           </button>
         </form>
