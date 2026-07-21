@@ -1,3 +1,4 @@
+'use client'
 import { useState } from 'react'
 import { SiteNav } from "@/components/landing/site-nav"
 import { SiteFooter } from "@/components/landing/site-footer"
