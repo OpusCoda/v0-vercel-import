@@ -304,8 +304,7 @@ export function PortfolioDashboard() {
       <div className="mx-auto max-w-7xl">
         {/* Header with Title and Stats */}
         <div className="mb-16">
-          <h1 className="font-serif text-5xl font-bold text-[#f4f4f4] mb-2">Portfolio</h1>
-          <p className="font-sans text-[#9a9a9a] mb-12">Track and manage all your wallets in one place.</p>
+          <h1 className="font-serif text-5xl font-bold text-[#f4f4f4] mb-2">Portfolio dashboard</h1>
           
           {/* Quick Stats Row - Only show when wallets exist */}
           {wallets.length > 0 && (
