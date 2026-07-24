@@ -1,10 +1,9 @@
 import Image from "next/image"
-import { Coins } from "lucide-react"
 
 const ways = [
   {
     title: "Hold",
-    icon: Coins,
+    art: "/landing/hold-orb.png",
     accent: "#d4af37",
     body: "Hold Opus or Coda and receive PLS or PLSX distributions automatically.",
     cta: "Learn More",
@@ -54,27 +53,19 @@ export function Participate() {
       <OrnamentHeading>Four ways to participate in the ecosystem</OrnamentHeading>
 
       <div className="mt-10 grid gap-6 md:grid-cols-4">
-        {ways.map((way) => {
-          const IconComponent = way.icon
-          return (
+        {ways.map((way) => (
           <article
             key={way.title}
             className="flex flex-col overflow-hidden rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 transition-colors hover:border-[#d4af37]/40"
           >
             <div className="flex items-start gap-4">
-              {IconComponent ? (
-                <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl border border-[#2a2a35]">
-                  <IconComponent className="h-12 w-12" style={{ color: way.accent }} />
-                </div>
-              ) : (
-                <Image
-                  src={way.art || "/placeholder.svg"}
-                  alt={`${way.title} illustration`}
-                  width={96}
-                  height={96}
-                  className="h-24 w-24 shrink-0 rounded-xl object-cover"
-                />
-              )}
+              <Image
+                src={way.art || "/placeholder.svg"}
+                alt={`${way.title} illustration`}
+                width={96}
+                height={96}
+                className="h-24 w-24 shrink-0 rounded-xl object-cover"
+              />
               <div>
                 <h3 className="font-serif text-2xl font-bold" style={{ color: way.accent }}>
                   {way.title}
@@ -90,8 +81,7 @@ export function Participate() {
               {way.cta}
             </a>
           </article>
-        )
-        })}
+        ))}
       </div>
     </section>
   )
