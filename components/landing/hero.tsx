@@ -13,8 +13,8 @@ export function Hero() {
           priority
           className="object-cover object-right opacity-70"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/85 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-[#0a0a0c] via-[#0a0a0c]/85 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#0a0a0c] via-transparent to-transparent" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-24 lg:py-28">
@@ -23,7 +23,7 @@ export function Hero() {
             Earn on PulseChain <span className="text-[#d4af37]">by holding, staking, and predicting.</span>
           </h1>
           <p className="mt-6 max-w-md text-pretty font-sans text-base leading-relaxed text-[#b8b6b1] md:text-lg">
-            Hold Opus for PLS. Hold Coda for PLSX. Stake Smaug and watch the supply shrink.
+            Hold Opus, earn PLS. Hold Coda, earn PLSX. Stake Smaug for amplified rewards on a supply that only shrinks.
           </p>
 
           <p className="mt-8 flex items-center gap-2 font-sans text-sm text-[#9ca3af]">
