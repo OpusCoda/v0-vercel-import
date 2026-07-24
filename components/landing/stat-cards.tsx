@@ -8,6 +8,7 @@ export function StatCards() {
   const [plsDistributed, setPlsDistributed] = useState<number | null>(null)
   const [plsxDistributed, setPlsxDistributed] = useState<number | null>(null)
   const [smaugBurned, setSmaugBurned] = useState<number | null>(null)
+  const [smaugBurned7d, setSmaugBurned7d] = useState<number | null>(null)
   const [plsPrice, setPlsPrice] = useState<number | null>(null)
   const [plsxPrice, setPlsxPrice] = useState<number | null>(null)
   const [otherTokensUsd, setOtherTokensUsd] = useState<number | null>(null)
@@ -23,6 +24,7 @@ export function StatCards() {
           setPlsDistributed(stats.plsDistributed ?? null)
           setPlsxDistributed(stats.plsxDistributed ?? null)
           setSmaugBurned(stats.smaugBurned ?? null)
+          setSmaugBurned7d(stats.smaugBurned7d ?? null)
         }
 
         if (pricesRes.ok) {
@@ -47,7 +49,7 @@ export function StatCards() {
     fetchData()
   }, [])
 
-  const display = (v: number | null) => (v === null ? "—" : formatBillions(v))
+  const display = (v: number | null) => (v === null ? "—" : v.toLocaleString(undefined, { maximumFractionDigits: 0 }))
   const fmtUsd = (v: number | null) =>
     v === null ? null : `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
   const usd = (amount: number | null, price: number | null) =>
@@ -57,7 +59,7 @@ export function StatCards() {
     { label: "TOTAL PLS DISTRIBUTED", value: display(plsDistributed), unit: "PLS", usd: usd(plsDistributed, plsPrice), icon: <Coins className="h-8 w-8 text-[#d4af37]" /> },
     { label: "TOTAL PLSX DISTRIBUTED", value: display(plsxDistributed), unit: "PLSX", usd: usd(plsxDistributed, plsxPrice), icon: <Droplets className="h-8 w-8 text-[#d4af37]" /> },
     { label: "OTHER TOKENS", value: fmtUsd(otherTokensUsd) ?? "—", unit: "", usd: null, sub: "", icon: <Gift className="h-8 w-8 text-[#d4af37]" /> },
-    { label: "SMAUG BURNED", value: display(smaugBurned), unit: "SMAUG", usd: null, icon: <Flame className="h-8 w-8 text-[#d4af37]" /> },
+    { label: "SMAUG BURNED", value: display(smaugBurned), unit: "SMAUG", usd: null, sub: smaugBurned7d ? `${display(smaugBurned7d)} last 7d` : "", icon: <Flame className="h-8 w-8 text-[#d4af37]" /> },
   ]
 
   // Total distributed to holders (USD): PLS + PLSX + other reward tokens
