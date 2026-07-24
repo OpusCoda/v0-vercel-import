@@ -2,6 +2,14 @@ import Image from "next/image"
 
 const ways = [
   {
+    title: "Hold",
+    art: "/landing/hold-orb.png",
+    accent: "#d4af37",
+    body: "Hold Opus or Coda and receive PLS or PLSX distributions automatically.",
+    cta: "Learn More",
+    href: "#portfolio",
+  },
+  {
     title: "Earn",
     art: "/landing/earn-orb.png",
     accent: "#5fbf7f",
@@ -42,9 +50,9 @@ export { OrnamentHeading }
 export function Participate() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
-      <OrnamentHeading>Three ways to participate in the ecosystem</OrnamentHeading>
+      <OrnamentHeading>Four ways to participate in the ecosystem</OrnamentHeading>
 
-      <div className="mt-10 grid gap-6 md:grid-cols-3">
+      <div className="mt-10 grid gap-6 md:grid-cols-4">
         {ways.map((way) => (
           <article
             key={way.title}
