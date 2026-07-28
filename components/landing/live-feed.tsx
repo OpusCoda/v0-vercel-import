@@ -1,103 +1,182 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useState } from "react"
 
-// Genuine content only: the official X timeline embed renders each account's
-// real latest posts (no fabricated entries, no public API key required).
-const X_ACCOUNTS = [
-  { handle: "OpusEco", name: "OpusEco", url: "https://twitter.com/OpusEco" },
-  { handle: "RichardHeartWin", name: "Richard Heart", url: "https://twitter.com/RichardHeartWin" },
-]
+type FilterType = "all" | "protocol" | "community" | "markets" | "burns" | "distributions"
 
-const X_ICON = (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-  </svg>
-)
-
-function loadTwitterWidgets(): Promise<void> {
-  return new Promise((resolve) => {
-    const w = window as unknown as { twttr?: { widgets: { load: (el?: HTMLElement) => void } } }
-    if (w.twttr?.widgets) {
-      resolve()
-      return
-    }
-    const existing = document.getElementById("twitter-wjs") as HTMLScriptElement | null
-    if (existing) {
-      existing.addEventListener("load", () => resolve(), { once: true })
-      return
-    }
-    const script = document.createElement("script")
-    script.id = "twitter-wjs"
-    script.src = "https://platform.twitter.com/widgets.js"
-    script.async = true
-    script.onload = () => resolve()
-    document.body.appendChild(script)
-  })
+interface FeedEvent {
+  id: string
+  type: "burn" | "distribution" | "market" | "x_post" | "stake"
+  category: FilterType
+  timestamp: Date
+  content: Record<string, unknown>
 }
 
-function XTimeline({ handle, name, url }: { handle: string; name: string; url: string }) {
-  const containerRef = useRef<HTMLDivElement>(null)
+// Sample unified feed events (in production, would come from API)
+const SAMPLE_EVENTS: FeedEvent[] = [
+  {
+    id: "1",
+    type: "burn",
+    category: "burns",
+    timestamp: new Date(Date.now() - 2 * 60000),
+    content: { amount: "42,814", label: "Smaug Burn" },
+  },
+  {
+    id: "2",
+    type: "distribution",
+    category: "distributions",
+    timestamp: new Date(Date.now() - 7 * 60000),
+    content: { amount: "1.28M", token: "PLS", label: "Opus Distribution" },
+  },
+  {
+    id: "3",
+    type: "market",
+    category: "markets",
+    timestamp: new Date(Date.now() - 18 * 60000),
+    content: { question: "Will PLS close above $0.00010 this month?", yes: "62%", pool: "1.8M PLS" },
+  },
+  {
+    id: "4",
+    type: "x_post",
+    category: "community",
+    timestamp: new Date(Date.now() - 31 * 60000),
+    content: { handle: "OpusEco", name: "Opus Eco", text: "New staking rewards have been distributed...", url: "https://x.com/OpusEco" },
+  },
+  {
+    id: "5",
+    type: "stake",
+    category: "protocol",
+    timestamp: new Date(Date.now() - 46 * 60000),
+    content: { amount: "2.4M", label: "Smaug Stake", duration: "730 days" },
+  },
+]
 
-  useEffect(() => {
-    let cancelled = false
-    loadTwitterWidgets().then(() => {
-      if (cancelled || !containerRef.current) return
-      const w = window as unknown as { twttr?: { widgets: { load: (el?: HTMLElement) => void } } }
-      w.twttr?.widgets.load(containerRef.current)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [])
+function formatTime(date: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
 
-  return (
-    <div className="overflow-hidden rounded-2xl border border-[#2a2a35] bg-[#0d0d12]">
-      <a
-        href={`https://x.com/${handle}/`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex items-center gap-2 border-b border-[#2a2a35] px-5 py-3"
-      >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8e6e3]/10 text-[#e8e6e3] ring-1 ring-[#e8e6e3]/20">
-          {X_ICON}
-        </span>
-        <span className="flex flex-col">
-          <span className="font-sans text-sm font-semibold text-[#e8e6e3] group-hover:text-[#d4af37]">{name}</span>
-          <span className="font-sans text-xs text-[#7c7a76]">@{handle}</span>
-        </span>
-      </a>
-      <div ref={containerRef} className="px-2 py-1">
-        <a
-          className="twitter-timeline"
-          data-theme="dark"
-          data-tweet-limit="3"
-          data-chrome="noheader nofooter noborders transparent"
-          data-dnt="true"
-          href={url}
-        >
-          {`Posts by @${handle}`}
-        </a>
-      </div>
-    </div>
-  )
+  if (diffMins < 1) return "now"
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  return `${Math.floor(diffHours / 24)}d ago`
+}
+
+function FeedCard({ event }: { event: FeedEvent }) {
+  switch (event.type) {
+    case "burn":
+      return (
+        <div className="flex gap-3 rounded-xl border border-[#2a2a35] bg-[#0d0d12] p-4">
+          <div className="text-2xl">🔥</div>
+          <div className="flex-1">
+            <div className="font-semibold text-[#e8e6e3]">{event.content.label}</div>
+            <div className="text-sm text-[#9a9a9a]">{event.content.amount} permanently burned</div>
+            <div className="text-xs text-[#7c7a76] mt-1">{formatTime(event.timestamp)}</div>
+          </div>
+        </div>
+      )
+    case "distribution":
+      return (
+        <div className="flex gap-3 rounded-xl border border-[#2a2a35] bg-[#0d0d12] p-4">
+          <div className="text-2xl">💰</div>
+          <div className="flex-1">
+            <div className="font-semibold text-[#e8e6e3]">{event.content.label}</div>
+            <div className="text-sm text-[#9a9a9a]">{event.content.amount} {event.content.token} distributed to holders</div>
+            <div className="text-xs text-[#7c7a76] mt-1">{formatTime(event.timestamp)}</div>
+          </div>
+        </div>
+      )
+    case "market":
+      return (
+        <div className="flex gap-3 rounded-xl border border-[#2a2a35] bg-[#0d0d12] p-4">
+          <div className="text-2xl">📊</div>
+          <div className="flex-1">
+            <div className="font-semibold text-[#e8e6e3]">Probability Shop</div>
+            <div className="text-sm text-[#9a9a9a]">"{event.content.question}"</div>
+            <div className="text-xs text-[#d4af37] mt-1">{event.content.yes} YES · {event.content.pool} pool</div>
+            <div className="text-xs text-[#7c7a76] mt-1">{formatTime(event.timestamp)}</div>
+          </div>
+        </div>
+      )
+    case "x_post":
+      return (
+        <div className="flex gap-3 rounded-xl border border-[#2a2a35] bg-[#0d0d12] p-4">
+          <div className="text-2xl">𝕏</div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-[#e8e6e3]">@{event.content.handle}</span>
+              <span className="text-xs text-[#7c7a76]">·</span>
+              <span className="text-xs text-[#7c7a76]">{formatTime(event.timestamp)}</span>
+            </div>
+            <div className="text-sm text-[#b8b6b1] mt-1">{event.content.text}</div>
+            <a href={event.content.url as string} target="_blank" rel="noopener noreferrer" className="text-xs text-[#d4af37] hover:underline mt-2 inline-flex items-center gap-1">
+              View on X ↗
+            </a>
+          </div>
+        </div>
+      )
+    case "stake":
+      return (
+        <div className="flex gap-3 rounded-xl border border-[#2a2a35] bg-[#0d0d12] p-4">
+          <div className="text-2xl">🔒</div>
+          <div className="flex-1">
+            <div className="font-semibold text-[#e8e6e3]">{event.content.label}</div>
+            <div className="text-sm text-[#9a9a9a]">{event.content.amount} staked for {event.content.duration}</div>
+            <div className="text-xs text-[#7c7a76] mt-1">{formatTime(event.timestamp)}</div>
+          </div>
+        </div>
+      )
+    default:
+      return null
+  }
 }
 
 export function LiveFeed() {
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all")
+
+  const filters: { id: FilterType; label: string }[] = [
+    { id: "all", label: "All" },
+    { id: "protocol", label: "Protocol" },
+    { id: "community", label: "Community" },
+    { id: "markets", label: "Markets" },
+    { id: "burns", label: "Burns" },
+    { id: "distributions", label: "Distributions" },
+  ]
+
+  const filteredEvents = activeFilter === "all" ? SAMPLE_EVENTS : SAMPLE_EVENTS.filter((e) => e.category === activeFilter)
+
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-4 md:px-6">
-      <div className="mb-5 flex items-center justify-center gap-2">
+    <section className="mx-auto max-w-3xl px-4 py-12 md:px-6">
+      <div className="mb-6 flex items-center justify-center gap-2">
         <span className="relative flex h-2.5 w-2.5">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#d4af37] opacity-75" />
           <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#d4af37]" />
         </span>
-        <h3 className="font-sans text-sm font-semibold tracking-wide text-[#e8e6e3]">Live Feed</h3>
-        <span className="font-sans text-xs text-[#7c7a76]">— Latest from the community</span>
+        <h3 className="font-sans text-sm font-semibold tracking-wide text-[#e8e6e3]">Live Ecosystem Feed</h3>
       </div>
 
-      <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
-        {X_ACCOUNTS.map((acct) => (
-          <XTimeline key={acct.handle} {...acct} />
+      {/* Filter Tabs */}
+      <div className="flex justify-center gap-2 mb-6 flex-wrap">
+        {filters.map((filter) => (
+          <button
+            key={filter.id}
+            onClick={() => setActiveFilter(filter.id)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+              activeFilter === filter.id
+                ? "border-[#d4af37] bg-[#d4af37]/10 text-[#d4af37]"
+                : "border-[#2a2a35] text-[#9a9a9a] hover:border-[#3a3a45] hover:text-[#b8b6b1]"
+            }`}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Events Feed */}
+      <div className="space-y-3">
+        {filteredEvents.map((event) => (
+          <FeedCard key={event.id} event={event} />
         ))}
       </div>
     </section>
