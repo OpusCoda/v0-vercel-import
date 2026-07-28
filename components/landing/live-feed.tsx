@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 type FilterType = "all" | "protocol" | "community" | "markets" | "burns" | "distributions"
 
@@ -12,8 +12,7 @@ interface FeedEvent {
   content: Record<string, unknown>
 }
 
-// Sample unified feed events (in production, would come from API)
-const SAMPLE_EVENTS: FeedEvent[] = [
+const STATIC_EVENTS: FeedEvent[] = [
   {
     id: "1",
     type: "burn",
@@ -36,13 +35,6 @@ const SAMPLE_EVENTS: FeedEvent[] = [
     content: { question: "Will PLS close above $0.00010 this month?", yes: "62%", pool: "1.8M PLS" },
   },
   {
-    id: "4",
-    type: "x_post",
-    category: "community",
-    timestamp: new Date(Date.now() - 31 * 60000),
-    content: { handle: "OpusEco", name: "Opus Eco", text: "New staking rewards have been distributed...", url: "https://x.com/OpusEco" },
-  },
-  {
     id: "5",
     type: "stake",
     category: "protocol",
@@ -50,6 +42,46 @@ const SAMPLE_EVENTS: FeedEvent[] = [
     content: { amount: "2.4M", label: "Smaug Stake", duration: "730 days" },
   },
 ]
+
+async function fetchXPosts(): Promise<FeedEvent[]> {
+  try {
+    const handles = ["OpusEco", "RichardHeartWin"]
+    const xPosts: FeedEvent[] = []
+    let id = 100
+
+    for (const handle of handles) {
+      try {
+        const response = await fetch(`https://api.vxtwitter.com/${handle}`)
+        const data = await response.json()
+
+        if (data && data.tweets && Array.isArray(data.tweets)) {
+          data.tweets.slice(0, 3).forEach((tweet: Record<string, unknown>) => {
+            const createdAt = tweet.date ? new Date(tweet.date as string) : new Date()
+            xPosts.push({
+              id: `x_${id++}`,
+              type: "x_post",
+              category: "community",
+              timestamp: createdAt,
+              content: {
+                handle: handle,
+                name: data.name || handle,
+                text: (tweet.text as string) || "Check this post on X",
+                url: `https://x.com/${handle}/status/${tweet.id || ""}`,
+              },
+            })
+          })
+        }
+      } catch (err) {
+        console.log(`[v0] Could not fetch posts from ${handle}`)
+      }
+    }
+
+    return xPosts
+  } catch (err) {
+    console.log("[v0] Failed to fetch X posts")
+    return []
+  }
+}
 
 function formatTime(date: Date): string {
   const now = new Date()
@@ -134,6 +166,20 @@ function FeedCard({ event }: { event: FeedEvent }) {
 
 export function LiveFeed() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all")
+  const [events, setEvents] = useState<FeedEvent[]>(STATIC_EVENTS)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadFeed() {
+      const xPosts = await fetchXPosts()
+      const allEvents = [...STATIC_EVENTS, ...xPosts].sort(
+        (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+      )
+      setEvents(allEvents)
+      setLoading(false)
+    }
+    loadFeed()
+  }, [])
 
   const filters: { id: FilterType; label: string }[] = [
     { id: "all", label: "All" },
@@ -144,7 +190,7 @@ export function LiveFeed() {
     { id: "distributions", label: "Distributions" },
   ]
 
-  const filteredEvents = activeFilter === "all" ? SAMPLE_EVENTS : SAMPLE_EVENTS.filter((e) => e.category === activeFilter)
+  const filteredEvents = activeFilter === "all" ? events : events.filter((e) => e.category === activeFilter)
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-12 md:px-6">
