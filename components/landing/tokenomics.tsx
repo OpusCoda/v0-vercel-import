@@ -1,14 +1,44 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Image from "next/image"
-import { Flame, Sprout, Package, Droplet ArrowRight } from "lucide-react"
+import { Flame, Sprout, Vault, Droplet, ArrowRight } from "lucide-react"
 
 const metrics = [
-  { icon: Flame, value: "3.5%", label: "Buy and burn" },
+  { icon: Flame, value: "3.5%", label: "Buy and burn", sublabel: "Smaug burned" },
   { icon: Sprout, value: "1.5%", label: "Reflections to holders" },
-  { icon: Package, value: "1%", label: "Added to Smaug's Vault" },
-  { icon: Droplet, value: "0.5%", label: "Added to burned LP" },
+  { icon: Vault, value: "1%", label: "Added to Smaug's Vault" },
+  { icon: Droplet, value: "0.5%", label: "Added to burned LP", sublabel: "Burned PLS added" },
 ]
 
 export function Tokenomics() {
+  const [smaugBurned, setSmaugBurned] = useState<number | null>(null)
+  const [burnedPlsAdded, setBurnedPlsAdded] = useState<number | null>(null)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const statsRes = await fetch("/api/stats")
+        if (statsRes.ok) {
+          const stats = await statsRes.json()
+          setSmaugBurned(stats.smaugBurned ?? null)
+          setBurnedPlsAdded(stats.burnedPlsAdded ?? null)
+        }
+      } catch (err) {
+        console.log("[v0] Failed to fetch tokenomics data")
+      }
+    }
+    fetchData()
+  }, [])
+
+  const formatNumber = (n: number | null) => {
+    if (n === null) return "—"
+    if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + "B"
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M"
+    if (n >= 1_000) return (n / 1_000).toFixed(1) + "K"
+    return n.toLocaleString(undefined, { maximumFractionDigits: 0 })
+  }
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 md:px-6">
       <div className="overflow-hidden rounded-2xl border border-[#2a2a35] bg-[#101017]">
@@ -21,7 +51,7 @@ export function Tokenomics() {
 
           {/* Content */}
           <div className="px-7 pb-8 pt-2 md:py-8 md:pr-10">
-            <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Tokenomics of Smaug — 6.5%</h2>
+            <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Tokenomics of Smaug</h2>
 
             <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-4">
               {metrics.map((m) => (
@@ -31,12 +61,17 @@ export function Tokenomics() {
                     <span className="font-serif text-2xl font-bold text-[#e8e6e3]">{m.value}</span>
                   </div>
                   <span className="mt-1 font-sans text-xs text-[#9ca3af]">{m.label}</span>
+                  {m.sublabel && (
+                    <span className="mt-1.5 font-sans text-xs text-[#7c7a76]">
+                      {m.sublabel}: {m.sublabel === "Smaug burned" ? formatNumber(smaugBurned) : formatNumber(burnedPlsAdded)}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
 
             <p className="mt-6 max-w-lg font-sans text-sm leading-relaxed text-[#b8b6b1]">
-              Every transaction strengthens the hoard. Every stake earns from the ecosystem.
+              Every trade contributes to four on-chain mechanisms that reward holders and reduce supply over time.
             </p>
             <a
               href="#tokens"
