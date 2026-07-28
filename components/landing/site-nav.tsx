@@ -8,7 +8,6 @@ import { ConnectWalletButton } from "./connect-wallet-button"
 
 const navLinks = [
   { label: "Home", href: "/" },
-  { label: "Earn", href: "/earn" },
   { label: "Markets", href: "/markets" },
   { label: "Stake", href: "/stake" },
   { label: "Referrals", href: "/referrals" },
