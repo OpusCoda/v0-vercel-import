@@ -62,7 +62,37 @@ export function BuyTokens() {
         ))}
       </div>
 
-
+      {/* Contract Addresses Section */}
+      <div className="mt-12">
+        <h3 className="font-serif text-xl font-bold text-[#e8e6e3] mb-4">Contract Addresses</h3>
+        <div className="space-y-2 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6">
+          {contracts.map((contract) => (
+            <div key={contract.name} className="flex items-center gap-3 group hover:bg-[#0d0d12] px-3 py-2 rounded-lg transition-colors">
+              <button
+                onClick={() => handleCopy(contract.address, contract.name)}
+                className="shrink-0 p-1.5 text-[#9ca3af] hover:text-[#d4af37] transition-colors"
+                title="Copy address"
+              >
+                {copiedId === contract.name ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </button>
+              <a
+                href={contract.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 flex-1 min-w-0"
+              >
+                <span className="font-mono text-sm text-[#d4af37]">{contract.name}:</span>
+                <span className="font-mono text-sm text-[#b8b6b1] truncate hover:text-[#e8e6e3]">{contract.address}</span>
+                <ExternalLink className="h-4 w-4 text-[#9ca3af] shrink-0 group-hover:text-[#d4af37] transition-colors" />
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   )
 }
