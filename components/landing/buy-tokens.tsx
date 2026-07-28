@@ -63,8 +63,8 @@ export function BuyTokens() {
       </div>
 
       {/* Contract Addresses Section */}
-      <div className="mt-12">
-        <h3 className="font-serif text-xl font-bold text-[#e8e6e3] mb-4">Contract Addresses</h3>
+      <div className="mt-16">
+        <h3 className="text-center font-serif text-xl font-bold text-[#e8e6e3] mb-6">Contract Addresses</h3>
         <div className="space-y-2 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6">
           {contracts.map((contract) => (
             <div key={contract.name} className="flex items-center gap-3 group hover:bg-[#0d0d12] px-3 py-2 rounded-lg transition-colors">

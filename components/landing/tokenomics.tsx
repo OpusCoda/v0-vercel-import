@@ -24,7 +24,7 @@ export function Tokenomics() {
         if (statsRes.ok) {
           const stats = await statsRes.json()
           setSmaugBurned(stats.smaugBurned ?? null)
-          setBurnedPlsAdded(stats.burnedPlsAdded ?? null)
+          setBurnedPlsAdded(stats.smaugLpPls ?? null)
         }
       } catch (err) {
         console.log("[v0] Failed to fetch tokenomics data")
@@ -75,7 +75,7 @@ export function Tokenomics() {
               <p className="font-sans text-sm text-[#b8b6b1]">
                 <span className="font-semibold">{formatBurnedPct(smaugBurned)}</span>
                 <span> of supply burned</span>
-                <span className="mx-2 text-[#7c7a76]">·</span>
+                <span className="mx-2 text-[#7c7a76]">—</span>
                 <span className="font-semibold">{formatNumber(burnedPlsAdded)}</span>
                 <span> PLS added to burned LP</span>
               </p>
