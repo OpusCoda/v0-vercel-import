@@ -2,46 +2,42 @@
 
 import { useState, useEffect } from "react"
 
-type FilterType = "all" | "protocol" | "community" | "markets" | "burns" | "distributions"
-
-interface FeedEvent {
+interface BurnEvent {
   id: string
-  type: "burn" | "distribution" | "market" | "x_post" | "stake"
-  category: FilterType
+  type: "burn"
   timestamp: Date
-  content: Record<string, unknown>
+  content: { label: string; amount: string }
 }
 
-const STATIC_EVENTS: FeedEvent[] = [
-  {
-    id: "1",
-    type: "burn",
-    category: "burns",
-    timestamp: new Date(Date.now() - 2 * 60000),
-    content: { amount: "42,814", label: "Smaug Burn" },
-  },
-  {
-    id: "2",
-    type: "distribution",
-    category: "distributions",
-    timestamp: new Date(Date.now() - 7 * 60000),
-    content: { amount: "1.28M", token: "PLS", label: "Opus Distribution" },
-  },
-  {
-    id: "3",
-    type: "market",
-    category: "markets",
-    timestamp: new Date(Date.now() - 18 * 60000),
-    content: { question: "Will PLS close above $0.00010 this month?", yes: "62%", pool: "1.8M PLS" },
-  },
-  {
-    id: "5",
-    type: "stake",
-    category: "protocol",
-    timestamp: new Date(Date.now() - 46 * 60000),
-    content: { amount: "2.4M", label: "Smaug Stake", duration: "730 days" },
-  },
-]
+interface DistributionEvent {
+  id: string
+  type: "distribution"
+  timestamp: Date
+  content: { label: string; amount: string; token: string }
+}
+
+interface MarketEvent {
+  id: string
+  type: "market"
+  timestamp: Date
+  content: { question: string; yes: string; pool: string }
+}
+
+interface XPostEvent {
+  id: string
+  type: "x_post"
+  timestamp: Date
+  content: { handle: string; name: string; text: string; url: string }
+}
+
+interface StakeEvent {
+  id: string
+  type: "stake"
+  timestamp: Date
+  content: { label: string; amount: string; duration: string }
+}
+
+type FeedEvent = BurnEvent | DistributionEvent | MarketEvent | XPostEvent | StakeEvent
 
 async function fetchXPosts(): Promise<FeedEvent[]> {
   try {
@@ -60,11 +56,10 @@ async function fetchXPosts(): Promise<FeedEvent[]> {
             xPosts.push({
               id: `x_${id++}`,
               type: "x_post",
-              category: "community",
               timestamp: createdAt,
               content: {
                 handle: handle,
-                name: data.name || handle,
+                name: (data.name as string) || handle,
                 text: (tweet.text as string) || "Check this post on X",
                 url: `https://x.com/${handle}/status/${tweet.id || ""}`,
               },
@@ -142,7 +137,7 @@ function FeedCard({ event }: { event: FeedEvent }) {
               <span className="text-xs text-[#7c7a76]">{formatTime(event.timestamp)}</span>
             </div>
             <div className="text-sm text-[#b8b6b1] mt-1">{event.content.text}</div>
-            <a href={event.content.url as string} target="_blank" rel="noopener noreferrer" className="text-xs text-[#d4af37] hover:underline mt-2 inline-flex items-center gap-1">
+            <a href={event.content.url} target="_blank" rel="noopener noreferrer" className="text-xs text-[#d4af37] hover:underline mt-2 inline-flex items-center gap-1">
               View on X ↗
             </a>
           </div>
@@ -165,14 +160,13 @@ function FeedCard({ event }: { event: FeedEvent }) {
 }
 
 export function LiveFeed() {
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all")
-  const [events, setEvents] = useState<FeedEvent[]>(STATIC_EVENTS)
+  const [events, setEvents] = useState<FeedEvent[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function loadFeed() {
       const xPosts = await fetchXPosts()
-      const allEvents = [...STATIC_EVENTS, ...xPosts].sort(
+      const allEvents = [...xPosts].sort(
         (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
       )
       setEvents(allEvents)
@@ -180,17 +174,6 @@ export function LiveFeed() {
     }
     loadFeed()
   }, [])
-
-  const filters: { id: FilterType; label: string }[] = [
-    { id: "all", label: "All" },
-    { id: "protocol", label: "Protocol" },
-    { id: "community", label: "Community" },
-    { id: "markets", label: "Markets" },
-    { id: "burns", label: "Burns" },
-    { id: "distributions", label: "Distributions" },
-  ]
-
-  const filteredEvents = activeFilter === "all" ? events : events.filter((e) => e.category === activeFilter)
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-12 md:px-6">
@@ -202,29 +185,18 @@ export function LiveFeed() {
         <h3 className="font-sans text-sm font-semibold tracking-wide text-[#e8e6e3]">Live Ecosystem Feed</h3>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex justify-center gap-2 mb-6 flex-wrap">
-        {filters.map((filter) => (
-          <button
-            key={filter.id}
-            onClick={() => setActiveFilter(filter.id)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
-              activeFilter === filter.id
-                ? "border-[#d4af37] bg-[#d4af37]/10 text-[#d4af37]"
-                : "border-[#2a2a35] text-[#9a9a9a] hover:border-[#3a3a45] hover:text-[#b8b6b1]"
-            }`}
-          >
-            {filter.label}
-          </button>
-        ))}
-      </div>
-
       {/* Events Feed */}
-      <div className="space-y-3">
-        {filteredEvents.map((event) => (
-          <FeedCard key={event.id} event={event} />
-        ))}
-      </div>
+      {loading ? (
+        <p className="text-center text-sm text-[#7c7a76]">Loading feed…</p>
+      ) : events.length === 0 ? (
+        <p className="text-center text-sm text-[#7c7a76]">No recent activity.</p>
+      ) : (
+        <div className="space-y-3">
+          {events.map((event) => (
+            <FeedCard key={event.id} event={event} />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

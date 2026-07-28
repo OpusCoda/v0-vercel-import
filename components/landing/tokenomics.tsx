@@ -5,18 +5,13 @@ import Image from "next/image"
 import { Flame, Sprout, Vault, Droplet, ArrowRight } from "lucide-react"
 
 const metrics = [
-  { icon: Flame, value: "3.5%", label: "Buy and burn", sublabel: "Burned", valueType: "burnedPct" },
+  { icon: Flame, value: "3.5%", label: "Buy and burn" },
   { icon: Sprout, value: "1.5%", label: "Reflections to holders" },
   { icon: Vault, value: "1%", label: "Added to Smaug's Vault" },
-  { icon: Droplet, value: "0.5%", label: "Added to burned LP", sublabel: "Burned PLS added", valueType: "plsAdded" },
+  { icon: Droplet, value: "0.5%", label: "Added to burned LP" },
 ]
 
 const SMAUG_TOTAL_SUPPLY = 1_000_000_000
-
-const formatBurnedPct = (n: number | null) => {
-  if (n === null) return "—"
-  return (n / SMAUG_TOTAL_SUPPLY * 100).toFixed(2) + "%"
-}
 
 export function Tokenomics() {
   const [smaugBurned, setSmaugBurned] = useState<number | null>(null)
@@ -46,6 +41,9 @@ export function Tokenomics() {
     return n.toLocaleString(undefined, { maximumFractionDigits: 0 })
   }
 
+  const formatBurnedPct = (n: number | null) =>
+    n === null ? "—" : ((n / SMAUG_TOTAL_SUPPLY) * 100).toFixed(2) + "%"
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 md:px-6">
       <div className="overflow-hidden rounded-2xl border border-[#2a2a35] bg-[#101017]">
@@ -68,21 +66,24 @@ export function Tokenomics() {
                     <span className="font-serif text-2xl font-bold text-[#e8e6e3]">{m.value}</span>
                   </div>
                   <span className="mt-1 font-sans text-xs text-[#9ca3af]">{m.label}</span>
-                  {m.sublabel && (
-                    <span className="mt-1.5 font-sans text-xs text-[#7c7a76]">
-                      {m.sublabel}: {m.valueType === "burnedPct" ? formatBurnedPct(smaugBurned) : formatNumber(burnedPlsAdded)}
-                    </span>
-                  )}
                 </div>
               ))}
             </div>
 
-            <p className="mt-6 max-w-lg font-sans text-sm leading-relaxed text-[#b8b6b1]">
-              Every trade contributes to four on-chain mechanisms that reward holders and reduce supply over time.
-            </p>
+            {/* Live on-chain figures */}
+            <div className="mt-6 border-t border-[#2a2a35] pt-4">
+              <p className="font-sans text-sm text-[#b8b6b1]">
+                <span className="font-semibold">{formatBurnedPct(smaugBurned)}</span>
+                <span> of supply burned</span>
+                <span className="mx-2 text-[#7c7a76]">·</span>
+                <span className="font-semibold">{formatNumber(burnedPlsAdded)}</span>
+                <span> PLS added to burned LP</span>
+              </p>
+            </div>
+
             <a
               href="#tokens"
-              className="mt-3 inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[#d4af37] hover:underline"
+              className="mt-4 inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[#d4af37] hover:underline"
             >
               View full tokenomics <ArrowRight className="h-4 w-4" />
             </a>
