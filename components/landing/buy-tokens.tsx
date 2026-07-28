@@ -1,5 +1,8 @@
+"use client"
+
+import { useState } from "react"
 import Image from "next/image"
-import { ArrowRight, ExternalLink } from "lucide-react"
+import { ArrowRight, ExternalLink, Copy, Check } from "lucide-react"
 
 const buys = [
   { name: "Buy Opus", img: "/opus-circle.png", accent: "#d4af37", href: "#" },
@@ -26,6 +29,14 @@ const contracts = [
 ]
 
 export function BuyTokens() {
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const handleCopy = (address: string, contractName: string) => {
+    navigator.clipboard.writeText(address)
+    setCopiedId(contractName)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 md:px-6">
       <h2 className="text-center font-serif text-xl font-bold text-[#e8e6e3]">Buy Tokens</h2>
@@ -51,24 +62,34 @@ export function BuyTokens() {
         ))}
       </div>
 
-      {/* Contract Addresses */}
-      <div className="mt-12 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6">
-        <h3 className="font-serif text-lg font-bold text-[#e8e6e3] mb-4">Contract Addresses</h3>
-        <div className="grid gap-3 md:grid-cols-3">
+      {/* Contract Addresses Section */}
+      <div className="mt-12">
+        <h3 className="font-serif text-xl font-bold text-[#e8e6e3] mb-4">Contract Addresses</h3>
+        <div className="space-y-2 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6">
           {contracts.map((contract) => (
-            <a
-              key={contract.name}
-              href={contract.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-start justify-between rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-4 py-3 transition-colors hover:border-[#d4af37]/50"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-[#d4af37] text-sm">{contract.name}</div>
-                <div className="font-mono text-xs text-[#7c7a76] mt-1 truncate hover:break-all">{contract.address}</div>
-              </div>
-              <ExternalLink className="h-4 w-4 text-[#9ca3af] shrink-0 ml-2 group-hover:text-[#d4af37] transition-colors" />
-            </a>
+            <div key={contract.name} className="flex items-center justify-between group hover:bg-[#0d0d12] px-3 py-2 rounded-lg transition-colors">
+              <a
+                href={contract.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 flex-1 min-w-0"
+              >
+                <span className="font-mono text-sm text-[#d4af37]">{contract.name}:</span>
+                <span className="font-mono text-sm text-[#b8b6b1] truncate hover:text-[#e8e6e3]">{contract.address}</span>
+                <ExternalLink className="h-4 w-4 text-[#9ca3af] shrink-0 group-hover:text-[#d4af37] transition-colors" />
+              </a>
+              <button
+                onClick={() => handleCopy(contract.address, contract.name)}
+                className="ml-2 p-1.5 text-[#9ca3af] hover:text-[#d4af37] transition-colors"
+                title="Copy address"
+              >
+                {copiedId === contract.name ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           ))}
         </div>
       </div>
