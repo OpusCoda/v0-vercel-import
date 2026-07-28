@@ -10,7 +10,7 @@ const ways = [
     href: "#portfolio",
   },
   {
-    title: "Earn",
+    title: "Stake",
     art: "/landing/earn-orb.png",
     accent: "#5fbf7f",
     body: "Stake Smaug to earn protocol rewards and enjoy fee rebates.",
@@ -26,7 +26,7 @@ const ways = [
     href: "#markets",
   },
   {
-    title: "Wager",
+    title: "Challenge",
     art: "/landing/wager-book.png",
     accent: "#9b7fc4",
     body: "Create or accept peer-to-peer wagers and settle outcomes onchain.",
