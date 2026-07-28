@@ -25,9 +25,9 @@ function OrnamentHeading({
 }
 
 const buys = [
-  { name: "Buy Opus", img: "/opus-circle.png", accent: "#d4af37", href: "#" },
-  { name: "Buy Coda", img: "/coda-circle.png", accent: "#c0c4cc", href: "#" },
-  { name: "Buy Smaug", img: "/smaug-circle.png", accent: "#cd7f32", href: "#" },
+  { name: "Buy Opus", img: "/opus-circle.png", accent: "#b1cbdc", href: "#" },
+  { name: "Buy Coda", img: "/coda-circle.png", accent: "#b1cbdc", href: "#" },
+  { name: "Buy Smaug", img: "/smaug-circle.png", accent: "#b1cbdc", href: "#" },
 ]
 
 const contracts = [
@@ -98,7 +98,7 @@ export function BuyTokens() {
 
       <div className="mt-16">
         <OrnamentHeading as="h3">
-          Contract Addresses
+          Contract addresses
         </OrnamentHeading>
 
         <div className="mt-6 space-y-2 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6">
