@@ -28,7 +28,7 @@ export function Hero() {
 
           <p className="mt-8 flex items-center gap-2 font-sans text-sm text-[#9ca3af]">
             <ShieldCheck className="h-4 w-4 text-[#d4af37]" />
-            Fully on-chain. Non-custodial. Your keys, your assets.
+            Non-custodial. No privileged wallets. Your keys, your assets.
           </p>
         </div>
       </div>
