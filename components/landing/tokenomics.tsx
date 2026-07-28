@@ -1,11 +1,11 @@
 import Image from "next/image"
-import { Flame, Sprout, Package, ArrowRight } from "lucide-react"
+import { Flame, Sprout, Package, Droplet ArrowRight } from "lucide-react"
 
 const metrics = [
-  { icon: Flame, value: "1%", label: "Buy Tax" },
-  { icon: Sprout, value: "1%", label: "Sell Tax" },
-  { icon: Package, value: "50%", label: "Staking Rewards" },
-  { icon: Package, value: "50%", label: "Burned Permanently" },
+  { icon: Flame, value: "3.5%", label: "Buy and burn" },
+  { icon: Sprout, value: "1.5%", label: "Reflections to holders" },
+  { icon: Package, value: "1%", label: "Added to Smaug's Vault" },
+  { icon: Droplet, value: "0.5%", label: "Added to burned LP" },
 ]
 
 export function Tokenomics() {
@@ -14,14 +14,14 @@ export function Tokenomics() {
       <div className="overflow-hidden rounded-2xl border border-[#2a2a35] bg-[#101017]">
         <div className="grid items-center gap-6 md:grid-cols-[1fr_1.4fr]">
           {/* Art */}
-          <div className="relative h-48 w-full md:h-full md:min-h-[260px]">
+          <div className="relative h-48 w-full md:h-full md:min-h-65">
             <Image src="/landing/hoard.png" alt="Dragon guarding its hoard of gold" fill className="object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#101017] md:bg-gradient-to-r" />
+            <div className="absolute inset-0 bg-linear-to-r from-transparent to-[#101017] md:bg-linear-to-r" />
           </div>
 
           {/* Content */}
           <div className="px-7 pb-8 pt-2 md:py-8 md:pr-10">
-            <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Smaug Tokenomics</h2>
+            <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Tokenomics of Smaug — 6.5%</h2>
 
             <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-4">
               {metrics.map((m) => (
