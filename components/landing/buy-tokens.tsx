@@ -4,6 +4,26 @@ import { useState } from "react"
 import Image from "next/image"
 import { ArrowRight, ExternalLink, Copy, Check } from "lucide-react"
 
+function OrnamentHeading({
+  children,
+  as: Tag = "h2",
+}: {
+  children: React.ReactNode
+  as?: "h1" | "h2" | "h3"
+}) {
+  return (
+    <div className="flex items-center justify-center gap-4">
+      <span className="text-[#d4af37]/50">&#9670;&mdash;</span>
+
+      <Tag className="text-center font-serif text-xl font-bold text-[#d4af37] md:text-2xl">
+        {children}
+      </Tag>
+
+      <span className="text-[#d4af37]/50">&mdash;&#9670;</span>
+    </div>
+  )
+}
+
 const buys = [
   { name: "Buy Opus", img: "/opus-circle.png", accent: "#d4af37", href: "#" },
   { name: "Buy Coda", img: "/coda-circle.png", accent: "#c0c4cc", href: "#" },
@@ -39,7 +59,7 @@ export function BuyTokens() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 md:px-6">
-      <h2 className="text-center font-serif text-xl font-bold text-[#e8e6e3]">Buy Tokens</h2>
+      <OrnamentHeading>Where to buy</OrnamentHeading>
 
       <div className="mt-8 grid gap-6 md:grid-cols-3">
         {buys.map((b) => (
@@ -49,28 +69,47 @@ export function BuyTokens() {
             className="group flex items-center justify-between rounded-2xl border border-[#2a2a35] bg-[#101017] px-6 py-5 transition-colors hover:border-[#d4af37]/50"
           >
             <span className="flex items-center gap-4">
-              <Image src={b.img || "/placeholder.svg"} alt="" width={44} height={44} className="rounded-full" />
+              <Image
+                src={b.img}
+                alt=""
+                width={44}
+                height={44}
+                className="rounded-full"
+              />
+
               <span className="flex flex-col">
-                <span className="font-serif text-lg font-bold" style={{ color: b.accent }}>
+                <span
+                  className="font-serif text-lg font-bold"
+                  style={{ color: b.accent }}
+                >
                   {b.name}
                 </span>
-                <span className="font-sans text-xs text-[#9ca3af]">On PulseX</span>
+
+                <span className="font-sans text-xs text-[#9ca3af]">
+                  On PulseX
+                </span>
               </span>
             </span>
+
             <ArrowRight className="h-5 w-5 text-[#9ca3af] transition-transform group-hover:translate-x-1 group-hover:text-[#d4af37]" />
           </a>
         ))}
       </div>
 
-      {/* Contract Addresses Section */}
       <div className="mt-16">
-        <h3 className="text-center font-serif text-xl font-bold text-[#e8e6e3] mb-6">Contract Addresses</h3>
-        <div className="space-y-2 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6">
+        <OrnamentHeading as="h3">
+          Contract Addresses
+        </OrnamentHeading>
+
+        <div className="mt-6 space-y-2 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6">
           {contracts.map((contract) => (
-            <div key={contract.name} className="flex items-center gap-3 group hover:bg-[#0d0d12] px-3 py-2 rounded-lg transition-colors">
+            <div
+              key={contract.name}
+              className="group flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-[#0d0d12]"
+            >
               <button
                 onClick={() => handleCopy(contract.address, contract.name)}
-                className="shrink-0 p-1.5 text-[#9ca3af] hover:text-[#d4af37] transition-colors"
+                className="shrink-0 p-1.5 text-[#9ca3af] transition-colors hover:text-[#d4af37]"
                 title="Copy address"
               >
                 {copiedId === contract.name ? (
@@ -79,15 +118,22 @@ export function BuyTokens() {
                   <Copy className="h-4 w-4" />
                 )}
               </button>
+
               <a
                 href={contract.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 flex-1 min-w-0"
+                className="flex min-w-0 flex-1 items-center gap-2"
               >
-                <span className="font-mono text-sm text-[#d4af37]">{contract.name}:</span>
-                <span className="font-mono text-sm text-[#b8b6b1] truncate hover:text-[#e8e6e3]">{contract.address}</span>
-                <ExternalLink className="h-4 w-4 text-[#9ca3af] shrink-0 group-hover:text-[#d4af37] transition-colors" />
+                <span className="font-mono text-sm text-[#d4af37]">
+                  {contract.name}:
+                </span>
+
+                <span className="truncate font-mono text-sm text-[#b8b6b1] hover:text-[#e8e6e3]">
+                  {contract.address}
+                </span>
+
+                <ExternalLink className="h-4 w-4 shrink-0 text-[#9ca3af] transition-colors group-hover:text-[#d4af37]" />
               </a>
             </div>
           ))}
