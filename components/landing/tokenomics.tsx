@@ -74,10 +74,10 @@ export function Tokenomics() {
             <div className="mt-6 border-t border-[#2a2a35] pt-4">
               <p className="font-sans text-sm text-[#b8b6b1]">
                 <span className="font-semibold">{formatBurnedPct(smaugBurned)}</span>
-                <span> of supply burned</span>
+                <span> burned</span>
                 <span className="mx-2 text-[#7c7a76]">—</span>
                 <span className="font-semibold">{formatNumber(burnedPlsAdded)}</span>
-                <span> PLS added to burned LP</span>
+                <span> PLS added to burned liquidity</span>
               </p>
             </div>
 

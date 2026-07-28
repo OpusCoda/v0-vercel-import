@@ -2,7 +2,6 @@ import { SiteNav } from "@/components/landing/site-nav"
 import { Tokens } from "@/components/landing/tokens"
 import { TokenOverview } from "@/components/landing/token-overview"
 import { BuyTokens } from "@/components/landing/buy-tokens"
-import { Contracts } from "@/components/landing/contracts"
 import { SiteFooter } from "@/components/landing/site-footer"
 
 export default function TokensPage() {
@@ -20,7 +19,6 @@ export default function TokensPage() {
       <Tokens />
       <TokenOverview />
       <BuyTokens />
-      <Contracts />
       <SiteFooter />
     </main>
   )
