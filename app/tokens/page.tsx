@@ -9,13 +9,14 @@ export default function TokensPage() {
     <main className="min-h-screen bg-[#0a0a0c]">
       <SiteNav />
       <div className="mx-auto max-w-7xl px-4 pt-14 md:px-6">
-        <h1 className="text-balance font-serif text-4xl font-bold text-[#e8e6e3] md:text-5xl">
-          The <span className="text-[#d4af37]">Tokens</span>
-        </h1>
-        <p className="mt-4 max-w-xl text-pretty font-sans text-base leading-relaxed text-[#b8b6b1]">
-          Three tokens power the OpusEco ecosystem. Hold, stake, and earn reflections across PulseChain.
-        </p>
-      </div>
+      <h1 className="text-balance font-serif text-4xl font-bold text-[#e8e6e3] md:text-5xl">
+      Three tokens. One ecosystem.
+      </h1>
+
+  <p className="mt-4 max-w-2xl text-pretty font-sans text-base leading-relaxed text-[#b8b6b1]">
+    Opus distributes PLS. Coda distributes PLSX. Smaug reduces supply while rewarding stakers.
+  </p>
+</div>
       <Tokens />
       <TokenOverview />
       <BuyTokens />

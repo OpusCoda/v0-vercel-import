@@ -7,7 +7,7 @@ const ways = [
     accent: "#d4af37",
     body: "Receive PLS or PLSX distributions by holding Opus or Coda.",
     cta: "Learn More",
-    href: "#portfolio",
+    href: "#tokens",
   },
   {
     title: "Stake",
@@ -31,7 +31,7 @@ const ways = [
     accent: "#9b7fc4",
     body: "Create or accept peer-to-peer wagers and settle outcomes onchain.",
     cta: "Open P2P Market",
-    href: "#wager",
+    href: "#markets",
   },
 ]
 
