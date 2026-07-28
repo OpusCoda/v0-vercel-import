@@ -5,7 +5,7 @@ const ways = [
     title: "Hold",
     art: "/landing/hold-orb.png",
     accent: "#d4af37",
-    body: "Own Opus or Coda and receive automated PLS or PLSX distributions..",
+    body: "Receive automated PLS or PLSX distributions by holding Opus or Coda.",
     cta: "Learn More",
     href: "#portfolio",
   },
@@ -13,7 +13,7 @@ const ways = [
     title: "Stake",
     art: "/landing/earn-orb.png",
     accent: "#5fbf7f",
-    body: "Stake Smaug to earn protocol rewards and enjoy fee rebates.",
+    body: "Stake Smaug to receive fee rebates and earn protocol rewards.",
     cta: "Start Staking",
     href: "#stake",
   },
@@ -21,7 +21,7 @@ const ways = [
     title: "Predict",
     art: "/landing/predict-orb.png",
     accent: "#5b9bd5",
-    body: "Trade on real-world outcomes in the Probability Shop. Buy YES or NO and earn if you're right.",
+    body: "Trade YES and NO positions on real-world events in the Probability Shop.",
     cta: "Browse Markets",
     href: "#markets",
   },
@@ -50,7 +50,7 @@ export { OrnamentHeading }
 export function Participate() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
-      <OrnamentHeading>Four ways to participate in the ecosystem</OrnamentHeading>
+      <OrnamentHeading>One ecosystem. Four ways to participate</OrnamentHeading>
 
       <div className="mt-10 grid gap-6 md:grid-cols-4">
         {ways.map((way) => (
