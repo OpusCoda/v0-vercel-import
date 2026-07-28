@@ -5,7 +5,6 @@ import { Participate } from "@/components/landing/participate"
 import { LiveFeed } from "@/components/landing/live-feed"
 import { Tokenomics } from "@/components/landing/tokenomics"
 import { BuyTokens } from "@/components/landing/buy-tokens"
-import { Contracts } from "@/components/landing/contracts"
 import { SiteFooter } from "@/components/landing/site-footer"
 
 export default function HomePage() {
@@ -18,7 +17,6 @@ export default function HomePage() {
       <LiveFeed />
       <Tokenomics />
       <BuyTokens />
-      <Contracts />
       <SiteFooter />
     </main>
   )

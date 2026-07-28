@@ -5,11 +5,18 @@ import Image from "next/image"
 import { Flame, Sprout, Vault, Droplet, ArrowRight } from "lucide-react"
 
 const metrics = [
-  { icon: Flame, value: "3.5%", label: "Buy and burn", sublabel: "Smaug burned" },
+  { icon: Flame, value: "3.5%", label: "Buy and burn", sublabel: "Burned", valueType: "burnedPct" },
   { icon: Sprout, value: "1.5%", label: "Reflections to holders" },
   { icon: Vault, value: "1%", label: "Added to Smaug's Vault" },
-  { icon: Droplet, value: "0.5%", label: "Added to burned LP", sublabel: "Burned PLS added" },
+  { icon: Droplet, value: "0.5%", label: "Added to burned LP", sublabel: "Burned PLS added", valueType: "plsAdded" },
 ]
+
+const SMAUG_TOTAL_SUPPLY = 1_000_000_000
+
+const formatBurnedPct = (n: number | null) => {
+  if (n === null) return "—"
+  return (n / SMAUG_TOTAL_SUPPLY * 100).toFixed(2) + "%"
+}
 
 export function Tokenomics() {
   const [smaugBurned, setSmaugBurned] = useState<number | null>(null)
@@ -63,7 +70,7 @@ export function Tokenomics() {
                   <span className="mt-1 font-sans text-xs text-[#9ca3af]">{m.label}</span>
                   {m.sublabel && (
                     <span className="mt-1.5 font-sans text-xs text-[#7c7a76]">
-                      {m.sublabel}: {m.sublabel === "Smaug burned" ? formatNumber(smaugBurned) : formatNumber(burnedPlsAdded)}
+                      {m.sublabel}: {m.valueType === "burnedPct" ? formatBurnedPct(smaugBurned) : formatNumber(burnedPlsAdded)}
                     </span>
                   )}
                 </div>
