@@ -7,7 +7,34 @@ const HANDLES = [
 ] as const
 
 const POSTS_PER_ACCOUNT = 3
-const FETCH_TIMEOUT_MS = 5_000
+
+interface XUser {
+  id: string
+  name: string
+  username: string
+}
+
+interface XPost {
+  id: string
+  text: string
+  created_at?: string
+}
+
+interface XUserLookupResponse {
+  data?: XUser
+  errors?: Array<{
+    detail?: string
+    title?: string
+  }>
+}
+
+interface XTimelineResponse {
+  data?: XPost[]
+  errors?: Array<{
+    detail?: string
+    title?: string
+  }>
+}
 
 export interface FeedXPost {
   id: string
@@ -18,185 +45,115 @@ export interface FeedXPost {
   timestamp: string
 }
 
-interface VXTwitterResponse {
-  tweetID?: string | number
-  tweetURL?: string
-  text?: string
-  date?: string
-  date_epoch?: number | string
-  user_name?: string
-  user_screen_name?: string
-}
+async function xFetch<T>(
+  url: string,
+  bearerToken: string
+): Promise<T> {
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${bearerToken}`,
+    },
+    next: {
+      revalidate: 300,
+    },
+  })
 
-interface FeedCache {
-  postsByHandle: Map<string, FeedXPost[]>
-}
+  if (!response.ok) {
+    const body = await response.text()
 
-declare global {
-  var xFeedCache: FeedCache | undefined
-}
-
-const feedCache: FeedCache =
-  globalThis.xFeedCache ??
-  {
-    postsByHandle: new Map<string, FeedXPost[]>(),
+    throw new Error(
+      `X API returned ${response.status}: ${body.slice(0, 300)}`
+    )
   }
 
-globalThis.xFeedCache = feedCache
-
-function parseTimestamp(data: VXTwitterResponse): string {
-  if (data.date_epoch !== undefined) {
-    const epoch = Number(data.date_epoch)
-
-    if (Number.isFinite(epoch)) {
-      return new Date(epoch * 1000).toISOString()
-    }
-  }
-
-  if (data.date) {
-    const parsed = new Date(data.date)
-
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed.toISOString()
-    }
-  }
-
-  return new Date().toISOString()
+  return response.json() as Promise<T>
 }
 
-async function fetchLatestPost(handle: string): Promise<FeedXPost> {
-  const controller = new AbortController()
-  const timeoutId = setTimeout(
-    () => controller.abort(),
-    FETCH_TIMEOUT_MS
+async function fetchPostsForHandle(
+  handle: string,
+  bearerToken: string
+): Promise<FeedXPost[]> {
+  const userUrl =
+    `https://api.x.com/2/users/by/username/${encodeURIComponent(handle)}` +
+    `?user.fields=name,username`
+
+  const userResponse = await xFetch<XUserLookupResponse>(
+    userUrl,
+    bearerToken
   )
 
-  try {
-    const response = await fetch(
-      `https://api.vxtwitter.com/${encodeURIComponent(handle)}`,
-      {
-        headers: {
-          Accept: "application/json",
-          "User-Agent": "OpusEcosystemFeed/1.0",
-        },
-        signal: controller.signal,
-
-        // Fetch a fresh latest post at most once every five minutes.
-        next: {
-          revalidate: 300,
-        },
-      }
+  if (!userResponse.data) {
+    throw new Error(
+      userResponse.errors?.[0]?.detail ??
+        `Could not find X account @${handle}`
     )
-
-    if (!response.ok) {
-      const body = await response.text()
-
-      throw new Error(
-        `VXTwitter returned ${response.status}: ${body.slice(0, 200)}`
-      )
-    }
-
-    const data = (await response.json()) as VXTwitterResponse
-
-    const tweetId = String(data.tweetID ?? "").trim()
-
-    if (!tweetId) {
-      throw new Error(
-        `VXTwitter response for @${handle} did not contain tweetID`
-      )
-    }
-
-    const returnedHandle =
-      String(data.user_screen_name ?? handle).trim() || handle
-
-    return {
-      id: tweetId,
-      handle: returnedHandle,
-      name:
-        String(data.user_name ?? returnedHandle).trim() ||
-        returnedHandle,
-      text:
-        String(data.text ?? "").trim() ||
-        "View this post on X",
-      url:
-        String(data.tweetURL ?? "").trim() ||
-        `https://x.com/${returnedHandle}/status/${tweetId}`,
-      timestamp: parseTimestamp(data),
-    }
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      error.name === "AbortError"
-    ) {
-      throw new Error(
-        `VXTwitter request for @${handle} timed out`
-      )
-    }
-
-    throw error
-  } finally {
-    clearTimeout(timeoutId)
   }
-}
 
-function storePost(
-  requestedHandle: string,
-  post: FeedXPost
-): FeedXPost[] {
-  const cacheKey = requestedHandle.toLowerCase()
-  const existing =
-    feedCache.postsByHandle.get(cacheKey) ?? []
+  const user = userResponse.data
 
-  const withoutDuplicate = existing.filter(
-    (savedPost) => savedPost.id !== post.id
+  // X currently requires max_results to be at least 5.
+  const timelineUrl =
+    `https://api.x.com/2/users/${user.id}/tweets` +
+    `?max_results=5` +
+    `&tweet.fields=created_at` +
+    `&exclude=replies,retweets`
+
+  const timelineResponse = await xFetch<XTimelineResponse>(
+    timelineUrl,
+    bearerToken
   )
 
-  const updated = [post, ...withoutDuplicate]
-    .sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() -
-        new Date(a.timestamp).getTime()
-    )
+  return (timelineResponse.data ?? [])
     .slice(0, POSTS_PER_ACCOUNT)
-
-  feedCache.postsByHandle.set(cacheKey, updated)
-
-  return updated
+    .map((post) => ({
+      id: post.id,
+      handle: user.username,
+      name: user.name,
+      text: post.text,
+      url: `https://x.com/${user.username}/status/${post.id}`,
+      timestamp: post.created_at ?? new Date().toISOString(),
+    }))
 }
 
 export async function GET() {
-  const results = await Promise.allSettled(
-    HANDLES.map(async (handle) => {
-      const latestPost = await fetchLatestPost(handle)
-      return {
-        handle,
-        posts: storePost(handle, latestPost),
+  const bearerToken = process.env.X_BEARER_TOKEN
+
+  if (!bearerToken) {
+    return NextResponse.json(
+      {
+        error: "X_BEARER_TOKEN is not configured.",
+      },
+      {
+        status: 500,
       }
-    })
+    )
+  }
+
+  const results = await Promise.allSettled(
+    HANDLES.map((handle) =>
+      fetchPostsForHandle(handle, bearerToken)
+    )
   )
 
+  const posts: FeedXPost[] = []
   const errors: string[] = []
 
   results.forEach((result, index) => {
-    if (result.status === "rejected") {
-      errors.push(
-        `@${HANDLES[index]}: ${
-          result.reason instanceof Error
-            ? result.reason.message
-            : String(result.reason)
-        }`
-      )
+    if (result.status === "fulfilled") {
+      posts.push(...result.value)
+      return
     }
+
+    errors.push(
+      `@${HANDLES[index]}: ${
+        result.reason instanceof Error
+          ? result.reason.message
+          : String(result.reason)
+      }`
+    )
   })
 
-  /*
-   * Include cached posts even when today's VXTwitter request fails.
-   */
-  const posts = HANDLES.flatMap((handle) => {
-    return (
-      feedCache.postsByHandle.get(handle.toLowerCase()) ?? []
-    )
-  }).sort(
+  posts.sort(
     (a, b) =>
       new Date(b.timestamp).getTime() -
       new Date(a.timestamp).getTime()
@@ -206,23 +163,9 @@ export async function GET() {
     {
       posts,
       errors,
-      postsPerAccount: Object.fromEntries(
-        HANDLES.map((handle) => [
-          handle,
-          (
-            feedCache.postsByHandle.get(
-              handle.toLowerCase()
-            ) ?? []
-          ).length,
-        ])
-      ),
     },
     {
       headers: {
-        /*
-         * Prevent every visitor from triggering three VXTwitter calls.
-         * Vercel can serve the same response for five minutes.
-         */
         "Cache-Control":
           "public, s-maxage=300, stale-while-revalidate=600",
       },
