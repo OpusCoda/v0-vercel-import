@@ -128,7 +128,7 @@ export function TokenOverview() {
       <div className="mb-8 flex items-center justify-center gap-3">
         <span className="h-px w-10 bg-linear-to-r from-transparent to-[#d4af37]/50" aria-hidden />
         <h2 className="text-center font-serif text-2xl font-bold text-[#e8e6e3] md:text-3xl">
-          Smaug <span className="text-[#d4af37]">Hoard & Ledger</span>
+          Anatomy of Smaug
         </h2>
         <span className="h-px w-10 bg-linear-to-l from-transparent to-[#d4af37]/50" aria-hidden />
       </div>
