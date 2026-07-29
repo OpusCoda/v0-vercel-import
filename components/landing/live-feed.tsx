@@ -41,41 +41,31 @@ type FeedEvent = BurnEvent | DistributionEvent | MarketEvent | XPostEvent | Stak
 
 async function fetchXPosts(): Promise<FeedEvent[]> {
   try {
-    const handles = ["OpusEco", "RichardHeartWin", "CryptoCoffee369"]
-    const xPosts: FeedEvent[] = []
-    let id = 100
+    const response = await fetch("/api/x-posts")
+    const data = await response.json()
 
-    for (const handle of handles) {
-      try {
-        const response = await fetch(`https://api.vxtwitter.com/${handle}`)
-        const data = await response.json()
-
-        console.log(`[v0] Fetched ${handle}:`, { status: response.status, hasData: !!data, tweetsCount: data?.tweets?.length })
-
-        if (data && data.tweets && Array.isArray(data.tweets)) {
-          data.tweets.slice(0, 3).forEach((tweet: Record<string, unknown>) => {
-            const createdAt = tweet.date ? new Date(tweet.date as string) : new Date()
-            xPosts.push({
-              id: `x_${id++}`,
-              type: "x_post",
-              timestamp: createdAt,
-              content: {
-                handle: handle,
-                name: (data.name as string) || handle,
-                text: (tweet.text as string) || "Check this post on X",
-                url: `https://x.com/${handle}/status/${tweet.id || ""}`,
-              },
-            })
-          })
-        } else {
-          console.log(`[v0] No tweets found in response for ${handle}`)
-        }
-      } catch (err) {
-        console.log(`[v0] Could not fetch posts from ${handle}:`, err instanceof Error ? err.message : String(err))
-      }
+    if (!response.ok || !data.posts) {
+      console.log("[v0] X posts API error:", data.error || "Unknown error")
+      return []
     }
 
-    console.log(`[v0] Total X posts fetched: ${xPosts.length}`)
+    const xPosts: FeedEvent[] = data.posts.map((post: Record<string, unknown>, index: number) => ({
+      id: `x_${index}`,
+      type: "x_post",
+      category: "community" as const,
+      timestamp: new Date(post.timestamp as string),
+      content: {
+        handle: post.handle,
+        name: post.name,
+        text: post.text,
+        url: post.url,
+      },
+    }))
+
+    if (data.errors && data.errors.length > 0) {
+      console.log("[v0] X posts API warnings:", data.errors)
+    }
+
     return xPosts
   } catch (err) {
     console.log("[v0] Failed to fetch X posts:", err instanceof Error ? err.message : String(err))
