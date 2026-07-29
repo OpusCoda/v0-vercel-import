@@ -273,7 +273,7 @@ function FeedCard({ event }: { event: FeedEvent }) {
               </span>
             </div>
 
-            <div className="mt-1 whitespace-pre-wrap break-words text-sm text-[#b8b6b1]">
+            <div className="mt-1 whitespace-pre-wrap wrap-break-word text-sm text-[#b8b6b1]">
               {event.content.text}
             </div>
 

@@ -59,7 +59,7 @@ export function StatCards() {
     { label: "TOTAL PLS DISTRIBUTED", value: display(plsDistributed), unit: "", usd: usd(plsDistributed, plsPrice), icon: <Droplets className="h-8 w-8 text-[#d4af37]" /> },
     { label: "TOTAL PLSX DISTRIBUTED", value: display(plsxDistributed), unit: "", usd: usd(plsxDistributed, plsxPrice), icon: <Droplets className="h-8 w-8 text-[#d4af37]" /> },
     { label: "OTHER TOKENS", value: fmtUsd(otherTokensUsd) ?? "—", unit: "", usd: null, sub: "", icon: <Gift className="h-8 w-8 text-[#d4af37]" /> },
-    { label: "SMAUG BURNED", value: display(smaugBurned), unit: "SMAUG", usd: null, sub: smaugBurned7d ? `${display(smaugBurned7d)} last 7d` : "", icon: <Flame className="h-8 w-8 text-[#d4af37]" /> },
+    { label: "SMAUG BURNED", value: display(smaugBurned), unit: "", usd: null, sub: smaugBurned7d ? `${display(smaugBurned7d)} last 7d` : "", icon: <Flame className="h-8 w-8 text-[#d4af37]" /> },
   ]
 
   // Total distributed to holders (USD): PLS + PLSX + other reward tokens

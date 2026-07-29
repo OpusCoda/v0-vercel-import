@@ -4,8 +4,11 @@
 
 const PENDING_KEY = "opus_pending_referrer"
 
+// Fixed production base so shared links never inherit a preview domain.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://opuseco.com"
+
 export type PendingReferrer = {
-  ref: string // the ?ref= value (name or address)
+  ref: string // the referral value (name or address)
   wallet: string // resolved referrer wallet address
   capturedAt: number
 }
@@ -42,8 +45,9 @@ export function clearPendingReferrer() {
   }
 }
 
-// Build a shareable referral link for a given name.
+// Build a shareable referral link for a given name, in the clean /r/<name> form.
+// Always uses the production domain, never the current (possibly preview) origin.
 export function buildReferralLink(name: string, origin?: string) {
-  const base = origin || (typeof window !== "undefined" ? window.location.origin : "")
-  return `${base}/?ref=${encodeURIComponent(name)}`
+  const base = origin || SITE_URL
+  return `${base}/r/${encodeURIComponent(name)}`
 }
