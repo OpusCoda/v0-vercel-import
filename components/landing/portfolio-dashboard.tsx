@@ -78,7 +78,7 @@ const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
   }
 }
 export function PortfolioDashboard() {
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState('assets')
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
   const [totalPortfolioValue, setTotalPortfolioValue] = useState(0)
@@ -394,7 +394,6 @@ export function PortfolioDashboard() {
             <div className="mb-8 border-b border-[#2a2a35]">
               <div className="flex gap-8">
                 {[
-                  { id: 'overview', label: 'Overview' },
                   { id: 'assets', label: 'Assets' },
                 ].map((tab) => (
                   <button
@@ -411,26 +410,6 @@ export function PortfolioDashboard() {
                 ))}
               </div>
             </div>
-            {/* Overview Tab */}
-            {activeTab === 'overview' && (
-              <div className="mb-12">
-                <h3 className="font-serif text-xl font-bold text-[#f4f4f4] mb-6">Holdings</h3>
-                <div className="space-y-2">
-                  {assets.filter(a => a.value > 0.5).slice(0, 10).map((asset) => (
-                    <div key={asset.symbol} className="flex justify-between items-center py-3 px-4 rounded hover:bg-[rgba(255,255,255,0.02)]">
-                      <div>
-                        <p className="font-sans text-sm font-medium text-[#f4f4f4]">{asset.symbol}</p>
-                        <p className="font-sans text-xs text-[#9a9a9a]">{Number(asset.balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
-                      </div>
-                      <p className="font-sans font-semibold text-[#d8b13d]">${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
-                    </div>
-                  ))}
-                  {assets.filter(a => a.value > 0.5).length > 10 && (
-                    <p className="font-sans text-xs text-[#9a9a9a] text-center py-3">+{assets.filter(a => a.value > 0.5).length - 10} more tokens</p>
-                  )}
-                </div>
-              </div>
-            )}
             {/* Assets Tab */}
             {activeTab === 'assets' && (
               <div className="mb-12">
