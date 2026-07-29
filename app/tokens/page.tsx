@@ -20,14 +20,29 @@ export default function TokensPage() {
           rewarding stakers.
         </p>
 
+        {/* Video Explainer */}
         <a
           href="https://www.youtube.com/watch?v=Qr-avVraIA0"
           target="_blank"
           rel="noopener noreferrer"
-          className="group mt-5 inline-flex items-center gap-2 font-sans text-sm font-medium text-[#d4af37] transition-colors hover:text-[#e8e6e3]"
+          className="group mt-8 flex max-w-2xl items-center justify-between rounded-2xl border border-[#2a2a35] bg-[#101017] px-6 py-5 transition-colors hover:border-[#d4af37]/50"
         >
-          <Play className="h-4 w-4 fill-current" />
-          <span>How Opus and Coda work — watch the 2-minute explainer</span>
+          <div className="flex items-center gap-4">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#d4af37]/10 text-[#d4af37]">
+            <Play className="ml-0.5 h-4 w-4 fill-current" />
+            </div>
+
+            <div>
+              <h2 className="font-serif text-xl font-bold text-[#e8e6e3]">
+                What are the Opus and Coda reward tokens?
+              </h2>
+
+              <p className="mt-1 font-sans text-sm text-[#b8b6b1]">
+                Watch the 2-minute explainer on YouTube
+              </p>
+            </div>
+          </div>
+
         </a>
       </div>
 

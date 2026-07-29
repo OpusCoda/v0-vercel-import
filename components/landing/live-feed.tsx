@@ -41,7 +41,7 @@ type FeedEvent = BurnEvent | DistributionEvent | MarketEvent | XPostEvent | Stak
 
 async function fetchXPosts(): Promise<FeedEvent[]> {
   try {
-    const handles = ["OpusEco", "RichardHeartWin", "CryptoCoffee369"]
+    const handles = ["OpusEco", "RichardHeartWin"]
     const xPosts: FeedEvent[] = []
     let id = 100
 
@@ -49,8 +49,6 @@ async function fetchXPosts(): Promise<FeedEvent[]> {
       try {
         const response = await fetch(`https://api.vxtwitter.com/${handle}`)
         const data = await response.json()
-
-        console.log(`[v0] Fetched ${handle}:`, { status: response.status, hasData: !!data, tweetsCount: data?.tweets?.length })
 
         if (data && data.tweets && Array.isArray(data.tweets)) {
           data.tweets.slice(0, 3).forEach((tweet: Record<string, unknown>) => {
@@ -67,18 +65,15 @@ async function fetchXPosts(): Promise<FeedEvent[]> {
               },
             })
           })
-        } else {
-          console.log(`[v0] No tweets found in response for ${handle}`)
         }
       } catch (err) {
-        console.log(`[v0] Could not fetch posts from ${handle}:`, err instanceof Error ? err.message : String(err))
+        console.log(`[v0] Could not fetch posts from ${handle}`)
       }
     }
 
-    console.log(`[v0] Total X posts fetched: ${xPosts.length}`)
     return xPosts
   } catch (err) {
-    console.log("[v0] Failed to fetch X posts:", err instanceof Error ? err.message : String(err))
+    console.log("[v0] Failed to fetch X posts")
     return []
   }
 }
