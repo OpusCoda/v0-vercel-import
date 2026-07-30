@@ -2,38 +2,6 @@
 
 import { useEffect, useState } from "react"
 
-interface BurnEvent {
-  id: string
-  type: "burn"
-  timestamp: Date
-  content: {
-    label: string
-    amount: string
-  }
-}
-
-interface DistributionEvent {
-  id: string
-  type: "distribution"
-  timestamp: Date
-  content: {
-    label: string
-    amount: string
-    token: string
-  }
-}
-
-interface MarketEvent {
-  id: string
-  type: "market"
-  timestamp: Date
-  content: {
-    question: string
-    yes: string
-    pool: string
-  }
-}
-
 interface XPostEvent {
   id: string
   type: "x_post"
@@ -43,17 +11,6 @@ interface XPostEvent {
     name: string
     text: string
     url: string
-  }
-}
-
-interface StakeEvent {
-  id: string
-  type: "stake"
-  timestamp: Date
-  content: {
-    label: string
-    amount: string
-    duration: string
   }
 }
 
@@ -69,12 +26,7 @@ interface XPostApiResponse {
   }
 }
 
-type FeedEvent =
-  | BurnEvent
-  | DistributionEvent
-  | MarketEvent
-  | XPostEvent
-  | StakeEvent
+type FeedEvent = XPostEvent
 
 async function fetchXPosts(): Promise<XPostEvent[]> {
   try {
@@ -110,62 +62,6 @@ async function fetchXPosts(): Promise<XPostEvent[]> {
   }
 }
 
-function createTemporaryEvents(): FeedEvent[] {
-  const now = Date.now()
-
-  return [
-    {
-      id: "burn_1",
-      type: "burn",
-      timestamp: new Date(now - 8 * 60 * 1000),
-      content: {
-        label: "Smaug Burn",
-        amount: "125,000 SMAUG",
-      },
-    },
-    {
-      id: "distribution_1",
-      type: "distribution",
-      timestamp: new Date(now - 24 * 60 * 1000),
-      content: {
-        label: "Opus Distribution",
-        amount: "2,450,000",
-        token: "PLS",
-      },
-    },
-    {
-      id: "stake_1",
-      type: "stake",
-      timestamp: new Date(now - 47 * 60 * 1000),
-      content: {
-        label: "New Smaug Stake",
-        amount: "1,250,000 SMAUG",
-        duration: "365 days",
-      },
-    },
-    {
-      id: "market_1",
-      type: "market",
-      timestamp: new Date(now - 82 * 60 * 1000),
-      content: {
-        question: "Will PLS reach $0.0001 before 2027?",
-        yes: "64%",
-        pool: "8,750,000 PLS",
-      },
-    },
-    {
-      id: "distribution_2",
-      type: "distribution",
-      timestamp: new Date(now - 3 * 60 * 60 * 1000),
-      content: {
-        label: "Coda Distribution",
-        amount: "785,000",
-        token: "PLSX",
-      },
-    },
-  ]
-}
-
 function formatTime(date: Date): string {
   const timestamp = date.getTime()
 
@@ -186,130 +82,44 @@ function formatTime(date: Date): string {
 }
 
 function FeedCard({ event }: { event: FeedEvent }) {
-  switch (event.type) {
-    case "burn":
-      return (
-        <div className="flex gap-3 rounded-xl border border-[#2a2a35] bg-[#0d0d12] p-4">
-          <div className="text-2xl">🔥</div>
+  return (
+    <article className="flex gap-3 rounded-xl border border-[#2a2a35] bg-[#0d0d12] p-4">
+      <div className="text-2xl" aria-hidden="true">
+        𝕏
+      </div>
 
-          <div className="min-w-0 flex-1">
-            <div className="font-semibold text-[#e8e6e3]">
-              {event.content.label}
-            </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="font-semibold text-[#e8e6e3]">
+            {event.content.name}
+          </span>
 
-            <div className="text-sm text-[#9a9a9a]">
-              {event.content.amount} permanently burned
-            </div>
+          <span className="text-sm text-[#7c7a76]">
+            @{event.content.handle}
+          </span>
 
-            <div className="mt-1 text-xs text-[#7c7a76]">
-              {formatTime(event.timestamp)}
-            </div>
-          </div>
+          <span className="text-xs text-[#7c7a76]">
+            · {formatTime(event.timestamp)}
+          </span>
         </div>
-      )
 
-    case "distribution":
-      return (
-        <div className="flex gap-3 rounded-xl border border-[#2a2a35] bg-[#0d0d12] p-4">
-          <div className="text-2xl">💰</div>
+        <p className="mt-1 whitespace-pre-wrap break-words text-sm text-[#b8b6b1]">
+          {event.content.text}
+        </p>
 
-          <div className="min-w-0 flex-1">
-            <div className="font-semibold text-[#e8e6e3]">
-              {event.content.label}
-            </div>
-
-            <div className="text-sm text-[#9a9a9a]">
-              {event.content.amount} {event.content.token} distributed to
-              holders
-            </div>
-
-            <div className="mt-1 text-xs text-[#7c7a76]">
-              {formatTime(event.timestamp)}
-            </div>
-          </div>
-        </div>
-      )
-
-    case "market":
-      return (
-        <div className="flex gap-3 rounded-xl border border-[#2a2a35] bg-[#0d0d12] p-4">
-          <div className="text-2xl">📊</div>
-
-          <div className="min-w-0 flex-1">
-            <div className="font-semibold text-[#e8e6e3]">
-              Probability Shop
-            </div>
-
-            <div className="text-sm text-[#9a9a9a]">
-              “{event.content.question}”
-            </div>
-
-            <div className="mt-1 text-xs text-[#d4af37]">
-              {event.content.yes} YES · {event.content.pool} pool
-            </div>
-
-            <div className="mt-1 text-xs text-[#7c7a76]">
-              {formatTime(event.timestamp)}
-            </div>
-          </div>
-        </div>
-      )
-
-    case "x_post":
-      return (
-        <div className="flex gap-3 rounded-xl border border-[#2a2a35] bg-[#0d0d12] p-4">
-          <div className="text-2xl">𝕏</div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-[#e8e6e3]">
-                @{event.content.handle}
-              </span>
-
-              <span className="text-xs text-[#7c7a76]">·</span>
-
-              <span className="text-xs text-[#7c7a76]">
-                {formatTime(event.timestamp)}
-              </span>
-            </div>
-
-            <div className="mt-1 whitespace-pre-wrap wrap-break-word text-sm text-[#b8b6b1]">
-              {event.content.text}
-            </div>
-
-            <a
-              href={event.content.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1 text-xs text-[#d4af37] hover:underline"
-            >
-              View on X ↗
-            </a>
-          </div>
-        </div>
-      )
-
-    case "stake":
-      return (
-        <div className="flex gap-3 rounded-xl border border-[#2a2a35] bg-[#0d0d12] p-4">
-          <div className="text-2xl">🔒</div>
-
-          <div className="min-w-0 flex-1">
-            <div className="font-semibold text-[#e8e6e3]">
-              {event.content.label}
-            </div>
-
-            <div className="text-sm text-[#9a9a9a]">
-              {event.content.amount} staked for {event.content.duration}
-            </div>
-
-            <div className="mt-1 text-xs text-[#7c7a76]">
-              {formatTime(event.timestamp)}
-            </div>
-          </div>
-        </div>
-      )
-  }
+        <a
+          href={event.content.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 inline-flex items-center gap-1 text-xs text-[#d4af37] hover:underline"
+        >
+          View on X
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </article>
+  )
+}
 }
 
 export function LiveFeed() {
@@ -320,18 +130,10 @@ export function LiveFeed() {
     let cancelled = false
 
     async function loadFeed() {
-      const temporaryEvents = createTemporaryEvents()
       const xPosts = await fetchXPosts()
 
-      const allEvents: FeedEvent[] = [
-        ...temporaryEvents,
-        ...xPosts,
-      ].sort(
-        (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
-      )
-
       if (!cancelled) {
-        setEvents(allEvents)
+        setEvents(xPosts)
         setLoading(false)
       }
     }

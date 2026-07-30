@@ -60,6 +60,23 @@ export async function GET(): Promise<NextResponse<XPostResponse>> {
     // Trigger cron fetch in background (don't await)
     triggerCronFetch().catch(() => {})
 
+    // Ensure table exists
+    try {
+      await sql`
+        CREATE TABLE IF NOT EXISTS x_posts (
+          id VARCHAR(255) PRIMARY KEY,
+          handle VARCHAR(255) NOT NULL,
+          name VARCHAR(255),
+          text TEXT,
+          url VARCHAR(500),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `
+    } catch (createErr) {
+      console.log("[x-posts] Table creation attempt:", createErr instanceof Error ? createErr.message : "unknown")
+    }
+
     // Fetch posts from database
     const posts = await sql<XPost>`
       SELECT id, handle, name, text, url, created_at
@@ -85,7 +102,7 @@ export async function GET(): Promise<NextResponse<XPostResponse>> {
       },
     })
   } catch (error) {
-    console.error("[x-posts] Database error:", error)
+    console.error("[x-posts] Database error:", error instanceof Error ? error.message : String(error))
 
     // Return empty posts on error rather than breaking
     return NextResponse.json(
@@ -93,7 +110,7 @@ export async function GET(): Promise<NextResponse<XPostResponse>> {
         posts: [],
         errors: ["Failed to fetch posts from database"],
       },
-      { status: 500 }
+      { status: 200 }
     )
   }
 }
