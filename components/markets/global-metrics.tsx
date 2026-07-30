@@ -1,54 +1,56 @@
 'use client'
 
-import { TrendingUp, TrendingDown } from 'lucide-react'
-
 interface GlobalMetricsProps {
-  lockedValuePLS?: number
-  pendingActions?: number
-  claimablePLS?: number
-  performance?: number // percentage, positive or negative
+  lockedValuePLS?: bigint
+  pendingActionsCount?: number
+  claimablePLS?: bigint
+  performance?: {
+    wins: number
+    losses: number
+    percentage: number
+  }
   isLoading?: boolean
 }
 
 export function GlobalMetrics({
-  lockedValuePLS = 0,
-  pendingActions = 0,
-  claimablePLS = 0,
-  performance = 0,
+  lockedValuePLS = 0n,
+  pendingActionsCount = 0,
+  claimablePLS = 0n,
+  performance = { wins: 0, losses: 0, percentage: 0 },
   isLoading = false,
 }: GlobalMetricsProps) {
-  const isPositivePerformance = performance >= 0
+  const formatPls = (value: bigint) =>
+    (Number(value) / 1e18).toLocaleString(undefined, {
+      maximumFractionDigits: 0,
+    })
+
+  const performanceText =
+    performance.wins + performance.losses > 0
+      ? `${performance.wins}W • ${performance.losses}L (${performance.percentage}%)`
+      : '—'
 
   const metrics = [
     {
       label: 'Locked value',
-      value: lockedValuePLS.toLocaleString(undefined, { maximumFractionDigits: 0 }),
+      value: formatPls(lockedValuePLS),
       suffix: 'PLS',
-      icon: null,
     },
     {
       label: 'Pending Actions',
-      value: pendingActions.toString(),
+      value: pendingActionsCount.toString(),
       suffix: '',
-      icon: null,
-      highlight: pendingActions > 0 ? 'orange' : undefined,
+      highlight: pendingActionsCount > 0 ? 'orange' : undefined,
     },
     {
       label: 'Claimable',
-      value: claimablePLS.toLocaleString(undefined, { maximumFractionDigits: 0 }),
+      value: formatPls(claimablePLS),
       suffix: 'PLS',
-      icon: null,
     },
     {
       label: 'Performance',
-      value: Math.abs(performance).toLocaleString(undefined, { maximumFractionDigits: 1 }),
-      suffix: '%',
-      icon: isPositivePerformance ? (
-        <TrendingUp className="h-4 w-4 text-green-400" />
-      ) : (
-        <TrendingDown className="h-4 w-4 text-red-400" />
-      ),
-      valueColor: isPositivePerformance ? 'text-green-400' : 'text-red-400',
+      value: performanceText,
+      suffix: '',
+      valueColor: performance.percentage > 50 ? 'text-green-400' : performance.percentage < 50 && performance.wins + performance.losses > 0 ? 'text-red-400' : undefined,
     },
   ]
 
@@ -68,7 +70,6 @@ export function GlobalMetrics({
               <p className="font-sans text-xs text-[#7c7a76] uppercase tracking-wide">
                 {metric.label}
               </p>
-              {metric.icon && <div>{metric.icon}</div>}
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <p
