@@ -199,43 +199,102 @@ export function MyWagers() {
           </p>
         </div>
       ) : (
-        <div className="space-y-10">
-          {/* Action needed */}
+        <div className="space-y-8">
+          {/* Needs your action */}
           {actionNeeded.length > 0 && (
             <div>
-              <h3 className="mb-3 font-serif text-lg font-semibold text-orange-400">
-                Needs your action ({actionNeeded.length})
+              <h3 className="mb-4 font-serif text-lg font-semibold text-orange-400">
+                Needs your action
               </h3>
-              <div className="grid gap-3 lg:grid-cols-2">
-                {actionNeeded.map((w) => (
-                  <CardFor key={`act-${w.id.toString()}`} w={w} />
-                ))}
+              <div className="space-y-3 rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+                {actionNeeded.map((w) => {
+                  const action = actionFor(w, me!, now)
+                  const isCreator = w.creator.toLowerCase() === me
+                  const myStake = isCreator ? plsNum(w.creatorStake) : plsNum(w.challengerStake)
+                  return (
+                    <div key={`action-${w.id.toString()}`} className="flex items-center justify-between rounded border border-[#2a2a35] bg-[#0d0d12] p-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-[#e8e6e3]">
+                          <span className="text-orange-400 mr-2">🟡</span>
+                          {action}
+                        </div>
+                        <div className="mt-1 text-xs text-[#7c7a76]">
+                          {wagerToCard(w).description}
+                        </div>
+                      </div>
+                      <button className="ml-4 shrink-0 rounded border border-[#d4af37]/40 px-3 py-1.5 font-sans text-xs font-semibold text-[#d4af37] transition-colors hover:bg-[#d4af37]/10">
+                        {action === 'Vote on the winner' ? 'Vote' : action === 'Accept or decline' ? 'Accept' : 'Claim'}
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
-          {/* Active */}
+
+          {/* Active Positions - Unified Table */}
           {active.length > 0 && (
             <div>
-              <h3 className="mb-3 font-serif text-lg font-semibold text-[#d4af37]">
-                Active ({active.length})
+              <h3 className="mb-4 font-serif text-lg font-semibold text-[#d4af37]">
+                Active Positions
               </h3>
-              <div className="grid gap-3 lg:grid-cols-2">
-                {active.map((w) => (
-                  <CardFor key={`live-${w.id.toString()}`} w={w} />
-                ))}
+              <div className="overflow-x-auto rounded-lg border border-[#2a2a35] bg-[#101017]">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-[#2a2a35] bg-[#0d0d12]">
+                      <th className="px-4 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Type</th>
+                      <th className="px-4 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Market</th>
+                      <th className="px-4 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Status</th>
+                      <th className="px-4 py-3 text-right font-sans text-xs font-semibold text-[#7c7a76]">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {active.map((w) => {
+                      const isCreator = w.creator.toLowerCase() === me
+                      const myStake = isCreator ? plsNum(w.creatorStake) : plsNum(w.challengerStake)
+                      const card = wagerToCard(w)
+                      const typeEmoji = w.wagerType === 1 ? '📈' : '🤝'
+                      const statusLabel = w.status === 0 ? 'Pending' : w.status === 2 ? 'Voting' : 'Active'
+                      return (
+                        <tr key={`pos-${w.id.toString()}`} className="border-t border-[#2a2a35] hover:bg-[#0d0d12]/50">
+                          <td className="px-4 py-3 text-sm text-[#e8e6e3]">{typeEmoji} {w.wagerType === 1 ? 'Price Bet' : 'Outcome'}</td>
+                          <td className="px-4 py-3 text-sm text-[#b8b6b1]">{card.description}</td>
+                          <td className="px-4 py-3 text-sm text-[#7c7a76]">{statusLabel}</td>
+                          <td className="px-4 py-3 text-right text-sm font-semibold text-[#d4af37]">{myStake.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
+
           {/* History */}
           {history.length > 0 && (
             <div>
-              <h3 className="mb-3 font-serif text-lg font-semibold text-[#7c7a76]">
-                History ({history.length})
+              <h3 className="mb-4 font-serif text-lg font-semibold text-[#7c7a76]">
+                History
               </h3>
-              <div className="grid gap-3 lg:grid-cols-2">
-                {history.map((w) => (
-                  <CardFor key={`hist-${w.id.toString()}`} w={w} />
-                ))}
+              <div className="space-y-2 rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+                {history.map((w) => {
+                  const isCreator = w.creator.toLowerCase() === me
+                  const myStake = isCreator ? plsNum(w.creatorStake) : plsNum(w.challengerStake)
+                  const won = w.winner.toLowerCase() === me
+                  const card = wagerToCard(w)
+                  return (
+                    <div key={`hist-${w.id.toString()}`} className="flex items-center justify-between rounded border border-[#2a2a35] bg-[#0d0d12] p-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-[#e8e6e3]">
+                          {card.description}
+                        </div>
+                      </div>
+                      <div className={`ml-4 shrink-0 text-sm font-semibold ${won ? 'text-green-400' : 'text-red-400'}`}>
+                        {won ? '+' : '−'}{myStake.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
