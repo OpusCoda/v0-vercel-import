@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react"
 import { Swords, Users, User, Gavel, Coins, TrendingUp, Percent, ChartCandlestick } from "lucide-react"
-
+import { QuestionMarkIcon } from '@/components/question-mark-icon'
 type Product = {
   name: string
   tagline: string
