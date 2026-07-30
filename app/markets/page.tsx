@@ -19,7 +19,7 @@ export default function MarketsPage() {
     { id: 'all', label: 'All' },
     { id: 'p2p', label: 'P2P Wagers' },
     { id: 'probability', label: 'Probability Shop' },
-    { id: 'my-wagers', label: 'My Wagers' },
+    { id: 'my-wagers', label: 'My Positions' },
   ]
 
   // Which sections show per tab:
