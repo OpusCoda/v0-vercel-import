@@ -193,7 +193,7 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="font-serif text-lg font-semibold text-[#d4af37]">P2P Market</h3>
+              <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Outcome Exchange</h3>
               <p className="font-sans text-xs text-[#7c7a76]">Peer-to-peer wager escrow</p>
             </div>
             <div className="flex gap-1 shrink-0">

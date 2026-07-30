@@ -9,21 +9,26 @@ import { OpenWagers } from "@/components/markets/open-wagers"
 import { CreateWager } from "@/components/markets/create-wager"
 import { MyWagers } from "@/components/markets/my-wagers"
 import { WalletContextPrompt } from '@/components/wallet-context-prompt'
+
 type Tab = 'all' | 'p2p' | 'probability' | 'my-wagers'
+
 export default function MarketsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('all')
+
   const tabs: { id: Tab; label: string }[] = [
     { id: 'all', label: 'All' },
     { id: 'p2p', label: 'P2P Wagers' },
     { id: 'probability', label: 'Probability Shop' },
     { id: 'my-wagers', label: 'My Wagers' },
   ]
+
   // Which sections show per tab:
   //   all         → two-column browse + stats + create/open + overview
   //   p2p         → full-width P2P browse + stats + create/open
   //   probability → full-width Probability browse only
   //   my-wagers   → personal dashboard only
   const showP2PExtras = activeTab === 'all' || activeTab === 'p2p'
+
   return (
     <main className="min-h-screen bg-[#0a0a0c]">
       <SiteNav />
@@ -48,6 +53,17 @@ export default function MarketsPage() {
               </button>
             ))}
           </div>
+          {activeTab === 'all' && (
+            <div className="mt-3 flex justify-center">
+              <a
+                href="#markets-explainer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#2a2a35] px-4 py-2 font-sans text-sm font-medium text-[#b8b6b1] transition-colors hover:border-[#d4af37]/50 hover:text-[#e8e6e3]"
+              >
+                What is this?
+                <span aria-hidden="true">↓</span>
+              </a>
+            </div>
+          )}
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-6">
@@ -74,7 +90,7 @@ export default function MarketsPage() {
                   <div className="md:col-span-2">
                     <CreateWager />
                   </div>
-                  
+
                   {/* Right Column - Open Wagers */}
                   <div>
                     <OpenWagers />

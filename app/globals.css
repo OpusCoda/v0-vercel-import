@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+
 @custom-variant dark (&:is(.dark *));
 
 /* -------------------------------------------------
@@ -25,7 +26,6 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-
   --radius: 0.625rem;
 }
 
@@ -59,7 +59,6 @@
   /* Font hierarchy — 2 core fonts optimized for performance */
   --font-serif: var(--font-serif), Georgia, serif;       /* Merriweather */
   --font-ui: var(--font-inter), system-ui, sans-serif;   /* Inter */
-
   --font-sans: var(--font-ui);
   --font-mono: ui-monospace, SFMono-Regular, monospace;
 
@@ -96,7 +95,9 @@
   * {
     @apply border-border outline-ring/50;
   }
-
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     background-color: #0a0a0c;
     color: #e8e6e3;
@@ -105,40 +106,33 @@
     line-height: 1.6;
     letter-spacing: 0.01em;
   }
-
   /* Headings — restrained, classical */
   h1, h2, h3 {
     font-family: var(--font-serif);
     font-weight: 700;
     letter-spacing: 0.01em;
   }
-
   h1 {
     font-size: 2rem;
     line-height: 1.25;
   }
-
   h2 {
     font-size: 1.375rem;
     line-height: 1.35;
   }
-
   h3 {
     font-size: 1.125rem;
     line-height: 1.4;
   }
-
   p {
     line-height: 1.6;
   }
-
   /* UI / controls */
   button,
   input {
     font-family: var(--font-ui);
     font-size: 15px;
   }
-
   strong {
     font-family: var(--font-strong);
   }
@@ -152,28 +146,22 @@
   .text-gain {
     color: #d4af37;
   }
-
   .text-loss {
     color: #c9302c;
   }
-
   .text-neutral {
     color: #9ca3af;
   }
-
   .bg-card {
     background-color: #12121a;
   }
-
   .border-card {
     border-color: #2a2a35;
   }
-
   .bg-accent {
     background-color: #d4af37;
     color: #0a0a0c;
   }
-
   .bg-accent-hover {
     background-color: #c19b2e;
   }
