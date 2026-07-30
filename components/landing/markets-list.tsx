@@ -1,6 +1,7 @@
 "use client"
 import { useState, useMemo } from "react"
 import { Search, X } from "lucide-react"
+import { QuestionMarkIcon } from "@/components/question-mark-icon"
 import { MarketCard, type MarketCardProps } from "./market-card"
 import { useAllWagers } from "@/hooks/useAllWagers"
 import { wagerToCard, type P2PCardData } from "@/lib/wager-to-card"
@@ -164,7 +165,22 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Probability Shop</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Probability Shop</h3>
+                
+                  <a href="#probability-shop-explainer"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    document.getElementById("probability-shop-explainer")?.scrollIntoView({ behavior: "smooth" })
+                  }}
+                  className="group relative flex"
+                >
+                  <QuestionMarkIcon className="h-3.5 w-3.5 text-[#7c7a76] hover:text-[#d4af37] transition-colors" />
+                  <span className="absolute bottom-full left-1/2 mb-2 hidden w-44 -translate-x-1/2 rounded-lg bg-[#2a2a35]/95 p-2 text-center text-xs text-[#e8e6e3] group-hover:block">
+                    Click to learn what this is
+                  </span>
+                </a>
+              </div>
               <p className="font-sans text-xs text-[#7c7a76]">Prediction market</p>
             </div>
             <span className="font-sans text-xs text-[#7c7a76]">{filteredProbabilityMarkets.length} markets</span>
@@ -193,7 +209,22 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Outcome Exchange</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Outcome Exchange</h3>
+                
+                  <a href="#outcome-exchange-explainer"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    document.getElementById("outcome-exchange-explainer")?.scrollIntoView({ behavior: "smooth" })
+                  }}
+                  className="group relative flex"
+                >
+                  <QuestionMarkIcon className="h-3.5 w-3.5 text-[#7c7a76] hover:text-[#d4af37] transition-colors" />
+                  <span className="absolute bottom-full left-1/2 mb-2 hidden w-44 -translate-x-1/2 rounded-lg bg-[#2a2a35]/95 p-2 text-center text-xs text-[#e8e6e3] group-hover:block">
+                    Click to learn what this is
+                  </span>
+                </a>
+              </div>
               <p className="font-sans text-xs text-[#7c7a76]">Peer-to-peer wager escrow</p>
             </div>
             <div className="flex gap-1 shrink-0">

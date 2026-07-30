@@ -1,103 +1,135 @@
-'use client'
-import { useState } from 'react'
-import { SiteNav } from "@/components/landing/site-nav"
-import { SiteFooter } from "@/components/landing/site-footer"
-import MarketsOverview from "@/components/landing/markets-overview"
-import { MarketsList } from "@/components/landing/markets-list"
-import { WagerMarketStats } from "@/components/markets/wager-market-stats"
-import { OpenWagers } from "@/components/markets/open-wagers"
-import { CreateWager } from "@/components/markets/create-wager"
-import { MyWagers } from "@/components/markets/my-wagers"
-import { WalletContextPrompt } from '@/components/wallet-context-prompt'
+import type { LucideIcon } from "lucide-react"
+import { Swords, Users, User, Gavel, Coins, TrendingUp, Percent, ChartCandlestick } from "lucide-react"
+import { QuestionMarkIcon } from '@/components/question-mark-icon'
 
-type Tab = 'all' | 'p2p' | 'probability' | 'my-wagers'
+type Product = {
+  name: string
+  tagline: string
+  accent: string
+  Icon: LucideIcon
+  description: string
+  audience: { Icon: LucideIcon; label: string }
+  features: { Icon: LucideIcon; title: string; body: string }[]
+}
 
-export default function MarketsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('all')
+const products: Product[] = [
+  {
+    name: "Probability Shop",
+    tagline: "Prediction market",
+    accent: "#5b9bd5",
+    Icon: ChartCandlestick,
+    audience: { Icon: Users, label: "One-to-many · anyone can take a position" },
+    description:
+      "Browse open markets and buy YES or NO positions on real-world outcomes using PLS. Markets are created by the protocol on topics like crypto prices, sports results, politics, and macroeconomic events.",
+    features: [
+      {
+        Icon: TrendingUp,
+        title: "AMM-priced odds",
+        body: "Positions are priced by a constant-product AMM — the more people buy YES, the pricier YES becomes and the cheaper NO gets, reflecting the crowd's current probability estimate.",
+      },
+      {
+        Icon: Coins,
+        title: "Winner takes the pot",
+        body: "When a market resolves, the winning side shares the full pot proportionally to their positions.",
+      },
+      {
+        Icon: Percent,
+        title: "Smaug fee discount",
+        body: "Holding and staking Smaug gives a fee discount on all trades, shared with the Outcome Exchange via SmaugStaking.",
+      },
+    ],
+  },
+  {
+    name: "Outcome Exchange",
+    tagline: "Peer-to-peer wager escrow",
+    accent: "#d4af37",
+    Icon: Swords,
+    audience: { Icon: User, label: "One-to-one · creator vs. challenger" },
+    description:
+      "Two parties lock PLS against each other on the outcome of any event — a sports result, a price milestone, a real-world prediction, anything they agree on. The creator sets the terms, the odds, and how long the offer stays open. A challenger accepts by matching their side.",
+    features: [
+      {
+        Icon: Gavel,
+        title: "Trustless resolution",
+        body: "After the event, both parties vote on the winner. If they agree, payout is automatic. If they disagree, three-of-five community arbitrators resolve the dispute.",
+      },
+      {
+        Icon: TrendingUp,
+        title: "Oracle-settled price bets",
+        body: 'Price-based wagers (e.g. "PLS above $0.0001 on January 1") resolve automatically via the Fetch Oracle — no votes needed.',
+      },
+      {
+        Icon: Coins,
+        title: "On-chain & non-custodial",
+        body: "Every wager is escrowed on-chain. Smaug stakers receive a fee discount on all wagers.",
+      },
+    ],
+  },
+]
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'all', label: 'All' },
-    { id: 'p2p', label: 'P2P Wagers' },
-    { id: 'probability', label: 'Probability Shop' },
-    { id: 'my-wagers', label: 'My Wagers' },
-  ]
-
-  // Which sections show per tab:
-  //   all         → two-column browse + stats + create/open + overview
-  //   p2p         → full-width P2P browse + stats + create/open
-  //   probability → full-width Probability browse only
-  //   my-wagers   → personal dashboard only
-  const showP2PExtras = activeTab === 'all' || activeTab === 'p2p'
-
+export default function MarketsOverview() {
   return (
-    <main className="min-h-screen bg-[#0a0a0c]">
-      <SiteNav />
-      <div className="mx-auto max-w-7xl px-6 pt-4">
-        <WalletContextPrompt />
-      </div>
-      {/* Tab Navigation */}
-      <div className="py-3">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="flex justify-center gap-3">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
-                  activeTab === tab.id
-                    ? 'border-[#d8b13d] bg-[#d8b13d]/10 text-[#d8b13d]'
-                    : 'border-[#2a2a35] text-[#9a9a9a] hover:border-[#3a3a45] hover:text-[#b8b6b1]'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-        </div>
-      </div>
-      <div className="mx-auto max-w-7xl px-6">
-        {activeTab === 'my-wagers' ? (
-          /* Personal dashboard view */
-          <div className="py-3">
-            <MyWagers />
-          </div>
-        ) : (
-          <>
-            {/* Market Browse Section */}
-            <div className="py-3">
-              <MarketsList variant={activeTab} />
-            </div>
-            {showP2PExtras && (
-              <>
-                {/* Stats Row */}
-                <div className="py-12 border-t border-[#2a2a35]">
-                  <WagerMarketStats />
-                </div>
-                {/* Main Content Grid */}
-                <div className="grid md:grid-cols-3 gap-8 py-8">
-                  {/* Left Column - Create Wager */}
-                  <div className="md:col-span-2">
-                    <CreateWager />
+    <section id="markets-explainer" className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
+      <div className="grid gap-6 lg:grid-cols-2">
+        {products.map((product) => (
+          <article
+            id={`${product.name.toLowerCase().replace(' ', '-')}-explainer`}
+            key={product.name}
+            className="flex flex-col rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 transition-colors hover:border-[#d4af37]/30 md:p-8"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-[#2a2a35] bg-[#0a0a0c]"
+                  style={{ boxShadow: `0 0 32px -14px ${product.accent}` }}
+                >
+                  <product.Icon className="h-7 w-7" style={{ color: product.accent }} aria-hidden />
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-serif text-2xl font-bold" style={{ color: product.accent }}>
+                      {product.name}
+                    </h3>
+                    <a
+                      href={`#${product.name.toLowerCase().replace(' ', '-')}-explainer`}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        document.getElementById(`${product.name.toLowerCase().replace(' ', '-')}-explainer`)?.scrollIntoView({
+                          behavior: 'smooth',
+                        })
+                      }}
+                    >
+                      <div className="group relative">
+                        <QuestionMarkIcon className="h-4 w-4 text-[#9ca3af] hover:text-[#d8b13d] transition-colors" />
+                        <div className="absolute bottom-full left-1/2 mb-2 hidden w-48 -translate-x-1/2 rounded-lg bg-[#2a2a35]/90 p-2 text-center text-xs text-[#e8e6e3] group-hover:block">
+                          Click to learn what this is
+                        </div>
+                      </div>
+                    </a>
                   </div>
-
-                  {/* Right Column - Open Wagers */}
-                  <div>
-                    <OpenWagers />
-                  </div>
+                  <p className="font-sans text-sm text-[#9ca3af]">{product.tagline}</p>
                 </div>
-              </>
-            )}
-            {activeTab === 'all' && (
-              /* Markets Overview */
-              <div className="py-12 border-t border-[#2a2a35]">
-                <MarketsOverview />
               </div>
-            )}
-          </>
-        )}
+            </div>
+            <div className="mt-5 flex items-center gap-2 font-sans text-xs text-[#9ca3af]">
+              <product.audience.Icon className="h-4 w-4" style={{ color: product.accent }} aria-hidden />
+              {product.audience.label}
+            </div>
+            <p className="mt-4 text-pretty font-sans text-sm leading-relaxed text-[#b8b6b1]">{product.description}</p>
+            <ul className="mt-6 flex flex-col gap-4 border-t border-[#2a2a35] pt-6">
+              {product.features.map((feature) => (
+                <li key={feature.title} className="flex gap-3">
+                  <feature.Icon className="mt-0.5 h-5 w-5 shrink-0" style={{ color: product.accent }} aria-hidden />
+                  <div>
+                    <p className="font-sans text-sm font-semibold text-[#e8e6e3]">{feature.title}</p>
+                    <p className="mt-1 font-sans text-sm leading-relaxed text-[#b8b6b1]">{feature.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
       </div>
-      <SiteFooter />
-    </main>
+    </section>
   )
 }

@@ -2,6 +2,7 @@
 import { useMemo, useEffect } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { MarketCard } from '@/components/landing/market-card'
+import { GlobalMetrics } from '@/components/markets/global-metrics'
 import { useAllWagers } from '@/hooks/useAllWagers'
 import { wagerToCard } from '@/lib/wager-to-card'
 import { WAGER_MARKET_ADDRESS } from '@/lib/wager-market'
@@ -159,52 +160,33 @@ export function MyWagers() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 md:px-6">
-      {/* Summary strip */}
-      <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-          <p className="font-sans text-xs text-[#7c7a76]">Locked in wagers</p>
-          <p className="mt-1 font-serif text-xl font-bold text-[#d4af37]">
-            {lockedPLS.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
-          </p>
+      {/* Global Metrics */}
+      <GlobalMetrics
+        lockedValuePLS={lockedPLS}
+        pendingActions={actionNeeded.length}
+        claimablePLS={pendingReferral}
+        performance={(won - lost) * 100 / Math.max(won + lost, 1)} // Simple performance calculation
+        isLoading={isLoading}
+      />
+
+      {/* Referral rewards claim button (separate from metrics) */}
+      {pendingReferral > 0 && (
+        <div className="mb-8 flex justify-end">
+          <button
+            onClick={() =>
+              claimWrite({
+                address: WAGER_MARKET_ADDRESS,
+                abi: REFERRAL_ABI,
+                functionName: 'claimReferralRewards',
+              })
+            }
+            disabled={claimPending}
+            className="rounded-lg border border-[#d4af37]/40 px-4 py-2 font-sans text-sm font-semibold text-[#d4af37] transition-colors hover:bg-[#d4af37]/10 disabled:opacity-50"
+          >
+            {claimPending ? 'Claiming…' : `Claim ${pendingReferral.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS`}
+          </button>
         </div>
-        <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-          <p className="font-sans text-xs text-[#7c7a76]">Need your action</p>
-          <p className={`mt-1 font-serif text-xl font-bold ${actionNeeded.length > 0 ? 'text-orange-400' : 'text-[#b8b6b1]'}`}>
-            {actionNeeded.length}
-          </p>
-        </div>
-        <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-          <p className="font-sans text-xs text-[#7c7a76]">Record</p>
-          <p className="mt-1 font-serif text-xl font-bold text-[#b8b6b1]">
-            <span className="text-green-400">{won}W</span>
-            {' / '}
-            <span className="text-red-400">{lost}L</span>
-          </p>
-        </div>
-        <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-          <p className="font-sans text-xs text-[#7c7a76]">Referral rewards</p>
-          <div className="mt-1 flex items-center justify-between gap-2">
-            <p className="font-serif text-xl font-bold text-[#d4af37]">
-              {pendingReferral.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
-            </p>
-            {pendingReferral > 0 && (
-              <button
-                onClick={() =>
-                  claimWrite({
-                    address: WAGER_MARKET_ADDRESS,
-                    abi: REFERRAL_ABI,
-                    functionName: 'claimReferralRewards',
-                  })
-                }
-                disabled={claimPending}
-                className="rounded border border-[#d4af37]/40 px-2 py-1 font-sans text-xs font-semibold text-[#d4af37] transition-colors hover:bg-[#d4af37]/10 disabled:opacity-50"
-              >
-                {claimPending ? '…' : 'Claim'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      )}
 
       {isLoading ? (
         <div className="py-12 text-center">

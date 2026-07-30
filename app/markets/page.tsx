@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { SiteNav } from "@/components/landing/site-nav"
 import { SiteFooter } from "@/components/landing/site-footer"
-import { MarketsOverview } from "@/components/landing/markets-overview"
+import MarketsOverview from "@/components/landing/markets-overview"
 import { MarketsList } from "@/components/landing/markets-list"
 import { WagerMarketStats } from "@/components/markets/wager-market-stats"
 import { OpenWagers } from "@/components/markets/open-wagers"
