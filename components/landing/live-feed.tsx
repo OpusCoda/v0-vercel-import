@@ -120,7 +120,6 @@ function FeedCard({ event }: { event: FeedEvent }) {
     </article>
   )
 }
-}
 
 export function LiveFeed() {
   const [events, setEvents] = useState<FeedEvent[]>([])
