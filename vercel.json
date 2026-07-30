@@ -5,7 +5,8 @@
   },
   "crons": [
     { "path": "/api/stats", "schedule": "* * * * *" },
-    { "path": "/api/prices", "schedule": "* * * * *" }
+    { "path": "/api/prices", "schedule": "* * * * *" },
+    { "path": "/api/cron/fetch-x-posts", "schedule": "0 * * * *" }
   ],
   "headers": [
     {
