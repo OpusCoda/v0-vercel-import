@@ -53,17 +53,7 @@ export default function MarketsPage() {
               </button>
             ))}
           </div>
-          {activeTab === 'all' && (
-            <div className="mt-3 flex justify-center">
-              <a
-                href="#markets-explainer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[#2a2a35] px-4 py-2 font-sans text-sm font-medium text-[#b8b6b1] transition-colors hover:border-[#d4af37]/50 hover:text-[#e8e6e3]"
-              >
-                What is this?
-                <span aria-hidden="true">↓</span>
-              </a>
-            </div>
-          )}
+
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-6">
