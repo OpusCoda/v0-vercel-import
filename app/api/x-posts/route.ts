@@ -3,25 +3,13 @@ import { NextResponse } from "next/server"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-interface XPost {
+interface XPostRow {
   id: string
   handle: string
   name: string
   text: string
   url: string
   created_at: string
-}
-
-interface XPostResponse {
-  posts: Array<{
-    id: string
-    handle: string
-    name: string
-    text: string
-    url: string
-    timestamp: string
-  }>
-  errors?: string[]
 }
 
 export const dynamic = "force-dynamic"
@@ -34,8 +22,6 @@ async function triggerCronFetch() {
       console.warn("[x-posts] CRON_SECRET not set, skipping on-demand fetch")
       return
     }
-
-    // Call the cron endpoint
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/cron/fetch-x-posts`,
       {
@@ -46,7 +32,6 @@ async function triggerCronFetch() {
         cache: "no-store",
       }
     )
-
     if (!response.ok) {
       console.warn(`[x-posts] Cron fetch returned ${response.status}`)
     }
@@ -55,7 +40,7 @@ async function triggerCronFetch() {
   }
 }
 
-export async function GET(): Promise<NextResponse<XPostResponse>> {
+export async function GET() {
   try {
     // Trigger cron fetch in background (don't await)
     triggerCronFetch().catch(() => {})
@@ -78,39 +63,34 @@ export async function GET(): Promise<NextResponse<XPostResponse>> {
     }
 
     // Fetch posts from database
-    const posts = await sql<XPost>`
+    const rows = (await sql`
       SELECT id, handle, name, text, url, created_at
       FROM x_posts
       ORDER BY created_at DESC
       LIMIT 20
-    `
+    `) as XPostRow[]
 
-    const response: XPostResponse = {
-      posts: posts.map((post) => ({
-        id: post.id,
+    // Return a bare array in the nested { content } shape the client expects.
+    const feed = rows.map((post) => ({
+      id: post.id,
+      type: "x_post" as const,
+      timestamp: new Date(post.created_at).toISOString(),
+      content: {
         handle: post.handle,
         name: post.name,
         text: post.text,
         url: post.url,
-        timestamp: new Date(post.created_at).toISOString(),
-      })),
-    }
+      },
+    }))
 
-    return NextResponse.json(response, {
+    return NextResponse.json(feed, {
       headers: {
         "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
       },
     })
   } catch (error) {
     console.error("[x-posts] Database error:", error instanceof Error ? error.message : String(error))
-
-    // Return empty posts on error rather than breaking
-    return NextResponse.json(
-      {
-        posts: [],
-        errors: ["Failed to fetch posts from database"],
-      },
-      { status: 200 }
-    )
+    // Return an empty array on error rather than breaking the client.
+    return NextResponse.json([], { status: 200 })
   }
 }

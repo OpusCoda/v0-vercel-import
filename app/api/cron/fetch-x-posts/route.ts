@@ -3,7 +3,11 @@ import { NextResponse } from "next/server"
 
 const sql = neon(process.env.DATABASE_URL!)
 
-interface XApiPost {
+// Handles to track. vxtwitter returns the single latest tweet per handle,
+// so we accumulate them in the database over time to build a feed history.
+const HANDLES = ["OpusEco", "RichardHeartWin", "CryptoCoffee369"]
+
+interface FetchedPost {
   id: string
   handle: string
   name: string
@@ -12,85 +16,121 @@ interface XApiPost {
   timestamp: string
 }
 
-async function fetchXPosts(): Promise<XApiPost[]> {
+// vxtwitter returns ONE tweet per handle as a flat object, not an array.
+// Shape (partial): { tweetID, text, user_name, user_screen_name, date, date_epoch }
+async function fetchLatestTweet(handle: string): Promise<FetchedPost | null> {
   try {
-    const response = await fetch("/api/x-posts", {
-      method: "GET",
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
+
+    const res = await fetch(`https://api.vxtwitter.com/${handle}`, {
       cache: "no-store",
-    })
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout))
 
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.error ?? "Failed to fetch X posts")
+    if (!res.ok) {
+      console.warn(`[cron/fetch-x-posts] ${handle}: HTTP ${res.status}`)
+      return null
     }
 
-    return data.posts ?? []
+    const data = await res.json()
+
+    // vxtwitter uses tweetID; fall back to id if present.
+    const tweetId: string | undefined = data.tweetID ?? data.id
+    const text: string | undefined = data.text
+    if (!tweetId || !text) {
+      console.warn(`[cron/fetch-x-posts] ${handle}: unexpected shape`, Object.keys(data))
+      return null
+    }
+
+    const screenName: string = data.user_screen_name ?? handle
+    const name: string = data.user_name ?? handle
+
+    // date_epoch is seconds; date is a string. Prefer epoch for accuracy.
+    const timestamp = data.date_epoch
+      ? new Date(Number(data.date_epoch) * 1000).toISOString()
+      : data.date
+      ? new Date(data.date).toISOString()
+      : new Date().toISOString()
+
+    return {
+      id: String(tweetId),
+      handle: screenName,
+      name,
+      text,
+      url: `https://x.com/${screenName}/status/${tweetId}`,
+      timestamp,
+    }
   } catch (err) {
-    console.error("[cron/fetch-x-posts] Failed to fetch X posts:", err)
-    return []
+    console.error(
+      `[cron/fetch-x-posts] ${handle}: fetch failed:`,
+      err instanceof Error ? err.message : String(err)
+    )
+    return null
   }
 }
 
 async function checkAndFetchPosts(): Promise<{ success: boolean; message: string; count: number }> {
   try {
-    // Check if we need to fetch (last fetch is older than 5 minutes)
-    const result = await sql`
-      SELECT fetched_at FROM x_posts 
-      ORDER BY fetched_at DESC 
-      LIMIT 1
+    // Ensure the table exists with the columns this cron writes.
+    await sql`
+      CREATE TABLE IF NOT EXISTS x_posts (
+        id VARCHAR(255) PRIMARY KEY,
+        handle VARCHAR(255) NOT NULL,
+        name VARCHAR(255),
+        text TEXT,
+        url VARCHAR(500),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
     `
 
-    const lastFetch = result.length > 0 ? new Date(result[0].fetched_at) : null
-    const now = new Date()
-    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000)
-
-    if (lastFetch && lastFetch > fiveMinutesAgo) {
-      return {
-        success: true,
-        message: "Posts were fetched recently, skipping",
-        count: 0,
+    // Throttle: skip if we fetched within the last 5 minutes.
+    const recent = await sql`
+      SELECT fetched_at FROM x_posts
+      ORDER BY fetched_at DESC
+      LIMIT 1
+    `
+    if (recent.length > 0) {
+      const lastFetch = new Date(recent[0].fetched_at as string)
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+      if (lastFetch > fiveMinutesAgo) {
+        return { success: true, message: "Fetched recently, skipping", count: 0 }
       }
     }
 
-    // Fetch new posts from X
-    const posts = await fetchXPosts()
+    // Fetch the latest tweet from each handle in parallel.
+    const results = await Promise.all(HANDLES.map((h) => fetchLatestTweet(h)))
+    const posts = results.filter((p): p is FetchedPost => p !== null)
 
     if (posts.length === 0) {
-      return {
-        success: true,
-        message: "No new posts fetched",
-        count: 0,
-      }
+      return { success: true, message: "No posts fetched", count: 0 }
     }
 
-    // Upsert posts (insert or update if ID exists)
+    // Upsert. On conflict (same tweet id) just refresh fetched_at, keeping
+    // the original created_at so ordering by recency stays stable.
     for (const post of posts) {
       await sql`
         INSERT INTO x_posts (id, handle, name, text, url, created_at, fetched_at)
         VALUES (${post.id}, ${post.handle}, ${post.name}, ${post.text}, ${post.url}, ${post.timestamp}, NOW())
-        ON CONFLICT (id) 
+        ON CONFLICT (id)
         DO UPDATE SET fetched_at = NOW()
       `
     }
 
-    // Delete all but newest 20 posts
+    // Keep only the newest 20 by created_at.
     await sql`
-      DELETE FROM x_posts 
+      DELETE FROM x_posts
       WHERE id NOT IN (
-        SELECT id FROM x_posts 
-        ORDER BY created_at DESC 
+        SELECT id FROM x_posts
+        ORDER BY created_at DESC
         LIMIT 20
       )
     `
 
-    return {
-      success: true,
-      message: `Fetched and stored ${posts.length} posts`,
-      count: posts.length,
-    }
+    return { success: true, message: `Stored ${posts.length} posts`, count: posts.length }
   } catch (err) {
-    console.error("[cron/fetch-x-posts] Error:", err)
+    console.error("[cron/fetch-x-posts] Error:", err instanceof Error ? err.message : String(err))
     return {
       success: false,
       message: err instanceof Error ? err.message : "Unknown error",
@@ -100,12 +140,10 @@ async function checkAndFetchPosts(): Promise<{ success: boolean; message: string
 }
 
 export async function GET(request: Request) {
-  // Verify this is from Vercel cron or internal
   const auth = request.headers.get("authorization")
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-
   const result = await checkAndFetchPosts()
   return NextResponse.json(result)
 }
