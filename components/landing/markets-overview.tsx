@@ -72,6 +72,7 @@ export function MarketsOverview() {
       <div className="grid gap-6 lg:grid-cols-2">
         {products.map((product) => (
           <article
+            id={`${product.name.toLowerCase().replace(' ', '-')}-explainer`}
             key={product.name}
             className="flex flex-col rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 transition-colors hover:border-[#d4af37]/30 md:p-8"
           >
@@ -84,8 +85,24 @@ export function MarketsOverview() {
                   <product.Icon className="h-7 w-7" style={{ color: product.accent }} aria-hidden />
                 </span>
                 <div>
-                  <h3 className="font-serif text-2xl font-bold" style={{ color: product.accent }}>
+                  <h3 className="flex items-center gap-1.5 font-serif text-2xl font-bold" style={{ color: product.accent }}>
                     {product.name}
+                    <a
+                      href={`#${product.name.toLowerCase().replace(' ', '-')}-explainer`}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        document.getElementById(`${product.name.toLowerCase().replace(' ', '-')}-explainer`)?.scrollIntoView({
+                          behavior: 'smooth',
+                        })
+                      }}
+                    >
+                      <div className="group relative">
+                        <QuestionMarkIcon />
+                        <div className="absolute bottom-full left-1/2 mb-2 hidden w-48 -translate-x-1/2 rounded-lg bg-[#2a2a35]/90 p-2 text-center text-xs text-[#e8e6e3] group-hover:block">
+                          Click to learn what this is
+                        </div>
+                      </div>
+                    </a>
                   </h3>
                   <p className="font-sans text-sm text-[#9ca3af]">{product.tagline}</p>
                 </div>
