@@ -1,70 +1,18 @@
 "use client"
 import { useState, useMemo } from "react"
-import { Search, X } from "lucide-react"
+import { Search } from "lucide-react"
+import { MarketCard } from "./market-card"
 import { QuestionMarkIcon } from "@/components/question-mark-icon"
-import { MarketCard, type MarketCardProps } from "./market-card"
 import { useAllWagers } from "@/hooks/useAllWagers"
 import { wagerToCard, type P2PCardData } from "@/lib/wager-to-card"
+
 type Category = "Crypto" | "Politics" | "Sports" | "Macro" | "PulseChain" | "Misc"
-type P2PStatus = "active" | "open"
 type MarketsVariant = "all" | "p2p" | "probability"
-interface ProbabilityMarket {
-  type: "probability"
-  icon: string
-  title: string
-  category: Category
-  outcomes: Array<{ label: string; odds: number }>
-}
-// Mock Probability Shop markets (always "Active") — separate PredictionMarket contract, still mock for now.
-const probabilityMarkets: ProbabilityMarket[] = [
-  {
-    type: "probability",
-    icon: "🏆",
-    title: "2026 World Cup Champion",
-    category: "Sports",
-    outcomes: [
-      { label: "France", odds: 29 },
-      { label: "Argentina", odds: 20 },
-      { label: "Spain", odds: 11 },
-    ],
-  },
-  {
-    type: "probability",
-    icon: "🏦",
-    title: "July Fed funds decision",
-    category: "Macro",
-    outcomes: [
-      { label: "No change", odds: 84 },
-      { label: "Increase", odds: 13 },
-      { label: "Decrease", odds: 3 },
-    ],
-  },
-  {
-    type: "probability",
-    icon: "📊",
-    title: "June CPI year-over-year",
-    category: "Macro",
-    outcomes: [
-      { label: "Below 3.8%", odds: 50 },
-      { label: "Exactly 3.8%", odds: 30 },
-      { label: "Above 3.8%", odds: 28 },
-    ],
-  },
-  {
-    type: "probability",
-    icon: "₿",
-    title: "BTC price range on Jul 1 at 1:00 PM?",
-    category: "Crypto",
-    outcomes: [
-      { label: "58435 to 60820", odds: 90 },
-      { label: "Below 58435", odds: 31 },
-      { label: "Above 60820", odds: 29 },
-    ],
-  },
-]
+
 const CATEGORIES: Category[] = ["Crypto", "Politics", "Sports", "Macro", "PulseChain", "Misc"]
 const MIN_PRICE = 100_000
 const MAX_PRICE = 1_000_000_000
+
 // Format large numbers with K, M, B suffixes
 function formatPrice(value: number): string {
   if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(0) + "B"
@@ -72,33 +20,21 @@ function formatPrice(value: number): string {
   if (value >= 1_000) return (value / 1_000).toFixed(0) + "K"
   return value.toString()
 }
-// Parse formatted strings back to numbers
-function parsePrice(str: string): number {
-  const num = parseFloat(str)
-  if (str.endsWith("B")) return num * 1_000_000_000
-  if (str.endsWith("M")) return num * 1_000_000
-  if (str.endsWith("K")) return num * 1_000
-  return num
-}
+
 export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategories, setSelectedCategories] = useState<Set<Category>>(new Set())
   const [p2pFilter, setP2PFilter] = useState<"All" | "Active" | "Open" | "Completed">("All")
   const [priceMin, setPriceMin] = useState(MIN_PRICE)
   const [priceMax, setPriceMax] = useState(MAX_PRICE)
+
   const showProbability = variant !== "p2p"
   const showP2P = variant !== "probability"
+
   // Live P2P wagers from chain (open wagers only — see note below).
   const { wagers, isLoading: wagersLoading } = useAllWagers()
   const p2pMarkets: P2PCardData[] = useMemo(() => wagers.map(wagerToCard), [wagers])
-  // Filter Probability Shop markets
-  const filteredProbabilityMarkets = useMemo(() => {
-    return probabilityMarkets.filter((market) => {
-      const matchesSearch = market.title.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesCategory = selectedCategories.size === 0 || selectedCategories.has(market.category)
-      return matchesSearch && matchesCategory
-    })
-  }, [searchQuery, selectedCategories])
+
   // Filter P2P Market
   const filteredP2PMarkets = useMemo(() => {
     return p2pMarkets.filter((market) => {
@@ -118,6 +54,7 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
       return matchesSearch && matchesCategory && matchesStatus && matchesPrice
     })
   }, [p2pMarkets, searchQuery, selectedCategories, p2pFilter, priceMin, priceMax])
+
   const toggleCategory = (cat: Category) => {
     const newCats = new Set(selectedCategories)
     if (newCats.has(cat)) {
@@ -127,6 +64,7 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
     }
     setSelectedCategories(newCats)
   }
+
   return (
     <section className="mx-auto max-w-7xl px-4 pt-4 pb-16 md:px-6 md:pt-6 md:pb-20">
       {/* Search and Filter Bar */}
@@ -167,13 +105,14 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Probability Shop</h3>
-                
-                  <a href="#probability-shop-explainer"
+                <a
+                  href="#probability-shop-explainer"
                   onClick={(e) => {
                     e.preventDefault()
                     document.getElementById("probability-shop-explainer")?.scrollIntoView({ behavior: "smooth" })
                   }}
                   className="group relative flex"
+                  aria-label="Learn about the Probability Shop"
                 >
                   <QuestionMarkIcon className="h-3.5 w-3.5 text-[#7c7a76] hover:text-[#d4af37] transition-colors" />
                   <span className="absolute bottom-full left-1/2 mb-2 hidden w-44 -translate-x-1/2 rounded-lg bg-[#2a2a35]/95 p-2 text-center text-xs text-[#e8e6e3] group-hover:block">
@@ -183,24 +122,12 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
               </div>
               <p className="font-sans text-xs text-[#7c7a76]">Prediction market</p>
             </div>
-            <span className="font-sans text-xs text-[#7c7a76]">{filteredProbabilityMarkets.length} markets</span>
           </div>
           <div className={`flex flex-col gap-3 max-h-200 overflow-y-auto pr-2 ${variant === "probability" ? "lg:grid lg:grid-cols-2 lg:gap-3" : ""}`}>
-            {filteredProbabilityMarkets.length > 0 ? (
-              filteredProbabilityMarkets.map((market, idx) => (
-                <MarketCard
-                  key={idx}
-                  type="probability"
-                  icon={market.icon}
-                  title={market.title}
-                  outcomes={market.outcomes}
-                />
-              ))
-            ) : (
-              <div className="py-8 text-center text-[#7c7a76]">
-                <p className="font-sans text-sm">No markets match your search</p>
-              </div>
-            )}
+            <div className="py-8 text-center text-[#7c7a76]">
+              <p className="font-sans text-sm">No markets open yet</p>
+              <p className="mt-1 font-sans text-xs">Prediction markets launch with the PredictionMarket contract.</p>
+            </div>
           </div>
         </div>
         )}
@@ -211,13 +138,14 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Outcome Exchange</h3>
-                
-                  <a href="#outcome-exchange-explainer"
+                <a
+                  href="#outcome-exchange-explainer"
                   onClick={(e) => {
                     e.preventDefault()
                     document.getElementById("outcome-exchange-explainer")?.scrollIntoView({ behavior: "smooth" })
                   }}
                   className="group relative flex"
+                  aria-label="Learn about the Outcome Exchange"
                 >
                   <QuestionMarkIcon className="h-3.5 w-3.5 text-[#7c7a76] hover:text-[#d4af37] transition-colors" />
                   <span className="absolute bottom-full left-1/2 mb-2 hidden w-44 -translate-x-1/2 rounded-lg bg-[#2a2a35]/95 p-2 text-center text-xs text-[#e8e6e3] group-hover:block">

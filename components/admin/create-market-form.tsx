@@ -237,14 +237,14 @@ export function CreateMarketForm() {
             <p>
               <span className="font-semibold text-red-400">Avoid — open-window questions.</span>{' '}
               The outcome can become known at any point in the window, months before your
-              deadline. e.g. &ldquo;Will sir Richard of Heartshire livestream at some point in 2026?&rdquo; or
+              deadline. e.g. &ldquo;Will Richard Heart livestream at some point in 2026?&rdquo; or
               &ldquo;Will the aforementioned person announce another sacrifice this year?&rdquo; There is no safe closing time
               for these. Better to restructure them into a specific moment (or to not create them at all).
             </p>
             <p>
               <span className="font-semibold text-[#e8e6e3]">Write objective resolution criteria.</span>{' '}
               State the exact source and threshold (e.g. &ldquo;PLS/USD per CoinGecko at the
-              stated timestamp ± $0.0001&rdquo;). Vague criteria might lead to disputes down the road.
+              stated timestamp ≥$0.0001&rdquo;). Vague criteria might lead to disputes down the road.
             </p>
             <p>
               <span className="font-semibold text-[#e8e6e3]">Leave room between close and resolution.</span>{' '}
