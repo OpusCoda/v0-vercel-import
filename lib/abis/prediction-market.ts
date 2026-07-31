@@ -1,0 +1,61 @@
+export const predictionMarketAbi = [
+  {
+    type: "function",
+    name: "owner",
+    inputs: [],
+    outputs: [{ type: "address", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "isAdmin",
+    inputs: [{ type: "address", name: "account" }],
+    outputs: [{ type: "bool", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "createMarket",
+    inputs: [
+      { type: "string", name: "question" },
+      { type: "string", name: "resolutionCriteria" },
+      { type: "string", name: "source" },
+      { type: "uint8", name: "category" },
+      { type: "uint256", name: "bettingDeadline" },
+      { type: "uint256", name: "resolutionDeadline" },
+      { type: "uint256", name: "seedPerSide" },
+    ],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "marketCount",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getMarket",
+    inputs: [{ type: "uint256", name: "marketId" }],
+    outputs: [
+      {
+        type: "tuple",
+        name: "",
+        components: [
+          { type: "string", name: "question" },
+          { type: "string", name: "resolutionCriteria" },
+          { type: "string", name: "source" },
+          { type: "uint8", name: "category" },
+          { type: "uint256", name: "bettingDeadline" },
+          { type: "uint256", name: "resolutionDeadline" },
+          { type: "uint256", name: "seedPerSide" },
+          { type: "address", name: "creator" },
+          { type: "uint256", name: "createdAt" },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+] as const

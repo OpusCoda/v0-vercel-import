@@ -1,6 +1,5 @@
 import type { LucideIcon } from "lucide-react"
 import { Swords, Users, User, Gavel, Coins, TrendingUp, Percent, ChartCandlestick } from "lucide-react"
-import { QuestionMarkIcon } from '@/components/question-mark-icon'
 
 type Product = {
   name: string
@@ -75,7 +74,7 @@ export default function MarketsOverview() {
           <article
             id={`${product.name.toLowerCase().replace(' ', '-')}-explainer`}
             key={product.name}
-            className="flex flex-col rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 transition-colors hover:border-[#d4af37]/30 md:p-8"
+            className="scroll-mt-24 flex flex-col rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 transition-colors hover:border-[#d4af37]/30 md:p-8"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -86,27 +85,9 @@ export default function MarketsOverview() {
                   <product.Icon className="h-7 w-7" style={{ color: product.accent }} aria-hidden />
                 </span>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-serif text-2xl font-bold" style={{ color: product.accent }}>
-                      {product.name}
-                    </h3>
-                    <a
-                      href={`#${product.name.toLowerCase().replace(' ', '-')}-explainer`}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        document.getElementById(`${product.name.toLowerCase().replace(' ', '-')}-explainer`)?.scrollIntoView({
-                          behavior: 'smooth',
-                        })
-                      }}
-                    >
-                      <div className="group relative">
-                        <QuestionMarkIcon className="h-4 w-4 text-[#9ca3af] hover:text-[#d8b13d] transition-colors" />
-                        <div className="absolute bottom-full left-1/2 mb-2 hidden w-48 -translate-x-1/2 rounded-lg bg-[#2a2a35]/90 p-2 text-center text-xs text-[#e8e6e3] group-hover:block">
-                          Click to learn what this is
-                        </div>
-                      </div>
-                    </a>
-                  </div>
+                  <h3 className="font-serif text-2xl font-bold" style={{ color: product.accent }}>
+                    {product.name}
+                  </h3>
                   <p className="font-sans text-sm text-[#9ca3af]">{product.tagline}</p>
                 </div>
               </div>
