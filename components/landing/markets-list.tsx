@@ -4,7 +4,9 @@ import { Search } from "lucide-react"
 import { MarketCard } from "./market-card"
 import { QuestionMarkIcon } from "@/components/question-mark-icon"
 import { useAllWagers } from "@/hooks/useAllWagers"
+import { useAllMarkets } from "@/hooks/useAllMarkets"
 import { wagerToCard, type P2PCardData } from "@/lib/wager-to-card"
+import { marketToCard, type ProbabilityCardData } from "@/lib/market-to-card"
 
 type Category = "Crypto" | "Politics" | "Sports" | "Macro" | "PulseChain" | "Misc"
 type MarketsVariant = "all" | "p2p" | "probability"
@@ -35,6 +37,10 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
   const { wagers, isLoading: wagersLoading } = useAllWagers()
   const p2pMarkets: P2PCardData[] = useMemo(() => wagers.map(wagerToCard), [wagers])
 
+  // Live Probability Shop markets from chain
+  const { markets, isLoading: marketsLoading } = useAllMarkets()
+  const probabilityMarkets: ProbabilityCardData[] = useMemo(() => markets.map(marketToCard), [markets])
+
   // Filter P2P Market
   const filteredP2PMarkets = useMemo(() => {
     return p2pMarkets.filter((market) => {
@@ -54,6 +60,17 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
       return matchesSearch && matchesCategory && matchesStatus && matchesPrice
     })
   }, [p2pMarkets, searchQuery, selectedCategories, p2pFilter, priceMin, priceMax])
+
+  // Filter Probability markets
+  const filteredProbabilityMarkets = useMemo(() => {
+    return probabilityMarkets.filter((market) => {
+      const matchesSearch =
+        market.question.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesCategory =
+        selectedCategories.size === 0 || selectedCategories.has(market.category as Category)
+      return matchesSearch && matchesCategory
+    })
+  }, [probabilityMarkets, searchQuery, selectedCategories])
 
   const toggleCategory = (cat: Category) => {
     const newCats = new Set(selectedCategories)
@@ -124,9 +141,19 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
             </div>
           </div>
           <div className={`flex flex-col gap-3 max-h-200 overflow-y-auto pr-2 ${variant === "probability" ? "lg:grid lg:grid-cols-2 lg:gap-3" : ""}`}>
-            <div className="py-8 text-center text-[#7c7a76]">
-              <p className="font-sans text-sm">No markets open yet</p>
-            </div>
+            {marketsLoading ? (
+              <div className="py-8 text-center text-[#7c7a76]">
+                <p className="font-sans text-sm">Loading markets…</p>
+              </div>
+            ) : filteredProbabilityMarkets.length === 0 ? (
+              <div className="py-8 text-center text-[#7c7a76]">
+                <p className="font-sans text-sm">No markets open yet</p>
+              </div>
+            ) : (
+              filteredProbabilityMarkets.map((market) => (
+                <MarketCard key={market.id} market={market} type="probability" />
+              ))
+            )}
           </div>
         </div>
         )}
