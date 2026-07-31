@@ -126,7 +126,6 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
           <div className={`flex flex-col gap-3 max-h-200 overflow-y-auto pr-2 ${variant === "probability" ? "lg:grid lg:grid-cols-2 lg:gap-3" : ""}`}>
             <div className="py-8 text-center text-[#7c7a76]">
               <p className="font-sans text-sm">No markets open yet</p>
-              <p className="mt-1 font-sans text-xs">Prediction markets launch with the PredictionMarket contract.</p>
             </div>
           </div>
         </div>
