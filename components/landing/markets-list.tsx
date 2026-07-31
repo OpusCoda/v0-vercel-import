@@ -62,16 +62,15 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
     })
   }, [p2pMarkets, searchQuery, selectedCategories, p2pFilter, priceMin, priceMax])
 
-  // Filter Probability markets
+  // Filter Probability markets — the probability card only has `title` (no `question` or `category`)
   const filteredProbabilityMarkets = useMemo(() => {
     return probabilityMarkets.filter((market) => {
+      if (market.type !== "probability") return false
       const matchesSearch =
-        market.question.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesCategory =
-        selectedCategories.size === 0 || selectedCategories.has(market.category as Category)
-      return matchesSearch && matchesCategory
+        !searchQuery || market.title.toLowerCase().includes(searchQuery.toLowerCase())
+      return matchesSearch
     })
-  }, [probabilityMarkets, searchQuery, selectedCategories])
+  }, [probabilityMarkets, searchQuery])
 
   const toggleCategory = (cat: Category) => {
     const newCats = new Set(selectedCategories)
