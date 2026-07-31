@@ -35,6 +35,30 @@ export const predictionMarketAbi = [
     outputs: [{ type: "uint256", name: "" }],
     stateMutability: "view",
   },
+  // ─── Add these entries to the predictionMarketAbi array ───
+
+  {
+    type: "function",
+    name: "getStatus",
+    inputs: [{ type: "uint256", name: "marketId" }],
+    outputs: [{ type: "uint8", name: "" }], // enum Status: 0 Betting, 1 AwaitingResolution, 2 ChallengeWindow, 3 Resolved, 4 Voided
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getProposal",
+    inputs: [{ type: "uint256", name: "marketId" }],
+    outputs: [
+      { type: "address", name: "proposer" },
+      { type: "bool", name: "proposedOutcome" },
+      { type: "uint256", name: "proposalTime" },
+      { type: "uint256", name: "expiresAt" },
+      { type: "bool", name: "disputed" },
+      { type: "uint256", name: "disputerCount" },
+      { type: "uint256", name: "totalBondsAtStake" },
+    ],
+    stateMutability: "view",
+  },
   {
     type: "function",
     name: "getMarket",
