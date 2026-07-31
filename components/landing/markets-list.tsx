@@ -6,7 +6,8 @@ import { QuestionMarkIcon } from "@/components/question-mark-icon"
 import { useAllWagers } from "@/hooks/useAllWagers"
 import { useAllMarkets } from "@/hooks/useAllMarkets"
 import { wagerToCard, type P2PCardData } from "@/lib/wager-to-card"
-import { marketToCard, type ProbabilityCardData } from "@/lib/market-to-card"
+import { marketToCard } from "@/lib/market-to-card"
+import type { MarketCardProps } from "@/components/landing/market-card"
 
 type Category = "Crypto" | "Politics" | "Sports" | "Macro" | "PulseChain" | "Misc"
 type MarketsVariant = "all" | "p2p" | "probability"
@@ -39,7 +40,7 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
 
   // Live Probability Shop markets from chain
   const { markets, isLoading: marketsLoading } = useAllMarkets()
-  const probabilityMarkets: ProbabilityCardData[] = useMemo(() => markets.map(marketToCard), [markets])
+  const probabilityMarkets: MarketCardProps[] = useMemo(() => markets.map(marketToCard), [markets])
 
   // Filter P2P Market
   const filteredP2PMarkets = useMemo(() => {
@@ -150,8 +151,8 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
                 <p className="font-sans text-sm">No markets open yet</p>
               </div>
             ) : (
-              filteredProbabilityMarkets.map((market) => (
-                <MarketCard key={market.id} market={market} type="probability" />
+              filteredProbabilityMarkets.map((market, idx) => (
+                <MarketCard key={idx} {...market} />
               ))
             )}
           </div>
