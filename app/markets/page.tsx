@@ -17,7 +17,7 @@ export default function MarketsPage() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'all', label: 'All' },
-    { id: 'p2p', label: 'P2P Wagers' },
+    { id: 'p2p', label: 'Outcome Exchange' },
     { id: 'probability', label: 'Probability Shop' },
     { id: 'my-wagers', label: 'My Positions' },
   ]
