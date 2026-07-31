@@ -77,14 +77,9 @@ export function CreateMarketForm() {
     }
   }, [seedPerSideInput])
 
-  // Live minimum liquidity per side, read from the contract.
-  const { data: minPerSideData } = useReadContract({
-    address: PREDICTION_MARKET_ADDRESS,
-    abi: predictionMarketAbi,
-    functionName: 'MIN_LIQUIDITY_PER_SIDE',
-  })
-
-  const minPerSide = (minPerSideData as bigint | undefined) ?? FALLBACK_MIN_PER_SIDE
+  // Minimum liquidity per side. Hardcoded — this is an admin-only form and the
+  // value rarely changes; no need to read it from the contract.
+  const minPerSide = FALLBACK_MIN_PER_SIDE
   // Whole-token string for the input's min attribute and helper text.
   const minPerSideDisplay = useMemo(() => {
     try {
