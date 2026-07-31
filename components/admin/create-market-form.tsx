@@ -46,6 +46,27 @@ function toUnixSeconds(value: string): bigint | undefined {
   return BigInt(Math.floor(milliseconds / 1000))
 }
 
+// Show the UTC equivalent of a local datetime-local value, so the admin can
+// confirm the on-chain deadline matches the UTC time stated in the question.
+function toUtcLabel(value: string): string {
+  if (!value) return ''
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleString('en-GB', {
+    timeZone: 'UTC',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }) + ' UTC'
+}
+
+const LOCAL_TZ =
+  typeof Intl !== 'undefined'
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone
+    : 'local time'
+
 export function CreateMarketForm() {
   const { address } = useAccount()
 
@@ -195,6 +216,44 @@ export function CreateMarketForm() {
       >
         <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Create YES/NO Market</h2>
 
+        {/* Guidelines */}
+        <details className="rounded-lg border border-[#2a2a35] bg-[#0d0d12] p-4">
+          <summary className="cursor-pointer font-sans text-sm font-semibold text-[#d4af37]">
+            Guidelines — read before creating a market
+          </summary>
+          <div className="mt-3 space-y-3 font-sans text-sm leading-relaxed text-[#b8b6b1]">
+            <p>
+              <span className="font-semibold text-[#e8e6e3]">Set betting to close before the outcome can be known.</span>{' '}
+              Betting is blocked once the closing time passes, so the outcome must remain
+              genuinely unknown until then. If the answer can become clear while betting is
+              still open, people will trade against a settled result.
+            </p>
+            <p>
+              <span className="font-semibold text-green-400">Good — point-in-time questions.</span>{' '}
+              The outcome materialises at one predictable moment. Close betting just before it.
+              e.g. &ldquo;Will BTC be above $150k on 1 Jan 2027 at 00:00 UTC?&rdquo; or
+              &ldquo;Who wins the 2026 World Cup final?&rdquo; (close at kickoff).
+            </p>
+            <p>
+              <span className="font-semibold text-red-400">Avoid — open-window questions.</span>{' '}
+              The outcome can become known at any point in the window, months before your
+              deadline. e.g. &ldquo;Will sir Richard of Heartshire livestream at some point in 2026?&rdquo; or
+              &ldquo;Will the aforementioned person announce another sacrifice this year?&rdquo; There is no safe closing time
+              for these. Better to restructure them into a specific moment (or to not create them at all).
+            </p>
+            <p>
+              <span className="font-semibold text-[#e8e6e3]">Write objective resolution criteria.</span>{' '}
+              State the exact source and threshold (e.g. &ldquo;PLS/USD per CoinGecko at the
+              stated timestamp ± $0.0001&rdquo;). Vague criteria might lead to disputes down the road.
+            </p>
+            <p>
+              <span className="font-semibold text-[#e8e6e3]">Leave room between close and resolution.</span>{' '}
+              Resolution must open after betting closes, with enough gap that the outcome is
+              definitively determinable by then.
+            </p>
+          </div>
+        </details>
+
         {/* Question */}
         <div>
           <label className="block font-sans text-sm font-semibold text-[#e8e6e3] mb-2">
@@ -204,7 +263,7 @@ export function CreateMarketForm() {
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="e.g., Will BTC trade above $150,000 before 1 January 2027?"
+            placeholder="e.g., Will BTC trade above $150,000 on 1 January 2027?"
             className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#d4af37] focus:outline-none"
           />
         </div>
@@ -212,7 +271,7 @@ export function CreateMarketForm() {
         {/* Resolution Criteria */}
         <div>
           <label className="block font-sans text-sm font-semibold text-[#e8e6e3] mb-2">
-            Resolution Criteria
+            Resolution criteria
           </label>
           <textarea
             value={resolutionCriteria}
@@ -226,7 +285,7 @@ export function CreateMarketForm() {
         {/* Resolution Source */}
         <div>
           <label className="block font-sans text-sm font-semibold text-[#e8e6e3] mb-2">
-            Resolution Source
+            Resolution source
           </label>
           <input
             type="text"
@@ -259,7 +318,7 @@ export function CreateMarketForm() {
           {/* Betting Deadline */}
           <div>
             <label className="block font-sans text-sm font-semibold text-[#e8e6e3] mb-2">
-              Betting Closes
+              Betting closes <span className="font-normal text-[#7c7a76]">({LOCAL_TZ})</span>
             </label>
             <input
               type="datetime-local"
@@ -267,12 +326,15 @@ export function CreateMarketForm() {
               onChange={(e) => setBettingDeadlineInput(e.target.value)}
               className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] focus:border-[#d4af37] focus:outline-none"
             />
+            {bettingDeadlineInput && (
+              <p className="mt-1 font-sans text-xs text-[#7c7a76]">= {toUtcLabel(bettingDeadlineInput)}</p>
+            )}
           </div>
 
           {/* Resolution Deadline */}
           <div>
             <label className="block font-sans text-sm font-semibold text-[#e8e6e3] mb-2">
-              Resolution Opens
+              Resolution opens <span className="font-normal text-[#7c7a76]">({LOCAL_TZ})</span>
             </label>
             <input
               type="datetime-local"
@@ -280,13 +342,16 @@ export function CreateMarketForm() {
               onChange={(e) => setResolutionDeadlineInput(e.target.value)}
               className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] focus:border-[#d4af37] focus:outline-none"
             />
+            {resolutionDeadlineInput && (
+              <p className="mt-1 font-sans text-xs text-[#7c7a76]">= {toUtcLabel(resolutionDeadlineInput)}</p>
+            )}
           </div>
         </div>
 
         {/* Initial Liquidity */}
         <div>
           <label className="block font-sans text-sm font-semibold text-[#e8e6e3] mb-2">
-            Initial Liquidity per Side
+            Initial liquidity per side
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -320,7 +385,7 @@ export function CreateMarketForm() {
         {!authorized && address && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3">
             <p className="font-sans text-sm text-red-400">
-              This wallet is not authorized to create markets.
+              This wallet is regrettably not authorized to create markets.
             </p>
           </div>
         )}
@@ -354,7 +419,7 @@ export function CreateMarketForm() {
         {/* Success */}
         {showSuccess && (
           <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3">
-            <p className="font-sans text-sm text-green-400">✓ Market created successfully!</p>
+            <p className="font-sans text-sm text-green-400">✓ A market has been created!</p>
           </div>
         )}
 
