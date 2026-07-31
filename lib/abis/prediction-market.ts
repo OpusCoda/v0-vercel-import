@@ -28,6 +28,22 @@ export const predictionMarketAbi = [
     outputs: [{ type: "uint256", name: "" }],
     stateMutability: "payable",
   },
+  // ─── Add to predictionMarketAbi (before the closing `] as const`) ───
+
+  {
+    type: "function",
+    name: "addAdmin",
+    inputs: [{ type: "address", name: "account" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "removeAdmin",
+    inputs: [{ type: "address", name: "account" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
   {
     type: "function",
     name: "marketCount",

@@ -1,13 +1,3 @@
-// Full ABI for the OutcomeExchange (Peer-to-peer wager escrow) contract.
-// Generated to match the deployed Solidity. Function signatures, structs, and
-// enums mirror the contract exactly.
-//
-// Enums (uint8):
-//   WagerType:     0 STANDARD, 1 PRICE_BET
-//   Status:        0 Created, 1 Active, 2 Voting, 3 Resolved, 4 Arbitration, 5 Cancelled, 6 Voided
-//   DepositWindow: 0 H24, 1 H48, 2 W1, 3 M1
-//   Category:      0 Crypto, 1 Politics, 2 Sports, 3 Macro, 4 PulseChain, 5 Misc
-
 export const outcomeExchangeAbi = [
   // ─────────────────────────── Views: counts ───────────────────────────
   {
@@ -29,6 +19,32 @@ export const outcomeExchangeAbi = [
     name: "openWagerCount",
     inputs: [],
     outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  // ─── Add to outcomeExchangeAbi (before the closing `] as const`) ───
+  // isArbitrator, activeArbitrations, and owner are already in the file.
+
+  {
+    type: "function",
+    name: "addArbitrator",
+    inputs: [{ type: "address", name: "_arbitrator" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "removeArbitrator",
+    inputs: [{ type: "address", name: "_arbitrator" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  // Public array accessor: arbitratorList(index) → address.
+  // Used to read the current panel by iterating indices until it reverts.
+  {
+    type: "function",
+    name: "arbitratorList",
+    inputs: [{ type: "uint256", name: "" }],
+    outputs: [{ type: "address", name: "" }],
     stateMutability: "view",
   },
   {
