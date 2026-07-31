@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   useAccount,
   useReadContract,
@@ -8,9 +8,10 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from 'wagmi'
-import { parseEther } from 'viem'
+import { parseEther, formatEther } from 'viem'
 import type { Address } from 'viem'
 import { predictionMarketAbi } from '@/lib/abis/prediction-market'
+import { ConnectWalletButton } from '@/components/landing/connect-wallet-button'
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
@@ -35,6 +36,9 @@ const CATEGORY_INDEX: Record<Category, number> = {
   Macro: 4,
   Misc: 5,
 }
+
+// Fallback minimum used only until the on-chain value loads.
+const FALLBACK_MIN_PER_SIDE = parseEther('500')
 
 function toUnixSeconds(value: string): bigint | undefined {
   if (!value) return undefined
@@ -73,6 +77,23 @@ export function CreateMarketForm() {
     }
   }, [seedPerSideInput])
 
+  // Live minimum liquidity per side, read from the contract.
+  const { data: minPerSideData } = useReadContract({
+    address: PREDICTION_MARKET_ADDRESS,
+    abi: predictionMarketAbi,
+    functionName: 'MIN_LIQUIDITY_PER_SIDE',
+  })
+
+  const minPerSide = (minPerSideData as bigint | undefined) ?? FALLBACK_MIN_PER_SIDE
+  // Whole-token string for the input's min attribute and helper text.
+  const minPerSideDisplay = useMemo(() => {
+    try {
+      return formatEther(minPerSide)
+    } catch {
+      return '500'
+    }
+  }, [minPerSide])
+
   const { data: owner } = useReadContract({
     address: PREDICTION_MARKET_ADDRESS,
     abi: predictionMarketAbi,
@@ -100,7 +121,7 @@ export function CreateMarketForm() {
     resolutionDeadline !== undefined &&
     resolutionDeadline > bettingDeadline &&
     seedPerSide !== undefined &&
-    seedPerSide >= parseEther('500')
+    seedPerSide >= minPerSide
 
   const args =
     validForm &&
@@ -149,23 +170,23 @@ export function CreateMarketForm() {
     writeContract(simulation.request)
   }
 
-  const handleSuccess = () => {
+  // Reset the form after a confirmed success. Runs as an effect (not during
+  // render) so it can't trigger the "update during render" error or a loop.
+  useEffect(() => {
+    if (!isSuccess) return
     setShowSuccess(true)
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setQuestion('')
       setResolutionCriteria('')
       setSource('')
       setCategory('Crypto')
       setBettingDeadlineInput('')
       setResolutionDeadlineInput('')
-      setSeedPerSideInput('500')
+      setSeedPerSideInput(minPerSideDisplay)
       setShowSuccess(false)
     }, 3000)
-  }
-
-  if (isSuccess) {
-    handleSuccess()
-  }
+    return () => clearTimeout(timer)
+  }, [isSuccess, minPerSideDisplay])
 
   const totalCost = seedPerSide ? (Number(seedPerSideInput || 0) * 2).toFixed(0) : '0'
 
@@ -178,7 +199,10 @@ export function CreateMarketForm() {
         }}
         className="space-y-6 rounded-lg border border-[#2a2a35] bg-[#101017] p-8"
       >
-        <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Create YES/NO Market</h2>
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Create YES/NO Market</h2>
+          <ConnectWalletButton />
+        </div>
 
         {/* Question */}
         <div>
@@ -279,13 +303,15 @@ export function CreateMarketForm() {
               inputMode="decimal"
               value={seedPerSideInput}
               onChange={(e) => setSeedPerSideInput(e.target.value)}
-              min="500"
+              min={minPerSideDisplay}
               step="100"
               className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#d4af37] focus:outline-none"
             />
             <span className="font-sans text-sm text-[#7c7a76]">PLS</span>
           </div>
           <p className="mt-2 font-sans text-sm text-[#7c7a76]">
+            Minimum per side: <span className="font-semibold text-[#d4af37]">{minPerSideDisplay} PLS</span>
+            {' · '}
             Total required: <span className="font-semibold text-[#d4af37]">{totalCost} PLS</span>
           </p>
         </div>

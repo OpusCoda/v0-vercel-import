@@ -136,6 +136,10 @@
   strong {
     font-family: var(--font-strong);
   }
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+  }
 }
 
 /* -------------------------------------------------
