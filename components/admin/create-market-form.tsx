@@ -11,7 +11,6 @@ import {
 import { parseEther, formatEther } from 'viem'
 import type { Address } from 'viem'
 import { predictionMarketAbi } from '@/lib/abis/prediction-market'
-import { ConnectWalletButton } from '@/components/landing/connect-wallet-button'
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
@@ -194,10 +193,7 @@ export function CreateMarketForm() {
         }}
         className="space-y-6 rounded-lg border border-[#2a2a35] bg-[#101017] p-8"
       >
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Create YES/NO Market</h2>
-          <ConnectWalletButton />
-        </div>
+        <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Create YES/NO Market</h2>
 
         {/* Question */}
         <div>
@@ -310,6 +306,15 @@ export function CreateMarketForm() {
             Total required: <span className="font-semibold text-[#d4af37]">{totalCost} PLS</span>
           </p>
         </div>
+
+        {/* Authorization status */}
+        {authorized && (
+          <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3">
+            <p className="font-sans text-sm text-green-400">
+              ✓ This wallet is authorized to create markets.
+            </p>
+          </div>
+        )}
 
         {/* Errors */}
         {!authorized && address && (
