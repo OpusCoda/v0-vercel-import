@@ -40,7 +40,7 @@ export function BuySection({
     abi: predictionMarketAbi,
     functionName: "minimumBet",
   })
-  const MINIMUM_BET_PLS =
+  const minimumBetPls =
     minimumBetWei !== undefined
       ? Number(formatUnits(minimumBetWei as bigint, 18))
       : FALLBACK_MINIMUM_BET_PLS
@@ -60,7 +60,7 @@ export function BuySection({
   } = useBuyShares(marketId, side, amount, slippageBps)
 
   const amountNum = Number(amount || 0)
-  const belowMin = amountNum > 0 && amountNum < MINIMUM_BET_PLS
+  const belowMin = amountNum > 0 && amountNum < minimumBetPls
 
   const sideLabel = side ? "Yes" : "No"
   const sideColor = side ? "text-green-400" : "text-red-400"
@@ -103,7 +103,7 @@ export function BuySection({
           inputMode="decimal"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          min={MINIMUM_BET_PLS}
+          min={minimumBetPls}
           step="1000"
           className="flex-1 rounded border border-[#2a2a35] bg-[#0a0a0c] px-2 py-1 font-sans text-xs text-[#e8e6e3] focus:border-[#d4af37] focus:outline-none"
         />
@@ -112,13 +112,26 @@ export function BuySection({
 
       {belowMin && (
         <p className="mt-1 font-sans text-[10px] text-orange-400">
-          Minimum bet is {fmt(MINIMUM_BET_PLS)} PLS.
+          Minimum bet is {fmt(minimumBetPls)} PLS.
         </p>
       )}
 
       {/* Slippage tolerance */}
       <div className="mt-2 flex items-center gap-2">
-        <span className="font-sans text-[10px] text-[#7c7a76]">Max slippage</span>
+        <span className="group relative flex items-center gap-1">
+          <span className="font-sans text-[10px] text-[#7c7a76]">Max slippage</span>
+          <span
+            className="flex h-3 w-3 cursor-help items-center justify-center rounded-full border border-[#7c7a76] font-sans text-[8px] text-[#7c7a76]"
+            aria-label="What is max slippage?"
+          >
+            ?
+          </span>
+          <span className="pointer-events-none absolute bottom-full left-0 mb-1 hidden w-56 rounded-lg border border-[#2a2a35] bg-[#1a1a20] p-2 font-sans text-[10px] leading-snug text-[#b8b6b1] group-hover:block z-10">
+            The trade reverts if the price moves against you (from others trading first)
+            and you'd get more than this % fewer shares than quoted. Tighter = safer price
+            but more likely to fail; looser = more likely to go through.
+          </span>
+        </span>
         {[100, 300, 500].map((bps) => (
           <button
             key={bps}
@@ -186,7 +199,7 @@ export function BuySection({
           {writeError.message.includes("SlippageTooHigh")
             ? "Price moved past your slippage tolerance — try again or raise tolerance."
             : writeError.message.includes("Below minimum")
-            ? `Minimum bet is ${fmt(MINIMUM_BET_PLS)} PLS.`
+            ? `Minimum bet is ${fmt(minimumBetPls)} PLS.`
             : writeError.message.includes("BettingClosed")
             ? "Betting has closed for this market."
             : "Transaction failed — see wallet for details."}
