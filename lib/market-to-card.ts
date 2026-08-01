@@ -26,10 +26,9 @@ const CATEGORY_ICONS: Record<string, string> = {
 export type MarketStatusLabel = "Open" | "Awaiting" | "Resolved"
 
 /**
- * Map an on-chain YES/NO market to the probability MarketCard props.
+ * Map an on-chain binary YES/NO market to the probability MarketCard props.
  * Odds come from the AMM pool ratio: YES probability = yesPool / (yes+no).
- * Status is derived from the market fields (voided markets are filtered out
- * upstream, so we don't produce a badge for them here).
+ * Volume and liquidity are shown in whole PLS.
  */
 export function marketToCard(entry: MarketWithId): MarketCardProps {
   const m = entry.market
@@ -40,8 +39,8 @@ export function marketToCard(entry: MarketWithId): MarketCardProps {
 
   // Spot probability from pools. Guard against an empty pool (shouldn't happen
   // since markets are seeded, but be safe).
-  const yesPct = total > 0 ? Math.round((yes / total) * 100) : 50
-  const noPct = 100 - yesPct
+  const yesOdds = total > 0 ? Math.round((yes / total) * 100) : 50
+  const noOdds = 100 - yesOdds
 
   const categoryLabel = CATEGORY_LABELS[m.category] ?? "Misc"
 
@@ -52,14 +51,19 @@ export function marketToCard(entry: MarketWithId): MarketCardProps {
   else if (now < m.bettingDeadline) status = "Open"
   else status = "Awaiting"
 
+  // Volume + liquidity in whole PLS.
+  const volumePls = Number(formatUnits(m.totalVolume, 18))
+  const liquidityPls = yes + no
+
   return {
     type: "probability",
+    id: entry.marketId.toString(),
     icon: CATEGORY_ICONS[categoryLabel] ?? "📊",
     title: m.question,
     status,
-    outcomes: [
-      { label: "Yes", odds: yesPct },
-      { label: "No", odds: noPct },
-    ],
+    yesOdds,
+    noOdds,
+    volumePls,
+    liquidityPls,
   }
 }

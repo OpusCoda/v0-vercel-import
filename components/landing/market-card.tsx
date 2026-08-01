@@ -1,5 +1,7 @@
 "use client"
+import { useState } from "react"
 import { useAccount, useReadContract } from "wagmi"
+import { BuySection } from "@/components/markets/buy-section"
 import { useAcceptWager } from "@/hooks/useAcceptWager"
 import { useCancelWager } from "@/hooks/useCancelWager"
 import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from "@/lib/wager-market"
@@ -202,62 +204,94 @@ function AcceptSection({
     </div>
   )
 }
-export function MarketCard(props: MarketCardProps) {
-  if (props.type === "probability") {
-    const fmtPls = (v?: number) =>
-      v === undefined ? undefined : Math.round(v).toLocaleString()
-    const vol = fmtPls(props.volumePls)
-    const liq = fmtPls(props.liquidityPls)
-    return (
-      <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#d4af37]/30">
-        {/* Header: icon + question, status badge */}
-        <div className="flex items-start justify-between gap-3 pb-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{props.icon || "📊"}</span>
-            <h3 className="font-sans text-sm font-semibold text-[#e8e6e3] line-clamp-2">{props.title}</h3>
-          </div>
-          {props.status && (
-            <span
-              className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${
-                props.status === "Open"
-                  ? "bg-green-400/10 text-green-400 border border-green-400/30"
-                  : props.status === "Resolved"
-                    ? "bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30"
-                    : "bg-[#7c7a76]/10 text-[#b8b6b1] border border-[#7c7a76]/30"
-              }`}
-            >
-              {props.status}
-            </span>
-          )}
-        </div>
+// Binary YES/NO market card with an inline buy panel per side.
+function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }>) {
+  const [openSide, setOpenSide] = useState<null | boolean>(null)
 
-        {/* Single row: odds on the left, buy buttons on the right */}
-        <div className="flex items-center justify-between gap-3 border-t border-[#2a2a35] pt-3">
-          <div className="font-sans text-sm text-[#b8b6b1]">
-            <span className="font-semibold text-green-400">Yes {props.yesOdds}%</span>
-            <span className="mx-2 text-[#7c7a76]">·</span>
-            <span className="font-semibold text-red-400">No {props.noOdds}%</span>
-          </div>
-          <div className="flex gap-1 shrink-0">
-            <button className="rounded px-3 py-1 font-sans text-[11px] font-semibold text-green-400 hover:bg-green-400/10 border border-green-400/30">
-              Buy Yes
-            </button>
-            <button className="rounded px-3 py-1 font-sans text-[11px] font-semibold text-red-400 hover:bg-red-400/10 border border-red-400/30">
-              Buy No
-            </button>
-          </div>
-        </div>
+  const fmtPls = (v?: number) =>
+    v === undefined ? undefined : Math.round(v).toLocaleString()
+  const vol = fmtPls(props.volumePls)
+  const liq = fmtPls(props.liquidityPls)
 
-        {/* Footer: volume + liquidity in PLS */}
-        {(vol || liq) && (
-          <p className="mt-3 font-sans text-[11px] text-[#7c7a76]">
-            {vol && <>{vol} PLS Vol</>}
-            {vol && liq && <span className="mx-1">·</span>}
-            {liq && <>{liq} PLS Liquidity</>}
-          </p>
+  const marketId = (() => {
+    try { return props.id !== undefined ? BigInt(props.id) : undefined } catch { return undefined }
+  })()
+
+  // Trading is only possible while the market is Open.
+  const tradable = props.status === "Open" && marketId !== undefined
+
+  return (
+    <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#d4af37]/30">
+      {/* Header: icon + question, status badge */}
+      <div className="flex items-start justify-between gap-3 pb-4">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{props.icon || "📊"}</span>
+          <h3 className="font-sans text-sm font-semibold text-[#e8e6e3] line-clamp-2">{props.title}</h3>
+        </div>
+        {props.status && (
+          <span
+            className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${
+              props.status === "Open"
+                ? "bg-green-400/10 text-green-400 border border-green-400/30"
+                : props.status === "Resolved"
+                  ? "bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30"
+                  : "bg-[#7c7a76]/10 text-[#b8b6b1] border border-[#7c7a76]/30"
+            }`}
+          >
+            {props.status}
+          </span>
         )}
       </div>
-    )
+
+      {/* Single row: odds on the left, buy buttons on the right */}
+      <div className="flex items-center justify-between gap-3 border-t border-[#2a2a35] pt-3">
+        <div className="font-sans text-sm text-[#b8b6b1]">
+          <span className="font-semibold text-green-400">Yes {props.yesOdds}%</span>
+          <span className="mx-2 text-[#7c7a76]">·</span>
+          <span className="font-semibold text-red-400">No {props.noOdds}%</span>
+        </div>
+        <div className="flex gap-1 shrink-0">
+          <button
+            onClick={() => tradable && setOpenSide((s) => (s === true ? null : true))}
+            disabled={!tradable}
+            className="rounded px-3 py-1 font-sans text-[11px] font-semibold text-green-400 hover:bg-green-400/10 border border-green-400/30 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Buy Yes
+          </button>
+          <button
+            onClick={() => tradable && setOpenSide((s) => (s === false ? null : false))}
+            disabled={!tradable}
+            className="rounded px-3 py-1 font-sans text-[11px] font-semibold text-red-400 hover:bg-red-400/10 border border-red-400/30 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Buy No
+          </button>
+        </div>
+      </div>
+
+      {/* Inline buy panel for the chosen side */}
+      {tradable && openSide !== null && marketId !== undefined && (
+        <BuySection
+          marketId={marketId}
+          side={openSide}
+          onClose={() => setOpenSide(null)}
+        />
+      )}
+
+      {/* Footer: volume + liquidity in PLS */}
+      {(vol || liq) && (
+        <p className="mt-3 font-sans text-[11px] text-[#7c7a76]">
+          {vol && <>{vol} PLS Vol</>}
+          {vol && liq && <span className="mx-1">·</span>}
+          {liq && <>{liq} PLS Liquidity</>}
+        </p>
+      )}
+    </div>
+  )
+}
+
+export function MarketCard(props: MarketCardProps) {
+  if (props.type === "probability") {
+    return <ProbabilityCard {...props} />
   }
   // P2P Market card. Creator side is taken; the other side is open to accept.
   const creatorStake = props.yesData.staked
