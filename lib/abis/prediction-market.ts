@@ -28,8 +28,6 @@ export const predictionMarketAbi = [
     outputs: [{ type: "uint256", name: "" }],
     stateMutability: "payable",
   },
-  // ─── Add to predictionMarketAbi (before the closing `] as const`) ───
-
   {
     type: "function",
     name: "addAdmin",
@@ -51,13 +49,11 @@ export const predictionMarketAbi = [
     outputs: [{ type: "uint256", name: "" }],
     stateMutability: "view",
   },
-  // ─── Add these entries to the predictionMarketAbi array ───
-
   {
     type: "function",
     name: "getStatus",
     inputs: [{ type: "uint256", name: "marketId" }],
-    outputs: [{ type: "uint8", name: "" }], // enum Status: 0 Betting, 1 AwaitingResolution, 2 ChallengeWindow, 3 Resolved, 4 Voided
+    outputs: [{ type: "uint8", name: "" }], // 0 Betting, 1 AwaitingResolution, 2 ChallengeWindow, 3 Resolved, 4 Voided
     stateMutability: "view",
   },
   {
@@ -75,7 +71,6 @@ export const predictionMarketAbi = [
     ],
     stateMutability: "view",
   },
-  // ─── REPLACE the existing (incorrect) getMarket entry with this ───
   // Full 32-field Market struct, confirmed against live getMarket(0) output.
   {
     type: "function",
@@ -121,14 +116,6 @@ export const predictionMarketAbi = [
         ],
       },
     ],
-    stateMutability: "view",
-  },
-  // Also ensure getStatus is present (needed to label market state):
-  {
-    type: "function",
-    name: "getStatus",
-    inputs: [{ type: "uint256", name: "marketId" }],
-    outputs: [{ type: "uint8", name: "" }], // 0 Betting,1 AwaitingResolution,2 ChallengeWindow,3 Resolved,4 Voided
     stateMutability: "view",
   },
 ] as const

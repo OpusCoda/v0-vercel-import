@@ -1,16 +1,18 @@
 "use client"
 import { useState, useMemo } from "react"
 import { Search } from "lucide-react"
-import { MarketCard } from "./market-card"
 import { QuestionMarkIcon } from "@/components/question-mark-icon"
+import { MarketCard } from "./market-card"
 import { useAllWagers } from "@/hooks/useAllWagers"
-import { useAllMarkets } from "@/hooks/useAllMarkets"
 import { wagerToCard, type P2PCardData } from "@/lib/wager-to-card"
+import { useAllMarkets } from "@/hooks/useAllMarkets"
 import { marketToCard } from "@/lib/market-to-card"
-import type { MarketCardProps } from "@/components/landing/market-card"
 
 type Category = "Crypto" | "Politics" | "Sports" | "Macro" | "PulseChain" | "Misc"
 type MarketsVariant = "all" | "p2p" | "probability"
+
+// PredictionMarket Category enum → label (index order matches the contract).
+const PM_CATEGORY_LABELS: Category[] = ["Crypto", "PulseChain", "Politics", "Sports", "Macro", "Misc"]
 
 const CATEGORIES: Category[] = ["Crypto", "Politics", "Sports", "Macro", "PulseChain", "Misc"]
 const MIN_PRICE = 100_000
@@ -38,9 +40,32 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
   const { wagers, isLoading: wagersLoading } = useAllWagers()
   const p2pMarkets: P2PCardData[] = useMemo(() => wagers.map(wagerToCard), [wagers])
 
-  // Live Probability Shop markets from chain
+  // Live prediction markets from chain.
   const { markets, isLoading: marketsLoading } = useAllMarkets()
-  const probabilityMarkets: MarketCardProps[] = useMemo(() => markets.map(marketToCard), [markets])
+
+  // Keep only markets still open for betting: not resolved, not voided,
+  // and before the betting deadline.
+  const openMarkets = useMemo(() => {
+    const now = BigInt(Math.floor(Date.now() / 1000))
+    return markets.filter(
+      (e) => !e.market.resolved && !e.market.voided && e.market.bettingDeadline > now
+    )
+  }, [markets])
+
+  // Apply search + category filters, then map to card props.
+  const filteredProbabilityCards = useMemo(() => {
+    return openMarkets
+      .filter((e) => {
+        const matchesSearch = e.market.question
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+        const label = PM_CATEGORY_LABELS[e.market.category] ?? "Misc"
+        const matchesCategory =
+          selectedCategories.size === 0 || selectedCategories.has(label)
+        return matchesSearch && matchesCategory
+      })
+      .map(marketToCard)
+  }, [openMarkets, searchQuery, selectedCategories])
 
   // Filter P2P Market
   const filteredP2PMarkets = useMemo(() => {
@@ -61,16 +86,6 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
       return matchesSearch && matchesCategory && matchesStatus && matchesPrice
     })
   }, [p2pMarkets, searchQuery, selectedCategories, p2pFilter, priceMin, priceMax])
-
-  // Filter Probability markets — the probability card only has `title` (no `question` or `category`)
-  const filteredProbabilityMarkets = useMemo(() => {
-    return probabilityMarkets.filter((market) => {
-      if (market.type !== "probability") return false
-      const matchesSearch =
-        !searchQuery || market.title.toLowerCase().includes(searchQuery.toLowerCase())
-      return matchesSearch
-    })
-  }, [probabilityMarkets, searchQuery])
 
   const toggleCategory = (cat: Category) => {
     const newCats = new Set(selectedCategories)
@@ -122,14 +137,13 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Probability Shop</h3>
-                <a
-                  href="#probability-shop-explainer"
+
+                  <a href="#probability-shop-explainer"
                   onClick={(e) => {
                     e.preventDefault()
                     document.getElementById("probability-shop-explainer")?.scrollIntoView({ behavior: "smooth" })
                   }}
                   className="group relative flex"
-                  aria-label="Learn about the Probability Shop"
                 >
                   <QuestionMarkIcon className="h-3.5 w-3.5 text-[#7c7a76] hover:text-[#d4af37] transition-colors" />
                   <span className="absolute bottom-full left-1/2 mb-2 hidden w-44 -translate-x-1/2 rounded-lg bg-[#2a2a35]/95 p-2 text-center text-xs text-[#e8e6e3] group-hover:block">
@@ -139,20 +153,21 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
               </div>
               <p className="font-sans text-xs text-[#7c7a76]">Prediction market</p>
             </div>
+            <span className="font-sans text-xs text-[#7c7a76]">{filteredProbabilityCards.length} markets</span>
           </div>
           <div className={`flex flex-col gap-3 max-h-200 overflow-y-auto pr-2 ${variant === "probability" ? "lg:grid lg:grid-cols-2 lg:gap-3" : ""}`}>
             {marketsLoading ? (
               <div className="py-8 text-center text-[#7c7a76]">
                 <p className="font-sans text-sm">Loading markets…</p>
               </div>
-            ) : filteredProbabilityMarkets.length === 0 ? (
-              <div className="py-8 text-center text-[#7c7a76]">
-                <p className="font-sans text-sm">No markets open yet</p>
-              </div>
-            ) : (
-              filteredProbabilityMarkets.map((market, idx) => (
-                <MarketCard key={idx} {...market} />
+            ) : filteredProbabilityCards.length > 0 ? (
+              filteredProbabilityCards.map((card, idx) => (
+                <MarketCard key={idx} {...card} />
               ))
+            ) : (
+              <div className="py-8 text-center text-[#7c7a76]">
+                <p className="font-sans text-sm">No open markets right now</p>
+              </div>
             )}
           </div>
         </div>
@@ -164,14 +179,13 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Outcome Exchange</h3>
-                <a
-                  href="#outcome-exchange-explainer"
+
+                  <a href="#outcome-exchange-explainer"
                   onClick={(e) => {
                     e.preventDefault()
                     document.getElementById("outcome-exchange-explainer")?.scrollIntoView({ behavior: "smooth" })
                   }}
                   className="group relative flex"
-                  aria-label="Learn about the Outcome Exchange"
                 >
                   <QuestionMarkIcon className="h-3.5 w-3.5 text-[#7c7a76] hover:text-[#d4af37] transition-colors" />
                   <span className="absolute bottom-full left-1/2 mb-2 hidden w-44 -translate-x-1/2 rounded-lg bg-[#2a2a35]/95 p-2 text-center text-xs text-[#e8e6e3] group-hover:block">
