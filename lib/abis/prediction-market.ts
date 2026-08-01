@@ -56,6 +56,115 @@ export const predictionMarketAbi = [
     outputs: [{ type: "uint8", name: "" }], // 0 Betting, 1 AwaitingResolution, 2 ChallengeWindow, 3 Resolved, 4 Voided
     stateMutability: "view",
   },
+  // ─── Add these to predictionMarketAbi (before the closing `] as const`) ───
+  // Trading functions + quotes, matching the deployed contract.
+
+  {
+    type: "function",
+    name: "buyShares",
+    inputs: [
+      { type: "uint256", name: "marketId" },
+      { type: "bool", name: "side" },
+      { type: "uint256", name: "minSharesOut" },
+      { type: "address", name: "referrer" },
+    ],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "sellShares",
+    inputs: [
+      { type: "uint256", name: "marketId" },
+      { type: "bool", name: "side" },
+      { type: "uint256", name: "sharesIn" },
+      { type: "uint256", name: "minPlsOut" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "quoteBuy",
+    inputs: [
+      { type: "uint256", name: "marketId" },
+      { type: "bool", name: "side" },
+      { type: "uint256", name: "plsIn" },
+    ],
+    outputs: [
+      { type: "uint256", name: "sharesOut" },
+      { type: "uint256", name: "pricePerShare" },
+      { type: "uint256", name: "spotPrice" },
+      { type: "uint256", name: "newSpotPrice" },
+      { type: "uint256", name: "priceImpactBps" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "quoteSell",
+    inputs: [
+      { type: "uint256", name: "marketId" },
+      { type: "bool", name: "side" },
+      { type: "uint256", name: "sharesIn" },
+    ],
+    outputs: [
+      { type: "uint256", name: "plsOut" },
+      { type: "uint256", name: "pricePerShare" },
+      { type: "uint256", name: "priceImpactBps" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "spotPrices",
+    inputs: [{ type: "uint256", name: "marketId" }],
+    outputs: [
+      { type: "uint256", name: "yesProbBps" },
+      { type: "uint256", name: "noProbBps" },
+      { type: "uint256", name: "yesPrice" },
+      { type: "uint256", name: "noPrice" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "minimumBet",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getUserPosition",
+    inputs: [
+      { type: "uint256", name: "marketId" },
+      { type: "address", name: "user" },
+    ],
+    outputs: [
+      {
+        type: "tuple",
+        name: "position",
+        components: [
+          { type: "uint256", name: "yesShares" },
+          { type: "uint256", name: "noShares" },
+          { type: "uint256", name: "netCollateral" },
+          { type: "bool", name: "hasTraded" },
+          { type: "bool", name: "claimed" },
+          { type: "bool", name: "voidRefundClaimed" },
+          { type: "uint256", name: "estimatedGrossPayout" },
+          { type: "uint256", name: "estimatedFee" },
+          { type: "uint256", name: "estimatedNetPayout" },
+          { type: "bool", name: "canClaimWinnings" },
+          { type: "bool", name: "canClaimVoidRefund" },
+          { type: "bool", name: "canClaimAbandoned" },
+          { type: "bool", name: "canClaimResidual" },
+          { type: "uint256", name: "claimableAmount" },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
   {
     type: "function",
     name: "getProposal",
