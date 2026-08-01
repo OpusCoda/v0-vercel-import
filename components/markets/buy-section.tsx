@@ -12,7 +12,7 @@ const PREDICTION_MARKET_ADDRESS =
   ("0x9F33330BA35cF5f34bB772E4c7a6Fc70D7c1a1BE" as Address)
 
 // Fallback until the on-chain minimumBet loads.
-const FALLBACK_MINIMUM_BET_PLS = 2_000
+const FALLBACK_MINIMUM_BET_PLS = 5_000
 
 function fmt(v: number, dp = 0) {
   return v.toLocaleString(undefined, { maximumFractionDigits: dp })

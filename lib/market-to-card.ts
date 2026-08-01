@@ -15,7 +15,7 @@ const CATEGORY_LABELS = [
 // Pick an icon by category (mirrors the mock markets' style).
 const CATEGORY_ICONS: Record<string, string> = {
   Crypto: "₿",
-  PulseChain: "🔷",
+  PulseChain: "🎈",
   Politics: "🏛️",
   Sports: "🏆",
   Macro: "📊",
