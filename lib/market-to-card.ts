@@ -22,9 +22,14 @@ const CATEGORY_ICONS: Record<string, string> = {
   Misc: "❓",
 }
 
+// User-facing status shown as a badge on the card.
+export type MarketStatusLabel = "Open" | "Awaiting" | "Resolved"
+
 /**
  * Map an on-chain YES/NO market to the probability MarketCard props.
  * Odds come from the AMM pool ratio: YES probability = yesPool / (yes+no).
+ * Status is derived from the market fields (voided markets are filtered out
+ * upstream, so we don't produce a badge for them here).
  */
 export function marketToCard(entry: MarketWithId): MarketCardProps {
   const m = entry.market
@@ -38,13 +43,20 @@ export function marketToCard(entry: MarketWithId): MarketCardProps {
   const yesPct = total > 0 ? Math.round((yes / total) * 100) : 50
   const noPct = 100 - yesPct
 
-  const categoryLabel =
-    CATEGORY_LABELS[m.category] ?? "Misc"
+  const categoryLabel = CATEGORY_LABELS[m.category] ?? "Misc"
+
+  // Derive the status label.
+  const now = BigInt(Math.floor(Date.now() / 1000))
+  let status: MarketStatusLabel
+  if (m.resolved) status = "Resolved"
+  else if (now < m.bettingDeadline) status = "Open"
+  else status = "Awaiting"
 
   return {
     type: "probability",
     icon: CATEGORY_ICONS[categoryLabel] ?? "📊",
     title: m.question,
+    status,
     outcomes: [
       { label: "Yes", odds: yesPct },
       { label: "No", odds: noPct },

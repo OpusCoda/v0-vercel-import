@@ -17,9 +17,14 @@ export type P2PSide = {
 export type MarketCardProps =
   | {
     type: "probability"
+    id?: string
     icon?: string
     title: string
-    outcomes: ProbabilityOutcome[]
+    status?: "Open" | "Awaiting" | "Resolved"
+    yesOdds: number
+    noOdds: number
+    volumePls?: number
+    liquidityPls?: number
   }
   | {
     type: "p2p"
@@ -199,28 +204,58 @@ function AcceptSection({
 }
 export function MarketCard(props: MarketCardProps) {
   if (props.type === "probability") {
+    const fmtPls = (v?: number) =>
+      v === undefined ? undefined : Math.round(v).toLocaleString()
+    const vol = fmtPls(props.volumePls)
+    const liq = fmtPls(props.liquidityPls)
     return (
       <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#d4af37]/30">
-        <div className="flex items-center gap-3 pb-4">
-          <span className="text-2xl">{props.icon || "📊"}</span>
-          <h3 className="font-sans text-sm font-semibold text-[#e8e6e3] line-clamp-2">{props.title}</h3>
+        {/* Header: icon + question, status badge */}
+        <div className="flex items-start justify-between gap-3 pb-4">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{props.icon || "📊"}</span>
+            <h3 className="font-sans text-sm font-semibold text-[#e8e6e3] line-clamp-2">{props.title}</h3>
+          </div>
+          {props.status && (
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${
+                props.status === "Open"
+                  ? "bg-green-400/10 text-green-400 border border-green-400/30"
+                  : props.status === "Resolved"
+                    ? "bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30"
+                    : "bg-[#7c7a76]/10 text-[#b8b6b1] border border-[#7c7a76]/30"
+              }`}
+            >
+              {props.status}
+            </span>
+          )}
         </div>
-        <div className="space-y-2 border-t border-[#2a2a35] pt-3">
-          {props.outcomes.map((outcome, idx) => (
-            <div key={idx} className="flex items-center justify-between gap-2">
-              <span className="font-sans text-xs text-[#b8b6b1] flex-1">{outcome.label}</span>
-              <span className="font-sans text-xs font-semibold text-[#9ca3af] w-8 text-right">{outcome.odds}%</span>
-              <div className="flex gap-1">
-                <button className="rounded px-2 py-1 font-sans text-[10px] font-semibold text-green-400 hover:bg-green-400/10 border border-green-400/30">
-                  Yes
-                </button>
-                <button className="rounded px-2 py-1 font-sans text-[10px] font-semibold text-red-400 hover:bg-red-400/10 border border-red-400/30">
-                  No
-                </button>
-              </div>
-            </div>
-          ))}
+
+        {/* Single row: odds on the left, buy buttons on the right */}
+        <div className="flex items-center justify-between gap-3 border-t border-[#2a2a35] pt-3">
+          <div className="font-sans text-sm text-[#b8b6b1]">
+            <span className="font-semibold text-green-400">Yes {props.yesOdds}%</span>
+            <span className="mx-2 text-[#7c7a76]">·</span>
+            <span className="font-semibold text-red-400">No {props.noOdds}%</span>
+          </div>
+          <div className="flex gap-1 shrink-0">
+            <button className="rounded px-3 py-1 font-sans text-[11px] font-semibold text-green-400 hover:bg-green-400/10 border border-green-400/30">
+              Buy Yes
+            </button>
+            <button className="rounded px-3 py-1 font-sans text-[11px] font-semibold text-red-400 hover:bg-red-400/10 border border-red-400/30">
+              Buy No
+            </button>
+          </div>
         </div>
+
+        {/* Footer: volume + liquidity in PLS */}
+        {(vol || liq) && (
+          <p className="mt-3 font-sans text-[11px] text-[#7c7a76]">
+            {vol && <>{vol} PLS Vol</>}
+            {vol && liq && <span className="mx-1">·</span>}
+            {liq && <>{liq} PLS Liquidity</>}
+          </p>
+        )}
       </div>
     )
   }

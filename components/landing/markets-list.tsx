@@ -1,20 +1,19 @@
 "use client"
 import { useState, useMemo } from "react"
 import { Search } from "lucide-react"
-import { QuestionMarkIcon } from "@/components/question-mark-icon"
 import { MarketCard } from "./market-card"
+import { QuestionMarkIcon } from "@/components/question-mark-icon"
 import { useAllWagers } from "@/hooks/useAllWagers"
-import { wagerToCard, type P2PCardData } from "@/lib/wager-to-card"
 import { useAllMarkets } from "@/hooks/useAllMarkets"
+import { wagerToCard, type P2PCardData } from "@/lib/wager-to-card"
 import { marketToCard } from "@/lib/market-to-card"
 
 type Category = "Crypto" | "Politics" | "Sports" | "Macro" | "PulseChain" | "Misc"
 type MarketsVariant = "all" | "p2p" | "probability"
-
-// PredictionMarket Category enum → label (index order matches the contract).
-const PM_CATEGORY_LABELS: Category[] = ["Crypto", "PulseChain", "Politics", "Sports", "Macro", "Misc"]
+type ProbabilityStatus = "All" | "Open" | "Awaiting" | "Resolved"
 
 const CATEGORIES: Category[] = ["Crypto", "Politics", "Sports", "Macro", "PulseChain", "Misc"]
+const PROBABILITY_FILTERS: ProbabilityStatus[] = ["All", "Open", "Awaiting", "Resolved"]
 const MIN_PRICE = 100_000
 const MAX_PRICE = 1_000_000_000
 
@@ -26,10 +25,23 @@ function formatPrice(value: number): string {
   return value.toString()
 }
 
+// Derive a user-facing status bucket from the market struct fields we already
+// have — no extra getStatus() call needed. Voided markets are excluded upstream.
+function deriveStatus(
+  market: { resolved: boolean; voided: boolean; bettingDeadline: bigint },
+  now: bigint
+): Exclude<ProbabilityStatus, "All"> | "Voided" {
+  if (market.voided) return "Voided"
+  if (market.resolved) return "Resolved"
+  if (now < market.bettingDeadline) return "Open"
+  return "Awaiting"
+}
+
 export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategories, setSelectedCategories] = useState<Set<Category>>(new Set())
   const [p2pFilter, setP2PFilter] = useState<"All" | "Active" | "Open" | "Completed">("All")
+  const [probabilityFilter, setProbabilityFilter] = useState<ProbabilityStatus>("All")
   const [priceMin, setPriceMin] = useState(MIN_PRICE)
   const [priceMax, setPriceMax] = useState(MAX_PRICE)
 
@@ -40,32 +52,29 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
   const { wagers, isLoading: wagersLoading } = useAllWagers()
   const p2pMarkets: P2PCardData[] = useMemo(() => wagers.map(wagerToCard), [wagers])
 
-  // Live prediction markets from chain.
+  // Live Probability Shop markets from chain.
   const { markets, isLoading: marketsLoading } = useAllMarkets()
 
-  // Keep only markets still open for betting: not resolved, not voided,
-  // and before the betting deadline.
-  const openMarkets = useMemo(() => {
-    const now = BigInt(Math.floor(Date.now() / 1000))
-    return markets.filter(
-      (e) => !e.market.resolved && !e.market.voided && e.market.bettingDeadline > now
-    )
-  }, [markets])
-
-  // Apply search + category filters, then map to card props.
+  // Filter the RAW markets first (while voided/resolved/bettingDeadline are
+  // still available), THEN map to cards. Mapping first would strip those fields.
   const filteredProbabilityCards = useMemo(() => {
-    return openMarkets
+    const now = BigInt(Math.floor(Date.now() / 1000))
+    return markets
       .filter((e) => {
-        const matchesSearch = e.market.question
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase())
-        const label = PM_CATEGORY_LABELS[e.market.category] ?? "Misc"
-        const matchesCategory =
-          selectedCategories.size === 0 || selectedCategories.has(label)
-        return matchesSearch && matchesCategory
+        const status = deriveStatus(e.market, now)
+        // Voided markets are never shown.
+        if (status === "Voided") return false
+        // Status filter.
+        const matchesStatus =
+          probabilityFilter === "All" || status === probabilityFilter
+        // Search filter on the question text.
+        const matchesSearch =
+          !searchQuery ||
+          e.market.question.toLowerCase().includes(searchQuery.toLowerCase())
+        return matchesStatus && matchesSearch
       })
       .map(marketToCard)
-  }, [openMarkets, searchQuery, selectedCategories])
+  }, [markets, searchQuery, probabilityFilter])
 
   // Filter P2P Market
   const filteredP2PMarkets = useMemo(() => {
@@ -133,17 +142,18 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
         {/* Left column: Probability Shop */}
         {showProbability && (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Probability Shop</h3>
-
-                  <a href="#probability-shop-explainer"
+                <a
+                  href="#probability-shop-explainer"
                   onClick={(e) => {
                     e.preventDefault()
                     document.getElementById("probability-shop-explainer")?.scrollIntoView({ behavior: "smooth" })
                   }}
                   className="group relative flex"
+                  aria-label="Learn about the Probability Shop"
                 >
                   <QuestionMarkIcon className="h-3.5 w-3.5 text-[#7c7a76] hover:text-[#d4af37] transition-colors" />
                   <span className="absolute bottom-full left-1/2 mb-2 hidden w-44 -translate-x-1/2 rounded-lg bg-[#2a2a35]/95 p-2 text-center text-xs text-[#e8e6e3] group-hover:block">
@@ -153,7 +163,20 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
               </div>
               <p className="font-sans text-xs text-[#7c7a76]">Prediction market</p>
             </div>
-            <span className="font-sans text-xs text-[#7c7a76]">{filteredProbabilityCards.length} markets</span>
+            <div className="flex gap-1 shrink-0">
+              {PROBABILITY_FILTERS.map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setProbabilityFilter(status)}
+                  className={`rounded px-2 py-1 font-sans text-xs font-semibold transition-colors ${probabilityFilter === status
+                    ? "bg-[#d4af37] text-[#0a0a0c]"
+                    : "border border-[#2a2a35] bg-[#101017] text-[#b8b6b1] hover:border-[#d4af37]/50"
+                    }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
           </div>
           <div className={`flex flex-col gap-3 max-h-200 overflow-y-auto pr-2 ${variant === "probability" ? "lg:grid lg:grid-cols-2 lg:gap-3" : ""}`}>
             {marketsLoading ? (
@@ -166,7 +189,7 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
               ))
             ) : (
               <div className="py-8 text-center text-[#7c7a76]">
-                <p className="font-sans text-sm">No open markets right now</p>
+                <p className="font-sans text-sm">No markets match your filters</p>
               </div>
             )}
           </div>
@@ -179,13 +202,14 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-serif text-lg font-semibold text-[#d4af37]">Outcome Exchange</h3>
-
-                  <a href="#outcome-exchange-explainer"
+                <a
+                  href="#outcome-exchange-explainer"
                   onClick={(e) => {
                     e.preventDefault()
                     document.getElementById("outcome-exchange-explainer")?.scrollIntoView({ behavior: "smooth" })
                   }}
                   className="group relative flex"
+                  aria-label="Learn about the Outcome Exchange"
                 >
                   <QuestionMarkIcon className="h-3.5 w-3.5 text-[#7c7a76] hover:text-[#d4af37] transition-colors" />
                   <span className="absolute bottom-full left-1/2 mb-2 hidden w-44 -translate-x-1/2 rounded-lg bg-[#2a2a35]/95 p-2 text-center text-xs text-[#e8e6e3] group-hover:block">
