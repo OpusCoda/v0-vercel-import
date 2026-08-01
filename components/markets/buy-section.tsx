@@ -1,12 +1,18 @@
 "use client"
 
 import { useState } from "react"
-import { useAccount } from "wagmi"
+import { useAccount, useReadContract } from "wagmi"
 import { formatUnits } from "viem"
+import type { Address } from "viem"
+import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useBuyShares } from "@/hooks/useBuyShares"
 
-// minimumBet on the contract is 10,000 PLS.
-const MINIMUM_BET_PLS = 10_000
+const PREDICTION_MARKET_ADDRESS =
+  (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
+  ("0x9F33330BA35cF5f34bB772E4c7a6Fc70D7c1a1BE" as Address)
+
+// Fallback until the on-chain minimumBet loads.
+const FALLBACK_MINIMUM_BET_PLS = 2_000
 
 function fmt(v: number, dp = 0) {
   return v.toLocaleString(undefined, { maximumFractionDigits: dp })
@@ -27,7 +33,19 @@ export function BuySection({
   onClose: () => void
 }) {
   const { isConnected } = useAccount()
-  const [amount, setAmount] = useState("10000")
+
+  // Live minimum bet from the contract (owner-adjustable via setMinimumBet).
+  const { data: minimumBetWei } = useReadContract({
+    address: PREDICTION_MARKET_ADDRESS,
+    abi: predictionMarketAbi,
+    functionName: "minimumBet",
+  })
+  const MINIMUM_BET_PLS =
+    minimumBetWei !== undefined
+      ? Number(formatUnits(minimumBetWei as bigint, 18))
+      : FALLBACK_MINIMUM_BET_PLS
+
+  const [amount, setAmount] = useState(String(FALLBACK_MINIMUM_BET_PLS))
   const [slippageBps, setSlippageBps] = useState(100) // 1%
 
   const {

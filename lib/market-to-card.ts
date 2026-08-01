@@ -65,5 +65,7 @@ export function marketToCard(entry: MarketWithId): MarketCardProps {
     noOdds,
     volumePls,
     liquidityPls,
+    bettingDeadline: Number(m.bettingDeadline),
+    resolutionDeadline: Number(m.resolutionDeadline),
   }
 }

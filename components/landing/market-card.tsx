@@ -27,6 +27,8 @@ export type MarketCardProps =
     noOdds: number
     volumePls?: number
     liquidityPls?: number
+    bettingDeadline?: number
+    resolutionDeadline?: number
   }
   | {
     type: "p2p"
@@ -204,6 +206,51 @@ function AcceptSection({
     </div>
   )
 }
+// Relative label when < 24h away, absolute (local) date beyond that.
+function deadlineLabel(status: string | undefined, bettingTs?: number, resolutionTs?: number): string | null {
+  const now = Math.floor(Date.now() / 1000)
+  if (status === "Open" && bettingTs) {
+    const secs = bettingTs - now
+    if (secs <= 0) return "Closing…"
+    return "Closes " + humanWhen(bettingTs, secs)
+  }
+  if (status === "Awaiting" && resolutionTs) {
+    const secs = resolutionTs - now
+    if (secs <= 0) return "Resolution open"
+    return "Resolves " + humanWhen(resolutionTs, secs)
+  }
+  return null
+}
+
+function humanWhen(ts: number, secs: number): string {
+  // Under 24h → relative ("in 3h 27m"); otherwise absolute local date.
+  if (secs < 86400) {
+    const h = Math.floor(secs / 3600)
+    const m = Math.floor((secs % 3600) / 60)
+    if (h >= 1) return `in ${h}h ${m}m`
+    if (m >= 1) return `in ${m}m`
+    return "in <1m"
+  }
+  return new Date(ts * 1000).toLocaleString(undefined, {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
+// Build the X (Twitter) share intent URL for an open market.
+function shareOnX(title: string, yesOdds: number, noOdds: number) {
+  const text = `${title}\n\nYes ${yesOdds}% · No ${noOdds}% — trade it on the Opus Probability Shop:`
+  const url = typeof window !== "undefined" ? window.location.href : "https://opuseco.com/markets"
+  const intent =
+    "https://twitter.com/intent/tweet?text=" +
+    encodeURIComponent(text) +
+    "&url=" +
+    encodeURIComponent(url)
+  if (typeof window !== "undefined") window.open(intent, "_blank", "noopener,noreferrer")
+}
+
 // Binary YES/NO market card with an inline buy panel per side.
 function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }>) {
   const [openSide, setOpenSide] = useState<null | boolean>(null)
@@ -212,6 +259,7 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
     v === undefined ? undefined : Math.round(v).toLocaleString()
   const vol = fmtPls(props.volumePls)
   const liq = fmtPls(props.liquidityPls)
+  const timing = deadlineLabel(props.status, props.bettingDeadline, props.resolutionDeadline)
 
   const marketId = (() => {
     try { return props.id !== undefined ? BigInt(props.id) : undefined } catch { return undefined }
@@ -277,13 +325,26 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
         />
       )}
 
-      {/* Footer: volume + liquidity in PLS */}
-      {(vol || liq) && (
-        <p className="mt-3 font-sans text-[11px] text-[#7c7a76]">
-          {vol && <>{vol} PLS Vol</>}
-          {vol && liq && <span className="mx-1">·</span>}
-          {liq && <>{liq} PLS Liquidity</>}
-        </p>
+      {/* Footer: volume + liquidity (left) · deadline (right) */}
+      {(vol || liq || timing) && (
+        <div className="mt-3 flex items-center justify-between gap-2 font-sans text-[11px] text-[#7c7a76]">
+          <span>
+            {vol && <>{vol} PLS Vol</>}
+            {vol && liq && <span className="mx-1">·</span>}
+            {liq && <>{liq} PLS Liquidity</>}
+          </span>
+          {timing && <span className="shrink-0">{timing}</span>}
+        </div>
+      )}
+
+      {/* Share on X — only for open markets */}
+      {props.status === "Open" && (
+        <button
+          onClick={() => shareOnX(props.title, props.yesOdds, props.noOdds)}
+          className="mt-3 w-full rounded border border-[#2a2a35] py-1.5 font-sans text-[11px] font-semibold text-[#b8b6b1] transition-colors hover:border-[#d4af37]/50 hover:text-[#d4af37]"
+        >
+          Share on X
+        </button>
       )}
     </div>
   )
