@@ -54,7 +54,7 @@ export function BuyTokens() {
   const handleCopy = (address: string, contractName: string) => {
     navigator.clipboard.writeText(address)
     setCopiedId(contractName)
-    setTimeout(() => setCopiedId(null), 2000)
+    setTimeout(() => setCopiedId(null), 5000)
   }
 
   return (

@@ -127,9 +127,7 @@ export function BuySection({
             ?
           </span>
           <span className="pointer-events-none absolute bottom-full left-0 mb-1 hidden w-56 rounded-lg border border-[#2a2a35] bg-[#1a1a20] p-2 font-sans text-[10px] leading-snug text-[#b8b6b1] group-hover:block z-10">
-            The trade reverts if the price moves against you (from others trading first)
-            and you'd get more than this % fewer shares than quoted. Tighter = safer price
-            but more likely to fail; looser = more likely to go through.
+            In layman's terms: "Potential extra slippage (in addition to the price impact) incurred in case others enter around the same time as you." In most cases this won't be an issue, but in periods of more activity it might behoove you to set it to 3% or 5%.
           </span>
         </span>
         {[100, 300, 500].map((bps) => (
