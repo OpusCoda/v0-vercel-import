@@ -1,27 +1,41 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { LogOut } from 'lucide-react'
+import { useAccount, useReadContract } from 'wagmi'
+import type { Address } from 'viem'
 import { AdminLogin } from '@/components/admin/admin-login'
 import { CreateMarketForm } from '@/components/admin/create-market-form'
+import { ManageAdmins } from '@/components/admin/manage-admins'
+import { ManageArbitrators } from '@/components/admin/manage-arbitrators'
+import { ManageResolver } from '@/components/admin/manage-resolver'
 import { ConnectWalletButton } from '@/components/landing/connect-wallet-button'
+import { predictionMarketAbi } from '@/lib/abis/prediction-market'
+import { outcomeExchangeAbi } from '@/lib/abis/outcome-exchange'
 
-type AdminTab = 'resolve' | 'create-market' | 'manage-admins'
+const PREDICTION_MARKET_ADDRESS =
+  (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
+  ('0x9F33330BA35cF5f34bB772E4c7a6Fc70D7c1a1BE' as Address)
 
-const tabs: { id: AdminTab; label: string }[] = [
-  { id: 'resolve', label: 'Disputes & Resolutions' },
-  { id: 'create-market', label: 'Create Market' },
-  { id: 'manage-admins', label: 'Manage Admins' },
-]
+const OUTCOME_EXCHANGE_ADDRESS = process.env
+  .NEXT_PUBLIC_OUTCOME_EXCHANGE_ADDRESS as Address
+
+type AdminTab =
+  | 'resolve'
+  | 'create-market'
+  | 'manage-admins'
+  | 'manage-arbitrators'
+  | 'manage-resolver'
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<AdminTab>('resolve')
 
+  const { address } = useAccount()
+
   useEffect(() => {
-    // Check if admin token exists in sessionStorage
     const token = sessionStorage.getItem('admin_token')
     setIsAuthenticated(!!token)
     setIsLoading(false)
@@ -31,6 +45,52 @@ export default function AdminPage() {
     sessionStorage.removeItem('admin_token')
     setIsAuthenticated(false)
   }
+
+  // Owner checks drive which management tabs are visible (Option B — hide).
+  const { data: pmOwner } = useReadContract({
+    address: PREDICTION_MARKET_ADDRESS,
+    abi: predictionMarketAbi,
+    functionName: 'owner',
+    query: { enabled: isAuthenticated },
+  })
+  const { data: oeOwner } = useReadContract({
+    address: OUTCOME_EXCHANGE_ADDRESS,
+    abi: outcomeExchangeAbi,
+    functionName: 'owner',
+    query: { enabled: isAuthenticated },
+  })
+
+  const isPmOwner = Boolean(address) && pmOwner?.toLowerCase() === address?.toLowerCase()
+  const isOeOwner = Boolean(address) && oeOwner?.toLowerCase() === address?.toLowerCase()
+
+  // Tab visibility:
+  //   - Disputes & Resolutions: always (default landing).
+  //   - Create Market: hidden for now. NOTE: createMarket is onlyAdmin (admins + owner),
+  //     so when you add other admins, change this gate to show for admins too
+  //     (e.g. read isAdmin(address) and OR it with isPmOwner).
+  //   - Manage Admins: PredictionMarket owner only.
+  //   - Manage Arbitrators: OutcomeExchange owner only.
+  //   - Manage Resolver: PredictionMarket owner only.
+  const showCreateMarket = isPmOwner
+  const showManageAdmins = isPmOwner
+  const showManageArbitrators = isOeOwner
+  const showManageResolver = isPmOwner
+
+  const tabs = useMemo(() => {
+    const list: { id: AdminTab; label: string }[] = [
+      { id: 'resolve', label: 'Disputes & Resolutions' },
+    ]
+    if (showCreateMarket) list.push({ id: 'create-market', label: 'Create Market' })
+    if (showManageAdmins) list.push({ id: 'manage-admins', label: 'Manage Admins' })
+    if (showManageArbitrators) list.push({ id: 'manage-arbitrators', label: 'Manage Arbitrators' })
+    if (showManageResolver) list.push({ id: 'manage-resolver', label: 'Manage Resolver' })
+    return list
+  }, [showCreateMarket, showManageAdmins, showManageArbitrators, showManageResolver])
+
+  // If the active tab becomes hidden (e.g. wallet changed), fall back to resolve.
+  useEffect(() => {
+    if (!tabs.some((t) => t.id === activeTab)) setActiveTab('resolve')
+  }, [tabs, activeTab])
 
   if (isLoading) {
     return (
@@ -107,32 +167,23 @@ export default function AdminPage() {
         </section>
       )}
 
-      {activeTab === 'create-market' && (
+      {activeTab === 'create-market' && showCreateMarket && (
         <section>
           <div className="mb-6">
             <h2 className="font-serif text-2xl font-bold text-[#e8e6e3]">Create Probability Market</h2>
             <p className="mt-2 font-sans text-sm text-[#7c7a76]">
-              Create a new YES/NO binary market for the Probability Shop. You must be connected with
-              an authorized wallet to proceed.
+              Create a new YES/NO binary market for the Probability Shop.
             </p>
           </div>
           <CreateMarketForm />
         </section>
       )}
 
-      {activeTab === 'manage-admins' && (
-        <section>
-          <div className="mb-6">
-            <h2 className="font-serif text-2xl font-bold text-[#e8e6e3]">Manage Admins</h2>
-            <p className="mt-2 font-sans text-sm text-[#7c7a76]">
-              Add or remove authorized admin wallets.
-            </p>
-          </div>
-          <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-8 text-center">
-            <p className="font-sans text-sm text-[#7c7a76]">Coming soon.</p>
-          </div>
-        </section>
-      )}
+      {activeTab === 'manage-admins' && showManageAdmins && <ManageAdmins />}
+
+      {activeTab === 'manage-arbitrators' && showManageArbitrators && <ManageArbitrators />}
+
+      {activeTab === 'manage-resolver' && showManageResolver && <ManageResolver />}
     </main>
   )
 }

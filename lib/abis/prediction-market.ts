@@ -73,6 +73,20 @@ export const predictionMarketAbi = [
   },
   {
     type: "function",
+    name: "resolver",
+    inputs: [],
+    outputs: [{ type: "address", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "setResolver",
+    inputs: [{ type: "address", name: "_resolver" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "sellShares",
     inputs: [
       { type: "uint256", name: "marketId" },
