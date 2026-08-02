@@ -10,6 +10,7 @@ import { CreateMarketForm } from '@/components/admin/create-market-form'
 import { ManageAdmins } from '@/components/admin/manage-admins'
 import { ManageArbitrators } from '@/components/admin/manage-arbitrators'
 import { ManageResolver } from '@/components/admin/manage-resolver'
+import { DisputesResolutions } from '@/components/admin/disputes-resolutions'
 import { ConnectWalletButton } from '@/components/landing/connect-wallet-button'
 import { predictionMarketAbi } from '@/lib/abis/prediction-market'
 import { outcomeExchangeAbi } from '@/lib/abis/outcome-exchange'
@@ -161,9 +162,7 @@ export default function AdminPage() {
               Markets and wagers awaiting resolution or arbitration will appear here.
             </p>
           </div>
-          <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-8 text-center">
-            <p className="font-sans text-sm text-[#7c7a76]">Nothing awaiting resolution right now.</p>
-          </div>
+          <DisputesResolutions />
         </section>
       )}
 

@@ -71,6 +71,32 @@ export const predictionMarketAbi = [
     outputs: [],
     stateMutability: "payable",
   },
+  // ─── Add to predictionMarketAbi (before the closing `] as const`) ───
+  {
+    type: "function",
+    name: "voidMarket",
+    inputs: [{ type: "uint256", name: "marketId" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "resetProposal",
+    inputs: [{ type: "uint256", name: "marketId" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "resolverSettle",
+    inputs: [
+      { type: "uint256", name: "marketId" },
+      { type: "bool", name: "outcome" },
+      { type: "bool", name: "proposerCorrect" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
   {
     type: "function",
     name: "resolver",
