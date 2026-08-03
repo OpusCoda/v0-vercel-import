@@ -16,6 +16,38 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 const WINDOW_SECONDS = [24 * 3600, 48 * 3600, 7 * 86400, 30 * 86400]
 // Minimum stake per side (frontend-only guard; the contract has no minimum).
 const MIN_STAKE_PLS = 100_000
+
+// The user's IANA timezone name (e.g. "Europe/Oslo"), for labelling local time.
+const LOCAL_TZ =
+  (typeof Intl !== 'undefined' && Intl.DateTimeFormat().resolvedOptions().timeZone) || 'local'
+
+// "Tue, 04 Aug 2026, 10:10" in the user's local timezone.
+function localLabel(d: Date): string {
+  return d.toLocaleString(undefined, {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+// "Tue, 04 Aug 2026 08:10 UTC" — toUTCString() minus the trailing " GMT",
+// with an explicit "UTC" tag (UTC and GMT are the same instant; show one label).
+function utcLabel(d: Date): string {
+  return d.toUTCString().replace(' GMT', '') + ' UTC'
+}
+
+// Display helper: group integer part with thousands separators for the stake
+// fields. Input state stays a raw dot-decimal string; this only affects display.
+function groupThousands(raw: string): string {
+  if (raw === '') return ''
+  const [intPart, decPart] = raw.split('.')
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return decPart !== undefined ? `${grouped}.${decPart}` : grouped
+}
+
 // Format a "YYYY-MM-DDTHH:mm" local datetime-local string a few days out.
 function defaultEventDateTime(daysAhead: number): string {
   const d = new Date()
@@ -85,9 +117,13 @@ export function CreateWager() {
   const eventTs = eventDateTime ? Math.floor(new Date(eventDateTime).getTime() / 1000) : 0
   const nowTs = Math.floor(Date.now() / 1000)
   const isEventDateValid = eventTs > nowTs + windowSeconds
+  // Date objects for local + UTC labelling.
+  const eventDateObj = eventDateTime ? new Date(eventDateTime) : null
+  const earliestValidDate = new Date((nowTs + windowSeconds) * 1000)
   // Earliest valid moment = now + window, shown in UTC (matches the contract rule).
-  const earliestValidLabel = new Date((nowTs + windowSeconds) * 1000).toUTCString()
-  const eventUtcLabel = eventDateTime ? new Date(eventDateTime).toUTCString() : ''
+  const earliestValidLabel = utcLabel(earliestValidDate)
+  const eventLocalLabel = eventDateObj ? localLabel(eventDateObj) : ''
+  const eventUtcLabel = eventDateObj ? utcLabel(eventDateObj) : ''
   // Stake minimums (both sides must meet the floor).
   const myStakeBelowMin = !!myStake && parseFloat(myStake) < MIN_STAKE_PLS
   const challengerStakeBelowMin = !!challengerStake && parseFloat(challengerStake) < MIN_STAKE_PLS
@@ -105,7 +141,7 @@ export function CreateWager() {
       return
     }
     if (!isEventDateValid) {
-      alert(`Event date is too soon for the selected deposit window. Earliest valid (UTC): ${earliestValidLabel}`)
+      alert(`Event date is too soon for the selected deposit window. Earliest valid: ${earliestValidLabel}`)
       return
     }
     if (parseFloat(myStake) < MIN_STAKE_PLS || parseFloat(challengerStake) < MIN_STAKE_PLS) {
@@ -258,6 +294,11 @@ export function CreateWager() {
               className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
               required
             />
+            <p className="text-xs text-[#666] mt-1 leading-relaxed">
+              If you mention a date/time in the description, make sure it matches the
+              Event Date &amp; Time set below. If they differ, the Event Date &amp; Time
+              (shown in UTC) is what settles the wager.
+            </p>
           </div>
           {/* My Stake */}
           <div>
@@ -265,12 +306,13 @@ export function CreateWager() {
             <input
               type="text"
               inputMode="decimal"
-              value={myStake}
+              value={groupThousands(myStake)}
               onChange={(e) => {
-                const raw = e.target.value.replace(',', '.')
+                // Strip grouping commas, then keep only a valid decimal string.
+                const raw = e.target.value.replace(/,/g, '')
                 if (raw === '' || /^\d*\.?\d*$/.test(raw)) setMyStake(raw)
               }}
-              placeholder="0.00"
+              placeholder="0"
               className={`w-full rounded-lg border bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:outline-none ${
                 myStakeBelowMin
                   ? 'border-red-500/50 focus:border-red-500'
@@ -282,10 +324,10 @@ export function CreateWager() {
               <p className="text-xs text-red-400 mt-1">Minimum {MIN_STAKE_PLS.toLocaleString()} PLS.</p>
             )}
           </div>
-          {/* Event Date & Time -- required for BOTH types. Local time, UTC echo shown. */}
+          {/* Event Date & Time -- required for BOTH types. Local + UTC shown explicitly. */}
           <div>
             <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">
-              Event Date &amp; Time <span className="text-[#9a9a9a] font-normal">(your local time)</span>
+              Event Date &amp; Time <span className="text-[#9a9a9a] font-normal">(enter in your local time)</span>
             </label>
             <div className="flex gap-2">
               <input
@@ -306,13 +348,18 @@ export function CreateWager() {
               </button>
             </div>
             {eventDateTime && (
-              <div className="text-xs mt-2 leading-relaxed">
-                <span className="text-[#9a9a9a]">UTC: {eventUtcLabel}</span>
+              <div className="text-xs mt-2 leading-relaxed space-y-0.5">
+                <div className="text-[#9a9a9a]">
+                  <span className="text-[#666]">Your time ({LOCAL_TZ}):</span> {eventLocalLabel}
+                </div>
+                <div className="text-[#9a9a9a]">
+                  <span className="text-[#666]">UTC:</span> {eventUtcLabel}
+                </div>
                 {!isEventDateValid && (
-                  <span className="block text-red-400 mt-1">
+                  <div className="block text-red-400 mt-1">
                     Too soon for a {DEPOSIT_WINDOWS[Number(depositWindow)].label} deposit window.
-                    Earliest valid (UTC): {earliestValidLabel}
-                  </span>
+                    Earliest valid: {earliestValidLabel}
+                  </div>
                 )}
               </div>
             )}
@@ -341,12 +388,12 @@ export function CreateWager() {
             <input
               type="text"
               inputMode="decimal"
-              value={challengerStake}
+              value={groupThousands(challengerStake)}
               onChange={(e) => {
-                const raw = e.target.value.replace(',', '.')
+                const raw = e.target.value.replace(/,/g, '')
                 if (raw === '' || /^\d*\.?\d*$/.test(raw)) setChallengerStake(raw)
               }}
-              placeholder="0.00"
+              placeholder="0"
               className={`w-full rounded-lg border bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:outline-none ${
                 challengerStakeBelowMin
                   ? 'border-red-500/50 focus:border-red-500'
@@ -561,7 +608,7 @@ export function CreateWager() {
               {isConfirmed ? (
                 <div className="flex items-center gap-2">
                   <span>✓</span>
-                  <span>Wager successfully created — your opinion is now collateralized on-chain.</span>
+                  <span>Wager successfully created — your wager is now collateralized on-chain.</span>
                 </div>
               ) : writeError ? (
                 <div>
@@ -571,7 +618,7 @@ export function CreateWager() {
                 </div>
               ) : (
                 <div className="space-y-1">
-                  <div>Your opinion will be collateralized as soon as the blockchain concurs.</div>
+                  <div>Your wager will be collateralized as soon as the blockchain concurs.</div>
                   <div className="text-xs opacity-80">Waiting for confirmation…</div>
                 </div>
               )}
@@ -606,9 +653,11 @@ export function CreateWager() {
               <h3 className="font-serif text-xl font-bold text-[#e8e6e3] mb-1">
                 {wagerType === 'standard' ? 'Standard Wager' : 'Price Bet'} -- {CATEGORIES.find(c => c.value.toString() === category)?.label}
               </h3>
-              <p className="text-[#9a9a9a] text-sm">
-                "{description}" - {eventUtcLabel} (UTC)
-              </p>
+              <p className="text-[#9a9a9a] text-sm">"{description}"</p>
+              <div className="mt-2 text-xs text-[#9a9a9a] space-y-0.5">
+                <div><span className="text-[#666]">Your time ({LOCAL_TZ}):</span> {eventLocalLabel}</div>
+                <div><span className="text-[#666]">UTC:</span> {eventUtcLabel}</div>
+              </div>
             </div>
             <div className="space-y-6 text-sm font-mono">
               <div className="space-y-2">
