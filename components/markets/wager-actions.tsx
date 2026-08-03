@@ -11,8 +11,10 @@ function short(a?: string) {
   return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : ''
 }
 /**
- * Self-contained resolution controls for a single wager.
+ * Self-contained action controls for a single wager.
  * Reads live state from getWagerDetails and shows the right action:
+ *   - Created, challenger is you                → "Accept" (payable, lazy amount read)
+ *   - Created, creator is you                   → "Cancel"
  *   - Price bet, past eventDate, Active         → "Resolve now" (anyone)
  *   - Standard, in voting window, party         → vote buttons
  *   - Standard, before eventDate, party         → early-resolution buttons (if enabled)
@@ -22,6 +24,8 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
   const { address } = useAccount()
   const { openConnectModal } = useConnectModal()
   const {
+    acceptWager,
+    cancelWager,
     submitVote,
     proposeEarlyResolution,
     resolvePriceBet,
@@ -78,6 +82,41 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
   const guarded = (fn: () => void) => () => {
     if (!address) { openConnectModal?.(); return }
     fn()
+  }
+  // ---- CREATED (open, not yet accepted) ----
+  if (status === 0) {
+    // Challenger (named counterparty) accepts. acceptWager reads the exact
+    // required amount on click and sends it as value.
+    if (isChallenger) {
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <button
+            onClick={guarded(() => acceptWager(wagerId))}
+            disabled={busy}
+            className="rounded-lg bg-[#D8B13D] px-5 py-2 text-sm font-semibold text-black transition hover:bg-[#D8B13D]/90 disabled:opacity-50"
+          >
+            {busy ? 'Accepting…' : 'Accept wager'}
+          </button>
+          {statusLine}
+        </div>
+      )
+    }
+    // Creator can cancel their own open wager to reclaim the stake.
+    if (isCreator) {
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <button
+            onClick={guarded(() => cancelWager(wagerId))}
+            disabled={busy}
+            className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-[#f4f4f4] transition hover:bg-white/5 disabled:opacity-50"
+          >
+            {busy ? 'Cancelling…' : 'Cancel wager'}
+          </button>
+          {statusLine}
+        </div>
+      )
+    }
+    return <div className="text-center text-sm text-[#9a9a9a]">Awaiting acceptance</div>
   }
   // ---- PRICE BET: resolvable by anyone once past eventDate ----
   if (wagerType === 1 && status === 1 && now > eventDate) {

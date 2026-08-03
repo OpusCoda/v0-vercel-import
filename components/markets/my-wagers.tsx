@@ -3,13 +3,12 @@ import { useMemo, useEffect } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { MarketCard } from '@/components/landing/market-card'
 import { GlobalMetrics } from '@/components/markets/global-metrics'
+import { WagerActions } from '@/components/markets/wager-actions'
 import { useAllWagers } from '@/hooks/useAllWagers'
 import { wagerToCard } from '@/lib/wager-to-card'
 import { WAGER_MARKET_ADDRESS } from '@/lib/wager-market'
 import type { WagerDetails } from '@/hooks/useOpenWagers'
-
 const ZERO = '0x0000000000000000000000000000000000000000'
-
 // getReferralInfo / claimReferralRewards exist on the deployed contract but not
 // in the shared ABI subset — declared locally to avoid touching wager-market.ts.
 const REFERRAL_ABI = [
@@ -36,11 +35,9 @@ const REFERRAL_ABI = [
     type: 'function',
   },
 ] as const
-
 function plsNum(v: bigint): number {
   return Number(v) / 1e18
 }
-
 // What (if anything) this wager needs from the connected user right now.
 // Status enum: 0 Created, 1 Active, 2 Voting, 3 Resolved, 4 Arbitration, 5 Cancelled, 6 Voided
 function actionFor(w: WagerDetails, me: string, now: number): string | null {
@@ -65,7 +62,6 @@ function actionFor(w: WagerDetails, me: string, now: number): string | null {
   }
   return null
 }
-
 function CardFor({ w }: { w: WagerDetails }) {
   const m = wagerToCard(w)
   return (
@@ -91,11 +87,9 @@ function CardFor({ w }: { w: WagerDetails }) {
     />
   )
 }
-
 export function MyWagers() {
   const { address, isConnected } = useAccount()
   const { wagers, isLoading } = useAllWagers()
-
   // Referral rewards — one extra read; claim button when non-zero.
   const { data: referralData, refetch: refetchReferral } = useReadContract({
     address: WAGER_MARKET_ADDRESS,
@@ -104,8 +98,10 @@ export function MyWagers() {
     args: address ? [address] : undefined,
     query: { enabled: !!address, refetchInterval: 60000 },
   })
-  const pendingReferral = referralData ? plsNum((referralData as readonly [string, bigint, boolean, bigint, bigint, bigint, bigint])[5]) : 0
-
+  const referralPendingWei = referralData
+    ? (referralData as readonly [string, bigint, boolean, bigint, bigint, bigint, bigint])[5]
+    : 0n
+  const pendingReferral = plsNum(referralPendingWei)
   const { writeContract: claimWrite, isPending: claimPending, data: claimTx } = useWriteContract()
   const { isSuccess: claimConfirmed } = useWaitForTransactionReceipt({
     hash: claimTx,
@@ -114,12 +110,10 @@ export function MyWagers() {
   useEffect(() => {
     if (claimConfirmed) refetchReferral()
   }, [claimConfirmed, refetchReferral])
-
   const me = address?.toLowerCase()
   const now = Math.floor(Date.now() / 1000)
-
   const { actionNeeded, active, history, lockedPLS, won, lost } = useMemo(() => {
-    const empty = { actionNeeded: [] as WagerDetails[], active: [] as WagerDetails[], history: [] as WagerDetails[], lockedPLS: 0, won: 0, lost: 0 }
+    const empty = { actionNeeded: [] as WagerDetails[], active: [] as WagerDetails[], history: [] as WagerDetails[], lockedPLS: 0n, won: 0, lost: 0 }
     if (!me) return empty
     const mine = wagers.filter(
       (w) => w.creator.toLowerCase() === me || w.challenger.toLowerCase() === me
@@ -127,7 +121,7 @@ export function MyWagers() {
     const out = { ...empty, actionNeeded: [], active: [], history: [] } as typeof empty
     for (const w of mine) {
       const isCreator = w.creator.toLowerCase() === me
-      const myStake = isCreator ? plsNum(w.creatorStake) : plsNum(w.challengerStake)
+      const myStake = isCreator ? w.creatorStake : w.challengerStake
       if (w.status === 0) {
         // Created: only the creator's PLS is actually deposited.
         if (isCreator) out.lockedPLS += myStake
@@ -149,7 +143,6 @@ export function MyWagers() {
     out.history.sort(byIdDesc)
     return out
   }, [wagers, me, now])
-
   if (!isConnected) {
     return (
       <div className="rounded-2xl border border-[#2a2a35] bg-[#101017] p-8 text-center">
@@ -157,18 +150,20 @@ export function MyWagers() {
       </div>
     )
   }
-
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 md:px-6">
       {/* Global Metrics */}
       <GlobalMetrics
         lockedValuePLS={lockedPLS}
-        pendingActions={actionNeeded.length}
-        claimablePLS={pendingReferral}
-        performance={(won - lost) * 100 / Math.max(won + lost, 1)} // Simple performance calculation
+        pendingActionsCount={actionNeeded.length}
+        claimablePLS={referralPendingWei}
+        performance={{
+          wins: won,
+          losses: lost,
+          percentage: won + lost > 0 ? Math.round((won * 100) / (won + lost)) : 0,
+        }}
         isLoading={isLoading}
       />
-
       {/* Referral rewards claim button (separate from metrics) */}
       {pendingReferral > 0 && (
         <div className="mb-8 flex justify-end">
@@ -187,7 +182,6 @@ export function MyWagers() {
           </button>
         </div>
       )}
-
       {isLoading ? (
         <div className="py-12 text-center">
           <p className="font-sans text-sm text-[#7c7a76]">Loading your wagers…</p>
@@ -209,8 +203,6 @@ export function MyWagers() {
               <div className="space-y-3 rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
                 {actionNeeded.map((w) => {
                   const action = actionFor(w, me!, now)
-                  const isCreator = w.creator.toLowerCase() === me
-                  const myStake = isCreator ? plsNum(w.creatorStake) : plsNum(w.challengerStake)
                   return (
                     <div key={`action-${w.id.toString()}`} className="flex items-center justify-between rounded border border-[#2a2a35] bg-[#0d0d12] p-3">
                       <div className="flex-1 min-w-0">
@@ -222,16 +214,15 @@ export function MyWagers() {
                           {wagerToCard(w).description}
                         </div>
                       </div>
-                      <button className="ml-4 shrink-0 rounded border border-[#d4af37]/40 px-3 py-1.5 font-sans text-xs font-semibold text-[#d4af37] transition-colors hover:bg-[#d4af37]/10">
-                        {action === 'Vote on the winner' ? 'Vote' : action === 'Accept or decline' ? 'Accept' : 'Claim'}
-                      </button>
+                      <div className="ml-4 shrink-0">
+                        <WagerActions wagerId={w.id} />
+                      </div>
                     </div>
                   )
                 })}
               </div>
             </div>
           )}
-
           {/* Active Positions - Unified Table */}
           {active.length > 0 && (
             <div>
@@ -269,7 +260,6 @@ export function MyWagers() {
               </div>
             </div>
           )}
-
           {/* History */}
           {history.length > 0 && (
             <div>
