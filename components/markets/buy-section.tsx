@@ -9,7 +9,7 @@ import { useBuyShares } from "@/hooks/useBuyShares"
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ("0x9F33330BA35cF5f34bB772E4c7a6Fc70D7c1a1BE" as Address)
+  ("0x1e6b4f6426CBFF980F70B6eF79FBaa8507f6e90A" as Address)
 
 // Fallback until the on-chain minimumBet loads.
 const FALLBACK_MINIMUM_BET_PLS = 5_000
