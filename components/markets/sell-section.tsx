@@ -5,9 +5,7 @@ import { formatUnits } from "viem"
 import type { Address } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useSellShares } from "@/hooks/useSellShares"
-const PREDICTION_MARKET_ADDRESS =
-  (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ("0x1e6b4f6426CBFF980F70B6eF79FBaa8507f6e90A" as Address)
+const PREDICTION_MARKET_ADDRESS = "0x1e6b4f6426CBFF980F70B6eF79FBaa8507f6e90A" as Address
 function fmt(v: number, dp = 0) {
   return v.toLocaleString(undefined, { maximumFractionDigits: dp })
 }

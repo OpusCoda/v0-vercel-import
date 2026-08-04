@@ -2,10 +2,13 @@
 import { useState } from "react"
 import { useAccount, useReadContract } from "wagmi"
 import { BuySection } from "@/components/markets/buy-section"
+import { SellSection } from "@/components/markets/sell-section"
 import { useAcceptWager } from "@/hooks/useAcceptWager"
 import { useCancelWager } from "@/hooks/useCancelWager"
 import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from "@/lib/wager-market"
+import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { WagerActions } from "@/components/markets/wager-actions"
+const PREDICTION_MARKET_ADDRESS = "0x1e6b4f6426CBFF980F70B6eF79FBaa8507f6e90A"
 export type ProbabilityOutcome = {
   label: string
   odds: number // percentage 0-100
@@ -253,9 +256,28 @@ function shareOnX(title: string, yesOdds: number, noOdds: number) {
     encodeURIComponent(url)
   if (typeof window !== "undefined") window.open(intent, "_blank", "noopener,noreferrer")
 }
-// Binary YES/NO market card with an inline buy panel per side.
+// Small hook: does the connected user hold any shares on this market?
+// Drives whether the Sell toggle appears. One light read per open card.
+function useHasPosition(marketId: bigint | undefined) {
+  const { address } = useAccount()
+  const { data } = useReadContract({
+    address: PREDICTION_MARKET_ADDRESS,
+    abi: predictionMarketAbi,
+    functionName: "getUserPosition",
+    args: address && marketId !== undefined ? [marketId, address] : undefined,
+    query: { enabled: !!address && marketId !== undefined },
+  })
+  const pos = data as unknown as { yesShares: bigint; noShares: bigint } | undefined
+  return {
+    hasYes: !!pos && pos.yesShares > 0n,
+    hasNo: !!pos && pos.noShares > 0n,
+  }
+}
+// A single open panel is described by which side + whether buying or selling.
+type PanelState = { side: boolean; mode: "buy" | "sell" } | null
+// Binary YES/NO market card with an inline buy/sell panel per side.
 function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }>) {
-  const [openSide, setOpenSide] = useState<null | boolean>(null)
+  const [panel, setPanel] = useState<PanelState>(null)
   const fmtPls = (v?: number) =>
     v === undefined ? undefined : Math.round(v).toLocaleString()
   const vol = fmtPls(props.volumePls)
@@ -266,6 +288,11 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
   })()
   // Trading is only possible while the market is Open.
   const tradable = props.status === "Open" && marketId !== undefined
+  const { hasYes, hasNo } = useHasPosition(marketId)
+  // Toggle a panel open/closed. Clicking the same side+mode closes it.
+  function toggle(side: boolean, mode: "buy" | "sell") {
+    setPanel((p) => (p && p.side === side && p.mode === mode ? null : { side, mode }))
+  }
   return (
     <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#d4af37]/30">
       {/* Header: icon + question, status badge */}
@@ -288,7 +315,7 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
           </span>
         )}
       </div>
-      {/* Single row: odds on the left, buy buttons on the right */}
+      {/* Odds row */}
       <div className="flex items-center justify-between gap-3 border-t border-[#2a2a35] pt-3">
         <div className="font-sans text-sm text-[#b8b6b1]">
           <span className="font-semibold text-green-400">Yes {props.yesOdds}%</span>
@@ -297,14 +324,14 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
         </div>
         <div className="flex gap-1 shrink-0">
           <button
-            onClick={() => tradable && setOpenSide((s) => (s === true ? null : true))}
+            onClick={() => tradable && toggle(true, "buy")}
             disabled={!tradable}
             className="rounded px-3 py-1 font-sans text-[11px] font-semibold text-green-400 hover:bg-green-400/10 border border-green-400/30 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Buy Yes
           </button>
           <button
-            onClick={() => tradable && setOpenSide((s) => (s === false ? null : false))}
+            onClick={() => tradable && toggle(false, "buy")}
             disabled={!tradable}
             className="rounded px-3 py-1 font-sans text-[11px] font-semibold text-red-400 hover:bg-red-400/10 border border-red-400/30 disabled:opacity-40 disabled:cursor-not-allowed"
           >
@@ -312,13 +339,45 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
           </button>
         </div>
       </div>
-      {/* Inline buy panel for the chosen side */}
-      {tradable && openSide !== null && marketId !== undefined && (
-        <BuySection
-          marketId={marketId}
-          side={openSide}
-          onClose={() => setOpenSide(null)}
-        />
+      {/* Sell row — only shows the sides the user actually holds, while tradable */}
+      {tradable && (hasYes || hasNo) && (
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <span className="font-sans text-[10px] text-[#7c7a76]">Your positions</span>
+          <div className="flex gap-1 shrink-0">
+            {hasYes && (
+              <button
+                onClick={() => toggle(true, "sell")}
+                className="rounded px-3 py-1 font-sans text-[11px] font-semibold text-green-400 border border-green-400/30 hover:bg-green-400/10"
+              >
+                Sell Yes
+              </button>
+            )}
+            {hasNo && (
+              <button
+                onClick={() => toggle(false, "sell")}
+                className="rounded px-3 py-1 font-sans text-[11px] font-semibold text-red-400 border border-red-400/30 hover:bg-red-400/10"
+              >
+                Sell No
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      {/* Inline panel: buy or sell for the chosen side */}
+      {tradable && panel !== null && marketId !== undefined && (
+        panel.mode === "buy" ? (
+          <BuySection
+            marketId={marketId}
+            side={panel.side}
+            onClose={() => setPanel(null)}
+          />
+        ) : (
+          <SellSection
+            marketId={marketId}
+            side={panel.side}
+            onClose={() => setPanel(null)}
+          />
+        )
       )}
       {/* Resolution details — collapsible; renders only when data is passed in */}
       {(props.resolutionCriteria || props.source || props.resolutionDeadline) && (

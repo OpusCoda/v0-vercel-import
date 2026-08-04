@@ -1,23 +1,18 @@
 "use client"
-
 import { useState } from "react"
 import { useAccount, useReadContract } from "wagmi"
 import { formatUnits } from "viem"
 import type { Address } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useBuyShares } from "@/hooks/useBuyShares"
-
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
   ("0x1e6b4f6426CBFF980F70B6eF79FBaa8507f6e90A" as Address)
-
 // Fallback until the on-chain minimumBet loads.
 const FALLBACK_MINIMUM_BET_PLS = 5_000
-
 function fmt(v: number, dp = 0) {
   return v.toLocaleString(undefined, { maximumFractionDigits: dp })
 }
-
 /**
  * Inline buy panel for one side of a binary market. Shows a live, contract-
  * quoted preview (shares out, avg price, price impact, resulting odds) and
@@ -33,7 +28,9 @@ export function BuySection({
   onClose: () => void
 }) {
   const { isConnected } = useAccount()
-
+  // Local key bumped on any new input to remount the buy hook, clearing a
+  // lingering "Bought ✓" success state once the user acts again.
+  const [txKey, setTxKey] = useState(0)
   // Live minimum bet from the contract (owner-adjustable via setMinimumBet).
   const { data: minimumBetWei } = useReadContract({
     address: PREDICTION_MARKET_ADDRESS,
@@ -44,10 +41,53 @@ export function BuySection({
     minimumBetWei !== undefined
       ? Number(formatUnits(minimumBetWei as bigint, 18))
       : FALLBACK_MINIMUM_BET_PLS
-
   const [amount, setAmount] = useState(String(FALLBACK_MINIMUM_BET_PLS))
   const [slippageBps, setSlippageBps] = useState(100) // 1%
-
+  return (
+    <BuyPanel
+      key={txKey}
+      marketId={marketId}
+      side={side}
+      onClose={onClose}
+      isConnected={isConnected}
+      minimumBetPls={minimumBetPls}
+      amount={amount}
+      setAmount={(v) => {
+        // Any change to the amount starts a fresh trade — clear prior success.
+        setAmount(v)
+        setTxKey((k) => k + 1)
+      }}
+      slippageBps={slippageBps}
+      setSlippageBps={(b) => {
+        setSlippageBps(b)
+        setTxKey((k) => k + 1)
+      }}
+    />
+  )
+}
+// Inner panel: holds the buy hook. Remounting (via key) resets its tx state,
+// which is how the stale "Bought ✓" label clears on new input.
+function BuyPanel({
+  marketId,
+  side,
+  onClose,
+  isConnected,
+  minimumBetPls,
+  amount,
+  setAmount,
+  slippageBps,
+  setSlippageBps,
+}: {
+  marketId: bigint
+  side: boolean
+  onClose: () => void
+  isConnected: boolean
+  minimumBetPls: number
+  amount: string
+  setAmount: (v: string) => void
+  slippageBps: number
+  setSlippageBps: (b: number) => void
+}) {
   const {
     quote,
     quoteLoading,
@@ -58,30 +98,24 @@ export function BuySection({
     isSuccess,
     writeError,
   } = useBuyShares(marketId, side, amount, slippageBps)
-
   const amountNum = Number(amount || 0)
   const belowMin = amountNum > 0 && amountNum < minimumBetPls
-
   const sideLabel = side ? "Yes" : "No"
   const sideColor = side ? "text-green-400" : "text-red-400"
   const sideBorder = side ? "border-green-400/30" : "border-red-400/30"
-
   // Derived preview numbers.
   const sharesOut = quote ? Number(formatUnits(quote.sharesOut, 18)) : undefined
   const avgPrice = quote ? Number(formatUnits(quote.pricePerShare, 18)) : undefined
   const newOdds = quote ? Math.round(Number(formatUnits(quote.newSpotPrice, 18)) * 100) : undefined
   const impactPct = quote ? Number(quote.priceImpactBps) / 100 : undefined
-
   let btnLabel: string
   if (!isConnected) btnLabel = "Connect wallet"
   else if (isSuccess) btnLabel = "Bought ✓"
   else if (isPending) btnLabel = "Confirm in wallet…"
   else if (isConfirming) btnLabel = "Buying…"
   else btnLabel = `Buy ${sideLabel}`
-
   const disabled =
     !isConnected || belowMin || !quote || isPending || isConfirming || isSuccess
-
   return (
     <div className={`mt-3 rounded-lg border ${sideBorder} bg-[#0d0d12] p-3`}>
       <div className="mb-2 flex items-center justify-between">
@@ -95,7 +129,6 @@ export function BuySection({
           Close
         </button>
       </div>
-
       {/* Amount */}
       <div className="flex items-center gap-2">
         <input
@@ -109,13 +142,11 @@ export function BuySection({
         />
         <span className="font-sans text-xs text-[#7c7a76]">PLS</span>
       </div>
-
       {belowMin && (
         <p className="mt-1 font-sans text-[10px] text-orange-400">
           Minimum bet is {fmt(minimumBetPls)} PLS.
         </p>
       )}
-
       {/* Slippage tolerance */}
       <div className="mt-2 flex items-center gap-2">
         <span className="group relative flex items-center gap-1">
@@ -144,7 +175,6 @@ export function BuySection({
           </button>
         ))}
       </div>
-
       {/* Preview */}
       {!belowMin && amountNum > 0 && (
         <div className="mt-3 space-y-1 border-t border-[#2a2a35] pt-2 font-sans text-[10px] text-[#b8b6b1]">
@@ -176,14 +206,12 @@ export function BuySection({
           ) : null}
         </div>
       )}
-
       {/* High-impact warning */}
       {impactPct !== undefined && impactPct >= 10 && (
         <p className="mt-2 font-sans text-[10px] text-orange-400">
           High price impact ({impactPct.toFixed(1)}%) — this market has thin liquidity.
         </p>
       )}
-
       <button
         onClick={() => buy()}
         disabled={disabled}
@@ -191,7 +219,6 @@ export function BuySection({
       >
         {btnLabel}
       </button>
-
       {writeError && (
         <p className="mt-1 font-sans text-[10px] text-red-400">
           {writeError.message.includes("SlippageTooHigh")
