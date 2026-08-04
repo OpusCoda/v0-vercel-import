@@ -332,6 +332,33 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
 
       {/* Footer: volume + liquidity (left) · deadline (right) */}
       {(vol || liq || timing) && (
+        {(props.resolutionCriteria || props.source || props.resolutionDeadline) && (
+  <details className="mt-3 rounded-lg border border-[#2a2a35] bg-[#0d0d12] p-3">
+    <summary className="cursor-pointer font-sans text-[11px] font-semibold text-[#d4af37]">
+      Resolution details
+    </summary>
+    <div className="mt-2 space-y-2 font-sans text-[11px] leading-relaxed text-[#b8b6b1]">
+      {props.resolutionCriteria && (
+        <p className="whitespace-pre-line">{props.resolutionCriteria}</p>
+      )}
+      {props.source && (
+        <p>
+          <span className="text-[#7c7a76]">Source: </span>
+          {props.source.startsWith("http") ? (
+            <a href={props.source} target="_blank" rel="noopener noreferrer"
+               className="text-[#d4af37] underline break-all">{props.source}</a>
+          ) : props.source}
+        </p>
+      )}
+      {props.resolutionDeadline && (
+        <p>
+          <span className="text-[#7c7a76]">Resolution opens: </span>
+          {humanWhen(props.resolutionDeadline, props.resolutionDeadline - Math.floor(Date.now() / 1000))}
+        </p>
+      )}
+    </div>
+  </details>
+)}
         <div className="mt-3 flex items-center justify-between gap-2 font-sans text-[11px] text-[#7c7a76]">
           <span>
             {vol && <>{vol} PLS Vol</>}
