@@ -256,11 +256,10 @@ function shareOnX(title: string, yesOdds: number, noOdds: number) {
     encodeURIComponent(url)
   if (typeof window !== "undefined") window.open(intent, "_blank", "noopener,noreferrer")
 }
-// Small hook: does the connected user hold any shares on this market?
-// Drives whether the Sell toggle appears. One light read per open card.
-// Small hook: does the connected user hold any shares on this market?
-// Reads the public yesShares/noShares mappings directly (plain uint256 —
-// avoids any struct-decode ambiguity from getUserPosition).
+// Small hook: the connected user's held shares on this market.
+// Drives whether the Sell toggle appears AND shows the amounts inline.
+// Polls so the row appears after a buy and updates/hides after a sell,
+// without a manual page refresh.
 function useHasPosition(marketId: bigint | undefined) {
   const { address } = useAccount()
   const { data } = useReadContract({
@@ -274,10 +273,18 @@ function useHasPosition(marketId: bigint | undefined) {
     },
   })
   const pos = data as unknown as { yesShares: bigint; noShares: bigint } | undefined
+  const yesShares = pos?.yesShares ?? 0n
+  const noShares = pos?.noShares ?? 0n
   return {
-    hasYes: !!pos && pos.yesShares > 0n,
-    hasNo: !!pos && pos.noShares > 0n,
+    hasYes: yesShares > 0n,
+    hasNo: noShares > 0n,
+    yesShares,
+    noShares,
   }
+}
+// Whole-share label from a 1e18-scaled bigint (e.g. 14_423).
+function fmtShares(v: bigint): string {
+  return (Number(v) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 0 })
 }
 // A single open panel is described by which side + whether buying or selling.
 type PanelState = { side: boolean; mode: "buy" | "sell" } | null
@@ -294,7 +301,7 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
   })()
   // Trading is only possible while the market is Open.
   const tradable = props.status === "Open" && marketId !== undefined
-  const { hasYes, hasNo } = useHasPosition(marketId)
+  const { hasYes, hasNo, yesShares, noShares } = useHasPosition(marketId)
   // Toggle a panel open/closed. Clicking the same side+mode closes it.
   function toggle(side: boolean, mode: "buy" | "sell") {
     setPanel((p) => (p && p.side === side && p.mode === mode ? null : { side, mode }))
@@ -345,10 +352,17 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
           </button>
         </div>
       </div>
-      {/* Sell row — only shows the sides the user actually holds, while tradable */}
+      {/* Sell row — shows held sides with their share counts, while tradable */}
       {tradable && (hasYes || hasNo) && (
         <div className="mt-2 flex items-center justify-between gap-3">
-          <span className="font-sans text-[10px] text-[#7c7a76]">Your positions</span>
+          <div className="flex flex-col font-sans text-[10px] text-[#7c7a76]">
+            <span>Your positions</span>
+            <span className="text-[#b8b6b1]">
+              {hasYes && <span className="text-green-400">{fmtShares(yesShares)} Yes</span>}
+              {hasYes && hasNo && <span className="mx-1 text-[#7c7a76]">·</span>}
+              {hasNo && <span className="text-red-400">{fmtShares(noShares)} No</span>}
+            </span>
+          </div>
           <div className="flex gap-1 shrink-0">
             {hasYes && (
               <button
@@ -424,13 +438,13 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
           </div>
         </details>
       )}
-      {/* Footer: volume + liquidity (left) · deadline (right) */}
+      {/* Footer: volume + market balance (left) · deadline (right) */}
       {(vol || liq || timing) && (
         <div className="mt-3 flex items-center justify-between gap-2 font-sans text-[11px] text-[#7c7a76]">
           <span>
             {vol && <>{vol} PLS Vol</>}
             {vol && liq && <span className="mx-1">·</span>}
-            {liq && <>{liq} PLS Liquidity</>}
+            {liq && <>{liq} PLS Market</>}
           </span>
           {timing && <span className="shrink-0">{timing}</span>}
         </div>
