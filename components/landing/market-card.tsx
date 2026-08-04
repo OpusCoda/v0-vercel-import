@@ -263,24 +263,20 @@ function shareOnX(title: string, yesOdds: number, noOdds: number) {
 // avoids any struct-decode ambiguity from getUserPosition).
 function useHasPosition(marketId: bigint | undefined) {
   const { address } = useAccount()
-  const enabled = !!address && marketId !== undefined
-  const { data: yes } = useReadContract({
+  const { data } = useReadContract({
     address: PREDICTION_MARKET_ADDRESS,
     abi: predictionMarketAbi,
-    functionName: "yesShares",
-    args: enabled ? [marketId, address] : undefined,
-    query: { enabled },
+    functionName: "getUserPosition",
+    args: address && marketId !== undefined ? [marketId, address] : undefined,
+    query: {
+      enabled: !!address && marketId !== undefined,
+      refetchInterval: 8000,
+    },
   })
-  const { data: no } = useReadContract({
-    address: PREDICTION_MARKET_ADDRESS,
-    abi: predictionMarketAbi,
-    functionName: "noShares",
-    args: enabled ? [marketId, address] : undefined,
-    query: { enabled },
-  })
+  const pos = data as unknown as { yesShares: bigint; noShares: bigint } | undefined
   return {
-    hasYes: typeof yes === "bigint" && yes > 0n,
-    hasNo: typeof no === "bigint" && no > 0n,
+    hasYes: !!pos && pos.yesShares > 0n,
+    hasNo: !!pos && pos.noShares > 0n,
   }
 }
 // A single open panel is described by which side + whether buying or selling.

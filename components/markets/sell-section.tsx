@@ -1,11 +1,10 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useAccount, useReadContract } from "wagmi"
 import { formatUnits } from "viem"
-import type { Address } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useSellShares } from "@/hooks/useSellShares"
-const PREDICTION_MARKET_ADDRESS = "0x1e6b4f6426CBFF980F70B6eF79FBaa8507f6e90A" as Address
+const PREDICTION_MARKET_ADDRESS = "0x1e6b4f6426CBFF980F70B6eF79FBaa8507f6e90A"
 function fmt(v: number, dp = 0) {
   return v.toLocaleString(undefined, { maximumFractionDigits: dp })
 }
@@ -40,13 +39,14 @@ export function SellSection({
   const [txKey, setTxKey] = useState(0)
   const [pct, setPct] = useState<number>(100)
   const [slippageBps, setSlippageBps] = useState(100)
-  // Read the user's position for this market.
-  const { data: posRaw } = useReadContract({
+  // Read the user's position for this market. Polls so the held-shares figure
+  // self-corrects after a sell (or a buy elsewhere) without a manual refresh.
+  const { data: posRaw, refetch: refetchPos } = useReadContract({
     address: PREDICTION_MARKET_ADDRESS,
     abi: predictionMarketAbi,
     functionName: "getUserPosition",
     args: address ? [marketId, address] : undefined,
-    query: { enabled: !!address },
+    query: { enabled: !!address, refetchInterval: 8000 },
   })
   const pos = posRaw as unknown as RawPos | undefined
   const heldShares = pos ? (side ? pos.yesShares : pos.noShares) : 0n
@@ -72,6 +72,10 @@ export function SellSection({
         setSlippageBps(b)
         setTxKey((k) => k + 1)
       }}
+      onSold={() => {
+        // Refresh held shares immediately when a sell confirms.
+        refetchPos()
+      }}
     />
   )
 }
@@ -86,6 +90,7 @@ function SellPanel({
   setPct,
   slippageBps,
   setSlippageBps,
+  onSold,
 }: {
   marketId: bigint
   side: boolean
@@ -97,6 +102,7 @@ function SellPanel({
   setPct: (p: number) => void
   slippageBps: number
   setSlippageBps: (b: number) => void
+  onSold: () => void
 }) {
   // Shares to sell = held * pct / 100. Full exit (100%) sells the exact held
   // amount to avoid any rounding dust left behind.
@@ -112,6 +118,11 @@ function SellPanel({
     isSuccess,
     writeError,
   } = useSellShares(marketId, side, sharesIn, slippageBps)
+  // On a confirmed sell, tell the parent to refetch the position read so the
+  // held-shares figure updates without a page refresh.
+  useEffect(() => {
+    if (isSuccess) onSold()
+  }, [isSuccess, onSold])
   const sideLabel = side ? "Yes" : "No"
   const sideColor = side ? "text-green-400" : "text-red-400"
   const sideBorder = side ? "border-green-400/30" : "border-red-400/30"

@@ -203,6 +203,8 @@ export const predictionMarketAbi = [
           { type: "uint256", name: "yesShares" },
           { type: "uint256", name: "noShares" },
           { type: "uint256", name: "netCollateral" },
+          { type: "uint256", name: "yesCostBasis" },
+          { type: "uint256", name: "noCostBasis" },
           { type: "bool", name: "hasTraded" },
           { type: "bool", name: "claimed" },
           { type: "bool", name: "voidRefundClaimed" },
