@@ -29,6 +29,8 @@ export type MarketCardProps =
     liquidityPls?: number
     bettingDeadline?: number
     resolutionDeadline?: number
+    resolutionCriteria?: string
+    source?: string
   }
   | {
     type: "p2p"
@@ -223,7 +225,7 @@ function deadlineLabel(status: string | undefined, bettingTs?: number, resolutio
 }
 
 function humanWhen(ts: number, secs: number): string {
-  // Under 24h → relative ("in 3h 27m"); otherwise absolute local date.
+  // Under 24h → relative ("in 3h 27m"); otherwise absolute UTC date.
   if (secs < 86400) {
     const h = Math.floor(secs / 3600)
     const m = Math.floor((secs % 3600) / 60)
@@ -231,12 +233,15 @@ function humanWhen(ts: number, secs: number): string {
     if (m >= 1) return `in ${m}m`
     return "in <1m"
   }
-  return new Date(ts * 1000).toLocaleString(undefined, {
+  return new Date(ts * 1000).toLocaleString("en-GB", {
+    timeZone: "UTC",
     day: "2-digit",
     month: "short",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })
+    hour12: false,
+  }) + " UTC"
 }
 
 // Build the X (Twitter) share intent URL for an open market.
