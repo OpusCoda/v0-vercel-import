@@ -208,7 +208,7 @@ function AcceptSection({
     </div>
   )
 }
-// Relative label when < 24h away, absolute (local) date beyond that.
+// Relative label when < 24h away, absolute (UTC) date beyond that.
 function deadlineLabel(status: string | undefined, bettingTs?: number, resolutionTs?: number): string | null {
   const now = Math.floor(Date.now() / 1000)
   if (status === "Open" && bettingTs) {
@@ -223,7 +223,6 @@ function deadlineLabel(status: string | undefined, bettingTs?: number, resolutio
   }
   return null
 }
-
 function humanWhen(ts: number, secs: number): string {
   // Under 24h → relative ("in 3h 27m"); otherwise absolute UTC date.
   if (secs < 86400) {
@@ -243,7 +242,6 @@ function humanWhen(ts: number, secs: number): string {
     hour12: false,
   }) + " UTC"
 }
-
 // Build the X (Twitter) share intent URL for an open market.
 function shareOnX(title: string, yesOdds: number, noOdds: number) {
   const text = `${title}\n\nYes ${yesOdds}% · No ${noOdds}% — trade it on the Opus Probability Shop:`
@@ -255,24 +253,19 @@ function shareOnX(title: string, yesOdds: number, noOdds: number) {
     encodeURIComponent(url)
   if (typeof window !== "undefined") window.open(intent, "_blank", "noopener,noreferrer")
 }
-
 // Binary YES/NO market card with an inline buy panel per side.
 function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }>) {
   const [openSide, setOpenSide] = useState<null | boolean>(null)
-
   const fmtPls = (v?: number) =>
     v === undefined ? undefined : Math.round(v).toLocaleString()
   const vol = fmtPls(props.volumePls)
   const liq = fmtPls(props.liquidityPls)
   const timing = deadlineLabel(props.status, props.bettingDeadline, props.resolutionDeadline)
-
   const marketId = (() => {
     try { return props.id !== undefined ? BigInt(props.id) : undefined } catch { return undefined }
   })()
-
   // Trading is only possible while the market is Open.
   const tradable = props.status === "Open" && marketId !== undefined
-
   return (
     <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#d4af37]/30">
       {/* Header: icon + question, status badge */}
@@ -295,7 +288,6 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
           </span>
         )}
       </div>
-
       {/* Single row: odds on the left, buy buttons on the right */}
       <div className="flex items-center justify-between gap-3 border-t border-[#2a2a35] pt-3">
         <div className="font-sans text-sm text-[#b8b6b1]">
@@ -320,7 +312,6 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
           </button>
         </div>
       </div>
-
       {/* Inline buy panel for the chosen side */}
       {tradable && openSide !== null && marketId !== undefined && (
         <BuySection
@@ -329,36 +320,47 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
           onClose={() => setOpenSide(null)}
         />
       )}
-
+      {/* Resolution details — collapsible; renders only when data is passed in */}
+      {(props.resolutionCriteria || props.source || props.resolutionDeadline) && (
+        <details className="mt-3 rounded-lg border border-[#2a2a35] bg-[#0d0d12] p-3">
+          <summary className="cursor-pointer font-sans text-[11px] font-semibold text-[#d4af37]">
+            Resolution details
+          </summary>
+          <div className="mt-2 space-y-2 font-sans text-[11px] leading-relaxed text-[#b8b6b1]">
+            {props.resolutionCriteria && (
+              <p className="whitespace-pre-line">{props.resolutionCriteria}</p>
+            )}
+            {props.source && (
+              <p>
+                <span className="text-[#7c7a76]">Source: </span>
+                {props.source.startsWith("http") ? (
+                  <a
+                    href={props.source}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#d4af37] underline break-all"
+                  >
+                    {props.source}
+                  </a>
+                ) : (
+                  props.source
+                )}
+              </p>
+            )}
+            {props.resolutionDeadline && (
+              <p>
+                <span className="text-[#7c7a76]">Resolution opens: </span>
+                {humanWhen(
+                  props.resolutionDeadline,
+                  props.resolutionDeadline - Math.floor(Date.now() / 1000),
+                )}
+              </p>
+            )}
+          </div>
+        </details>
+      )}
       {/* Footer: volume + liquidity (left) · deadline (right) */}
       {(vol || liq || timing) && (
-        {(props.resolutionCriteria || props.source || props.resolutionDeadline) && (
-  <details className="mt-3 rounded-lg border border-[#2a2a35] bg-[#0d0d12] p-3">
-    <summary className="cursor-pointer font-sans text-[11px] font-semibold text-[#d4af37]">
-      Resolution details
-    </summary>
-    <div className="mt-2 space-y-2 font-sans text-[11px] leading-relaxed text-[#b8b6b1]">
-      {props.resolutionCriteria && (
-        <p className="whitespace-pre-line">{props.resolutionCriteria}</p>
-      )}
-      {props.source && (
-        <p>
-          <span className="text-[#7c7a76]">Source: </span>
-          {props.source.startsWith("http") ? (
-            <a href={props.source} target="_blank" rel="noopener noreferrer"
-               className="text-[#d4af37] underline break-all">{props.source}</a>
-          ) : props.source}
-        </p>
-      )}
-      {props.resolutionDeadline && (
-        <p>
-          <span className="text-[#7c7a76]">Resolution opens: </span>
-          {humanWhen(props.resolutionDeadline, props.resolutionDeadline - Math.floor(Date.now() / 1000))}
-        </p>
-      )}
-    </div>
-  </details>
-)}
         <div className="mt-3 flex items-center justify-between gap-2 font-sans text-[11px] text-[#7c7a76]">
           <span>
             {vol && <>{vol} PLS Vol</>}
@@ -368,7 +370,6 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
           {timing && <span className="shrink-0">{timing}</span>}
         </div>
       )}
-
       {/* Share on X — only for open markets */}
       {props.status === "Open" && (
         <button
@@ -381,7 +382,6 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
     </div>
   )
 }
-
 export function MarketCard(props: MarketCardProps) {
   if (props.type === "probability") {
     return <ProbabilityCard {...props} />
