@@ -124,6 +124,20 @@ export const predictionMarketAbi = [
     stateMutability: "nonpayable",
   },
   {
+  inputs: [{ type: "uint256" }, { type: "address" }],
+  name: "yesShares",
+  outputs: [{ type: "uint256" }],
+  stateMutability: "view",
+  type: "function",
+},
+{
+  inputs: [{ type: "uint256" }, { type: "address" }],
+  name: "noShares",
+  outputs: [{ type: "uint256" }],
+  stateMutability: "view",
+  type: "function",
+},
+  {
     type: "function",
     name: "quoteBuy",
     inputs: [

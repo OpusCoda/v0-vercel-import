@@ -258,19 +258,29 @@ function shareOnX(title: string, yesOdds: number, noOdds: number) {
 }
 // Small hook: does the connected user hold any shares on this market?
 // Drives whether the Sell toggle appears. One light read per open card.
+// Small hook: does the connected user hold any shares on this market?
+// Reads the public yesShares/noShares mappings directly (plain uint256 —
+// avoids any struct-decode ambiguity from getUserPosition).
 function useHasPosition(marketId: bigint | undefined) {
   const { address } = useAccount()
-  const { data } = useReadContract({
+  const enabled = !!address && marketId !== undefined
+  const { data: yes } = useReadContract({
     address: PREDICTION_MARKET_ADDRESS,
     abi: predictionMarketAbi,
-    functionName: "getUserPosition",
-    args: address && marketId !== undefined ? [marketId, address] : undefined,
-    query: { enabled: !!address && marketId !== undefined },
+    functionName: "yesShares",
+    args: enabled ? [marketId, address] : undefined,
+    query: { enabled },
   })
-  const pos = data as unknown as { yesShares: bigint; noShares: bigint } | undefined
+  const { data: no } = useReadContract({
+    address: PREDICTION_MARKET_ADDRESS,
+    abi: predictionMarketAbi,
+    functionName: "noShares",
+    args: enabled ? [marketId, address] : undefined,
+    query: { enabled },
+  })
   return {
-    hasYes: !!pos && pos.yesShares > 0n,
-    hasNo: !!pos && pos.noShares > 0n,
+    hasYes: typeof yes === "bigint" && yes > 0n,
+    hasNo: typeof no === "bigint" && no > 0n,
   }
 }
 // A single open panel is described by which side + whether buying or selling.
