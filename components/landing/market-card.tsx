@@ -158,13 +158,21 @@ function AcceptSection({
           <p className="mt-1 text-center font-sans text-[10px] text-[#7c7a76]">
             You created this wager. You can cancel and be refunded until someone accepts.
           </p>
-          {cancelError && (
-            <p className="mt-1 font-sans text-[10px] text-red-400">
-              {cancelError.message.includes("already accepted")
-                ? "Too late — this wager has already been accepted."
-                : "Cancel failed — see wallet for details."}
-            </p>
-          )}
+      {cancelError && (
+        <p className="mt-1 font-sans text-[10px] text-red-400">
+          {(() => {
+            const msg = cancelError.message
+            // cancelWager require: "Wager already accepted or resolved"
+            if (msg.includes("already accepted") || msg.includes("already accepted or resolved"))
+              return "Too late — this wager has already been accepted."
+            if (msg.includes("Only creator, admin"))
+              return "You can't cancel this wager (not the creator, or the window hasn't expired)."
+            if (msg.includes("User rejected") || msg.includes("User denied"))
+              return "You rejected the transaction in your wallet."
+            return "Cancel failed — see wallet for details."
+          })()}
+        </p>
+      )}
         </>
       ) : (
         // Taker view: payout + accept.
@@ -195,17 +203,34 @@ function AcceptSection({
           <p className="mt-1 text-center font-sans text-[10px] text-[#7c7a76]">
             A small protocol fee is deducted from winnings at resolution.
           </p>
-          {writeError && (
-            <p className="mt-1 font-sans text-[10px] text-red-400">
-              {writeError.message.includes("Creator cannot accept")
-                ? "You can't accept your own wager."
-                : writeError.message.includes("Arbitration panel not ready")
-                ? "Arbitration panel not ready (needs 3 arbitrators)."
-                : writeError.message.includes("Deposit window expired")
-                ? "This wager's acceptance window has expired."
-                : "Transaction failed — see wallet for details."}
-            </p>
-          )}
+      {writeError && (
+        <p className="mt-1 font-sans text-[10px] text-red-400">
+          {(() => {
+            const msg = writeError.message
+            // WagerMarket uses require-strings — match on the string content.
+            if (msg.includes("Creator cannot accept"))
+              return "You can't accept your own wager."
+            if (msg.includes("Not the challenger"))
+              return "This wager is reserved for a specific challenger — not your address."
+            if (msg.includes("Not open for acceptance"))
+              return "This wager is no longer open — it may have just been accepted or cancelled."
+            if (msg.includes("Arbitration panel not ready"))
+              return "The arbitration panel isn't ready yet (needs 3 arbitrators). Try again later."
+            if (msg.includes("Deposit window expired"))
+              return "This wager's acceptance window has expired."
+            if (
+              msg.includes("Must match required challenger stake") ||
+              msg.includes("Must cover stake and vote deposit")
+            )
+              return "The stake amount didn't match — refresh and try again."
+            if (msg.includes("User rejected") || msg.includes("User denied"))
+              return "You rejected the transaction in your wallet."
+            if (msg.includes("insufficient funds"))
+              return "Insufficient PLS balance for the stake plus gas."
+            return "Transaction failed — see wallet for details."
+          })()}
+        </p>
+      )}
         </>
       )}
     </div>
