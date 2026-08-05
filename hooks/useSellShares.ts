@@ -8,7 +8,7 @@ import {
 } from "wagmi"
 import type { Address } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
-const PREDICTION_MARKET_ADDRESS = "0x1e6b4f6426CBFF980F70B6eF79FBaa8507f6e90A" as Address
+const PREDICTION_MARKET_ADDRESS = "0x3CE1D7142259237519Ed41D6b4d95690457427C6" as Address
 export interface SellQuote {
   plsOut: bigint
   pricePerShare: bigint

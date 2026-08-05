@@ -258,6 +258,13 @@ export const predictionMarketAbi = [
     stateMutability: "view",
   },
   {
+    inputs: [{ name: "marketId", type: "uint256" }],
+    name: "sweepUnclaimed",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     type: "function",
     name: "spotPrices",
     inputs: [{ type: "uint256", name: "marketId" }],

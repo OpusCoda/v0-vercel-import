@@ -4,7 +4,7 @@ import { useAccount, useReadContract } from "wagmi"
 import { formatUnits } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useSellShares } from "@/hooks/useSellShares"
-const PREDICTION_MARKET_ADDRESS = "0x1e6b4f6426CBFF980F70B6eF79FBaa8507f6e90A"
+const PREDICTION_MARKET_ADDRESS = "0x3CE1D7142259237519Ed41D6b4d95690457427C6"
 function fmt(v: number, dp = 0) {
   return v.toLocaleString(undefined, { maximumFractionDigits: dp })
 }
