@@ -4,7 +4,7 @@ import { SiteNav } from "@/components/landing/site-nav"
 import { SiteFooter } from "@/components/landing/site-footer"
 import MarketsOverview from "@/components/landing/markets-overview"
 import { MarketsList } from "@/components/landing/markets-list"
-import { WagerMarketStats } from "@/components/markets/wager-market-stats"
+import { PlatformOverview } from "@/components/markets/platform-overview"
 import { OpenWagers } from "@/components/markets/open-wagers"
 import { CreateWager } from "@/components/markets/create-wager"
 import { MyWagers } from "@/components/markets/my-wagers"
@@ -72,7 +72,7 @@ export default function MarketsPage() {
               <>
                 {/* Stats Row */}
                 <div className="py-12 border-t border-[#2a2a35]">
-                  <WagerMarketStats />
+                  <PlatformOverview />
                 </div>
                 {/* Main Content Grid */}
                 <div className="grid md:grid-cols-3 gap-8 py-8">

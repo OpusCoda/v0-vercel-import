@@ -149,9 +149,14 @@ export const predictionMarketAbi = [
     stateMutability: "view",
   },
   // ── Dev-fee withdrawal ──
+  // ── Dev-fee withdrawal ──
   {
     type: "function",
-    name:
+    name: "withdrawProtocolFees",
+    inputs: [],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
   {
     type: "function",
     name: "resolver",
