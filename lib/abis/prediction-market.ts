@@ -148,8 +148,11 @@ export const predictionMarketAbi = [
     outputs: [{ type: "uint256", name: "" }],
     stateMutability: "view",
   },
-  // ── Dev-fee withdrawal ──
-  // ── Dev-fee withdrawal ──
+  { type: "error", name: "SlippageTooHighErr", inputs: [] },
+  { type: "error", name: "BelowMinBetErr", inputs: [] },
+  { type: "error", name: "BettingClosedErr", inputs: [] },
+  { type: "error", name: "InsufficientSharesErr", inputs: [] },
+  { type: "error", name: "BadInputErr", inputs: [] },
   {
     type: "function",
     name: "withdrawProtocolFees",
