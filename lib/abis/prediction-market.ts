@@ -257,6 +257,21 @@ export const predictionMarketAbi = [
     ],
     stateMutability: "view",
   },
+    {
+    type: "function",
+    name: "getSettlementInfo",
+    inputs: [{ type: "uint256", name: "marketId" }],
+    outputs: [
+      { type: "uint256", name: "settlementPool" },
+      { type: "uint256", name: "remainingSettlementPool" },
+      { type: "uint256", name: "totalWinningShares" },
+      { type: "uint256", name: "claimedWinningShares" },
+      { type: "uint256", name: "remainingMarketBalance" },
+      { type: "bool",    name: "residualClaimable" },
+      { type: "bool",    name: "residualClaimed" },
+    ],
+    stateMutability: "view",
+  },
   {
     inputs: [{ name: "marketId", type: "uint256" }],
     name: "sweepUnclaimed",

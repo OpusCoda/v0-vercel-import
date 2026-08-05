@@ -62,9 +62,9 @@ export function useMarketsNeedingResolution() {
   })
   const count = countData !== undefined ? Number(countData as bigint) : 0
 
-  // One getMarket + getStatus + getProposal per market.
+// One getMarket + getStatus + getProposal per market.
   const calls = useMemo(() => {
-    const c: object[] = []
+    const c = []
     for (let i = 0; i < count; i++) {
       c.push({ ...contract, functionName: "getMarket", args: [BigInt(i)] })
       c.push({ ...contract, functionName: "getStatus", args: [BigInt(i)] })
@@ -78,18 +78,24 @@ export function useMarketsNeedingResolution() {
     isLoading: readsLoading,
     refetch,
   } = useReadContracts({
-    contracts: calls as never,
+    contracts: calls,
     allowFailure: true,
     query: { enabled: count > 0 },
   })
 
   const items = useMemo<ResolutionItem[]>(() => {
     if (!reads) return []
+    // With allowFailure, each entry is { status: 'success'|'failure', result?: unknown, error?: Error }.
+    const results = reads as readonly {
+      status: "success" | "failure"
+      result?: unknown
+      error?: Error
+    }[]
     const out: ResolutionItem[] = []
     for (let i = 0; i < count; i++) {
-      const marketRes = reads[i * 3]
-      const statusRes = reads[i * 3 + 1]
-      const proposalRes = reads[i * 3 + 2]
+      const marketRes = results[i * 3]
+      const statusRes = results[i * 3 + 1]
+      const proposalRes = results[i * 3 + 2]
       if (marketRes?.status !== "success" || statusRes?.status !== "success") continue
 
       const m = marketRes.result as {
