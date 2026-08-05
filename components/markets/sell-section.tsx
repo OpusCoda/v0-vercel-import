@@ -249,11 +249,24 @@ function SellPanel({
       </button>
       {writeError && (
         <p className="mt-1 font-sans text-[10px] text-red-400">
-          {writeError.message.includes("SlippageTooHigh")
-            ? "Price moved past your slippage tolerance — try again or raise tolerance."
-            : writeError.message.includes("BettingClosed")
-            ? "Betting has closed — you can no longer sell into this market."
-            : "Transaction failed — see wallet for details."}
+          {(() => {
+            const msg = writeError.message
+            if (msg.includes("SlippageTooHigh"))
+              return "Price moved past your slippage tolerance — try again or raise tolerance."
+            if (msg.includes("InsufficientShares"))
+              return "You don't hold enough shares for this sell."
+            if (
+              msg.includes("BettingClosed") ||
+              msg.includes("WindowClosed") ||
+              msg.includes("DeadlinePassed")
+            )
+              return "Betting has closed — you can no longer sell into this market."
+            if (msg.includes("BadInput"))
+              return "Invalid sell input — check the amount."
+            if (msg.includes("User rejected") || msg.includes("User denied"))
+              return "You rejected the transaction in your wallet."
+            return "Transaction failed — see wallet for details."
+          })()}
         </p>
       )}
     </div>

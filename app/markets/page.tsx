@@ -6,7 +6,6 @@ import MarketsOverview from "@/components/landing/markets-overview"
 import { PositionsDashboard } from "@/components/markets/positions-dashboard"
 import { MarketsList } from "@/components/landing/markets-list"
 import { PlatformOverview } from "@/components/markets/platform-overview"
-import { OpenWagers } from "@/components/markets/open-wagers"
 import { CreateWager } from "@/components/markets/create-wager"
 import { MyWagers } from "@/components/markets/my-wagers"
 import { WalletContextPrompt } from '@/components/wallet-context-prompt'
@@ -78,17 +77,9 @@ export default function MarketsPage() {
             </div>
             {showP2PExtras && (
               <>
-                {/* Main Content Grid */}
-                <div className="grid md:grid-cols-3 gap-8 py-8">
-                  {/* Left Column - Create Wager */}
-                  <div className="md:col-span-2">
-                    <CreateWager />
-                  </div>
-
-                  {/* Right Column - Open Wagers */}
-                  <div>
-                    <OpenWagers />
-                  </div>
+                {/* Create Wager */}
+                <div className="py-8">
+                  <CreateWager />
                 </div>
               </>
             )}

@@ -14,7 +14,7 @@ type ProbabilityStatus = "All" | "Open" | "Awaiting" | "Resolved"
 
 const CATEGORIES: Category[] = ["Crypto", "Politics", "Sports", "Macro", "PulseChain", "Misc"]
 const PROBABILITY_FILTERS: ProbabilityStatus[] = ["All", "Open", "Awaiting", "Resolved"]
-const MIN_PRICE = 100_000
+const MIN_PRICE = 0
 const MAX_PRICE = 1_000_000_000
 
 // Format large numbers with K, M, B suffixes

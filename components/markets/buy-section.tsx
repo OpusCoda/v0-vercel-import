@@ -221,13 +221,26 @@ function BuyPanel({
       </button>
       {writeError && (
         <p className="mt-1 font-sans text-[10px] text-red-400">
-          {writeError.message.includes("SlippageTooHigh")
-            ? "Price moved past your slippage tolerance — try again or raise tolerance."
-            : writeError.message.includes("Below minimum")
-            ? `Minimum bet is ${fmt(minimumBetPls)} PLS.`
-            : writeError.message.includes("BettingClosed")
-            ? "Betting has closed for this market."
-            : "Transaction failed — see wallet for details."}
+          {(() => {
+            const msg = writeError.message
+            if (msg.includes("SlippageTooHigh"))
+              return "Price moved past your slippage tolerance — try again or raise tolerance."
+            if (msg.includes("BelowMinBet") || msg.includes("Below minimum"))
+              return `Minimum bet is ${fmt(minimumBetPls)} PLS.`
+            if (
+              msg.includes("BettingClosed") ||
+              msg.includes("WindowClosed") ||
+              msg.includes("DeadlinePassed")
+            )
+              return "Betting has closed for this market."
+            if (msg.includes("BadInput"))
+              return "Invalid trade input — check the amount."
+            if (msg.includes("User rejected") || msg.includes("User denied"))
+              return "You rejected the transaction in your wallet."
+            if (msg.includes("insufficient funds"))
+              return "Insufficient PLS balance for this trade plus gas."
+            return "Transaction failed — see wallet for details."
+          })()}
         </p>
       )}
     </div>
