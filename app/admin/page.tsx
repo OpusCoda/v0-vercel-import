@@ -10,6 +10,7 @@ import { CreateMarketForm } from '@/components/admin/create-market-form'
 import { ManageAdmins } from '@/components/admin/manage-admins'
 import { ManageArbitrators } from '@/components/admin/manage-arbitrators'
 import { ManageResolver } from '@/components/admin/manage-resolver'
+import { SweepPanel } from '@/components/admin/sweep-panel'
 import { DisputesResolutions } from '@/components/admin/disputes-resolutions'
 import { ConnectWalletButton } from '@/components/landing/connect-wallet-button'
 import { predictionMarketAbi } from '@/lib/abis/prediction-market'
@@ -27,6 +28,7 @@ type AdminTab =
   | 'manage-admins'
   | 'manage-arbitrators'
   | 'manage-resolver'
+  | 'sweep'
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -75,6 +77,7 @@ export default function AdminPage() {
   const showManageAdmins = isPmOwner
   const showManageArbitrators = isOeOwner
   const showManageResolver = isPmOwner
+  const showSweep = isPmOwner
 
   const tabs = useMemo(() => {
     const list: { id: AdminTab; label: string }[] = [
@@ -84,8 +87,9 @@ export default function AdminPage() {
     if (showManageAdmins) list.push({ id: 'manage-admins', label: 'Manage Admins' })
     if (showManageArbitrators) list.push({ id: 'manage-arbitrators', label: 'Manage Arbitrators' })
     if (showManageResolver) list.push({ id: 'manage-resolver', label: 'Manage Resolver' })
+    if (showSweep) list.push({ id: 'sweep', label: 'Unclaimed Sweeps' })
     return list
-  }, [showCreateMarket, showManageAdmins, showManageArbitrators, showManageResolver])
+  }, [showCreateMarket, showManageAdmins, showManageArbitrators, showManageResolver, showSweep])
 
   // If the active tab becomes hidden (e.g. wallet changed), fall back to resolve.
   useEffect(() => {
@@ -182,6 +186,18 @@ export default function AdminPage() {
       {activeTab === 'manage-arbitrators' && showManageArbitrators && <ManageArbitrators />}
 
       {activeTab === 'manage-resolver' && showManageResolver && <ManageResolver />}
+      
+      {activeTab === 'sweep' && showSweep && (
+        <section>
+          <div className="mb-6">
+            <h2 className="font-serif text-2xl font-bold text-[#e8e6e3]">Unclaimed Sweeps</h2>
+            <p className="mt-2 font-sans text-sm text-[#7c7a76]">
+              Sweep forfeited funds from markets resolved over 90 days ago.
+            </p>
+          </div>
+          <SweepPanel />
+        </section>
+      )}
     </main>
   )
 }
