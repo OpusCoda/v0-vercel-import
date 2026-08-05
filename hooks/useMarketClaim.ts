@@ -25,6 +25,9 @@ export function useMarketClaim() {
       abi: predictionMarketAbi,
       functionName: FN_BY_KIND[kind],
       args: [marketId],
+    }, {
+      onError: (err) => console.error("writeContract error:", err),
+      onSuccess: (hash) => console.log("writeContract submitted:", hash),
     })
   }
   return {
