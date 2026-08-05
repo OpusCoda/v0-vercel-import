@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { SiteNav } from "@/components/landing/site-nav"
 import { SiteFooter } from "@/components/landing/site-footer"
 import MarketsOverview from "@/components/landing/markets-overview"
+import { PositionsDashboard } from "@/components/markets/positions-dashboard"
 import { MarketsList } from "@/components/landing/markets-list"
 import { PlatformOverview } from "@/components/markets/platform-overview"
 import { OpenWagers } from "@/components/markets/open-wagers"
@@ -65,7 +66,7 @@ export default function MarketsPage() {
         {activeTab === 'my-wagers' ? (
           /* Personal dashboard view */
           <div className="py-3">
-            <MyWagers />
+            <PositionsDashboard />
           </div>
         ) : (
           <>

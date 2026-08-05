@@ -15,18 +15,17 @@ function fmtPls(wei: bigint): string {
 function fmtCount(n: number | bigint): string {
   return Number(n).toLocaleString()
 }
-// One inline stat: value bold, label muted beside it.
-function Stat({ value, label }: { value: string; label: string }) {
+// A compact stat: value over a muted label. Zero values are dimmed so
+// populated numbers carry the eye.
+function Stat({ value, label, zero }: { value: string; label: string; zero?: boolean }) {
   return (
-    <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-      <span className="font-sans text-sm font-bold text-[#e8e6e3]">{value}</span>
-      <span className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">{label}</span>
+    <div className="flex flex-col leading-tight">
+      <span className={`font-sans text-sm font-bold ${zero ? "text-[#57565a]" : "text-[#e8e6e3]"}`}>
+        {value}
+      </span>
+      <span className="font-sans text-[9px] uppercase tracking-wider text-[#7c7a76]">{label}</span>
     </div>
   )
-}
-// Thin vertical divider between stat groups.
-function Divider() {
-  return <span className="hidden h-4 w-px shrink-0 bg-[#2a2a35] sm:block" />
 }
 export function PlatformOverview() {
   const { markets } = useAllMarkets()
@@ -47,25 +46,42 @@ export function PlatformOverview() {
   const combinedVolume = shopVolume + wager.totalVolume
   const combinedOpen = pmOpen + Number(wager.openWagerCount)
   const wagerCompleted = wager.totalResolved + wager.totalVoided
+  const oeVolZero = wager.totalVolume === 0n
+  const oeOpenZero = wager.openWagerCount === 0n
+  const oeDoneZero = wagerCompleted === 0n
   return (
-    <div className="mb-6 rounded-xl border border-[#2a2a35] bg-[#101017] px-4 py-3">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        {/* Combined — lead group, gold accent */}
-        <span className="font-serif text-xs font-semibold text-[#d4af37]">Platform</span>
-        <Stat value={fmtPls(combinedVolume)} label="PLS Vol" />
+    <div className="mb-6 flex flex-wrap items-stretch gap-3">
+      {/* Hero — combined platform total */}
+      <div className="flex items-center gap-4 rounded-xl border border-[#d4af37]/25 bg-gradient-to-br from-[#d4af37]/[0.06] to-transparent px-5 py-3">
+        <div className="flex flex-col leading-tight">
+          <span className="font-serif text-[10px] font-semibold uppercase tracking-wider text-[#d4af37]">
+            Platform
+          </span>
+          <span className="font-sans text-xl font-bold text-[#e8e6e3]">
+            {fmtPls(combinedVolume)}
+            <span className="ml-1 font-sans text-[10px] font-medium uppercase text-[#7c7a76]">PLS Vol</span>
+          </span>
+        </div>
+        <div className="h-8 w-px bg-[#d4af37]/15" />
         <Stat value={fmtCount(combinedOpen)} label="Open" />
-        <Divider />
-        {/* Probability Shop */}
-        <span className="font-sans text-[10px] font-semibold text-[#b8b6b1]">Shop</span>
+      </div>
+      {/* Probability Shop segment */}
+      <div className="flex items-center gap-4 rounded-xl border border-[#2a2a35] bg-[#101017] px-5 py-3">
+        <span className="font-sans text-[10px] font-semibold uppercase tracking-wider text-[#b8b6b1]">
+          Probability Shop
+        </span>
         <Stat value={fmtPls(shopVolume)} label="Vol" />
-        <Stat value={fmtCount(pmOpen)} label="Open" />
-        <Stat value={fmtCount(pm.resolvedMarketCount)} label="Resolved" />
-        <Divider />
-        {/* Outcome Exchange */}
-        <span className="font-sans text-[10px] font-semibold text-[#b8b6b1]">Exchange</span>
-        <Stat value={fmtPls(wager.totalVolume)} label="Vol" />
-        <Stat value={fmtCount(wager.openWagerCount)} label="Open" />
-        <Stat value={fmtCount(wagerCompleted)} label="Done" />
+        <Stat value={fmtCount(pmOpen)} label="Open" zero={pmOpen === 0} />
+        <Stat value={fmtCount(pm.resolvedMarketCount)} label="Resolved" zero={pm.resolvedMarketCount === 0n} />
+      </div>
+      {/* Outcome Exchange segment */}
+      <div className="flex items-center gap-4 rounded-xl border border-[#2a2a35] bg-[#101017] px-5 py-3">
+        <span className="font-sans text-[10px] font-semibold uppercase tracking-wider text-[#b8b6b1]">
+          Wager Market
+        </span>
+        <Stat value={fmtPls(wager.totalVolume)} label="Vol" zero={oeVolZero} />
+        <Stat value={fmtCount(wager.openWagerCount)} label="Open" zero={oeOpenZero} />
+        <Stat value={fmtCount(wagerCompleted)} label="Done" zero={oeDoneZero} />
       </div>
     </div>
   )
