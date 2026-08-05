@@ -97,6 +97,61 @@ export const predictionMarketAbi = [
     outputs: [],
     stateMutability: "nonpayable",
   },
+  // ── Global stat counters (public state) ──
+  {
+    type: "function",
+    name: "cumulativeVolume",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "resolvedMarketCount",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "voidedMarketCount",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalTrades",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  // ── Revenue reads ──
+  {
+    type: "function",
+    name: "totalProtocolFees",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalReferralLiabilities",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "protocolFeeAccrued",
+    inputs: [{ type: "address", name: "" }],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  // ── Dev-fee withdrawal ──
+  {
+    type: "function",
+    name:
   {
     type: "function",
     name: "resolver",
