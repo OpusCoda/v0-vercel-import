@@ -17,8 +17,8 @@ export default function MarketsPage() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'all', label: 'All' },
-    { id: 'p2p', label: 'P2P Wagers' },
     { id: 'probability', label: 'Probability Shop' },
+    { id: 'p2p', label: 'Wager Market' },
     { id: 'my-wagers', label: 'My Positions' },
   ]
 
@@ -53,9 +53,14 @@ export default function MarketsPage() {
               </button>
             ))}
           </div>
-
         </div>
       </div>
+
+      {/* Platform Overview — compact summary bar, directly under the tabs */}
+      <div className="mx-auto max-w-7xl px-6">
+        <PlatformOverview />
+      </div>
+
       <div className="mx-auto max-w-7xl px-6">
         {activeTab === 'my-wagers' ? (
           /* Personal dashboard view */
@@ -70,10 +75,6 @@ export default function MarketsPage() {
             </div>
             {showP2PExtras && (
               <>
-                {/* Stats Row */}
-                <div className="py-12 border-t border-[#2a2a35]">
-                  <PlatformOverview />
-                </div>
                 {/* Main Content Grid */}
                 <div className="grid md:grid-cols-3 gap-8 py-8">
                   {/* Left Column - Create Wager */}
