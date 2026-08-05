@@ -57,10 +57,12 @@ export default function MarketsPage() {
         </div>
       </div>
 
-      {/* Platform Overview — compact summary bar, directly under the tabs */}
-      <div className="mx-auto max-w-7xl px-6">
-        <PlatformOverview />
-      </div>
+      {/* Platform Overview — hidden on the My Positions tab */}
+      {activeTab !== 'my-wagers' && (
+        <div className="mx-auto max-w-7xl px-6">
+          <PlatformOverview />
+        </div>
+      )}
 
       <div className="mx-auto max-w-7xl px-6">
         {activeTab === 'my-wagers' ? (
