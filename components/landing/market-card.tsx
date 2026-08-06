@@ -281,6 +281,17 @@ function shareOnX(title: string, yesOdds: number, noOdds: number) {
     encodeURIComponent(url)
   if (typeof window !== "undefined") window.open(intent, "_blank", "noopener,noreferrer")
 }
+// Build the X (Twitter) share intent URL for an open wager.
+function shareWagerOnX(description: string, creatorStake: number) {
+  const text = `Someone just offered ${creatorStake.toLocaleString()} PLS on this wager:\n"${description}"\n\nThink they're wrong? Take the other side on the Opus Wager Market.`
+  const url = typeof window !== "undefined" ? window.location.href : "https://opuseco.com/markets"
+  const intent =
+    "https://twitter.com/intent/tweet?text=" +
+    encodeURIComponent(text) +
+    "&url=" +
+    encodeURIComponent(url)
+  if (typeof window !== "undefined") window.open(intent, "_blank", "noopener,noreferrer")
+}
 // Small hook: the connected user's held shares on this market.
 // Drives whether the Sell toggle appears AND shows the amounts inline.
 // Polls so the row appears after a buy and updates/hides after a sell,
@@ -551,6 +562,12 @@ export function MarketCard(props: MarketCardProps) {
             tokenLabel={props.tokenLabel}
           />
           <p className="font-sans text-xs text-[#7c7a76]">Time left to accept: {props.closesIn}</p>
+          <button
+            onClick={() => shareWagerOnX(props.description, creatorStake)}
+            className="mt-3 w-full rounded border border-[#2a2a35] py-1.5 font-sans text-[11px] font-semibold text-[#b8b6b1] transition-colors hover:border-[#d4af37]/50 hover:text-[#d4af37]"
+          >
+            Share on X
+          </button>
         </>
       ) : (
         <div className="mb-1 text-center">
