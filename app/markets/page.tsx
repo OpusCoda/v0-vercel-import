@@ -7,7 +7,6 @@ import { PositionsDashboard } from "@/components/markets/positions-dashboard"
 import { MarketsList } from "@/components/landing/markets-list"
 import { PlatformOverview } from "@/components/markets/platform-overview"
 import { CreateWager } from "@/components/markets/create-wager"
-import { MyWagers } from "@/components/markets/my-wagers"
 import { WalletContextPrompt } from '@/components/wallet-context-prompt'
 
 type Tab = 'all' | 'p2p' | 'probability' | 'my-wagers'
