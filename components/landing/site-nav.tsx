@@ -51,14 +51,16 @@ export function SiteNav() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          <Link
-            href="#docs"
+          
+            href="https://docs.google.com/document/d/1jC_cfg87C_B7n6tAtYmGpV5KJwjM_vzXIIHsZXaSAAw/preview"
+            target="_blank"
+            rel="noopener noreferrer"
             aria-label="Documentation"
             className="hidden items-center gap-2 text-[#9ca3af] transition-colors hover:text-[#d4af37] sm:flex"
           >
             <BookOpen className="h-5 w-5" />
             <span className="font-sans text-sm">Docs</span>
-          </Link>
+          </a>
           <div className="hidden sm:block">
             <ConnectWalletButton />
           </div>
