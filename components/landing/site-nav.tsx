@@ -1,11 +1,9 @@
 "use client"
-
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
 import { BookOpen, Menu, X } from "lucide-react"
 import { ConnectWalletButton } from "./connect-wallet-button"
-
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Markets", href: "/markets" },
@@ -14,10 +12,8 @@ const navLinks = [
   { label: "Portfolio", href: "/portfolio" },
   { label: "Tokens", href: "/tokens" },
 ]
-
 export function SiteNav() {
   const [open, setOpen] = useState(false)
-
   return (
     <header className="sticky top-0 z-50 border-b border-[#2a2a35] bg-[#0a0a0c]/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
@@ -35,7 +31,6 @@ export function SiteNav() {
             <span className="font-sans text-[11px] tracking-wide text-[#9ca3af]"></span>
           </span>
         </Link>
-
         {/* Desktop nav */}
         <nav className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
@@ -48,10 +43,9 @@ export function SiteNav() {
             </Link>
           ))}
         </nav>
-
         {/* Right side */}
         <div className="flex items-center gap-3">
-          
+          <a
             href="https://docs.google.com/document/d/1jC_cfg87C_B7n6tAtYmGpV5KJwjM_vzXIIHsZXaSAAw/preview"
             target="_blank"
             rel="noopener noreferrer"
@@ -74,7 +68,6 @@ export function SiteNav() {
           </button>
         </div>
       </div>
-
       {/* Mobile menu */}
       {open && (
         <nav className="border-t border-[#2a2a35] px-4 py-4 md:hidden">
