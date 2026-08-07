@@ -51,7 +51,7 @@ export type MarketCardProps =
     creatorBetsAbove?: boolean
     targetPrice?: number
     tokenLabel?: string
-    status?: 'open' | 'active' | 'closed'
+    status?: 'open' | 'active' | 'closed' | 'arbitration'
     eventDateTs?: number
     winnerShort?: string
   }
@@ -583,6 +583,15 @@ export function MarketCard(props: MarketCardProps) {
                 </span>
               )
             })()
+          ) : props.status === "arbitration" ? (
+            <div className="flex flex-col items-center gap-1">
+              <span className="inline-block rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 font-sans text-xs font-semibold text-red-400">
+                In arbitration
+              </span>
+              <span className="font-sans text-[10px] text-[#7c7a76]">
+                The arbitration panel is deciding this wager. It is not settled.
+              </span>
+            </div>
           ) : (
             <div className="flex flex-col items-center gap-1">
               <span className="inline-block rounded-full border border-[#2a2a35] bg-[#1a1a20] px-3 py-1 font-sans text-xs font-semibold text-[#b8b6b1]">

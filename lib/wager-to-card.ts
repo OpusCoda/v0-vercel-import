@@ -1,5 +1,4 @@
 import type { WagerDetails } from '@/hooks/useOpenWagers'
-
 // Contract enum orders
 const CATEGORY_LABELS = ['Crypto', 'Politics', 'Sports', 'Macro', 'PulseChain', 'Misc'] as const
 const QUERY_LABELS: Record<string, string> = {
@@ -8,22 +7,18 @@ const QUERY_LABELS: Record<string, string> = {
   '0xd510cabcca8d9d6dd6f2b15393a383b0c4978df7e8369459d2daedef4269c42e': 'HEX',
   '0x4a7e4a0f0c3ddff451d40e9b2c17e3050bc412794a5e53de9bf4db692611381c': 'INC',
 }
-
 function pls(v: bigint): number {
   return Number(v) / 1e18
 }
-
 const ZERO = '0x0000000000000000000000000000000000000000'
 function shortAddr(a?: string): string {
   if (!a || a === ZERO) return ''
   return `${a.slice(0, 4)}...${a.slice(-4)}`
 }
-
 function formatDeadline(eventDate: bigint): string {
   const d = new Date(Number(eventDate) * 1000)
   return `by ${d.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
 }
-
 function closesIn(depositDeadline: bigint): string {
   const secs = Number(depositDeadline) - Math.floor(Date.now() / 1000)
   if (secs <= 0) return 'closed'
@@ -32,7 +27,6 @@ function closesIn(depositDeadline: bigint): string {
   const hours = Math.floor(secs / 3600)
   return `${hours} hour${hours === 1 ? '' : 's'}`
 }
-
 // The card's P2PMarket shape (mirror of the interface in markets-list.tsx)
 export type P2PCardData = {
   type: 'p2p'
@@ -44,7 +38,7 @@ export type P2PCardData = {
   yesData: { label: string; staked: number; wins: number; isTaken: boolean }
   noData: { label: string; staked: number; wins: number; isTaken: boolean }
   closesIn: string
-  status: 'active' | 'open' | 'closed'
+  status: 'active' | 'open' | 'closed' | 'arbitration'
   id: string
   creator: string
   isPriceBet: boolean
@@ -54,12 +48,10 @@ export type P2PCardData = {
   eventDateTs: number
   winnerShort: string  // '' if unresolved
   }
-
 export function wagerToCard(w: WagerDetails): P2PCardData {
   const isPriceBet = w.wagerType === 1
   const creatorStake = pls(w.creatorStake)
   const challengerStake = pls(w.challengerStake)
-
   // Build a readable description. For price bets, use the token + target + direction;
   // otherwise fall back to the free-text description the creator entered.
   let description = w.description
@@ -72,7 +64,6 @@ export function wagerToCard(w: WagerDetails): P2PCardData {
       ? w.description
       : `${token} ${dir} $${price}`
   }
-
   // Creator side = "YES" (the position they took). Challenger side = "NO" (open to take).
   // Winner of a side collects the OTHER side's stake, so wins = opposing stake.
   const yesData = {
@@ -89,7 +80,6 @@ export function wagerToCard(w: WagerDetails): P2PCardData {
     wins: creatorStake,
     isTaken: false,
   }
-
   return {
     type: 'p2p',
     icon: isPriceBet ? '💰' : '🎯',
@@ -100,8 +90,18 @@ export function wagerToCard(w: WagerDetails): P2PCardData {
     yesData,
     noData,
     closesIn: closesIn(w.depositDeadline),
-    // 0 Created = open; 1 Active / 2 Voting = active; 3+ = closed/resolved.
-    status: w.status === 0 ? 'open' : w.status === 1 || w.status === 2 ? 'active' : 'closed',
+    // Status enum: 0 Created, 1 Active, 2 Voting, 3 Resolved,
+    // 4 Arbitration, 5 Cancelled, 6 Voided.
+    // Arbitration is NOT closed — the wager is unsettled and can still pay
+    // either party or void. It gets its own bucket so the card can say so.
+    status:
+      w.status === 0
+        ? 'open'
+        : w.status === 1 || w.status === 2
+          ? 'active'
+          : w.status === 4
+            ? 'arbitration'
+            : 'closed',
     id: w.id.toString(),
     creator: w.creator,
     isPriceBet,

@@ -372,7 +372,7 @@ function CastVoteControls({
         Cast arbitration vote
       </p>
       <p className="mb-2 font-sans text-[10px] text-[#7c7a76]">
-        Vote for the party you judge to have won. Three matching votes resolve the wager and pay the
+        Cast one vote for the party you judge to have won. Three matching votes resolve the wager and pay the
         winner automatically. This cannot be undone.
       </p>
       <div className="mb-3 flex flex-wrap items-center gap-2">

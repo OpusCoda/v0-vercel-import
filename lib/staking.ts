@@ -3,6 +3,23 @@ import { parseUnits } from 'viem'
 export const STAKING_CONTRACT = '0xD597ccE5Fc999ee2DFc35E682e2D00136F25Aa63'
 export const SMAUG_TOKEN = '0xf4754Aa585caBf38537A68660469A17E203D8632'
 
+export const SMAUG_SUPPLY_ABI = [
+  {
+    inputs: [],
+    name: 'getCirculatingSupply',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalSupply',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const
+
 export const STAKING_ABI = [
   {
     inputs: [],
@@ -21,6 +38,54 @@ export const STAKING_ABI = [
   {
     inputs: [],
     name: 'totalStakers',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+   {
+    inputs: [],
+    name: 'plsTotalDistributed',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'smaugTotalDistributed',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+ 
+  // Currently-outstanding (unclaimed) reward balances.
+  {
+    inputs: [],
+    name: 'plsTotalPending',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'smaugTotalPending',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+ 
+  // Reflection pool. There is NO cumulative reflection counter on the
+  // contract — only the currently-outstanding amount — so lifetime
+  // reflections cannot be displayed.
+  {
+    inputs: [],
+    name: 'totalSmaugReflectionPending',
+    outputs: [{ type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalReflectionPrincipal',
     outputs: [{ type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',

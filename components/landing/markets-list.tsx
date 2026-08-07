@@ -17,6 +17,15 @@ const PROBABILITY_FILTERS: ProbabilityStatus[] = ["All", "Open", "Awaiting", "Re
 const MIN_PRICE = 0
 const MAX_PRICE = 1_000_000_000
 
+// Display order for the wager list: things needing action first, archive last.
+// Open wagers need a challenger, active/arbitration are live, closed is history.
+const P2P_STATUS_ORDER: Record<P2PCardData["status"], number> = {
+  open: 0,
+  active: 1,
+  arbitration: 2,
+  closed: 3,
+}
+
 // Format large numbers with K, M, B suffixes
 function formatPrice(value: number): string {
   if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(0) + "B"
@@ -76,24 +85,34 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
       .map(marketToCard)
   }, [markets, searchQuery, probabilityFilter])
 
-  // Filter P2P Market
+  // Filter P2P Market, then order: open → active → arbitration → closed,
+  // newest first within each group.
   const filteredP2PMarkets = useMemo(() => {
-    return p2pMarkets.filter((market) => {
-      const matchesSearch =
-        market.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        market.betType.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesCategory =
-        selectedCategories.size === 0 || selectedCategories.has(market.category as Category)
-      const matchesStatus =
-        (p2pFilter === "All") ||
-        (p2pFilter === "Active" && market.status === "active") ||
-        (p2pFilter === "Open" && market.status === "open") ||
-        (p2pFilter === "Completed" && market.status === "closed")
-      // Check if the max of (yes staked, no staked) falls within price range
-      const maxStaked = Math.max(market.yesData.staked, market.noData.staked)
-      const matchesPrice = maxStaked >= priceMin && maxStaked <= priceMax
-      return matchesSearch && matchesCategory && matchesStatus && matchesPrice
-    })
+    return p2pMarkets
+      .filter((market) => {
+        const matchesSearch =
+          market.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          market.betType.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesCategory =
+          selectedCategories.size === 0 || selectedCategories.has(market.category as Category)
+        // "Active" covers anything live but unsettled — including arbitration,
+        // which is emphatically NOT completed.
+        const matchesStatus =
+          (p2pFilter === "All") ||
+          (p2pFilter === "Active" && (market.status === "active" || market.status === "arbitration")) ||
+          (p2pFilter === "Open" && market.status === "open") ||
+          (p2pFilter === "Completed" && market.status === "closed")
+        // Check if the max of (yes staked, no staked) falls within price range
+        const maxStaked = Math.max(market.yesData.staked, market.noData.staked)
+        const matchesPrice = maxStaked >= priceMin && maxStaked <= priceMax
+        return matchesSearch && matchesCategory && matchesStatus && matchesPrice
+      })
+      .sort((a, b) => {
+        const byStatus = P2P_STATUS_ORDER[a.status] - P2P_STATUS_ORDER[b.status]
+        if (byStatus !== 0) return byStatus
+        // Same bucket → newest wager first (ids increment on creation).
+        return Number(b.id) - Number(a.id)
+      })
   }, [p2pMarkets, searchQuery, selectedCategories, p2pFilter, priceMin, priceMax])
 
   const toggleCategory = (cat: Category) => {
