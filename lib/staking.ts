@@ -72,10 +72,6 @@ export const STAKING_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
- 
-  // Reflection pool. There is NO cumulative reflection counter on the
-  // contract — only the currently-outstanding amount — so lifetime
-  // reflections cannot be displayed.
   {
     inputs: [],
     name: 'totalSmaugReflectionPending',
