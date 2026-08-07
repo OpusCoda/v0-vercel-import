@@ -7,6 +7,7 @@ import { useAccount, useReadContract } from 'wagmi'
 import type { Address } from 'viem'
 import { AdminLogin } from '@/components/admin/admin-login'
 import { CreateMarketForm } from '@/components/admin/create-market-form'
+import { WagerArbitration } from '@/components/admin/wager-arbitration'
 import { ManageAdmins } from '@/components/admin/manage-admins'
 import { ManageArbitrators } from '@/components/admin/manage-arbitrators'
 import { ManageResolver } from '@/components/admin/manage-resolver'
@@ -166,6 +167,14 @@ export default function AdminPage() {
             </p>
           </div>
           <DisputesResolutions />
+
+          <div className="mt-10 mb-6 border-t border-[#2a2a35] pt-8">
+            <h2 className="font-serif text-2xl font-bold text-[#e8e6e3]">Wager Arbitration</h2>
+            <p className="mt-2 font-sans text-sm text-[#7c7a76]">
+              Wager Market bets in voting or arbitration.
+            </p>
+          </div>
+          <WagerArbitration />
         </section>
       )}
 
