@@ -96,8 +96,6 @@ export default function StakePage() {
             {/* Stats strip — single bordered row, no individual cards */}
             <div className="flex divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-[#111116]">
               {[
-                { label: 'Current APR',   value: isLoading ? '—' : '38.42%' },
-                { label: 'TVL',           value: tvl },
                 { label: 'Total staked',  value: isLoading ? '—' : `${totalStaked} SMAUG` },
                 { label: 'Your active stakes', value: isConnected ? userStakeIds.length.toLocaleString() : '—' },
               ].map(({ label, value }) => (
