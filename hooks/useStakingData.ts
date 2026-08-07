@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useAccount, useReadContract, useReadContracts } from 'wagmi'
+import { useAccount, useReadContract } from 'wagmi'
 import { STAKING_CONTRACT, STAKING_ABI, SMAUG_TOKEN, ERC20_ABI, formatSmaugBalance } from '@/lib/staking'
-
 export function useStakingData() {
   const { address } = useAccount()
   const [totalStaked, setTotalStaked] = useState<string>('0')
@@ -13,7 +12,6 @@ export function useStakingData() {
   const [minStakeAmount, setMinStakeAmount] = useState<string>('0')
   const [userStakeIds, setUserStakeIds] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
-
   const { data: contractSmaugBalanceData } = useReadContract({
     address: SMAUG_TOKEN as `0x${string}`,
     abi: ERC20_ABI,
@@ -21,34 +19,29 @@ export function useStakingData() {
     args: [STAKING_CONTRACT as `0x${string}`],
     query: { refetchInterval: 30000 },
   })
-
   const { data: totalStakedData } = useReadContract({
     address: STAKING_CONTRACT as `0x${string}`,
     abi: STAKING_ABI,
     functionName: 'totalStaked',
     query: { refetchInterval: 30000 },
   })
-
   const { data: totalWeightedStakeData } = useReadContract({
     address: STAKING_CONTRACT as `0x${string}`,
     abi: STAKING_ABI,
     functionName: 'totalWeightedStake',
     query: { refetchInterval: 30000 },
   })
-
   const { data: totalStakersData } = useReadContract({
     address: STAKING_CONTRACT as `0x${string}`,
     abi: STAKING_ABI,
     functionName: 'totalStakers',
     query: { refetchInterval: 30000 },
   })
-
   const { data: minStakeData } = useReadContract({
     address: STAKING_CONTRACT as `0x${string}`,
     abi: STAKING_ABI,
     functionName: 'minStakeAmount',
   })
-
   const { data: balanceData } = useReadContract({
     address: SMAUG_TOKEN as `0x${string}`,
     abi: ERC20_ABI,
@@ -56,17 +49,17 @@ export function useStakingData() {
     args: address ? [address] : undefined,
     query: { enabled: !!address, refetchInterval: 30000 },
   })
-
-  const { data: stakeIdsData, refetch: refetchStakeIds } = useReadContracts({
-    contracts: address ? Array.from({ length: 20 }, (_, i) => ({
-      address: STAKING_CONTRACT as `0x${string}`,
-      abi: STAKING_ABI,
-      functionName: 'userStakeIds' as const,
-      args: [address, BigInt(i)] as const,
-    })) : [],
-    query: { enabled: !!address },
+  // The `userStakeIds` mapping is `internal` on the contract, so no getter is
+  // generated for it — probing userStakeIds(address, index) fails on every call.
+  // getUserStakeIds(address) is the external view that returns the whole array
+  // in a single call. (Same function your-stakes.tsx uses.)
+  const { data: stakeIdsData, refetch: refetchStakeIds } = useReadContract({
+    address: STAKING_CONTRACT as `0x${string}`,
+    abi: STAKING_ABI,
+    functionName: 'getUserStakeIds',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address, refetchInterval: 30000 },
   })
-
   useEffect(() => {
     if (totalStakedData !== undefined) {
       const staked = typeof totalStakedData === 'bigint' ? totalStakedData : BigInt(totalStakedData)
@@ -92,15 +85,14 @@ export function useStakingData() {
       const min = typeof minStakeData === 'bigint' ? minStakeData : BigInt(minStakeData)
       setMinStakeAmount(formatSmaugBalance(min))
     }
-    if (stakeIdsData) {
-      const ids = stakeIdsData
-        .filter(result => result.status === 'success' && result.result !== undefined)
-        .map(result => (result.result as bigint).toString())
-      setUserStakeIds(ids)
+    // Wallet disconnected → clear the list rather than leaving stale ids.
+    if (!address) {
+      setUserStakeIds([])
+    } else if (stakeIdsData !== undefined) {
+      setUserStakeIds((stakeIdsData as readonly bigint[]).map((id) => id.toString()))
     }
     setIsLoading(false)
-  }, [totalStakedData, totalWeightedStakeData, contractSmaugBalanceData, totalStakersData, balanceData, minStakeData, stakeIdsData])
-
+  }, [address, totalStakedData, totalWeightedStakeData, contractSmaugBalanceData, totalStakersData, balanceData, minStakeData, stakeIdsData])
   return {
     totalStaked,
     totalStakedRaw,
