@@ -75,10 +75,6 @@ function CardFor({ w }: { w: WagerDetails }) {
       noData={m.noData}
       closesIn={m.closesIn}
       creator={m.creator}
-      isPriceBet={m.isPriceBet}
-      creatorBetsAbove={m.creatorBetsAbove}
-      targetPrice={m.targetPrice}
-      tokenLabel={m.tokenLabel}
       status={m.status}
       eventDateTs={m.eventDateTs}
       winnerShort={m.winnerShort}

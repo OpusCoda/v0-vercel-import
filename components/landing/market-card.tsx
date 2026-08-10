@@ -47,10 +47,6 @@ export type MarketCardProps =
     noData: P2PSide
     closesIn: string
     creator?: string
-    isPriceBet?: boolean
-    creatorBetsAbove?: boolean
-    targetPrice?: number
-    tokenLabel?: string
     status?: 'open' | 'active' | 'closed' | 'arbitration'
     eventDateTs?: number
     winnerShort?: string
@@ -60,19 +56,17 @@ function pls(v: bigint): number {
 }
 // Human label for time until resolution opens (the event date).
 // Standard wagers open VOTING at eventDate; price bets become RESOLVABLE.
-function resolutionLabel(eventDateTs: number | undefined, isPriceBet: boolean | undefined): string {
+function resolutionLabel(eventDateTs: number | undefined): string {
   if (!eventDateTs) return "Matched — awaiting resolution"
   const secs = eventDateTs - Math.floor(Date.now() / 1000)
-  if (secs <= 0) {
-    return isPriceBet ? "Ready to resolve" : "Voting open"
-  }
+  if (secs <= 0) return "Voting open"
   const days = Math.floor(secs / 86400)
   const hours = Math.floor((secs % 86400) / 3600)
   let left: string
   if (days >= 1) left = `${days}d ${hours}h`
   else if (hours >= 1) left = `${hours}h`
   else left = `${Math.max(1, Math.floor(secs / 60))}m`
-  return isPriceBet ? `Resolves in ${left}` : `Voting opens in ${left}`
+  return `Voting opens in ${left}`
 }
 // Live accept button + accurate payout via quoteWager.
 function AcceptSection({
@@ -80,19 +74,11 @@ function AcceptSection({
   creatorStake,
   takerStake,
   creator,
-  isPriceBet,
-  creatorBetsAbove,
-  targetPrice,
-  tokenLabel,
 }: {
   id: string
   creatorStake: number
   takerStake: number
   creator?: string
-  isPriceBet?: boolean
-  creatorBetsAbove?: boolean
-  targetPrice?: number
-  tokenLabel?: string
 }) {
   const { address, isConnected } = useAccount()
   const wagerId = (() => {
@@ -505,14 +491,8 @@ export function MarketCard(props: MarketCardProps) {
   const takerStake = props.noData.staked
   // Describe each side's position.
   // For price bets, show the directional opposite explicitly.
-  const creatorPosition =
-    props.isPriceBet && props.tokenLabel
-      ? `${props.tokenLabel} ${props.creatorBetsAbove ? "above" : "below"} $${props.targetPrice}`
-      : "Backs this outcome"
-  const takerPosition =
-    props.isPriceBet && props.tokenLabel
-      ? `${props.tokenLabel} ${props.creatorBetsAbove ? "below" : "above"} $${props.targetPrice}`
-      : "Backs the opposite outcome"
+  const creatorPosition = "Backs this outcome"
+  const takerPosition = "Backs the opposite outcome"
   return (
     <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#B87333]/30">
       {/* Header */}
@@ -555,10 +535,6 @@ export function MarketCard(props: MarketCardProps) {
             creatorStake={creatorStake}
             takerStake={takerStake}
             creator={props.creator}
-            isPriceBet={props.isPriceBet}
-            creatorBetsAbove={props.creatorBetsAbove}
-            targetPrice={props.targetPrice}
-            tokenLabel={props.tokenLabel}
           />
           <p className="font-sans text-xs text-[#7c7a76]">Time left to accept: {props.closesIn}</p>
           <button
@@ -578,7 +554,7 @@ export function MarketCard(props: MarketCardProps) {
                 <WagerActions wagerId={wid} />
               ) : (
                 <span className="inline-block rounded-full border border-[#2a2a35] bg-[#1a1a20] px-3 py-1 font-sans text-xs font-semibold text-[#b8b6b1]">
-                  {resolutionLabel(props.eventDateTs, props.isPriceBet)}
+                  {resolutionLabel(props.eventDateTs)}
                 </span>
               )
             })()
