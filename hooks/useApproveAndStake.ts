@@ -27,7 +27,7 @@ export function useApproveAndStake(address: `0x${string}` | undefined) {
     query: { enabled: !!approveTxHash },
   })
 
-  const { isSuccess: stakeConfirmed } = useWaitForTransactionReceipt({
+  const { isSuccess: stakeConfirmed, isError: stakeReverted } = useWaitForTransactionReceipt({
     hash: stakeTxHash,
     query: { enabled: !!stakeTxHash },
   })
@@ -107,5 +107,7 @@ export function useApproveAndStake(address: `0x${string}` | undefined) {
     isPending: approveIsPending || stakeIsPending,
     approveTxHash,
     stakeTxHash,
+    error: approveError || stakeError,
+    stakeReverted,
   }
 }
