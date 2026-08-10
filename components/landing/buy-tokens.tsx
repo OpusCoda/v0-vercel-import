@@ -46,8 +46,8 @@ const contracts = [
 const protocolContracts = [
   {
     name: "Smaug Staking",
-    address: "0xD597ccE5Fc999ee2DFc35E682e2D00136F25Aa63",
-    url: "https://otter.pulsechain.com/address/0xD597ccE5Fc999ee2DFc35E682e2D00136F25Aa63",
+    address: "0x46cDdbe5084c7A2A5AD1c5BF74f39f3579725f5a",
+    url: "https://otter.pulsechain.com/address/0x46cDdbe5084c7A2A5AD1c5BF74f39f3579725f5a",
   },
   {
     name: "Probability Shop",
@@ -56,8 +56,8 @@ const protocolContracts = [
   },
   {
     name: "Wager Market",
-    address: "0x4B5da4B6b4607B5bA054511ef6bD83742287e18F",
-    url: "https://otter.pulsechain.com/address/0x4B5da4B6b4607B5bA054511ef6bD83742287e18F",
+    address: "0x5c806d98Ab3fBAA7eDFa04749F69580E1f753167",
+    url: "https://otter.pulsechain.com/address/0x5c806d98Ab3fBAA7eDFa04749F69580E1f753167",
   },
 ]
 // Testing summary per contract — describes the self-testing / AI-review work

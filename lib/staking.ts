@@ -1,6 +1,7 @@
 import { parseUnits } from 'viem'
 
-export const STAKING_CONTRACT = '0xD597ccE5Fc999ee2DFc35E682e2D00136F25Aa63'
+export const STAKING_CONTRACT = '0x46cDdbe5084c7A2A5AD1c5BF74f39f3579725f5a'
+
 export const SMAUG_TOKEN = '0xf4754Aa585caBf38537A68660469A17E203D8632'
 
 export const SMAUG_SUPPLY_ABI = [

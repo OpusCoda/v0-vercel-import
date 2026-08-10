@@ -5,7 +5,7 @@ import { useAccount, useReadContract, useReadContracts } from "wagmi"
 import type { Address } from "viem"
 import { outcomeExchangeAbi } from "@/lib/abis/outcome-exchange"
 
-const OUTCOME_EXCHANGE_ADDRESS = '0x4B5da4B6b4607B5bA054511ef6bD83742287e18F' as Address
+const OUTCOME_EXCHANGE_ADDRESS = '0x5c806d98Ab3fBAA7eDFa04749F69580E1f753167' as Address
 
 const PAGE_SIZE = 100n
 
