@@ -2,6 +2,7 @@ import type React from "react"
 import "./globals.css"
 import "@rainbow-me/rainbowkit/styles.css"
 import { Inter, Merriweather } from "next/font/google"
+import { TopBar } from "@/components/top-bar"
 import { Providers } from "@/components/providers"
 import { ReferralCapture } from "@/components/referral-capture"
 
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${merriweather.variable} ${inter.variable}`}>
         <Providers>
           <ReferralCapture />
+          <TopBar />
           {children}
         </Providers>
       </body>

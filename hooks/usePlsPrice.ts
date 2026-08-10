@@ -10,6 +10,7 @@ const PAIRS: Record<string, string> = {
   PLSX: '0x1b45b9148791d3a104184cd5dfe5ce57193a3ee9', // PLSX/WPLS
   HEX: '0xf1f4ee610b2babb05c635f726ef8b0c568c8dc65',  // HEX/WPLS
   INC: '0xf808bb6265e9ca27002c0a04562bf50d4fe37eaa',  // INC/WPLS
+  SMAUG: '0x151e583badb57138d41aa964ac3ff38d4bb1145f', // SMAUG/WPLS
 }
 
 export function usePlsPrice(tokenLabel?: string) {
