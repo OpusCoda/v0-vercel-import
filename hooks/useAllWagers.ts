@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useReadContract, useReadContracts } from 'wagmi'
 import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from '@/lib/wager-market'
 import type { WagerDetails } from '@/hooks/useOpenWagers'
-
 /**
  * Fetches ALL wagers (every status), not just open ones.
  *
@@ -23,10 +22,8 @@ export function useAllWagers() {
     functionName: 'totalWagerCount',
     query: { refetchInterval: 30000 },
   })
-
   const count = countData ? Number(countData as bigint) : 0
   const ids = useMemo(() => Array.from({ length: count }, (_, i) => BigInt(i)), [count])
-
   const { data: detailsData, isLoading: detailsLoading } = useReadContracts({
     contracts: ids.map((wagerId) => ({
       address: WAGER_MARKET_ADDRESS,
@@ -36,19 +33,18 @@ export function useAllWagers() {
     })),
     query: { enabled: ids.length > 0, refetchInterval: 30000 },
   })
-
   const wagers: WagerDetails[] = useMemo(() => {
     if (!detailsData) return []
+    // getWagerDetails returns FOUR values now — the priceBet tuple is gone:
+    //   [ wager(tuple), creatorRequestedVoid, challengerRequestedVoid, arbitrationStart ]
     return detailsData
       .map((result, i) => {
         if (result.status !== 'success' || !result.result) return null
         const res = result.result as any
         const w = res[0]
-        const pb = res[1]
         if (!w) return null
         return {
           id: ids[i],
-          wagerType: Number(w.wagerType),
           category: Number(w.category),
           creator: w.creator,
           challenger: w.challenger,
@@ -64,14 +60,13 @@ export function useAllWagers() {
           creatorVote: w.creatorVote,
           challengerVote: w.challengerVote,
           winner: w.winner,
-          queryId: pb?.queryId ?? '0x',
-          targetPrice: pb?.targetPrice ?? 0n,
-          creatorBetsAbove: pb?.creatorBetsAbove ?? false,
+          creatorRequestedVoid: Boolean(res[1]),
+          challengerRequestedVoid: Boolean(res[2]),
+          arbitrationStart: (res[3] ?? 0n) as bigint,
         } as WagerDetails
       })
       .filter((x): x is WagerDetails => x !== null)
   }, [detailsData, ids])
-
   return {
     wagers,
     isLoading: countLoading || detailsLoading,
