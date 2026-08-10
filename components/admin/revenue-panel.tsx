@@ -9,7 +9,7 @@ import {
 import { formatUnits } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from "@/lib/wager-market"
-const PREDICTION_MARKET_ADDRESS = "0x3CE1D7142259237519Ed41D6b4d95690457427C6"
+const PREDICTION_MARKET_ADDRESS = "0x77b004A0029d725e353E5EE0D80102516A4e52a8"
 function fmtPls(wei: bigint, dp = 2): string {
   return Number(formatUnits(wei, 18)).toLocaleString(undefined, { maximumFractionDigits: dp })
 }

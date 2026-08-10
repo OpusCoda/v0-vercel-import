@@ -51,8 +51,8 @@ const protocolContracts = [
   },
   {
     name: "Probability Shop",
-    address: "0x3CE1D7142259237519Ed41D6b4d95690457427C6",
-    url: "https://otter.pulsechain.com/address/0x3CE1D7142259237519Ed41D6b4d95690457427C6",
+    address: "0x77b004A0029d725e353E5EE0D80102516A4e52a8",
+    url: "https://otter.pulsechain.com/address/0x77b004A0029d725e353E5EE0D80102516A4e52a8",
   },
   {
     name: "Wager Market",

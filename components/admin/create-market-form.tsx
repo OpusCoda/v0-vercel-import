@@ -14,7 +14,7 @@ import { predictionMarketAbi } from '@/lib/abis/prediction-market'
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ('0x3CE1D7142259237519Ed41D6b4d95690457427C6' as Address)
+  ('0x77b004A0029d725e353E5EE0D80102516A4e52a8' as Address)
 
 const CATEGORIES = [
   'Crypto',

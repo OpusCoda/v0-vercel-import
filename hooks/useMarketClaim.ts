@@ -1,7 +1,7 @@
 "use client"
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
-const PREDICTION_MARKET_ADDRESS = "0x3CE1D7142259237519Ed41D6b4d95690457427C6"
+const PREDICTION_MARKET_ADDRESS = "0x77b004A0029d725e353E5EE0D80102516A4e52a8"
 // Which claim function applies for a resolved/voided/abandoned market.
 export type ClaimKind = "winnings" | "voidRefund" | "abandoned" | "residual"
 const FN_BY_KIND: Record<ClaimKind, "claim" | "claimVoidRefund" | "claimAbandoned" | "claimResidualLiquidity"> = {

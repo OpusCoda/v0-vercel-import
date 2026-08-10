@@ -8,7 +8,7 @@ import { useCancelWager } from "@/hooks/useCancelWager"
 import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from "@/lib/wager-market"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { WagerActions } from "@/components/markets/wager-actions"
-const PREDICTION_MARKET_ADDRESS = "0x3CE1D7142259237519Ed41D6b4d95690457427C6"
+const PREDICTION_MARKET_ADDRESS = "0x77b004A0029d725e353E5EE0D80102516A4e52a8"
 export type ProbabilityOutcome = {
   label: string
   odds: number // percentage 0-100
