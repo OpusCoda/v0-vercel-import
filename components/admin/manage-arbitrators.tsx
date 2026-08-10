@@ -127,7 +127,7 @@ export function ManageArbitrators() {
         <div>
           <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Manage Arbitrators</h2>
           <p className="mt-2 font-sans text-sm text-[#7c7a76]">
-            Arbitrators resolve disputed Outcome Exchange wagers. The panel holds{' '}
+            Arbitrators resolve disputed P2P wagers. The panel holds{' '}
             {ARBITRATION_THRESHOLD}–{MAX_ARBITRATORS} members; {ARBITRATION_THRESHOLD} matching
             votes resolve a dispute. Only the contract owner can change the panel.
           </p>

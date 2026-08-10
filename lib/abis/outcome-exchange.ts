@@ -21,30 +21,11 @@ export const outcomeExchangeAbi = [
     outputs: [{ type: "uint256", name: "" }],
     stateMutability: "view",
   },
-  // ─── Add to outcomeExchangeAbi (before the closing `] as const`) ───
-  // isArbitrator, activeArbitrations, and owner are already in the file.
-
   {
     type: "function",
-    name: "addArbitrator",
-    inputs: [{ type: "address", name: "_arbitrator" }],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "removeArbitrator",
-    inputs: [{ type: "address", name: "_arbitrator" }],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  // Public array accessor: arbitratorList(index) → address.
-  // Used to read the current panel by iterating indices until it reverts.
-  {
-    type: "function",
-    name: "arbitratorList",
-    inputs: [{ type: "uint256", name: "" }],
-    outputs: [{ type: "address", name: "" }],
+    name: "userWagerCount",
+    inputs: [{ type: "address", name: "user" }],
+    outputs: [{ type: "uint256", name: "" }],
     stateMutability: "view",
   },
   {
@@ -54,14 +35,99 @@ export const outcomeExchangeAbi = [
     outputs: [{ type: "uint256", name: "" }],
     stateMutability: "view",
   },
+  // ─────────────────────────── Views: protocol stats ────────────────────
+  // Public state variables on the contract — each has an auto-generated getter.
   {
     type: "function",
-    name: "userWagerCount",
-    inputs: [{ type: "address", name: "user" }],
+    name: "totalVolume",
+    inputs: [],
     outputs: [{ type: "uint256", name: "" }],
     stateMutability: "view",
   },
-
+  {
+    type: "function",
+    name: "totalResolved",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalVoided",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalProtocolFees",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalStakerFees",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalPayouts",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalStandardWagers",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalFeeAccrued",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalReferralLiabilities",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "stakerFeeSplitBps",
+    inputs: [],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "devRecipient",
+    inputs: [],
+    outputs: [{ type: "address", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "stakingRecipient",
+    inputs: [],
+    outputs: [{ type: "address", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "publicWagering",
+    inputs: [],
+    outputs: [{ type: "bool", name: "" }],
+    stateMutability: "view",
+  },
   // ─────────────────────────── Views: enumeration ───────────────────────
   {
     type: "function",
@@ -91,8 +157,10 @@ export const outcomeExchangeAbi = [
     outputs: [{ type: "uint256[]", name: "ids" }],
     stateMutability: "view",
   },
-
   // ─────────────────────────── Views: wager detail ──────────────────────
+  // NOTE: price bets were removed from the contract. The wager struct no
+  // longer carries a `wagerType` field, and getWagerDetails no longer
+  // returns a priceBet tuple — it now returns 4 values, not 5.
   {
     type: "function",
     name: "getWagerDetails",
@@ -102,7 +170,6 @@ export const outcomeExchangeAbi = [
         type: "tuple",
         name: "wager",
         components: [
-          { type: "uint8", name: "wagerType" },
           { type: "uint8", name: "category" },
           { type: "address", name: "creator" },
           { type: "address", name: "challenger" },
@@ -118,15 +185,6 @@ export const outcomeExchangeAbi = [
           { type: "address", name: "creatorVote" },
           { type: "address", name: "challengerVote" },
           { type: "address", name: "winner" },
-        ],
-      },
-      {
-        type: "tuple",
-        name: "priceBet",
-        components: [
-          { type: "bytes32", name: "queryId" },
-          { type: "uint256", name: "targetPrice" },
-          { type: "bool", name: "creatorBetsAbove" },
         ],
       },
       { type: "bool", name: "creatorRequestedVoid" },
@@ -172,7 +230,6 @@ export const outcomeExchangeAbi = [
     ],
     stateMutability: "view",
   },
-
   // ─────────────────────────── Views: user info ─────────────────────────
   {
     type: "function",
@@ -231,9 +288,25 @@ export const outcomeExchangeAbi = [
   },
   {
     type: "function",
+    name: "referralRewards",
+    inputs: [{ type: "address", name: "" }],
+    outputs: [{ type: "uint256", name: "" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "isArbitrator",
     inputs: [{ type: "address", name: "" }],
     outputs: [{ type: "bool", name: "" }],
+    stateMutability: "view",
+  },
+  // Public array accessor: arbitratorList(index) → address.
+  // Used to read the current panel by iterating indices until it reverts.
+  {
+    type: "function",
+    name: "arbitratorList",
+    inputs: [{ type: "uint256", name: "" }],
+    outputs: [{ type: "address", name: "" }],
     stateMutability: "view",
   },
   {
@@ -243,14 +316,6 @@ export const outcomeExchangeAbi = [
     outputs: [{ type: "address", name: "" }],
     stateMutability: "view",
   },
-  {
-    type: "function",
-    name: "queryIdLabel",
-    inputs: [{ type: "bytes32", name: "queryId" }],
-    outputs: [{ type: "string", name: "" }],
-    stateMutability: "pure",
-  },
-
   // ─────────────────────────── Writes: create ───────────────────────────
   {
     type: "function",
@@ -267,25 +332,6 @@ export const outcomeExchangeAbi = [
     outputs: [{ type: "uint256", name: "wagerId" }],
     stateMutability: "payable",
   },
-  {
-    type: "function",
-    name: "createPriceBet",
-    inputs: [
-      { type: "address", name: "challenger" },
-      { type: "string", name: "description" },
-      { type: "uint256", name: "eventDate" },
-      { type: "uint8", name: "depositWindow" },
-      { type: "uint256", name: "challengerStake" },
-      { type: "bytes32", name: "queryId" },
-      { type: "uint256", name: "targetPrice" },
-      { type: "bool", name: "creatorBetsAbove" },
-      { type: "uint8", name: "category" },
-      { type: "address", name: "referrer" },
-    ],
-    outputs: [{ type: "uint256", name: "wagerId" }],
-    stateMutability: "payable",
-  },
-
   // ─────────────────────────── Writes: lifecycle ────────────────────────
   {
     type: "function",
@@ -296,13 +342,6 @@ export const outcomeExchangeAbi = [
     ],
     outputs: [],
     stateMutability: "payable",
-  },
-  {
-    type: "function",
-    name: "resolvePriceBet",
-    inputs: [{ type: "uint256", name: "wagerId" }],
-    outputs: [],
-    stateMutability: "nonpayable",
   },
   {
     type: "function",
@@ -376,14 +415,62 @@ export const outcomeExchangeAbi = [
     outputs: [],
     stateMutability: "nonpayable",
   },
-
+  // ─────────────────────────── Writes: admin ────────────────────────────
+  {
+    type: "function",
+    name: "addArbitrator",
+    inputs: [{ type: "address", name: "_arbitrator" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "removeArbitrator",
+    inputs: [{ type: "address", name: "_arbitrator" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setPublicWagering",
+    inputs: [{ type: "bool", name: "enabled" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setDevRecipient",
+    inputs: [{ type: "address", name: "_devRecipient" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setStakingRecipient",
+    inputs: [{ type: "address", name: "_stakingRecipient" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setStakerFeeSplit",
+    inputs: [{ type: "uint256", name: "_stakerFeeSplitBps" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "transferOwnership",
+    inputs: [{ type: "address", name: "newOwner" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
   // ─────────────────────────── Events (subset) ──────────────────────────
   {
     type: "event",
     name: "WagerCreated",
     inputs: [
       { type: "uint256", name: "wagerId", indexed: true },
-      { type: "uint8", name: "wagerType", indexed: false },
       { type: "uint8", name: "category", indexed: false },
       { type: "address", name: "creator", indexed: true },
       { type: "address", name: "challenger", indexed: true },
@@ -437,6 +524,12 @@ export const outcomeExchangeAbi = [
       { type: "address", name: "arbitrator", indexed: true },
       { type: "address", name: "proposedWinner", indexed: true },
     ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "ArbitrationAutoVoided",
+    inputs: [{ type: "uint256", name: "wagerId", indexed: true }],
     anonymous: false,
   },
 ] as const
