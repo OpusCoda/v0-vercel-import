@@ -130,7 +130,13 @@ export default function StakePage() {
                       className="w-full bg-transparent py-4 text-lg outline-none"
                     />
                     <button
-                      onClick={() => setAmount(formatNumberInput(balance))}
+                      onClick={() => {
+  // Wallet is reflection-exempt; staking raw max makes rAmount round past
+  // rOwned and underflow SMAUG's _transferFromExcluded. Back off a hair.
+  const raw = parseFloat(balance.replace(/,/g, '')) || 0
+  const safe = Math.max(0, raw - 0.001)
+  setAmount(formatNumberInput(String(safe)))
+}}
                       className="ml-2 rounded-lg px-3 py-2 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors"
                     >
                       Max
