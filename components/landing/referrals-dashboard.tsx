@@ -111,7 +111,7 @@ export function ReferralsDashboard() {
     }
   }
 
-  const shareMessage = "Opus on PulseChain now has two ways to trade outcomes:\n\n• Probability Shop: YES/NO prediction markets\n• Wager Market: Trustlessly resolved peer-to-peer bets\n\nSame idea, very different mechanics."
+  const shareMessage = "Opus on PulseChain now has two ways to trade outcomes:\n\n• Probability Shop: YES/NO prediction markets\n• Wager Market: Trustlessly resolved peer-to-peer bets\n\nSame idea, different mechanics."
   const shareX = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(referralLink)}`
   const shareTelegram = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareMessage)}`
 
