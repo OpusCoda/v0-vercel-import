@@ -124,7 +124,7 @@ export function ReferralsDashboard() {
     <section className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
       <OrnamentHeading>Refer friends, earn together</OrnamentHeading>
       <p className="mx-auto mt-4 max-w-2xl text-pretty text-center font-sans text-base leading-relaxed text-[#b8b6b1]">
-        Claim a referral name, share your link, and earn a share of protocol fees when the people you invite use the Outcome Exchange and Probability Shop. Your friends get a fee discount, too.
+        Claim a referral name, share your link, and earn a share of protocol fees when the people you invite use the Wager Market and Probability Shop. Your friends get a fee discount, too.
       </p>
 
       {pendingRef && (
@@ -297,7 +297,7 @@ export function ReferralsDashboard() {
             {
               Icon: Percent,
               title: "20% fee discount for your invitees",
-              body: "Anyone who joins through your link pays 20% lower protocol fees on Outcome Exchange wagers and Probability Shop trades.",
+              body: "Anyone who joins through your link pays 20% lower protocol fees on trades in the Wager Market and Probability Shop.",
             },
             {
               Icon: Gift,
