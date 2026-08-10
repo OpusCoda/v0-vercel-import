@@ -49,10 +49,8 @@ function actionFor(w: WagerDetails, me: string, now: number): string | null {
     return null
   }
   // Price bet past event date: resolvable (permissionless, but surface it)
-  if (w.wagerType === 1 && w.status === 1 && now > Number(w.eventDate)) return 'Resolve (oracle)'
-  // Standard wager in the voting window where you have not voted yet
+  // In the voting window where you have not voted yet
   if (
-    w.wagerType === 0 &&
     (w.status === 1 || w.status === 2) &&
     now >= Number(w.eventDate) &&
     now <= Number(w.votingDeadline)
@@ -244,11 +242,10 @@ export function MyWagers() {
                       const isCreator = w.creator.toLowerCase() === me
                       const myStake = isCreator ? plsNum(w.creatorStake) : plsNum(w.challengerStake)
                       const card = wagerToCard(w)
-                      const typeEmoji = w.wagerType === 1 ? '📈' : '🤝'
                       const statusLabel = w.status === 0 ? 'Pending' : w.status === 2 ? 'Voting' : 'Active'
                       return (
                         <tr key={`pos-${w.id.toString()}`} className="border-t border-[#2a2a35] hover:bg-[#0d0d12]/50">
-                          <td className="px-4 py-3 text-sm text-[#e8e6e3]">{typeEmoji} {w.wagerType === 1 ? 'Price Bet' : 'Outcome'}</td>
+                          <td className="px-4 py-3 text-sm text-[#e8e6e3]">🤝 Outcome</td>
                           <td className="px-4 py-3 text-sm text-[#b8b6b1]">{card.description}</td>
                           <td className="px-4 py-3 text-sm text-[#7c7a76]">{statusLabel}</td>
                           <td className="px-4 py-3 text-right text-sm font-semibold text-[#B87333]">{myStake.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS</td>
