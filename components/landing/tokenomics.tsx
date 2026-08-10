@@ -56,13 +56,13 @@ export function Tokenomics() {
 
           {/* Content */}
           <div className="px-7 pb-8 pt-2 md:py-8 md:pr-10">
-            <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Tokenomics of Smaug</h2>
+            <h2 className="font-serif text-2xl font-bold text-[#B87333]">Tokenomics of Smaug</h2>
 
             <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-4">
               {metrics.map((m) => (
                 <div key={m.label} className="flex flex-col items-start">
                   <div className="flex items-baseline gap-2">
-                    <m.icon className="h-5 w-5 text-[#d4af37]" />
+                    <m.icon className="h-5 w-5 text-[#B87333]" />
                     <span className="font-serif text-2xl font-bold text-[#e8e6e3]">{m.value}</span>
                   </div>
                   <span className="mt-1 font-sans text-xs text-[#9ca3af]">{m.label}</span>
@@ -83,7 +83,7 @@ export function Tokenomics() {
 
             <a
               href="#tokens"
-              className="mt-4 inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[#d4af37] hover:underline"
+              className="mt-4 inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[#B87333] hover:underline"
             >
               View full tokenomics <ArrowRight className="h-4 w-4" />
             </a>

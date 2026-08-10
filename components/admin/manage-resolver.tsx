@@ -76,7 +76,7 @@ export function ManageResolver() {
     <div className="mx-auto max-w-2xl">
       <div className="space-y-6 rounded-lg border border-[#2a2a35] bg-[#101017] p-8">
         <div>
-          <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Manage Resolver</h2>
+          <h2 className="font-serif text-2xl font-bold text-[#B87333]">Manage Resolver</h2>
           <p className="mt-2 font-sans text-sm text-[#7c7a76]">
             The resolver settles disputed markets. Only the contract owner can change it.
           </p>
@@ -100,7 +100,7 @@ export function ManageResolver() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="0x..."
-            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#d4af37] focus:outline-none"
+            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#B87333] focus:outline-none"
           />
           {input.length > 0 && !target && (
             <p className="mt-2 font-sans text-xs text-red-400">Not a valid address.</p>
@@ -145,7 +145,7 @@ export function ManageResolver() {
           type="button"
           onClick={submit}
           disabled={!canSubmit || !simulation?.request || isPending || confirming}
-          className="w-full rounded-lg border border-[#d4af37] bg-[#d4af37]/10 px-4 py-3 font-sans font-semibold text-[#d4af37] transition-colors hover:bg-[#d4af37]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-lg border border-[#B87333] bg-[#B87333]/10 px-4 py-3 font-sans font-semibold text-[#B87333] transition-colors hover:bg-[#B87333]/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending ? 'Confirm in Wallet' : confirming ? 'Processing...' : 'Set Resolver'}
         </button>

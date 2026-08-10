@@ -24,7 +24,7 @@ export default function TokensPage() {
           href="https://www.youtube.com/watch?v=Qr-avVraIA0"
           target="_blank"
           rel="noopener noreferrer"
-          className="group mt-5 inline-flex items-center gap-2 font-sans text-sm font-medium text-[#d4af37] transition-colors hover:text-[#e8e6e3]"
+          className="group mt-5 inline-flex items-center gap-2 font-sans text-sm font-medium text-[#B87333] transition-colors hover:text-[#e8e6e3]"
         >
           <Play className="h-4 w-4 fill-current" />
           <span>What are these Opus and Coda tokens? Watch the 2-minute explainer</span>

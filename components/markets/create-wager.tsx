@@ -85,7 +85,7 @@ export function CreateWager() {
     try {
       const pending = localStorage.getItem('opus_pending_referrer')
       if (pending) setReferrer(pending)
-    } catch {}
+    } catch { }
   }, [])
 
   const [showConfirm, setShowConfirm] = useState(false)
@@ -257,7 +257,7 @@ export function CreateWager() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What is this wager about?"
-              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
+              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#B87333] focus:outline-none"
               required
             />
             <p className="text-xs text-[#666] mt-1 leading-relaxed">
@@ -280,11 +280,10 @@ export function CreateWager() {
                 if (raw === '' || /^\d*\.?\d*$/.test(raw)) setMyStake(raw)
               }}
               placeholder="0"
-              className={`w-full rounded-lg border bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:outline-none ${
-                myStakeBelowMin
+              className={`w-full rounded-lg border bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:outline-none ${myStakeBelowMin
                   ? 'border-red-500/50 focus:border-red-500'
-                  : 'border-white/10 focus:border-[#D8B13D]'
-              }`}
+                  : 'border-white/10 focus:border-[#B87333]'
+                }`}
               required
             />
             {myStakeBelowMin && (
@@ -303,13 +302,13 @@ export function CreateWager() {
                 type="datetime-local"
                 value={eventDateTime}
                 onChange={(e) => setEventDateTime(e.target.value)}
-                className="flex-1 rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
+                className="flex-1 rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#B87333] focus:outline-none"
                 required
               />
               <button
                 type="button"
                 onClick={() => dateInputRef.current?.showPicker?.()}
-                className="rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#9a9a9a] hover:border-[#D8B13D] hover:text-[#D8B13D] transition"
+                className="rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#9a9a9a] hover:border-[#B87333] hover:text-[#B87333] transition"
                 title="Open calendar"
               >
                 📅
@@ -339,7 +338,7 @@ export function CreateWager() {
             <select
               value={depositWindow}
               onChange={(e) => setDepositWindow(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
+              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#B87333] focus:outline-none"
             >
               {DEPOSIT_WINDOWS.map((w) => (
                 <option key={w.value} value={w.value}>
@@ -364,11 +363,10 @@ export function CreateWager() {
                 if (raw === '' || /^\d*\.?\d*$/.test(raw)) setChallengerStake(raw)
               }}
               placeholder="0"
-              className={`w-full rounded-lg border bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:outline-none ${
-                challengerStakeBelowMin
+              className={`w-full rounded-lg border bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:outline-none ${challengerStakeBelowMin
                   ? 'border-red-500/50 focus:border-red-500'
-                  : 'border-white/10 focus:border-[#D8B13D]'
-              }`}
+                  : 'border-white/10 focus:border-[#B87333]'
+                }`}
               required
             />
             {challengerStakeBelowMin && (
@@ -382,7 +380,7 @@ export function CreateWager() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#D8B13D] focus:outline-none"
+              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] focus:border-[#B87333] focus:outline-none"
             >
               {CATEGORIES.map((c) => (
                 <option key={c.value} value={c.value}>
@@ -400,7 +398,7 @@ export function CreateWager() {
               value={challengerAddress}
               onChange={(e) => setChallengerAddress(e.target.value)}
               placeholder="0x0000... (leave empty for open wager)"
-              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#D8B13D] focus:outline-none"
+              className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#B87333] focus:outline-none"
             />
           </div>
 
@@ -413,7 +411,7 @@ export function CreateWager() {
                   <button
                     type="button"
                     onClick={() => setShowOddsHelp((v) => !v)}
-                    className="text-xs text-[#9a9a9a] hover:text-[#D8B13D] transition underline decoration-dotted"
+                    className="text-xs text-[#9a9a9a] hover:text-[#B87333] transition underline decoration-dotted"
                   >
                     How is this calculated?
                   </button>
@@ -427,7 +425,7 @@ export function CreateWager() {
                   const netProfit = totalBack - myStakeNum
                   return (
                     <div className="space-y-1">
-                      <div className="text-lg font-semibold text-[#D8B13D]">
+                      <div className="text-lg font-semibold text-[#B87333]">
                         {totalBack.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS back
                       </div>
                       <div className="text-xs text-[#9a9a9a]">
@@ -460,8 +458,8 @@ export function CreateWager() {
                 </div>
                 <div className="border-t border-white/10 pt-2 mt-2">
                   <div className="flex justify-between font-semibold">
-                    <span className="text-[#D8B13D]">Total to Send:</span>
-                    <span className="text-[#D8B13D]">{(parseFloat(myStake || '0') * 1.05).toFixed(2)} PLS</span>
+                    <span className="text-[#B87333]">Total to Send:</span>
+                    <span className="text-[#B87333]">{(parseFloat(myStake || '0') * 1.05).toFixed(2)} PLS</span>
                   </div>
                 </div>
                 <div className="pt-2 mt-2 border-t border-white/10">
@@ -477,13 +475,12 @@ export function CreateWager() {
           {/* Transaction status */}
           {(isConfirming || isConfirmed || writeError) && (
             <div
-              className={`rounded-lg border p-4 text-sm ${
-                isConfirmed
+              className={`rounded-lg border p-4 text-sm ${isConfirmed
                   ? 'border-green-500/30 bg-green-500/10 text-green-400'
                   : writeError
-                  ? 'border-red-500/30 bg-red-500/10 text-red-400'
-                  : 'border-[#D8B13D]/30 bg-[#D8B13D]/10 text-[#D8B13D]'
-              }`}
+                    ? 'border-red-500/30 bg-red-500/10 text-red-400'
+                    : 'border-[#B87333]/30 bg-[#B87333]/10 text-[#B87333]'
+                }`}
             >
               {isConfirmed ? (
                 <div className="flex items-center gap-2">
@@ -512,17 +509,17 @@ export function CreateWager() {
               parseFloat(myStake || '0') < MIN_STAKE_PLS ||
               parseFloat(challengerStake || '0') < MIN_STAKE_PLS
             }
-            className="w-full rounded-lg bg-[#D8B13D] px-6 py-3 font-semibold text-black transition hover:bg-[#D8B13D]/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-lg bg-[#B87333] px-6 py-3 font-semibold text-black transition hover:bg-[#B87333]/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending
               ? 'Confirm in wallet...'
               : isConfirming
-              ? 'Collateralizing...'
-              : !isEventDateValid
-              ? 'Pick a later event date'
-              : (parseFloat(myStake || '0') < MIN_STAKE_PLS || parseFloat(challengerStake || '0') < MIN_STAKE_PLS)
-              ? `Minimum ${MIN_STAKE_PLS.toLocaleString()} PLS per side`
-              : 'Review & Create Wager'}
+                ? 'Collateralizing...'
+                : !isEventDateValid
+                  ? 'Pick a later event date'
+                  : (parseFloat(myStake || '0') < MIN_STAKE_PLS || parseFloat(challengerStake || '0') < MIN_STAKE_PLS)
+                    ? `Minimum ${MIN_STAKE_PLS.toLocaleString()} PLS per side`
+                    : 'Review & Create Wager'}
           </button>
         </form>
       </div>
@@ -553,13 +550,13 @@ export function CreateWager() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#9a9a9a]">If you win:</span>
-                  <span className="text-[#D8B13D] font-semibold">+{parseFloat(challengerStake || '0').toLocaleString()} PLS</span>
+                  <span className="text-[#B87333] font-semibold">+{parseFloat(challengerStake || '0').toLocaleString()} PLS</span>
                 </div>
               </div>
               <div className="border-t border-white/10 pt-6">
                 <div className="flex justify-between mb-2">
-                  <span className="text-[#D8B13D] font-bold">Total to Send Now:</span>
-                  <span className="text-[#D8B13D] font-bold">
+                  <span className="text-[#B87333] font-bold">Total to Send Now:</span>
+                  <span className="text-[#B87333] font-bold">
                     {(parseFloat(myStake || '0') * 1.05).toFixed(0)} PLS
                   </span>
                 </div>
@@ -580,7 +577,7 @@ export function CreateWager() {
               <button
                 onClick={handleConfirm}
                 disabled={isPending}
-                className="flex-1 rounded-lg bg-[#D8B13D] px-4 py-3 font-semibold text-black hover:bg-[#D8B13D]/90 disabled:opacity-50 transition"
+                className="flex-1 rounded-lg bg-[#B87333] px-4 py-3 font-semibold text-black hover:bg-[#B87333]/90 disabled:opacity-50 transition"
               >
                 {isPending ? 'Creating...' : 'Confirm & Create'}
               </button>

@@ -14,9 +14,9 @@ const SITE_HOST = "opuseco.com"
 function OrnamentHeading({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-center gap-4">
-      <span className="text-[#d4af37]/50">&#9670;&mdash;</span>
-      <h2 className="text-center font-serif text-xl font-bold text-[#d4af37] md:text-2xl">{children}</h2>
-      <span className="text-[#d4af37]/50">&mdash;&#9670;</span>
+      <span className="text-[#B87333]/50">&#9670;&mdash;</span>
+      <h2 className="text-center font-serif text-xl font-bold text-[#B87333] md:text-2xl">{children}</h2>
+      <span className="text-[#B87333]/50">&mdash;&#9670;</span>
     </div>
   )
 }
@@ -128,7 +128,7 @@ export function ReferralsDashboard() {
       </p>
 
       {pendingRef && (
-        <p className="mx-auto mt-4 max-w-2xl rounded-lg border border-[#d4af37]/30 bg-[#d4af37]/5 px-4 py-3 text-center font-sans text-sm text-[#d4af37]">
+        <p className="mx-auto mt-4 max-w-2xl rounded-lg border border-[#B87333]/30 bg-[#B87333]/5 px-4 py-3 text-center font-sans text-sm text-[#B87333]">
           You were referred by <span className="font-semibold">{pendingRef}</span>. This links automatically on your first protocol interaction.
         </p>
       )}
@@ -145,7 +145,7 @@ export function ReferralsDashboard() {
         ) : stats?.name ? (
           <div>
             <div className="flex items-center gap-2 font-sans text-xs uppercase tracking-[0.15em] text-[#9ca3af]">
-              <Link2 className="h-4 w-4 text-[#d4af37]" aria-hidden />
+              <Link2 className="h-4 w-4 text-[#B87333]" aria-hidden />
               Your referral link
             </div>
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -155,7 +155,7 @@ export function ReferralsDashboard() {
               <button
                 type="button"
                 onClick={handleCopy}
-                className="flex items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-5 py-3 font-sans text-sm font-semibold text-[#0a0a0c] transition-colors hover:bg-[#c19b2e]"
+                className="flex items-center justify-center gap-2 rounded-lg bg-[#B87333] px-5 py-3 font-sans text-sm font-semibold text-[#0a0a0c] transition-colors hover:bg-[#c19b2e]"
               >
                 {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
                 {copied ? "Copied" : "Copy"}
@@ -172,7 +172,7 @@ export function ReferralsDashboard() {
                 href={shareX}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-lg border border-[#2a2a35] px-4 py-2 font-sans text-xs font-medium text-[#b8b6b1] transition-colors hover:border-[#d4af37]/50 hover:text-[#e8e6e3]"
+                className="rounded-lg border border-[#2a2a35] px-4 py-2 font-sans text-xs font-medium text-[#b8b6b1] transition-colors hover:border-[#B87333]/50 hover:text-[#e8e6e3]"
               >
                 Share on X
               </a>
@@ -180,14 +180,14 @@ export function ReferralsDashboard() {
                 href={shareTelegram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-lg border border-[#2a2a35] px-4 py-2 font-sans text-xs font-medium text-[#b8b6b1] transition-colors hover:border-[#d4af37]/50 hover:text-[#e8e6e3]"
+                className="rounded-lg border border-[#2a2a35] px-4 py-2 font-sans text-xs font-medium text-[#b8b6b1] transition-colors hover:border-[#B87333]/50 hover:text-[#e8e6e3]"
               >
                 Share on Telegram
               </a>
             </div>
 
             <p className="mt-4 font-sans text-sm text-[#9ca3af]">
-              Referral name: <span className="font-semibold text-[#d4af37]">{stats.name}</span>
+              Referral name: <span className="font-semibold text-[#B87333]">{stats.name}</span>
             </p>
           </div>
         ) : (
@@ -220,7 +220,7 @@ export function ReferralsDashboard() {
                   type="button"
                   onClick={() => setConfirming(true)}
                   disabled={!validFormat}
-                  className="rounded-lg bg-[#d4af37] px-6 py-3 font-sans text-sm font-semibold text-[#0a0a0c] transition-colors hover:bg-[#c19b2e] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg bg-[#B87333] px-6 py-3 font-sans text-sm font-semibold text-[#0a0a0c] transition-colors hover:bg-[#c19b2e] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Claim name
                 </button>
@@ -229,7 +229,7 @@ export function ReferralsDashboard() {
                   type="button"
                   onClick={handleRegister}
                   disabled={registering}
-                  className="rounded-lg bg-[#d4af37] px-6 py-3 font-sans text-sm font-semibold text-[#0a0a0c] transition-colors hover:bg-[#c19b2e] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg bg-[#B87333] px-6 py-3 font-sans text-sm font-semibold text-[#0a0a0c] transition-colors hover:bg-[#c19b2e] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {registering ? "Claiming…" : "Confirm"}
                 </button>
@@ -237,7 +237,7 @@ export function ReferralsDashboard() {
             </div>
 
             {confirming && !registering && (
-              <p className="mt-3 rounded-lg border border-[#d4af37]/30 bg-[#d4af37]/5 px-4 py-3 font-sans text-xs text-[#d4af37]">
+              <p className="mt-3 rounded-lg border border-[#B87333]/30 bg-[#B87333]/5 px-4 py-3 font-sans text-xs text-[#B87333]">
                 Claim <span className="font-semibold">{trimmed}</span> permanently? This name is tied to your wallet and can’t be changed later.{" "}
                 <button
                   type="button"
@@ -263,7 +263,7 @@ export function ReferralsDashboard() {
       {isConnected && stats && (
         <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-[#2a2a35] bg-[#2a2a35] sm:grid-cols-3">
           <div className="flex items-center gap-4 bg-[#0d0d12] px-6 py-7">
-            <Users className="h-8 w-8 text-[#d4af37]" aria-hidden />
+            <Users className="h-8 w-8 text-[#B87333]" aria-hidden />
             <span className="flex flex-col">
               <span className="font-sans text-[11px] tracking-[0.12em] text-[#9ca3af]">PEOPLE REFERRED</span>
               <span className="mt-1 font-serif text-2xl font-bold text-[#e8e6e3]">{stats.referralCount}</span>
@@ -273,14 +273,14 @@ export function ReferralsDashboard() {
             </span>
           </div>
           <div className="flex items-center gap-4 bg-[#0d0d12] px-6 py-7">
-            <Gift className="h-8 w-8 text-[#d4af37]" aria-hidden />
+            <Gift className="h-8 w-8 text-[#B87333]" aria-hidden />
             <span className="flex flex-col">
               <span className="font-sans text-[11px] tracking-[0.12em] text-[#9ca3af]">FEES EARNED</span>
               <span className="mt-1 font-serif text-2xl font-bold text-[#e8e6e3]">—</span>
             </span>
           </div>
           <div className="flex items-center gap-4 bg-[#0d0d12] px-6 py-7">
-            <Percent className="h-8 w-8 text-[#d4af37]" aria-hidden />
+            <Percent className="h-8 w-8 text-[#B87333]" aria-hidden />
             <span className="flex flex-col">
               <span className="font-sans text-[11px] tracking-[0.12em] text-[#9ca3af]">REFERRED BY</span>
               <span className="mt-1 font-serif text-lg font-bold text-[#e8e6e3]">{referredByDisplay}</span>
@@ -316,7 +316,7 @@ export function ReferralsDashboard() {
             },
           ].map((item) => (
             <div key={item.title} className="flex gap-4 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6">
-              <item.Icon className="mt-0.5 h-6 w-6 shrink-0 text-[#d4af37]" aria-hidden />
+              <item.Icon className="mt-0.5 h-6 w-6 shrink-0 text-[#B87333]" aria-hidden />
               <div>
                 <p className="font-sans text-sm font-semibold text-[#e8e6e3]">{item.title}</p>
                 <p className="mt-1 font-sans text-sm leading-relaxed text-[#b8b6b1]">{item.body}</p>

@@ -41,7 +41,7 @@ const products: Product[] = [
   {
     name: "Outcome Exchange",
     tagline: "Peer-to-peer wager escrow",
-    accent: "#d4af37",
+    accent: "#B87333",
     Icon: Swords,
     audience: { Icon: User, label: "One-to-one · creator vs. challenger" },
     description:
@@ -54,8 +54,8 @@ const products: Product[] = [
       },
       {
         Icon: TrendingUp,
-        title: "Oracle-settled price bets",
-        body: 'Price-based wagers (e.g. "PLS above $0.0001 on January 1") resolve automatically via the Fetch Oracle — no votes needed.',
+        title: "Bet on anything",
+        body: 'Any event works — sports, politics, or a price milestone (e.g. "PLS above $0.0001 on January 1"). Both parties agree the terms up front.',
       },
       {
         Icon: Coins,
@@ -74,7 +74,7 @@ export default function MarketsOverview() {
           <article
             id={`${product.name.toLowerCase().replace(' ', '-')}-explainer`}
             key={product.name}
-            className="scroll-mt-24 flex flex-col rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 transition-colors hover:border-[#d4af37]/30 md:p-8"
+            className="scroll-mt-24 flex flex-col rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 transition-colors hover:border-[#B87333]/30 md:p-8"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">

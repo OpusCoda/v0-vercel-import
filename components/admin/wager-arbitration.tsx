@@ -207,11 +207,10 @@ function WagerRow({
           </p>
         </div>
         <span
-          className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${
-            isArbitration
+          className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${isArbitration
               ? 'border border-red-500/30 bg-red-500/10 text-red-400'
-              : 'border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#d4af37]'
-          }`}
+              : 'border border-[#B87333]/30 bg-[#B87333]/10 text-[#B87333]'
+            }`}
         >
           {isArbitration ? 'Arbitration' : 'Voting'}
         </span>
@@ -269,11 +268,11 @@ function WagerRow({
           </p>
           <div className="mb-2 flex gap-4 font-sans text-xs">
             <span className="text-[#b8b6b1]">
-              Creator: <span className="font-semibold text-[#d4af37]">{creatorVotes?.toString() ?? '0'}</span>
+              Creator: <span className="font-semibold text-[#B87333]">{creatorVotes?.toString() ?? '0'}</span>
             </span>
             <span className="text-[#b8b6b1]">
               Challenger:{' '}
-              <span className="font-semibold text-[#d4af37]">{challengerVotes?.toString() ?? '0'}</span>
+              <span className="font-semibold text-[#B87333]">{challengerVotes?.toString() ?? '0'}</span>
             </span>
           </div>
           <div className="space-y-0.5">
@@ -378,21 +377,19 @@ function CastVoteControls({
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <button
           onClick={() => setWinner(creator)}
-          className={`rounded px-2 py-0.5 font-sans text-[10px] font-semibold ${
-            winner === creator
-              ? 'bg-[#d4af37] text-[#0a0a0c]'
-              : 'border border-[#d4af37]/30 text-[#d4af37]'
-          }`}
+          className={`rounded px-2 py-0.5 font-sans text-[10px] font-semibold ${winner === creator
+              ? 'bg-[#B87333] text-[#0a0a0c]'
+              : 'border border-[#B87333]/30 text-[#B87333]'
+            }`}
         >
           Creator {short(creator)}
         </button>
         <button
           onClick={() => setWinner(challenger)}
-          className={`rounded px-2 py-0.5 font-sans text-[10px] font-semibold ${
-            winner === challenger
-              ? 'bg-[#d4af37] text-[#0a0a0c]'
-              : 'border border-[#d4af37]/30 text-[#d4af37]'
-          }`}
+          className={`rounded px-2 py-0.5 font-sans text-[10px] font-semibold ${winner === challenger
+              ? 'bg-[#B87333] text-[#0a0a0c]'
+              : 'border border-[#B87333]/30 text-[#B87333]'
+            }`}
         >
           Challenger {short(challenger)}
         </button>

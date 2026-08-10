@@ -54,7 +54,7 @@ function SweepCard({ row, nowSec, onSwept }: { row: SweepRow; nowSec: bigint; on
     statusColor = "text-orange-400"
   } else {
     statusLabel = "Ready to sweep"
-    statusColor = "text-[#d4af37]"
+    statusColor = "text-[#B87333]"
   }
   const canSweep = windowPassed && hasBalance && !alreadySettled
   const stakerShare = row.remainingBalance / 2n
@@ -89,15 +89,15 @@ function SweepCard({ row, nowSec, onSwept }: { row: SweepRow; nowSec: bigint; on
         <div className="mb-2 rounded border border-orange-400/20 bg-orange-400/5 px-2 py-1.5">
           <p className="font-sans text-[10px] leading-relaxed text-[#b8b6b1]">
             Sweeping forfeits {unclaimedPct.toFixed(1)}% of winning shares still unclaimed. Splits{" "}
-            <span className="text-[#d4af37]">{fmtPls(stakerShare)} PLS</span> to stakers and{" "}
-            <span className="text-[#d4af37]">{fmtPls(devShare)} PLS</span> to dev.
+            <span className="text-[#B87333]">{fmtPls(stakerShare)} PLS</span> to stakers and{" "}
+            <span className="text-[#B87333]">{fmtPls(devShare)} PLS</span> to dev.
           </p>
         </div>
       )}
       <button
         onClick={() => sweep(row.marketId)}
         disabled={!canSweep || isPending || isConfirming || isSuccess}
-        className="w-full rounded border border-[#d4af37]/30 bg-[#1a1a20] py-1.5 font-sans text-xs font-semibold text-[#d4af37] transition-colors hover:bg-[#2a2a35] disabled:cursor-not-allowed disabled:opacity-40"
+        className="w-full rounded border border-[#B87333]/30 bg-[#1a1a20] py-1.5 font-sans text-xs font-semibold text-[#B87333] transition-colors hover:bg-[#2a2a35] disabled:cursor-not-allowed disabled:opacity-40"
       >
         {alreadySettled ? "Settled" : !hasBalance ? "Nothing to sweep" : btnLabel}
       </button>
@@ -188,7 +188,7 @@ export function SweepPanel() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="mb-1 font-serif text-sm font-semibold text-[#d4af37]">Unclaimed sweeps</h3>
+        <h3 className="mb-1 font-serif text-sm font-semibold text-[#B87333]">Unclaimed sweeps</h3>
         <p className="font-sans text-[11px] leading-relaxed text-[#7c7a76]">
           After a market has been resolved for 90 days, you can sweep any funds winners never
           claimed. The swept amount is split 50% to stakers and 50% to dev. Winners forfeit their

@@ -125,7 +125,7 @@ export function ManageArbitrators() {
     <div className="mx-auto max-w-2xl">
       <div className="space-y-6 rounded-lg border border-[#2a2a35] bg-[#101017] p-8">
         <div>
-          <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Manage Arbitrators</h2>
+          <h2 className="font-serif text-2xl font-bold text-[#B87333]">Manage Arbitrators</h2>
           <p className="mt-2 font-sans text-sm text-[#7c7a76]">
             Arbitrators resolve disputed P2P wagers. The panel holds{' '}
             {ARBITRATION_THRESHOLD}–{MAX_ARBITRATORS} members; {ARBITRATION_THRESHOLD} matching
@@ -161,11 +161,10 @@ export function ManageArbitrators() {
               key={m}
               type="button"
               onClick={() => setMode(m)}
-              className={`rounded-full border px-4 py-2 font-sans text-sm font-medium transition-all ${
-                mode === m
-                  ? 'border-[#d8b13d] bg-[#d8b13d]/10 text-[#d8b13d]'
-                  : 'border-[#2a2a35] text-[#9a9a9a] hover:border-[#3a3a45] hover:text-[#b8b6b1]'
-              }`}
+              className={`rounded-full border px-4 py-2 font-sans text-sm font-medium transition-all ${mode === m
+                ? 'border-[#B87333] bg-[#B87333]/10 text-[#B87333]'
+                : 'border-[#2a2a35] text-[#9a9a9a] hover:border-[#3a3a45] hover:text-[#b8b6b1]'
+                }`}
             >
               {m === 'add' ? 'Add Arbitrator' : 'Remove Arbitrator'}
             </button>
@@ -182,7 +181,7 @@ export function ManageArbitrators() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="0x..."
-            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#d4af37] focus:outline-none"
+            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#B87333] focus:outline-none"
           />
           {input.length > 0 && !target && (
             <p className="mt-2 font-sans text-xs text-red-400">Not a valid address.</p>
@@ -270,7 +269,7 @@ export function ManageArbitrators() {
           type="button"
           onClick={submit}
           disabled={!canSubmit || !simulation?.request || isPending || confirming}
-          className="w-full rounded-lg border border-[#d4af37] bg-[#d4af37]/10 px-4 py-3 font-sans font-semibold text-[#d4af37] transition-colors hover:bg-[#d4af37]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-lg border border-[#B87333] bg-[#B87333]/10 px-4 py-3 font-sans font-semibold text-[#B87333] transition-colors hover:bg-[#B87333]/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending
             ? 'Confirm in Wallet'

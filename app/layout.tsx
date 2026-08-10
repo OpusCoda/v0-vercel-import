@@ -1,22 +1,23 @@
 import type React from "react"
 import "./globals.css"
 import "@rainbow-me/rainbowkit/styles.css"
-import { Inter, Merriweather } from "next/font/google"
+import { Spectral, Fraunces } from "next/font/google"
 import { TopBar } from "@/components/top-bar"
 import { Providers } from "@/components/providers"
 import { ReferralCapture } from "@/components/referral-capture"
 
-const merriweather = Merriweather({
+const spectral = Spectral({
   subsets: ["latin"],
-  weight: ["400", "700"],
-  display: "swap",
-  variable: "--font-serif",
-})
-
-const inter = Inter({
-  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
   display: "swap",
   variable: "--font-inter",
+})
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+  variable: "--font-serif",
 })
 
 export const metadata = {
@@ -40,7 +41,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${merriweather.variable} ${inter.variable}`}>
+      <body className={`${fraunces.variable} ${spectral.variable}`}>
         <Providers>
           <ReferralCapture />
           <TopBar />

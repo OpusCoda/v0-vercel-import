@@ -100,12 +100,12 @@ export function PortfolioDashboard() {
     try {
       const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
       const prices = await fetchTokenPrices()
-      
+
       // Aggregate balances by token across all wallets
       const tokenBalances: { [symbol: string]: { balance: number; token: typeof TOKEN_CONTRACTS[0] } } = {}
       for (const token of TOKEN_CONTRACTS) {
         let totalBalance = 0
-        
+
         if (token.symbol === 'PLS') {
           // Handle native PLS separately
           for (const address of addresses) {
@@ -119,7 +119,7 @@ export function PortfolioDashboard() {
             totalBalance += Number(ethers.formatUnits(balance, token.decimals))
           }
         }
-        
+
         if (totalBalance > 0) {
           tokenBalances[token.symbol] = { balance: totalBalance, token }
         }
@@ -151,7 +151,7 @@ export function PortfolioDashboard() {
   const handleSaveEditedWallets = async () => {
     console.log('[v0] handleSaveEditedWallets called with', editingWallets.length, 'wallets')
     console.log('[v0] editingWallets:', editingWallets)
-    
+
     // Save wallet list locally and to API if it was loaded from a saved list
     if (loadedWalletListName) {
       try {
@@ -250,10 +250,10 @@ export function PortfolioDashboard() {
       setLoadedWalletListName(loadWalletName)
       setLoadWalletName('')
       setShowLoadWalletModal(false)
-      
+
       // Save to localStorage for quick restoration
       localStorage.setItem('currentWalletList', JSON.stringify({ name: loadWalletName, wallets: loadedWallets }))
-      
+
       // Fetch real data for loaded wallets
       const selectedAddresses = loadedWallets.map(w => w.address)
       fetchTokenBalances(selectedAddresses)
@@ -306,7 +306,7 @@ export function PortfolioDashboard() {
         <div className="mb-16">
           <div className="flex items-end justify-between mb-8">
             <h1 className="font-serif text-5xl font-bold text-[#f4f4f4]">Portfolio dashboard</h1>
-            
+
             {/* Total Portfolio Value - Positioned to the right */}
             {wallets.length > 0 && (
               <div className="text-right">
@@ -317,13 +317,13 @@ export function PortfolioDashboard() {
           </div>
           {/* Action Buttons */}
           <div className="flex gap-4">
-            <button onClick={() => setShowConnectModal(true)} className="bg-[#d8b13d] text-[#0b0b0e] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#e8c860] transition-colors">
+            <button onClick={() => setShowConnectModal(true)} className="bg-[#B87333] text-[#0b0b0e] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#e8c860] transition-colors">
               Connect Wallet
             </button>
-            <button onClick={() => handleOpenEditModal()} className="border border-[#d8b13d] text-[#d8b13d] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#d8b13d]/5 transition-colors">
+            <button onClick={() => handleOpenEditModal()} className="border border-[#B87333] text-[#B87333] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#B87333]/5 transition-colors">
               {wallets.length > 0 ? 'Edit Wallets' : 'Add Wallet'}
             </button>
-            <button onClick={() => setShowLoadWalletModal(true)} className="border border-[#d8b13d] text-[#d8b13d] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#d8b13d]/5 transition-colors">
+            <button onClick={() => setShowLoadWalletModal(true)} className="border border-[#B87333] text-[#B87333] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#B87333]/5 transition-colors">
               Load Saved Wallet
             </button>
           </div>
@@ -332,7 +332,7 @@ export function PortfolioDashboard() {
         {wallets.length > 0 && (
           <div className="mb-16 pb-12 border-b border-[rgba(255,255,255,0.08)]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="font-serif text-2xl font-bold text-[#f4f4f4]">Your Wallets <span className="text-[#d8b13d]">({selectedWallets.length} selected)</span></h2>
+              <h2 className="font-serif text-2xl font-bold text-[#f4f4f4]">Your Wallets <span className="text-[#B87333]">({selectedWallets.length} selected)</span></h2>
               <div className="flex gap-2">
                 <button onClick={() => {
                   const allSelected = wallets.every(w => w.selected)
@@ -341,7 +341,7 @@ export function PortfolioDashboard() {
                   } else {
                     setWallets(wallets.map(w => ({ ...w, selected: true })))
                   }
-                }} className="font-sans text-sm text-[#d8b13d] hover:text-[#e8c860]">
+                }} className="font-sans text-sm text-[#B87333] hover:text-[#e8c860]">
                   {wallets.every(w => w.selected) ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
@@ -351,7 +351,7 @@ export function PortfolioDashboard() {
                 <button
                   key={wallet.id}
                   onClick={() => {
-                    const updated = wallets.map(w => 
+                    const updated = wallets.map(w =>
                       w.id === wallet.id ? { ...w, selected: !w.selected } : w
                     )
                     setWallets(updated)
@@ -399,11 +399,10 @@ export function PortfolioDashboard() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`pb-4 font-sans text-sm font-semibold transition-colors ${
-                      activeTab === tab.id
-                        ? 'border-b-2 border-[#d4af37] text-[#d4af37]'
-                        : 'text-[#7c7a76] hover:text-[#b8b6b1]'
-                    }`}
+                    className={`pb-4 font-sans text-sm font-semibold transition-colors ${activeTab === tab.id
+                      ? 'border-b-2 border-[#B87333] text-[#B87333]'
+                      : 'text-[#7c7a76] hover:text-[#b8b6b1]'
+                      }`}
                   >
                     {tab.label}
                   </button>
@@ -413,7 +412,7 @@ export function PortfolioDashboard() {
             {/* Assets Tab */}
             {activeTab === 'assets' && (
               <div className="mb-12">
-                <h3 className="mb-6 font-serif text-xl font-bold text-[#d4af37]">Your Holdings</h3>
+                <h3 className="mb-6 font-serif text-xl font-bold text-[#B87333]">Your Holdings</h3>
                 <div className="rounded-lg border border-[#2a2a35] bg-[#101017] overflow-hidden">
                   <table className="w-full">
                     <thead>
@@ -428,21 +427,21 @@ export function PortfolioDashboard() {
                       {assets.filter(a => a.value > 0.5).map((asset) => {
                         const price = asset.balance > 0 ? asset.value / asset.balance : 0
                         return (
-                        <tr key={asset.symbol} className="border-b border-[#2a2a35] last:border-b-0 hover:bg-[#0a0a0c] transition-colors">
-                          <td className="px-6 py-4">
-                            <div>
-                              <p className="font-sans font-semibold text-[#b8b6b1]">{asset.name}</p>
-                              <p className="font-sans text-xs text-[#7c7a76]">{asset.symbol}</p>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 font-sans text-sm text-[#b8b6b1]">{asset.balance.toLocaleString()}</td>
-                          <td className="px-6 py-4 font-serif font-semibold text-[#d4af37]">${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
-                          <td className="px-6 py-4 text-right">
-                            <span className="font-sans text-sm font-semibold text-[#d4af37]">
-                              ${price.toLocaleString('en-US', { maximumFractionDigits: price < 0.01 ? 8 : 4 })}
-                            </span>
-                          </td>
-                        </tr>
+                          <tr key={asset.symbol} className="border-b border-[#2a2a35] last:border-b-0 hover:bg-[#0a0a0c] transition-colors">
+                            <td className="px-6 py-4">
+                              <div>
+                                <p className="font-sans font-semibold text-[#b8b6b1]">{asset.name}</p>
+                                <p className="font-sans text-xs text-[#7c7a76]">{asset.symbol}</p>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 font-sans text-sm text-[#b8b6b1]">{asset.balance.toLocaleString()}</td>
+                            <td className="px-6 py-4 font-serif font-semibold text-[#B87333]">${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
+                            <td className="px-6 py-4 text-right">
+                              <span className="font-sans text-sm font-semibold text-[#B87333]">
+                                ${price.toLocaleString('en-US', { maximumFractionDigits: price < 0.01 ? 8 : 4 })}
+                              </span>
+                            </td>
+                          </tr>
                         )
                       })}
                     </tbody>
@@ -457,8 +456,8 @@ export function PortfolioDashboard() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="w-full max-w-md rounded-lg bg-[#101017] p-6 border border-[#2a2a35]">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-serif text-xl font-bold text-[#d4af37]">Connect Wallet</h3>
-                <button onClick={() => setShowConnectModal(false)} className="text-[#7c7a76] hover:text-[#d4af37]">
+                <h3 className="font-serif text-xl font-bold text-[#B87333]">Connect Wallet</h3>
+                <button onClick={() => setShowConnectModal(false)} className="text-[#7c7a76] hover:text-[#B87333]">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -476,13 +475,13 @@ export function PortfolioDashboard() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="w-full max-w-2xl rounded-lg bg-[#101017] p-6 border border-[#2a2a35] max-h-[90vh] overflow-y-auto">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-serif text-2xl font-bold text-[#d4af37]">Edit Addresses</h3>
-                <button onClick={() => setShowEditWalletsModal(false)} className="text-[#7c7a76] hover:text-[#d4af37]">
+                <h3 className="font-serif text-2xl font-bold text-[#B87333]">Edit Addresses</h3>
+                <button onClick={() => setShowEditWalletsModal(false)} className="text-[#7c7a76] hover:text-[#B87333]">
                   <X className="h-5 w-5" />
                 </button>
               </div>
               <div className="mb-6 flex gap-2 border-b border-[#2a2a35] pb-4">
-                <button className="rounded-lg bg-[#2a2a35] px-4 py-2 font-sans text-sm font-semibold text-[#d4af37]">
+                <button className="rounded-lg bg-[#2a2a35] px-4 py-2 font-sans text-sm font-semibold text-[#B87333]">
                   {editingWallets.length} Addresses
                 </button>
               </div>
@@ -494,7 +493,7 @@ export function PortfolioDashboard() {
                       type="checkbox"
                       checked={wallet.selected}
                       onChange={() => handleToggleWalletSelection(wallet.id)}
-                      className="w-5 h-5 rounded border-[#2a2a35] bg-[#0a0a0c] accent-[#d4af37] cursor-pointer"
+                      className="w-5 h-5 rounded border-[#2a2a35] bg-[#0a0a0c] accent-[#B87333] cursor-pointer"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-sans text-sm text-[#b8b6b1] truncate">{wallet.address}</p>
@@ -504,7 +503,7 @@ export function PortfolioDashboard() {
                       value={wallet.name}
                       onChange={(e) => handleUpdateWalletName(wallet.id, e.target.value)}
                       placeholder="Wallet name"
-                      className="rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-3 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#d4af37] outline-none transition-colors w-40"
+                      className="rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-3 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#B87333] outline-none transition-colors w-40"
                     />
                     <button
                       onClick={() => handleDeleteWallet(wallet.id)}
@@ -517,25 +516,25 @@ export function PortfolioDashboard() {
               </div>
               {/* Add New Address */}
               <div className="mb-6 border-t border-[#2a2a35] pt-6">
-                <p className="mb-4 font-sans text-sm font-semibold text-[#d4af37]">Add new Address</p>
+                <p className="mb-4 font-sans text-sm font-semibold text-[#B87333]">Add new Address</p>
                 <div className="flex items-center gap-3">
                   <input
                     type="text"
                     value={newWalletAddress}
                     onChange={(e) => setNewWalletAddress(e.target.value)}
                     placeholder="0x..."
-                    className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#d4af37] outline-none transition-colors"
+                    className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#B87333] outline-none transition-colors"
                   />
                   <input
                     type="text"
                     value={newWalletName}
                     onChange={(e) => setNewWalletName(e.target.value)}
                     placeholder="Wallet name"
-                    className="rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#d4af37] outline-none transition-colors w-40"
+                    className="rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#B87333] outline-none transition-colors w-40"
                   />
                   <button
                     onClick={handleAddNewWallet}
-                    className="rounded-lg bg-[#d4af37] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]"
+                    className="rounded-lg bg-[#B87333] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]"
                   >
                     +
                   </button>
@@ -545,13 +544,13 @@ export function PortfolioDashboard() {
               <div className="flex gap-3 border-t border-[#2a2a35] pt-6">
                 <button
                   onClick={() => setShowEditWalletsModal(false)}
-                  className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans font-semibold text-[#d4af37] transition-colors hover:border-[#d4af37]/50"
+                  className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans font-semibold text-[#B87333] transition-colors hover:border-[#B87333]/50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveEditedWallets}
-                  className="flex-1 rounded-lg bg-[#d4af37] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]"
+                  className="flex-1 rounded-lg bg-[#B87333] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]"
                 >
                   {loadedWalletListName ? 'Save Changes' : 'Save Wallets'}
                 </button>
@@ -564,8 +563,8 @@ export function PortfolioDashboard() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="w-full max-w-md rounded-lg bg-[#101017] p-6 border border-[#2a2a35]">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-serif text-xl font-bold text-[#d4af37]">Load Saved Wallet</h3>
-                <button onClick={() => setShowLoadWalletModal(false)} className="text-[#7c7a76] hover:text-[#d4af37]">
+                <h3 className="font-serif text-xl font-bold text-[#B87333]">Load Saved Wallet</h3>
+                <button onClick={() => setShowLoadWalletModal(false)} className="text-[#7c7a76] hover:text-[#B87333]">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -577,21 +576,21 @@ export function PortfolioDashboard() {
                     placeholder="e.g., My Portfolio"
                     value={loadWalletName}
                     onChange={(e) => setLoadWalletName(e.target.value)}
-                    className="w-full rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#d4af37] outline-none transition-colors"
+                    className="w-full rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#B87333] outline-none transition-colors"
                   />
                 </div>
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowLoadWalletModal(false)}
-                  className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans font-semibold text-[#d4af37] transition-colors hover:border-[#d4af37]/50"
+                  className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans font-semibold text-[#B87333] transition-colors hover:border-[#B87333]/50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleLoadWallets}
                   disabled={loadingWallets}
-                  className="flex-1 rounded-lg bg-[#d4af37] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860] disabled:opacity-50"
+                  className="flex-1 rounded-lg bg-[#B87333] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860] disabled:opacity-50"
                 >
                   {loadingWallets ? 'Loading...' : 'Load'}
                 </button>

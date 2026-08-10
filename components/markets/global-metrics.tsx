@@ -55,8 +55,8 @@ export function GlobalMetrics({
         performance.percentage > 50
           ? 'text-green-400'
           : performance.percentage < 50 && played > 0
-          ? 'text-red-400'
-          : undefined,
+            ? 'text-red-400'
+            : undefined,
     },
   ]
   return (
@@ -66,15 +66,15 @@ export function GlobalMetrics({
           metric.highlight === 'orange'
             ? 'border-orange-400/30 bg-orange-400/5'
             : metric.highlight === 'gold'
-            ? 'border-[#d4af37]/25 bg-[#d4af37]/[0.05]'
-            : 'border-[#2a2a35] bg-[#101017]'
+              ? 'border-[#B87333]/25 bg-[#B87333]/[0.05]'
+              : 'border-[#2a2a35] bg-[#101017]'
         const valueColor =
           metric.valueColor ||
           (metric.highlight === 'gold'
-            ? 'text-[#d4af37]'
+            ? 'text-[#B87333]'
             : metric.highlight === 'orange'
-            ? 'text-orange-400'
-            : 'text-[#e8e6e3]')
+              ? 'text-orange-400'
+              : 'text-[#e8e6e3]')
         return (
           <div key={metric.label} className={`rounded-xl border px-4 py-3 ${border}`}>
             <div className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">

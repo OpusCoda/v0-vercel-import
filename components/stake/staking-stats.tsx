@@ -32,9 +32,8 @@ function StatBox({
     <div className="rounded-2xl border border-white/10 bg-[#111116] p-5">
       <p className="font-sans text-xs uppercase tracking-wide text-[#9a9a9a]">{label}</p>
       <p
-        className={`mt-2 font-serif text-2xl font-bold ${
-          accent ? 'text-[#D8B13D]' : 'text-[#f4f4f4]'
-        }`}
+        className={`mt-2 font-serif text-2xl font-bold ${accent ? 'text-[#B87333]' : 'text-[#f4f4f4]'
+          }`}
       >
         {value}
       </p>
@@ -217,7 +216,7 @@ export function StakingStats() {
               <p className="font-sans text-xs uppercase tracking-wide text-[#9a9a9a]">
                 Share of rewards
               </p>
-              <p className="mt-1 font-sans text-lg font-semibold text-[#D8B13D]">
+              <p className="mt-1 font-sans text-lg font-semibold text-[#B87333]">
                 {weightShare !== undefined ? `${weightShare.toFixed(2)}%` : '—'}
               </p>
               <p className="font-sans text-xs text-[#7c7a76]">
@@ -228,7 +227,7 @@ export function StakingStats() {
               <p className="font-sans text-xs uppercase tracking-wide text-[#9a9a9a]">
                 Fee rebate
               </p>
-              <p className="mt-1 font-sans text-lg font-semibold text-[#D8B13D]">
+              <p className="mt-1 font-sans text-lg font-semibold text-[#B87333]">
                 {rebateBps !== undefined ? `${Number(rebateBps) / 100}%` : '—'}
               </p>
               <p className="font-sans text-xs text-[#7c7a76]">
@@ -241,7 +240,7 @@ export function StakingStats() {
               <p className="font-sans text-xs uppercase tracking-wide text-[#9a9a9a]">
                 Pending rewards
               </p>
-              <p className="mt-1 font-sans text-lg font-semibold text-[#D8B13D]">
+              <p className="mt-1 font-sans text-lg font-semibold text-[#B87333]">
                 {plsPending !== undefined ? formatSmaugBalance(plsPending) : '—'} PLS
               </p>
               <p className="font-sans text-xs text-[#7c7a76]">

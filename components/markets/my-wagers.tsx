@@ -176,7 +176,7 @@ export function MyWagers() {
               })
             }
             disabled={claimPending}
-            className="rounded-lg border border-[#d4af37]/40 px-4 py-2 font-sans text-sm font-semibold text-[#d4af37] transition-colors hover:bg-[#d4af37]/10 disabled:opacity-50"
+            className="rounded-lg border border-[#B87333]/40 px-4 py-2 font-sans text-sm font-semibold text-[#B87333] transition-colors hover:bg-[#B87333]/10 disabled:opacity-50"
           >
             {claimPending ? 'Claiming…' : `Claim ${pendingReferral.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS`}
           </button>
@@ -226,7 +226,7 @@ export function MyWagers() {
           {/* Active Positions - Unified Table */}
           {active.length > 0 && (
             <div>
-              <h3 className="mb-4 font-serif text-lg font-semibold text-[#d4af37]">
+              <h3 className="mb-4 font-serif text-lg font-semibold text-[#B87333]">
                 Active Positions
               </h3>
               <div className="overflow-x-auto rounded-lg border border-[#2a2a35] bg-[#101017]">
@@ -251,7 +251,7 @@ export function MyWagers() {
                           <td className="px-4 py-3 text-sm text-[#e8e6e3]">{typeEmoji} {w.wagerType === 1 ? 'Price Bet' : 'Outcome'}</td>
                           <td className="px-4 py-3 text-sm text-[#b8b6b1]">{card.description}</td>
                           <td className="px-4 py-3 text-sm text-[#7c7a76]">{statusLabel}</td>
-                          <td className="px-4 py-3 text-right text-sm font-semibold text-[#d4af37]">{myStake.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS</td>
+                          <td className="px-4 py-3 text-right text-sm font-semibold text-[#B87333]">{myStake.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS</td>
                         </tr>
                       )
                     })}

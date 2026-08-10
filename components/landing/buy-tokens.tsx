@@ -11,11 +11,11 @@ function OrnamentHeading({
 }) {
   return (
     <div className="flex items-center justify-center gap-4">
-      <span className="text-[#d4af37]/50">&#9670;&mdash;</span>
-      <Tag className="text-center font-serif text-xl font-bold text-[#d4af37] md:text-2xl">
+      <span className="text-[#B87333]/50">&#9670;&mdash;</span>
+      <Tag className="text-center font-serif text-xl font-bold text-[#B87333] md:text-2xl">
         {children}
       </Tag>
-      <span className="text-[#d4af37]/50">&mdash;&#9670;</span>
+      <span className="text-[#B87333]/50">&mdash;&#9670;</span>
     </div>
   )
 }
@@ -121,7 +121,7 @@ function AddressRow({
     <div className="group flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-[#0d0d12]">
       <button
         onClick={() => onCopy(contract.address, contract.name)}
-        className="shrink-0 p-1.5 text-[#9ca3af] transition-colors hover:text-[#d4af37]"
+        className="shrink-0 p-1.5 text-[#9ca3af] transition-colors hover:text-[#B87333]"
         title="Copy address"
       >
         {copiedId === contract.name ? (
@@ -136,11 +136,11 @@ function AddressRow({
         rel="noopener noreferrer"
         className="flex min-w-0 flex-1 items-center gap-2"
       >
-        <span className="shrink-0 font-mono text-sm text-[#d4af37]">{contract.name}:</span>
+        <span className="shrink-0 font-mono text-sm text-[#B87333]">{contract.name}:</span>
         <span className="truncate font-mono text-sm text-[#b8b6b1] hover:text-[#e8e6e3]">
           {contract.address}
         </span>
-        <ExternalLink className="h-4 w-4 shrink-0 text-[#9ca3af] transition-colors group-hover:text-[#d4af37]" />
+        <ExternalLink className="h-4 w-4 shrink-0 text-[#9ca3af] transition-colors group-hover:text-[#B87333]" />
       </a>
     </div>
   )
@@ -161,7 +161,7 @@ export function BuyTokens() {
           <a
             key={b.name}
             href={b.href}
-            className="group flex items-center justify-between rounded-2xl border border-[#2a2a35] bg-[#101017] px-6 py-5 transition-colors hover:border-[#d4af37]/50"
+            className="group flex items-center justify-between rounded-2xl border border-[#2a2a35] bg-[#101017] px-6 py-5 transition-colors hover:border-[#B87333]/50"
           >
             <span className="flex items-center gap-4">
               <Image src={b.img} alt="" width={44} height={44} className="rounded-full" />
@@ -172,7 +172,7 @@ export function BuyTokens() {
                 <span className="font-sans text-xs text-[#9ca3af]">On PulseX</span>
               </span>
             </span>
-            <ArrowRight className="h-5 w-5 text-[#9ca3af] transition-transform group-hover:translate-x-1 group-hover:text-[#d4af37]" />
+            <ArrowRight className="h-5 w-5 text-[#9ca3af] transition-transform group-hover:translate-x-1 group-hover:text-[#B87333]" />
           </a>
         ))}
       </div>
@@ -202,26 +202,20 @@ export function BuyTokens() {
             onClick={() => setTestsOpen((v) => !v)}
             className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-[#0d0d12]"
           >
-            <span className="font-serif text-sm font-semibold text-[#d4af37]">
+            <span className="font-serif text-sm font-semibold text-[#B87333]">
               Testing &amp; review summary
             </span>
             <ChevronDown
-              className={`h-4 w-4 shrink-0 text-[#9ca3af] transition-transform ${
-                testsOpen ? "rotate-180" : ""
-              }`}
+              className={`h-4 w-4 shrink-0 text-[#9ca3af] transition-transform ${testsOpen ? "rotate-180" : ""
+                }`}
             />
           </button>
           {testsOpen && (
             <div className="border-t border-[#2a2a35] px-6 py-5">
-              <p className="mb-4 font-sans text-xs leading-relaxed text-[#7c7a76]">
-                Each contract has been tested with automated test suites (including property-based
-                fuzzing) and reviewed with multiple AI systems. This is in-house testing and review,
-                not a formal third-party security audit.
-              </p>
               <div className="space-y-5">
                 {testSummaries.map((c) => (
                   <div key={c.name}>
-                    <h4 className="mb-2 font-mono text-sm font-semibold text-[#d4af37]">{c.name}</h4>
+                    <h4 className="mb-2 font-mono text-sm font-semibold text-[#B87333]">{c.name}</h4>
                     <ul className="space-y-1.5">
                       {c.items.map((item, i) => (
                         <li key={i} className="flex gap-2 font-sans text-xs leading-relaxed text-[#b8b6b1]">

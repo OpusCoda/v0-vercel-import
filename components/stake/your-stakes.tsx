@@ -88,10 +88,10 @@ function StakeRow({ stakeId }: StakeRowProps) {
   if (stakeDetails.amount === 0n) return null
   const { amount, startTime, endTime, tierIndex, weightedAmount } = stakeDetails
   const multiplierFormatted = (() => {
-  if (!multiplierData) return TIER_MULTIPLIERS[tierIndex] || '1'
-  const val = Number(multiplierData) / 100
-  return val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)
-})()
+    if (!multiplierData) return TIER_MULTIPLIERS[tierIndex] || '1'
+    const val = Number(multiplierData) / 100
+    return val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)
+  })()
   const tierName = TIERS[tierIndex] || 'Unknown'
   const tierImagePath = TIER_IMAGES[tierName] || TIER_IMAGES['Hatchling']
   const maturityInfo = getMaturityInfo(startTime, endTime)
@@ -137,8 +137,8 @@ function StakeRow({ stakeId }: StakeRowProps) {
       </td>
       <td className="px-6 py-4 text-sm">
         <div className="space-y-1">
-          <div className="text-[#D8B13D] font-semibold">{plsFormatted} PLS</div>
-          <div className="text-[#D8B13D] font-semibold">{totalSmaugFormatted} SMAUG</div>
+          <div className="text-[#B87333] font-semibold">{plsFormatted} PLS</div>
+          <div className="text-[#B87333] font-semibold">{totalSmaugFormatted} SMAUG</div>
         </div>
       </td>
       <td className="px-6 py-4 text-sm">
@@ -172,7 +172,7 @@ function StakeRow({ stakeId }: StakeRowProps) {
                 <button
                   onClick={handleClaim}
                   disabled={isPending}
-                  className="rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-xs font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors disabled:opacity-50"
+                  className="rounded-lg border border-[#B87333]/40 px-3 py-1.5 text-xs font-semibold text-[#B87333] hover:bg-[#B87333]/10 transition-colors disabled:opacity-50"
                 >
                   {isPending ? 'Claiming...' : 'Confirm'}
                 </button>
@@ -182,7 +182,7 @@ function StakeRow({ stakeId }: StakeRowProps) {
             <button
               onClick={() => isMature ? handleClaim() : setShowConfirm(true)}
               disabled={isPending}
-              className="w-full rounded-lg border border-[#D8B13D]/40 px-3 py-1.5 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors disabled:opacity-50"
+              className="w-full rounded-lg border border-[#B87333]/40 px-3 py-1.5 text-sm font-semibold text-[#B87333] hover:bg-[#B87333]/10 transition-colors disabled:opacity-50"
             >
               {isPending ? 'Claiming...' : 'Claim rewards'}
             </button>
@@ -194,8 +194,8 @@ function StakeRow({ stakeId }: StakeRowProps) {
                 {inBurnPhase
                   ? 'Returns remaining principal and rewards.'
                   : isMature
-                  ? 'Matured — returns your principal and all rewards, no penalty.'
-                  : `You keep ${keepPct}% of rewards. Principal is returned in full.`}
+                    ? 'Matured — returns your principal and all rewards, no penalty.'
+                    : `You keep ${keepPct}% of rewards. Principal is returned in full.`}
               </div>
               <div className="flex justify-end gap-2">
                 <button
@@ -220,8 +220,8 @@ function StakeRow({ stakeId }: StakeRowProps) {
               className={inBurnPhase
                 ? "w-full rounded-lg border border-orange-500/40 px-3 py-1.5 text-sm font-semibold text-orange-400 hover:bg-orange-500/10 transition-colors disabled:opacity-50"
                 : isMature
-                ? "w-full rounded-lg border border-green-500/40 px-3 py-1.5 text-sm font-semibold text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-50"
-                : "w-full rounded-lg border border-red-500/20 px-3 py-1.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"}
+                  ? "w-full rounded-lg border border-green-500/40 px-3 py-1.5 text-sm font-semibold text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-50"
+                  : "w-full rounded-lg border border-red-500/20 px-3 py-1.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"}
             >
               {unstakePending ? 'Ending...' : inBurnPhase ? 'End stake' : isMature ? 'End stake (no penalty)' : 'End stake'}
             </button>

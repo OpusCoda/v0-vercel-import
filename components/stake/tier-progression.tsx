@@ -38,7 +38,7 @@ export default function TierProgression() {
               </div>
 
               <div className="text-right">
-                <p className="font-semibold text-[#D8B13D]">{tier.multiplier}x</p>
+                <p className="font-semibold text-[#B87333]">{tier.multiplier}x</p>
                 <p className="text-xs text-[#9a9a9a]">Multiplier</p>
               </div>
 

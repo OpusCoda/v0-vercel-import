@@ -56,10 +56,10 @@ export function StatCards() {
     amount === null || price === null ? null : fmtUsd(amount * price)
 
   const stats = [
-    { label: "TOTAL PLS DISTRIBUTED", value: display(plsDistributed), unit: "", usd: usd(plsDistributed, plsPrice), icon: <Droplets className="h-8 w-8 text-[#d4af37]" /> },
-    { label: "TOTAL PLSX DISTRIBUTED", value: display(plsxDistributed), unit: "", usd: usd(plsxDistributed, plsxPrice), icon: <Droplets className="h-8 w-8 text-[#d4af37]" /> },
-    { label: "OTHER TOKENS", value: fmtUsd(otherTokensUsd) ?? "—", unit: "", usd: null, sub: "", icon: <Gift className="h-8 w-8 text-[#d4af37]" /> },
-    { label: "SMAUG BURNED", value: display(smaugBurned), unit: "", usd: null, sub: smaugBurned7d ? `${display(smaugBurned7d)} last 7d` : "", icon: <Flame className="h-8 w-8 text-[#d4af37]" /> },
+    { label: "TOTAL PLS DISTRIBUTED", value: display(plsDistributed), unit: "", usd: usd(plsDistributed, plsPrice), icon: <Droplets className="h-8 w-8 text-[#B87333]" /> },
+    { label: "TOTAL PLSX DISTRIBUTED", value: display(plsxDistributed), unit: "", usd: usd(plsxDistributed, plsxPrice), icon: <Droplets className="h-8 w-8 text-[#B87333]" /> },
+    { label: "OTHER TOKENS", value: fmtUsd(otherTokensUsd) ?? "—", unit: "", usd: null, sub: "", icon: <Gift className="h-8 w-8 text-[#B87333]" /> },
+    { label: "SMAUG BURNED", value: display(smaugBurned), unit: "", usd: null, sub: smaugBurned7d ? `${display(smaugBurned7d)} last 7d` : "", icon: <Flame className="h-8 w-8 text-[#B87333]" /> },
   ]
 
   // Total distributed to holders (USD): PLS + PLSX + other reward tokens
@@ -83,7 +83,7 @@ export function StatCards() {
               <span className="mt-1 font-serif text-2xl font-bold text-[#e8e6e3]">
                 {stat.value} {stat.unit && <span className="text-sm font-normal text-[#9ca3af]">{stat.unit}</span>}
               </span>
-              {stat.usd && <span className="mt-0.5 font-sans text-sm text-[#d4af37]">{stat.usd}</span>}
+              {stat.usd && <span className="mt-0.5 font-sans text-sm text-[#B87333]">{stat.usd}</span>}
               {stat.sub && <span className="mt-0.5 font-sans text-xs text-[#9ca3af]">{stat.sub}</span>}
             </span>
           </div>

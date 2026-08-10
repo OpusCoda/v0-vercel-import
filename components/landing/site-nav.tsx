@@ -15,7 +15,7 @@ const navLinks = [
 export function SiteNav() {
   const [open, setOpen] = useState(false)
   return (
-    <header className="sticky top-0 z-50 border-b border-[#2a2a35] bg-[#0a0a0c]/85 backdrop-blur-md">
+    <header className="border-b border-[#2a2a35] bg-[#0a0a0c]/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-3">
@@ -24,10 +24,10 @@ export function SiteNav() {
             alt="Opus emblem"
             width={44}
             height={44}
-            className="rounded-full ring-1 ring-[#d4af37]/40"
+            className="rounded-full ring-1 ring-[#B87333]/40"
           />
           <span className="flex flex-col leading-tight">
-            <span className="font-serif text-lg font-bold tracking-[0.18em] text-[#e8e6e3]">OPUS</span>
+            <span className="font-serif text-lg font-bold tracking-[0.18em] text-[#B87333]">OPUS</span>
             <span className="font-sans text-[11px] tracking-wide text-[#9ca3af]"></span>
           </span>
         </Link>
@@ -37,7 +37,7 @@ export function SiteNav() {
             <Link
               key={link.label}
               href={link.href}
-              className="font-sans text-sm text-[#cfcdc8] transition-colors hover:text-[#d4af37]"
+              className="font-sans text-sm text-[#cfcdc8] transition-colors hover:text-[#B87333]"
             >
               {link.label}
             </Link>
@@ -50,7 +50,7 @@ export function SiteNav() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Documentation"
-            className="hidden items-center gap-2 text-[#9ca3af] transition-colors hover:text-[#d4af37] sm:flex"
+            className="hidden items-center gap-2 text-[#9ca3af] transition-colors hover:text-[#B87333] sm:flex"
           >
             <BookOpen className="h-5 w-5" />
             <span className="font-sans text-sm">Docs</span>
@@ -77,7 +77,7 @@ export function SiteNav() {
                 <Link
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="block rounded-md px-3 py-2.5 font-sans text-sm text-[#cfcdc8] transition-colors hover:bg-[#12121a] hover:text-[#d4af37]"
+                  className="block rounded-md px-3 py-2.5 font-sans text-sm text-[#cfcdc8] transition-colors hover:bg-[#12121a] hover:text-[#B87333]"
                 >
                   {link.label}
                 </Link>

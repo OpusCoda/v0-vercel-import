@@ -38,9 +38,9 @@ export function SiteFooter() {
               aria-label={social.label}
               className="group"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#2a2a35] bg-[#0d0d12] shadow-lg transition-all duration-300 hover:border-[#d4af37]/50 hover:bg-[#1a1a22]">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#2a2a35] bg-[#0d0d12] shadow-lg transition-all duration-300 hover:border-[#B87333]/50 hover:bg-[#1a1a22]">
                 <svg
-                  className={`${social.size} text-[#9ca3af] transition-colors group-hover:text-[#d4af37]`}
+                  className={`${social.size} text-[#9ca3af] transition-colors group-hover:text-[#B87333]`}
                   fill="currentColor"
                   viewBox={social.viewBox}
                   aria-hidden="true"

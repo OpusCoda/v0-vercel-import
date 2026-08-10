@@ -11,7 +11,7 @@ export function ConnectWalletButton({ fullWidth = false }: { fullWidth?: boolean
 
         const base =
           "rounded-md px-5 py-2.5 font-sans text-sm font-semibold transition-colors"
-        const gold = "bg-[#d4af37] text-[#0a0a0c] hover:bg-[#c19b2e]"
+        const gold = "bg-[#B87333] text-[#0a0a0c] hover:bg-[#c19b2e]"
         const width = fullWidth ? "w-full" : ""
 
         return (
@@ -45,7 +45,7 @@ export function ConnectWalletButton({ fullWidth = false }: { fullWidth?: boolean
                 <button
                   type="button"
                   onClick={openAccountModal}
-                  className={`${base} ${width} border border-[#d4af37]/40 bg-[#12121a] text-[#e8e6e3] hover:border-[#d4af37]`}
+                  className={`${base} ${width} border border-[#B87333]/40 bg-[#12121a] text-[#e8e6e3] hover:border-[#B87333]`}
                 >
                   {account.displayName}
                 </button>

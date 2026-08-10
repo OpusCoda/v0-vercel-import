@@ -52,9 +52,9 @@ export function PlatformOverview() {
   return (
     <div className="mb-6 flex flex-wrap items-stretch gap-3">
       {/* Hero — combined platform total */}
-      <div className="flex items-center gap-4 rounded-xl border border-[#d4af37]/25 bg-gradient-to-br from-[#d4af37]/[0.06] to-transparent px-5 py-3">
+      <div className="flex items-center gap-4 rounded-xl border border-[#B87333]/25 bg-gradient-to-br from-[#B87333]/[0.06] to-transparent px-5 py-3">
         <div className="flex flex-col leading-tight">
-          <span className="font-serif text-[10px] font-semibold uppercase tracking-wider text-[#d4af37]">
+          <span className="font-serif text-[10px] font-semibold uppercase tracking-wider text-[#B87333]">
             Platform
           </span>
           <span className="font-sans text-xl font-bold text-[#e8e6e3]">
@@ -62,7 +62,7 @@ export function PlatformOverview() {
             <span className="ml-1 font-sans text-[10px] font-medium uppercase text-[#7c7a76]">PLS Vol</span>
           </span>
         </div>
-        <div className="h-8 w-px bg-[#d4af37]/15" />
+        <div className="h-8 w-px bg-[#B87333]/15" />
         <Stat value={fmtCount(combinedOpen)} label="Open" />
       </div>
       {/* Probability Shop segment */}

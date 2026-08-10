@@ -4,7 +4,7 @@ const ways = [
   {
     title: "Hold",
     art: "/landing/hold-orb.png",
-    accent: "#d4af37",
+    accent: "#B87333",
     body: "Receive PLS or PLSX distributions by holding Opus or Coda.",
     cta: "Learn More",
     href: "#tokens",
@@ -38,9 +38,9 @@ const ways = [
 function OrnamentHeading({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-center gap-4">
-      <span className="text-[#d4af37]/50">&#9670;&mdash;</span>
-      <h2 className="text-center font-serif text-xl font-bold text-[#d4af37] md:text-2xl">{children}</h2>
-      <span className="text-[#d4af37]/50">&mdash;&#9670;</span>
+      <span className="text-[#B87333]/50">&#9670;&mdash;</span>
+      <h2 className="text-center font-serif text-xl font-bold text-[#B87333] md:text-2xl">{children}</h2>
+      <span className="text-[#B87333]/50">&mdash;&#9670;</span>
     </div>
   )
 }
@@ -56,7 +56,7 @@ export function Participate() {
         {ways.map((way) => (
           <article
             key={way.title}
-            className="flex flex-col overflow-hidden rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 transition-colors hover:border-[#d4af37]/40"
+            className="flex flex-col overflow-hidden rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 transition-colors hover:border-[#B87333]/40"
           >
             <div className="flex items-start gap-4">
               <Image

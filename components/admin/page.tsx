@@ -94,7 +94,7 @@ export default function AdminPage() {
     return (
       <main className="mx-auto max-w-7xl px-4 py-12 md:px-6">
         <div className="mb-8">
-          <Link href="/" className="font-sans text-sm text-[#d4af37] hover:underline">
+          <Link href="/" className="font-sans text-sm text-[#B87333] hover:underline">
             ← Back to home
           </Link>
         </div>
@@ -108,16 +108,16 @@ export default function AdminPage() {
       {/* Header */}
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <Link href="/" className="font-sans text-sm text-[#d4af37] hover:underline">
+          <Link href="/" className="font-sans text-sm text-[#B87333] hover:underline">
             ← Back to home
           </Link>
-          <h1 className="mt-2 font-serif text-3xl font-bold text-[#d4af37]">Admin Panel</h1>
+          <h1 className="mt-2 font-serif text-3xl font-bold text-[#B87333]">Admin Panel</h1>
         </div>
         <div className="flex items-center gap-3">
           <ConnectWalletButton />
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 rounded-lg border border-[#d4af37]/40 px-3 py-2 font-sans text-sm font-semibold text-[#d4af37] transition-colors hover:bg-[#d4af37]/10"
+            className="flex items-center gap-2 rounded-lg border border-[#B87333]/40 px-3 py-2 font-sans text-sm font-semibold text-[#B87333] transition-colors hover:bg-[#B87333]/10"
           >
             <LogOut className="h-4 w-4" />
             Logout
@@ -131,11 +131,10 @@ export default function AdminPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`rounded-full border px-4 py-2 font-sans text-sm font-medium transition-all ${
-              activeTab === tab.id
-                ? 'border-[#d8b13d] bg-[#d8b13d]/10 text-[#d8b13d]'
-                : 'border-[#2a2a35] text-[#9a9a9a] hover:border-[#3a3a45] hover:text-[#b8b6b1]'
-            }`}
+            className={`rounded-full border px-4 py-2 font-sans text-sm font-medium transition-all ${activeTab === tab.id
+              ? 'border-[#B87333] bg-[#B87333]/10 text-[#B87333]'
+              : 'border-[#2a2a35] text-[#9a9a9a] hover:border-[#3a3a45] hover:text-[#b8b6b1]'
+              }`}
           >
             {tab.label}
           </button>

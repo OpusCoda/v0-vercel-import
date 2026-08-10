@@ -35,7 +35,7 @@ export function ComingSoon({
 
       <Link
         href="/"
-        className="mt-8 inline-flex items-center gap-2 font-sans text-sm text-[#9ca3af] transition-colors hover:text-[#d4af37]"
+        className="mt-8 inline-flex items-center gap-2 font-sans text-sm text-[#9ca3af] transition-colors hover:text-[#B87333]"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to home

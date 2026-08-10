@@ -44,7 +44,7 @@ function ClaimButton({
       <button
         onClick={() => claim(position.marketId, claimable.kind)}
         disabled={isPending || isConfirming || isSuccess}
-        className="rounded border border-[#d4af37]/40 bg-[#1a1a20] px-3 py-1.5 font-sans text-xs font-semibold text-[#d4af37] transition-colors hover:bg-[#d4af37]/10 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded border border-[#B87333]/40 bg-[#1a1a20] px-3 py-1.5 font-sans text-xs font-semibold text-[#B87333] transition-colors hover:bg-[#B87333]/10 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {label}
         {amount > 0n && !isSuccess && (
@@ -134,16 +134,16 @@ export function MyMarketPositions() {
           </div>
         </div>
         {totalClaimable > 0n && (
-          <div className="rounded-xl border border-[#d4af37]/25 bg-[#d4af37]/[0.05] px-4 py-3">
-            <div className="font-sans text-[10px] uppercase tracking-wider text-[#d4af37]">Claimable</div>
-            <div className="font-sans text-lg font-bold text-[#d4af37]">{fmtPls(totalClaimable)} PLS</div>
+          <div className="rounded-xl border border-[#B87333]/25 bg-[#B87333]/[0.05] px-4 py-3">
+            <div className="font-sans text-[10px] uppercase tracking-wider text-[#B87333]">Claimable</div>
+            <div className="font-sans text-lg font-bold text-[#B87333]">{fmtPls(totalClaimable)} PLS</div>
           </div>
         )}
       </div>
       {/* Open positions */}
       {openPositions.length > 0 && (
         <div>
-          <h3 className="mb-3 font-serif text-lg font-semibold text-[#d4af37]">Open positions</h3>
+          <h3 className="mb-3 font-serif text-lg font-semibold text-[#B87333]">Open positions</h3>
           <div className="overflow-x-auto rounded-lg border border-[#2a2a35] bg-[#101017]">
             <table className="w-full">
               <thead>
@@ -183,7 +183,7 @@ export function MyMarketPositions() {
       {/* Settleable — resolved / voided, with claim buttons */}
       {settleable.length > 0 && (
         <div>
-          <h3 className="mb-3 font-serif text-lg font-semibold text-[#d4af37]">Ready to claim</h3>
+          <h3 className="mb-3 font-serif text-lg font-semibold text-[#B87333]">Ready to claim</h3>
           <div className="space-y-2 rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
             {settleable.map((p) => {
               const claimable = claimFor(p)

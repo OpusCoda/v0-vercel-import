@@ -172,11 +172,10 @@ function SellPanel({
           <button
             key={p}
             onClick={() => setPct(p)}
-            className={`flex-1 rounded px-1.5 py-1 font-sans text-[10px] font-semibold transition-colors ${
-              pct === p
-                ? "bg-[#d4af37] text-[#0a0a0c]"
-                : "border border-[#2a2a35] text-[#b8b6b1] hover:border-[#d4af37]/50"
-            }`}
+            className={`flex-1 rounded px-1.5 py-1 font-sans text-[10px] font-semibold transition-colors ${pct === p
+                ? "bg-[#B87333] text-[#0a0a0c]"
+                : "border border-[#2a2a35] text-[#b8b6b1] hover:border-[#B87333]/50"
+              }`}
           >
             {p === 100 ? "Max" : `${p}%`}
           </button>
@@ -189,11 +188,10 @@ function SellPanel({
           <button
             key={bps}
             onClick={() => setSlippageBps(bps)}
-            className={`rounded px-1.5 py-0.5 font-sans text-[10px] font-semibold transition-colors ${
-              slippageBps === bps
-                ? "bg-[#d4af37] text-[#0a0a0c]"
-                : "border border-[#2a2a35] text-[#b8b6b1] hover:border-[#d4af37]/50"
-            }`}
+            className={`rounded px-1.5 py-0.5 font-sans text-[10px] font-semibold transition-colors ${slippageBps === bps
+                ? "bg-[#B87333] text-[#0a0a0c]"
+                : "border border-[#2a2a35] text-[#b8b6b1] hover:border-[#B87333]/50"
+              }`}
           >
             {bps / 100}%
           </button>

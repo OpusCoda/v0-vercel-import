@@ -140,18 +140,18 @@ export function CreateMarketForm() {
 
   const args =
     validForm &&
-    bettingDeadline !== undefined &&
-    resolutionDeadline !== undefined &&
-    seedPerSide !== undefined
+      bettingDeadline !== undefined &&
+      resolutionDeadline !== undefined &&
+      seedPerSide !== undefined
       ? ([
-          question.trim(),
-          resolutionCriteria.trim(),
-          source.trim(),
-          CATEGORY_INDEX[category],
-          bettingDeadline,
-          resolutionDeadline,
-          seedPerSide,
-        ] as const)
+        question.trim(),
+        resolutionCriteria.trim(),
+        source.trim(),
+        CATEGORY_INDEX[category],
+        bettingDeadline,
+        resolutionDeadline,
+        seedPerSide,
+      ] as const)
       : undefined
 
   const { data: simulation, error: simulationError } = useSimulateContract({
@@ -214,11 +214,11 @@ export function CreateMarketForm() {
         }}
         className="space-y-6 rounded-lg border border-[#2a2a35] bg-[#101017] p-8"
       >
-        <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Create YES/NO Market</h2>
+        <h2 className="font-serif text-2xl font-bold text-[#B87333]">Create YES/NO Market</h2>
 
         {/* Guidelines */}
         <details className="rounded-lg border border-[#2a2a35] bg-[#0d0d12] p-4">
-          <summary className="cursor-pointer font-sans text-sm font-semibold text-[#d4af37]">
+          <summary className="cursor-pointer font-sans text-sm font-semibold text-[#B87333]">
             Guidelines — read before creating a market
           </summary>
           <div className="mt-3 space-y-3 font-sans text-sm leading-relaxed text-[#b8b6b1]">
@@ -264,7 +264,7 @@ export function CreateMarketForm() {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="e.g., Will BTC trade above $150,000 on 1 January 2027?"
-            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#d4af37] focus:outline-none"
+            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#B87333] focus:outline-none"
           />
         </div>
 
@@ -278,7 +278,7 @@ export function CreateMarketForm() {
             onChange={(e) => setResolutionCriteria(e.target.value)}
             placeholder="Define the exact conditions under which YES resolves."
             rows={3}
-            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#d4af37] focus:outline-none"
+            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#B87333] focus:outline-none"
           />
         </div>
 
@@ -292,7 +292,7 @@ export function CreateMarketForm() {
             value={source}
             onChange={(e) => setSource(e.target.value)}
             placeholder="e.g., CoinGecko BTC/USD"
-            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#d4af37] focus:outline-none"
+            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#B87333] focus:outline-none"
           />
         </div>
 
@@ -304,7 +304,7 @@ export function CreateMarketForm() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as Category)}
-            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] focus:border-[#d4af37] focus:outline-none"
+            className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] focus:border-[#B87333] focus:outline-none"
           >
             {CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
@@ -324,7 +324,7 @@ export function CreateMarketForm() {
               type="datetime-local"
               value={bettingDeadlineInput}
               onChange={(e) => setBettingDeadlineInput(e.target.value)}
-              className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] focus:border-[#d4af37] focus:outline-none"
+              className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] focus:border-[#B87333] focus:outline-none"
             />
             {bettingDeadlineInput && (
               <p className="mt-1 font-sans text-xs text-[#7c7a76]">= {toUtcLabel(bettingDeadlineInput)}</p>
@@ -340,7 +340,7 @@ export function CreateMarketForm() {
               type="datetime-local"
               value={resolutionDeadlineInput}
               onChange={(e) => setResolutionDeadlineInput(e.target.value)}
-              className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] focus:border-[#d4af37] focus:outline-none"
+              className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] focus:border-[#B87333] focus:outline-none"
             />
             {resolutionDeadlineInput && (
               <p className="mt-1 font-sans text-xs text-[#7c7a76]">= {toUtcLabel(resolutionDeadlineInput)}</p>
@@ -361,14 +361,14 @@ export function CreateMarketForm() {
               onChange={(e) => setSeedPerSideInput(e.target.value)}
               min={minPerSideDisplay}
               step="100"
-              className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#d4af37] focus:outline-none"
+              className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#B87333] focus:outline-none"
             />
             <span className="font-sans text-sm text-[#7c7a76]">PLS</span>
           </div>
           <p className="mt-2 font-sans text-sm text-[#7c7a76]">
-            Minimum per side: <span className="font-semibold text-[#d4af37]">{minPerSideDisplay} PLS</span>
+            Minimum per side: <span className="font-semibold text-[#B87333]">{minPerSideDisplay} PLS</span>
             {' · '}
-            Total required: <span className="font-semibold text-[#d4af37]">{totalCost} PLS</span>
+            Total required: <span className="font-semibold text-[#B87333]">{totalCost} PLS</span>
           </p>
         </div>
 
@@ -433,7 +433,7 @@ export function CreateMarketForm() {
             confirming ||
             !address
           }
-          className="w-full rounded-lg border border-[#d4af37] bg-[#d4af37]/10 px-4 py-3 font-sans font-semibold text-[#d4af37] transition-colors hover:bg-[#d4af37]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-lg border border-[#B87333] bg-[#B87333]/10 px-4 py-3 font-sans font-semibold text-[#B87333] transition-colors hover:bg-[#B87333]/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {!address
             ? 'Connect Wallet'

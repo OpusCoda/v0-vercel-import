@@ -65,9 +65,9 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
   const iVoted = myVote && myVote !== ZERO
   // Shared tx-status line
   const statusLine = isPending ? (
-    <p className="text-xs text-[#D8B13D]">Confirm in wallet…</p>
+    <p className="text-xs text-[#B87333]">Confirm in wallet…</p>
   ) : isConfirming ? (
-    <p className="text-xs text-[#D8B13D]">Submitting to the blockchain…</p>
+    <p className="text-xs text-[#B87333]">Submitting to the blockchain…</p>
   ) : isConfirmed ? (
     <p className="text-xs text-green-400">Done — updating…</p>
   ) : error ? (
@@ -93,7 +93,7 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
           <button
             onClick={guarded(() => acceptWager(wagerId))}
             disabled={busy}
-            className="rounded-lg bg-[#D8B13D] px-5 py-2 text-sm font-semibold text-black transition hover:bg-[#D8B13D]/90 disabled:opacity-50"
+            className="rounded-lg bg-[#B87333] px-5 py-2 text-sm font-semibold text-black transition hover:bg-[#B87333]/90 disabled:opacity-50"
           >
             {busy ? 'Accepting…' : 'Accept wager'}
           </button>
@@ -125,7 +125,7 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
         <button
           onClick={guarded(() => resolvePriceBet(wagerId))}
           disabled={busy}
-          className="rounded-lg bg-[#D8B13D] px-5 py-2 text-sm font-semibold text-black transition hover:bg-[#D8B13D]/90 disabled:opacity-50"
+          className="rounded-lg bg-[#B87333] px-5 py-2 text-sm font-semibold text-black transition hover:bg-[#B87333]/90 disabled:opacity-50"
         >
           {busy ? 'Resolving…' : 'Resolve now (oracle)'}
         </button>
@@ -157,14 +157,14 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
           <button
             onClick={guarded(() => submitVote(wagerId, creator as `0x${string}`))}
             disabled={busy}
-            className="rounded-lg border border-[#D8B13D] px-4 py-2 text-sm font-semibold text-[#D8B13D] transition hover:bg-[#D8B13D]/10 disabled:opacity-50"
+            className="rounded-lg border border-[#B87333] px-4 py-2 text-sm font-semibold text-[#B87333] transition hover:bg-[#B87333]/10 disabled:opacity-50"
           >
             {'Creator won'}
           </button>
           <button
             onClick={guarded(() => submitVote(wagerId, challenger as `0x${string}`))}
             disabled={busy}
-            className="rounded-lg border border-[#D8B13D] px-4 py-2 text-sm font-semibold text-[#D8B13D] transition hover:bg-[#D8B13D]/10 disabled:opacity-50"
+            className="rounded-lg border border-[#B87333] px-4 py-2 text-sm font-semibold text-[#B87333] transition hover:bg-[#B87333]/10 disabled:opacity-50"
           >
             {'Acceptor won'}
           </button>

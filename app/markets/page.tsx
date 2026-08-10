@@ -42,11 +42,10 @@ export default function MarketsPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
-                  activeTab === tab.id
-                    ? 'border-[#d8b13d] bg-[#d8b13d]/10 text-[#d8b13d]'
+                className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${activeTab === tab.id
+                    ? 'border-[#B87333] bg-[#B87333]/10 text-[#B87333]'
                     : 'border-[#2a2a35] text-[#9a9a9a] hover:border-[#3a3a45] hover:text-[#b8b6b1]'
-                }`}
+                  }`}
               >
                 {tab.label}
               </button>

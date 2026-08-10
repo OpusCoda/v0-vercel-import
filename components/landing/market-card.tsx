@@ -158,21 +158,21 @@ function AcceptSection({
           <p className="mt-1 text-center font-sans text-[10px] text-[#7c7a76]">
             You created this wager. You can cancel and be refunded until someone accepts.
           </p>
-      {cancelError && (
-        <p className="mt-1 font-sans text-[10px] text-red-400">
-          {(() => {
-            const msg = cancelError.message
-            // cancelWager require: "Wager already accepted or resolved"
-            if (msg.includes("already accepted") || msg.includes("already accepted or resolved"))
-              return "Too late — this wager has already been accepted."
-            if (msg.includes("Only creator, admin"))
-              return "You can't cancel this wager (not the creator, or the window hasn't expired)."
-            if (msg.includes("User rejected") || msg.includes("User denied"))
-              return "You rejected the transaction in your wallet."
-            return "Cancel failed — see wallet for details."
-          })()}
-        </p>
-      )}
+          {cancelError && (
+            <p className="mt-1 font-sans text-[10px] text-red-400">
+              {(() => {
+                const msg = cancelError.message
+                // cancelWager require: "Wager already accepted or resolved"
+                if (msg.includes("already accepted") || msg.includes("already accepted or resolved"))
+                  return "Too late — this wager has already been accepted."
+                if (msg.includes("Only creator, admin"))
+                  return "You can't cancel this wager (not the creator, or the window hasn't expired)."
+                if (msg.includes("User rejected") || msg.includes("User denied"))
+                  return "You rejected the transaction in your wallet."
+                return "Cancel failed — see wallet for details."
+              })()}
+            </p>
+          )}
         </>
       ) : (
         // Taker view: payout + accept.
@@ -182,7 +182,7 @@ function AcceptSection({
             {winnerPayout !== undefined ? (
               <p className="font-sans text-xs text-[#b8b6b1]">
                 If you win, you receive{" "}
-                <span className="text-[#d4af37] font-semibold">
+                <span className="text-[#B87333] font-semibold">
                   {winnerPayout.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
                 </span>
                 {profit !== undefined && profit > 0 && (
@@ -196,41 +196,41 @@ function AcceptSection({
           <button
             onClick={() => accept()}
             disabled={disabled}
-            className="w-full bg-[#1a1a20] hover:bg-[#2a2a35] text-[#d4af37] font-sans text-xs font-semibold py-2 rounded transition-colors border border-[#d4af37]/30 hover:border-[#d4af37]/60 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#1a1a20] hover:bg-[#2a2a35] text-[#B87333] font-sans text-xs font-semibold py-2 rounded transition-colors border border-[#B87333]/30 hover:border-[#B87333]/60 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {btnLabel}
           </button>
           <p className="mt-1 text-center font-sans text-[10px] text-[#7c7a76]">
             A small protocol fee is deducted from winnings at resolution.
           </p>
-      {writeError && (
-        <p className="mt-1 font-sans text-[10px] text-red-400">
-          {(() => {
-            const msg = writeError.message
-            // WagerMarket uses require-strings — match on the string content.
-            if (msg.includes("Creator cannot accept"))
-              return "You can't accept your own wager."
-            if (msg.includes("Not the challenger"))
-              return "This wager is reserved for a specific challenger — not your address."
-            if (msg.includes("Not open for acceptance"))
-              return "This wager is no longer open — it may have just been accepted or cancelled."
-            if (msg.includes("Arbitration panel not ready"))
-              return "The arbitration panel isn't ready yet (needs 3 arbitrators). Try again later."
-            if (msg.includes("Deposit window expired"))
-              return "This wager's acceptance window has expired."
-            if (
-              msg.includes("Must match required challenger stake") ||
-              msg.includes("Must cover stake and vote deposit")
-            )
-              return "The stake amount didn't match — refresh and try again."
-            if (msg.includes("User rejected") || msg.includes("User denied"))
-              return "You rejected the transaction in your wallet."
-            if (msg.includes("insufficient funds"))
-              return "Insufficient PLS balance for the stake plus gas."
-            return "Transaction failed — see wallet for details."
-          })()}
-        </p>
-      )}
+          {writeError && (
+            <p className="mt-1 font-sans text-[10px] text-red-400">
+              {(() => {
+                const msg = writeError.message
+                // WagerMarket uses require-strings — match on the string content.
+                if (msg.includes("Creator cannot accept"))
+                  return "You can't accept your own wager."
+                if (msg.includes("Not the challenger"))
+                  return "This wager is reserved for a specific challenger — not your address."
+                if (msg.includes("Not open for acceptance"))
+                  return "This wager is no longer open — it may have just been accepted or cancelled."
+                if (msg.includes("Arbitration panel not ready"))
+                  return "The arbitration panel isn't ready yet (needs 3 arbitrators). Try again later."
+                if (msg.includes("Deposit window expired"))
+                  return "This wager's acceptance window has expired."
+                if (
+                  msg.includes("Must match required challenger stake") ||
+                  msg.includes("Must cover stake and vote deposit")
+                )
+                  return "The stake amount didn't match — refresh and try again."
+                if (msg.includes("User rejected") || msg.includes("User denied"))
+                  return "You rejected the transaction in your wallet."
+                if (msg.includes("insufficient funds"))
+                  return "Insufficient PLS balance for the stake plus gas."
+                return "Transaction failed — see wallet for details."
+              })()}
+            </p>
+          )}
         </>
       )}
     </div>
@@ -343,7 +343,7 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
     setPanel((p) => (p && p.side === side && p.mode === mode ? null : { side, mode }))
   }
   return (
-    <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#d4af37]/30">
+    <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#B87333]/30">
       {/* Header: icon + question, status badge */}
       <div className="flex items-start justify-between gap-3 pb-4">
         <div className="flex items-center gap-3">
@@ -352,13 +352,12 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
         </div>
         {props.status && (
           <span
-            className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${
-              props.status === "Open"
+            className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${props.status === "Open"
                 ? "bg-green-400/10 text-green-400 border border-green-400/30"
                 : props.status === "Resolved"
-                  ? "bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30"
+                  ? "bg-[#B87333]/10 text-[#B87333] border border-[#B87333]/30"
                   : "bg-[#7c7a76]/10 text-[#b8b6b1] border border-[#7c7a76]/30"
-            }`}
+              }`}
           >
             {props.status}
           </span>
@@ -438,7 +437,7 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
       {/* Resolution details — collapsible; renders only when data is passed in */}
       {(props.resolutionCriteria || props.source || props.resolutionDeadline) && (
         <details className="mt-3 rounded-lg border border-[#2a2a35] bg-[#0d0d12] p-3">
-          <summary className="cursor-pointer font-sans text-[11px] font-semibold text-[#d4af37]">
+          <summary className="cursor-pointer font-sans text-[11px] font-semibold text-[#B87333]">
             Resolution details
           </summary>
           <div className="mt-2 space-y-2 font-sans text-[11px] leading-relaxed text-[#b8b6b1]">
@@ -453,7 +452,7 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
                     href={props.source}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[#d4af37] underline break-all"
+                    className="text-[#B87333] underline break-all"
                   >
                     {props.source}
                   </a>
@@ -489,7 +488,7 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
       {props.status === "Open" && (
         <button
           onClick={() => shareOnX(props.title, props.yesOdds, props.noOdds)}
-          className="mt-3 w-full rounded border border-[#2a2a35] py-1.5 font-sans text-[11px] font-semibold text-[#b8b6b1] transition-colors hover:border-[#d4af37]/50 hover:text-[#d4af37]"
+          className="mt-3 w-full rounded border border-[#2a2a35] py-1.5 font-sans text-[11px] font-semibold text-[#b8b6b1] transition-colors hover:border-[#B87333]/50 hover:text-[#B87333]"
         >
           Share on X
         </button>
@@ -515,14 +514,14 @@ export function MarketCard(props: MarketCardProps) {
       ? `${props.tokenLabel} ${props.creatorBetsAbove ? "below" : "above"} $${props.targetPrice}`
       : "Backs the opposite outcome"
   return (
-    <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#d4af37]/30">
+    <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#B87333]/30">
       {/* Header */}
       <div className="flex items-start justify-between pb-3">
         <div className="flex items-center gap-2">
           <span className="text-xl">{props.icon || "🎯"}</span>
-          <h3 className="font-sans text-xs font-bold text-[#d4af37]">{props.betType}</h3>
+          <h3 className="font-sans text-xs font-bold text-[#B87333]">{props.betType}</h3>
         </div>
-        <span className="font-sans text-xs text-[#d4af37] bg-[#1a1a20] px-2 py-1 rounded">{props.category}</span>
+        <span className="font-sans text-xs text-[#B87333] bg-[#1a1a20] px-2 py-1 rounded">{props.category}</span>
       </div>
       {/* Description + deadline */}
       <div className="pb-3 space-y-1">
@@ -564,7 +563,7 @@ export function MarketCard(props: MarketCardProps) {
           <p className="font-sans text-xs text-[#7c7a76]">Time left to accept: {props.closesIn}</p>
           <button
             onClick={() => shareWagerOnX(props.description, creatorStake)}
-            className="mt-3 w-full rounded border border-[#2a2a35] py-1.5 font-sans text-[11px] font-semibold text-[#b8b6b1] transition-colors hover:border-[#d4af37]/50 hover:text-[#d4af37]"
+            className="mt-3 w-full rounded border border-[#2a2a35] py-1.5 font-sans text-[11px] font-semibold text-[#b8b6b1] transition-colors hover:border-[#B87333]/50 hover:text-[#B87333]"
           >
             Share on X
           </button>
@@ -599,7 +598,7 @@ export function MarketCard(props: MarketCardProps) {
               </span>
               {props.winnerShort && (
                 <span className="font-sans text-[10px] text-[#7c7a76]">
-                  Winner: <span className="font-mono text-[#d4af37]">{props.winnerShort}</span>
+                  Winner: <span className="font-mono text-[#B87333]">{props.winnerShort}</span>
                 </span>
               )}
             </div>

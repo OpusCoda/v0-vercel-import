@@ -93,15 +93,15 @@ export function EarnDashboard() {
         {/* Header with Total Value */}
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="font-serif text-4xl font-bold text-[#d4af37] md:text-5xl">Earn Rewards</h1>
+            <h1 className="font-serif text-4xl font-bold text-[#B87333] md:text-5xl">Earn Rewards</h1>
             <p className="mt-2 font-sans text-[#b8b6b1]">Stake Smaug and earn PLS, PLSX, and Coda rewards.</p>
           </div>
           <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
             <div className="flex items-center gap-2">
               <span className="font-sans text-xs font-semibold text-[#7c7a76]">Total Value Earning</span>
-              <TrendingUp className="h-4 w-4 text-[#d4af37]" />
+              <TrendingUp className="h-4 w-4 text-[#B87333]" />
             </div>
-            <p className="mt-2 font-serif text-3xl font-bold text-[#d4af37]">$183,000</p>
+            <p className="mt-2 font-serif text-3xl font-bold text-[#B87333]">$183,000</p>
           </div>
         </div>
 
@@ -109,22 +109,22 @@ export function EarnDashboard() {
         <div className="mb-12 grid gap-4 md:grid-cols-4">
           <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
             <p className="font-sans text-xs font-semibold text-[#7c7a76]">EST. DAILY REWARDS</p>
-            <p className="mt-2 font-serif text-2xl font-bold text-[#d4af37]">{dailyRewards.pls.amount} <span className="text-sm">PLS</span></p>
+            <p className="mt-2 font-serif text-2xl font-bold text-[#B87333]">{dailyRewards.pls.amount} <span className="text-sm">PLS</span></p>
             <p className="mt-1 font-sans text-xs text-[#7c7a76]">≈ ${dailyRewards.pls.value.toFixed(2)}</p>
           </div>
           <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
             <p className="font-sans text-xs font-semibold text-[#7c7a76]">EST. DAILY REWARDS</p>
-            <p className="mt-2 font-serif text-2xl font-bold text-[#d4af37]">{dailyRewards.plsx.amount} <span className="text-sm">PLSX</span></p>
+            <p className="mt-2 font-serif text-2xl font-bold text-[#B87333]">{dailyRewards.plsx.amount} <span className="text-sm">PLSX</span></p>
             <p className="mt-1 font-sans text-xs text-[#7c7a76]">≈ ${dailyRewards.plsx.value.toFixed(2)}</p>
           </div>
           <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
             <p className="font-sans text-xs font-semibold text-[#7c7a76]">EST. DAILY REWARDS</p>
-            <p className="mt-2 font-serif text-2xl font-bold text-[#d4af37]">{dailyRewards.smaug.amount} <span className="text-sm">SMAUG</span></p>
+            <p className="mt-2 font-serif text-2xl font-bold text-[#B87333]">{dailyRewards.smaug.amount} <span className="text-sm">SMAUG</span></p>
             <p className="mt-1 font-sans text-xs text-[#7c7a76]">≈ ${dailyRewards.smaug.value.toFixed(2)}</p>
           </div>
           <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
             <p className="font-sans text-xs font-semibold text-[#7c7a76]">EST. APR (COMBINED)</p>
-            <p className="mt-2 font-serif text-2xl font-bold text-[#d4af37]">{dailyRewards.combinedApr}%</p>
+            <p className="mt-2 font-serif text-2xl font-bold text-[#B87333]">{dailyRewards.combinedApr}%</p>
             <p className="mt-1 font-sans text-xs text-[#7c7a76]">Across all positions</p>
           </div>
         </div>
@@ -137,8 +137,8 @@ export function EarnDashboard() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`pb-4 font-sans text-sm font-semibold uppercase transition-colors ${activeTab === tab
-                    ? "border-b-2 border-[#d4af37] text-[#d4af37]"
-                    : "text-[#7c7a76] hover:text-[#b8b6b1]"
+                  ? "border-b-2 border-[#B87333] text-[#B87333]"
+                  : "text-[#7c7a76] hover:text-[#b8b6b1]"
                   }`}
               >
                 {tab === "overview" && "Overview"}
@@ -151,14 +151,14 @@ export function EarnDashboard() {
 
         {/* Your Earnings Cards */}
         <div className="mb-12">
-          <h2 className="mb-6 font-serif text-2xl font-bold text-[#d4af37]">Your Earnings (auto-compounding)</h2>
+          <h2 className="mb-6 font-serif text-2xl font-bold text-[#B87333]">Your Earnings (auto-compounding)</h2>
           <div className="grid gap-6 md:grid-cols-3">
             {/* Hold Opus */}
             <div className="rounded-lg border border-[#2a2a35] bg-gradient-to-br from-[#1a1f1a] to-[#101017] p-6">
               <div className="mb-4 flex items-center gap-3">
                 <span className="text-2xl">💰</span>
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-[#d4af37]">Hold Opus</h3>
+                  <h3 className="font-serif text-lg font-bold text-[#B87333]">Hold Opus</h3>
                   <p className="font-sans text-xs text-[#7c7a76]">Earn PLS automatically</p>
                 </div>
               </div>
@@ -178,7 +178,7 @@ export function EarnDashboard() {
                   <p className="font-sans text-xs font-semibold text-[#7c7a76]">TOTAL EARNED (ALL TIME)</p>
                   <p className="font-sans font-semibold text-[#b8b6b1]">{earnings.opus.totalEarned.toLocaleString()} PLS</p>
                 </div>
-                <button className="flex items-center gap-2 font-sans text-sm font-semibold text-[#d4af37] transition-colors hover:text-[#e8c860]">
+                <button className="flex items-center gap-2 font-sans text-sm font-semibold text-[#B87333] transition-colors hover:text-[#e8c860]">
                   View details <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -189,7 +189,7 @@ export function EarnDashboard() {
               <div className="mb-4 flex items-center gap-3">
                 <span className="text-2xl">⚡</span>
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-[#d4af37]">Hold Coda</h3>
+                  <h3 className="font-serif text-lg font-bold text-[#B87333]">Hold Coda</h3>
                   <p className="font-sans text-xs text-[#7c7a76]">Earn PLSX automatically</p>
                 </div>
               </div>
@@ -209,7 +209,7 @@ export function EarnDashboard() {
                   <p className="font-sans text-xs font-semibold text-[#7c7a76]">TOTAL EARNED (ALL TIME)</p>
                   <p className="font-sans font-semibold text-[#b8b6b1]">{earnings.coda.totalEarned.toLocaleString()} PLSX</p>
                 </div>
-                <button className="flex items-center gap-2 font-sans text-sm font-semibold text-[#d4af37] transition-colors hover:text-[#e8c860]">
+                <button className="flex items-center gap-2 font-sans text-sm font-semibold text-[#B87333] transition-colors hover:text-[#e8c860]">
                   View details <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -220,7 +220,7 @@ export function EarnDashboard() {
               <div className="mb-4 flex items-center gap-3">
                 <span className="text-2xl">🔥</span>
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-[#d4af37]">Stake Smaug</h3>
+                  <h3 className="font-serif text-lg font-bold text-[#B87333]">Stake Smaug</h3>
                   <p className="font-sans text-xs text-[#7c7a76]">Stake SMAUG to earn more SMAUG</p>
                 </div>
               </div>
@@ -240,7 +240,7 @@ export function EarnDashboard() {
                   <p className="font-sans text-xs font-semibold text-[#7c7a76]">ACTIVE STAKES</p>
                   <p className="font-sans font-semibold text-[#b8b6b1]">{earnings.smaug.activeStakes}</p>
                 </div>
-                <button className="flex items-center gap-2 font-sans text-sm font-semibold text-[#d4af37] transition-colors hover:text-[#e8c860]">
+                <button className="flex items-center gap-2 font-sans text-sm font-semibold text-[#B87333] transition-colors hover:text-[#e8c860]">
                   Manage stakes <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -252,10 +252,10 @@ export function EarnDashboard() {
         <section className="mb-12">
           <div className="mb-8 flex items-center justify-between">
             <div>
-              <h2 className="font-serif text-2xl font-bold text-[#d4af37]">Stake Smaug</h2>
+              <h2 className="font-serif text-2xl font-bold text-[#B87333]">Stake Smaug</h2>
               <p className="mt-1 font-sans text-sm text-[#b8b6b1]">Lock your SMAUG and earn high rewards.</p>
             </div>
-            <button className="rounded-lg bg-[#d4af37] px-6 py-3 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]">
+            <button className="rounded-lg bg-[#B87333] px-6 py-3 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]">
               Create New Stake
             </button>
           </div>
@@ -284,8 +284,8 @@ export function EarnDashboard() {
           {/* Your Active Stakes Table */}
           <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-6">
             <div className="mb-6 flex items-center justify-between">
-              <h3 className="font-serif text-xl font-bold text-[#d4af37]">Your Active Stakes</h3>
-              <button className="flex items-center gap-2 font-sans text-sm font-semibold text-[#d4af37] transition-colors hover:text-[#e8c860]">
+              <h3 className="font-serif text-xl font-bold text-[#B87333]">Your Active Stakes</h3>
+              <button className="flex items-center gap-2 font-sans text-sm font-semibold text-[#B87333] transition-colors hover:text-[#e8c860]">
                 View all stakes <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -328,14 +328,14 @@ export function EarnDashboard() {
 
         {/* Ecosystem Overview */}
         <section>
-          <h2 className="mb-6 font-serif text-2xl font-bold text-[#d4af37]">Ecosystem Overview</h2>
+          <h2 className="mb-6 font-serif text-2xl font-bold text-[#B87333]">Ecosystem Overview</h2>
           <div className="grid gap-4 md:grid-cols-5">
             {ecosystemStats.map((stat, idx) => (
               <div key={idx} className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-sans text-xs font-semibold text-[#7c7a76]">{stat.label}</p>
-                    <p className="mt-2 font-serif text-2xl font-bold text-[#d4af37]">{stat.value}</p>
+                    <p className="mt-2 font-serif text-2xl font-bold text-[#B87333]">{stat.value}</p>
                     <p className="mt-1 font-sans text-xs text-[#7c7a76]">{stat.change}</p>
                   </div>
                   <span className="text-2xl">{stat.icon}</span>
@@ -350,7 +350,7 @@ export function EarnDashboard() {
           <p className="font-sans text-sm text-[#7c7a76]">
             Rewards are distributed automatically via reflections. No claiming required.
           </p>
-          <button className="mt-3 flex items-center justify-center gap-2 font-sans text-sm font-semibold text-[#d4af37] transition-colors hover:text-[#e8c860]">
+          <button className="mt-3 flex items-center justify-center gap-2 font-sans text-sm font-semibold text-[#B87333] transition-colors hover:text-[#e8c860]">
             Learn more about how it works <ArrowRight className="h-4 w-4" />
           </button>
         </div>

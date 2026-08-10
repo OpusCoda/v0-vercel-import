@@ -53,11 +53,11 @@ function ClaimCard({
       <div className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-wider text-[#7c7a76]">
         {title}
       </div>
-      <div className="mb-3 font-sans text-xl font-bold text-[#d4af37]">{fmtPls(claimable)} PLS</div>
+      <div className="mb-3 font-sans text-xl font-bold text-[#B87333]">{fmtPls(claimable)} PLS</div>
       <button
         onClick={onClaim}
         disabled={disabled || nothing || isPending || isConfirming || isSuccess}
-        className="w-full rounded border border-[#d4af37]/30 bg-[#1a1a20] py-1.5 font-sans text-xs font-semibold text-[#d4af37] transition-colors hover:bg-[#2a2a35] disabled:cursor-not-allowed disabled:opacity-40"
+        className="w-full rounded border border-[#B87333]/30 bg-[#1a1a20] py-1.5 font-sans text-xs font-semibold text-[#B87333] transition-colors hover:bg-[#2a2a35] disabled:cursor-not-allowed disabled:opacity-40"
       >
         {nothing ? "Nothing to withdraw" : label}
       </button>
@@ -138,7 +138,7 @@ export function RevenuePanel() {
     <div className="space-y-6">
       {/* Claimable — the actionable part */}
       <div>
-        <h3 className="mb-3 font-serif text-sm font-semibold text-[#d4af37]">Claimable revenue</h3>
+        <h3 className="mb-3 font-serif text-sm font-semibold text-[#B87333]">Claimable revenue</h3>
         <div className="grid gap-3 md:grid-cols-2">
           <ClaimCard
             title="Probability Shop — dev fees"

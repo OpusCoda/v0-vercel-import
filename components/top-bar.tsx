@@ -53,14 +53,14 @@ function WalletBalance() {
   return (
     <div className="flex items-center gap-1.5 whitespace-nowrap text-xs">
       <span className="text-[#9a9a9a]">Balance</span>
-      <span className="font-semibold text-[#D8B13D]">{formatted} PLS</span>
+      <span className="font-semibold text-[#B87333]">{formatted} PLS</span>
     </div>
   )
 }
 
 export function TopBar() {
   return (
-    <div className="w-full border-b border-white/10 bg-[#0a0b0d]">
+    <div className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b0d]">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2">
         <PriceTicker />
         <WalletBalance />

@@ -11,11 +11,11 @@ import { useReadContract } from 'wagmi'
 import { STAKING_CONTRACT, STAKING_ABI, parseSmaugAmount } from '@/lib/staking'
 import { WalletContextPrompt } from '@/components/wallet-context-prompt'
 const TIERS = [
-  { name: 'Hatchling',    min: 30,  max: 89,  multiplier: 1,   feeRebate: 5,  icon: '🥚' },
-  { name: 'Drake',        min: 90,  max: 179, multiplier: 1.5, feeRebate: 10, icon: '🥚' },
-  { name: 'Dragon',       min: 180, max: 364, multiplier: 2,   feeRebate: 20, icon: '🥚' },
-  { name: 'Elder Dragon', min: 365, max: 729, multiplier: 3,   feeRebate: 30, icon: '🥚' },
-  { name: 'Smaug',        min: 730, max: 730, multiplier: 5,   feeRebate: 40, icon: '🥚' },
+  { name: 'Hatchling', min: 30, max: 89, multiplier: 1, feeRebate: 5, icon: '🥚' },
+  { name: 'Drake', min: 90, max: 179, multiplier: 1.5, feeRebate: 10, icon: '🥚' },
+  { name: 'Dragon', min: 180, max: 364, multiplier: 2, feeRebate: 20, icon: '🥚' },
+  { name: 'Elder Dragon', min: 365, max: 729, multiplier: 3, feeRebate: 30, icon: '🥚' },
+  { name: 'Smaug', min: 730, max: 730, multiplier: 5, feeRebate: 40, icon: '🥚' },
 ]
 function getTier(days: number) {
   if (!days || days < 30 || days > 730) return null
@@ -36,27 +36,27 @@ export default function StakePage() {
   const [days, setDays] = useState(365)
   const selectedTier = useMemo(() => getTier(days), [days])
   const { data: previewMultiplier } = useReadContract({
-  address: STAKING_CONTRACT as `0x${string}`,
-  abi: STAKING_ABI,
-  functionName: 'multiplierForDuration',
-  args: [BigInt(days * 86400)],
-  query: { enabled: !!selectedTier },
+    address: STAKING_CONTRACT as `0x${string}`,
+    abi: STAKING_ABI,
+    functionName: 'multiplierForDuration',
+    args: [BigInt(days * 86400)],
+    query: { enabled: !!selectedTier },
   })
   const multiplierPreview = previewMultiplier
-  ? (() => {
+    ? (() => {
       const val = Number(previewMultiplier) / 100
       return val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)
     })()
-  : null
+    : null
   const handleStake = async () => {
-  if (!isConnected || !address) return
-  if (!amount || parseFloat(amount) <= 0) return
-  if (!selectedTier) return
-  try {
-    const amountBn = parseSmaugAmount(amount.replace(/,/g, ''))
-    initiateApproveAndStake(amountBn, days)
-  } catch (err) {
-    console.error('[v0] Stake error:', err)
+    if (!isConnected || !address) return
+    if (!amount || parseFloat(amount) <= 0) return
+    if (!selectedTier) return
+    try {
+      const amountBn = parseSmaugAmount(amount.replace(/,/g, ''))
+      initiateApproveAndStake(amountBn, days)
+    } catch (err) {
+      console.error('[v0] Stake error:', err)
     }
   }
   // Get the numeric minimum stake amount for validation
@@ -65,19 +65,19 @@ export default function StakePage() {
   const isBelowMinimum = amountNum > 0 && amountNum < minStakeNum
   const [showSuccess, setShowSuccess] = useState(false)
   useEffect(() => {
-  if (stakeTxHash && step === 'idle') {
-    setShowSuccess(true)
-    refetchStakeIds()
-    setAmount('')
-    setDays(365)
+    if (stakeTxHash && step === 'idle') {
+      setShowSuccess(true)
+      refetchStakeIds()
+      setAmount('')
+      setDays(365)
     }
   }, [stakeTxHash, step, refetchStakeIds])
   useEffect(() => {
-  if (showSuccess) {
-    const timer = setTimeout(() => {
-      setShowSuccess(false)
-    }, 5000)
-    return () => clearTimeout(timer)
+    if (showSuccess) {
+      const timer = setTimeout(() => {
+        setShowSuccess(false)
+      }, 5000)
+      return () => clearTimeout(timer)
     }
   }, [showSuccess])
   return (
@@ -96,15 +96,15 @@ export default function StakePage() {
             {/* Stats strip — single bordered row, no individual cards */}
             <div className="flex divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-[#111116]">
               {[
-                { label: 'Total staked',  value: isLoading ? '—' : `${totalStaked} SMAUG` },
-                { label: 'Stakers',       value: isLoading ? '—' : totalStakers },
+                { label: 'Total staked', value: isLoading ? '—' : `${totalStaked} SMAUG` },
+                { label: 'Stakers', value: isLoading ? '—' : totalStakers },
                 { label: 'Your active stakes', value: isConnected ? userStakeIds.length.toLocaleString() : '—' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex-1 px-6 py-4">
                   <div className="text-xs font-semibold uppercase tracking-wide text-[#8f8f8f]">
                     {label}
                   </div>
-                  <div className="mt-1 font-serif text-2xl font-bold text-[#D8B13D]">
+                  <div className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
                     {value}
                   </div>
                 </div>
@@ -131,13 +131,13 @@ export default function StakePage() {
                     />
                     <button
                       onClick={() => {
-  // Wallet is reflection-exempt; staking raw max makes rAmount round past
-  // rOwned and underflow SMAUG's _transferFromExcluded. Back off a hair.
-  const raw = parseFloat(balance.replace(/,/g, '')) || 0
-  const safe = Math.max(0, raw - 0.01)
-  setAmount(formatNumberInput(String(safe)))
-}}
-                      className="ml-2 rounded-lg px-3 py-2 text-sm font-semibold text-[#D8B13D] hover:bg-[#D8B13D]/10 transition-colors"
+                        // Wallet is reflection-exempt; staking raw max makes rAmount round past
+                        // rOwned and underflow SMAUG's _transferFromExcluded. Back off a hair.
+                        const raw = parseFloat(balance.replace(/,/g, '')) || 0
+                        const safe = Math.max(0, raw - 0.01)
+                        setAmount(formatNumberInput(String(safe)))
+                      }}
+                      className="ml-2 rounded-lg px-3 py-2 text-sm font-semibold text-[#B87333] hover:bg-[#B87333]/10 transition-colors"
                     >
                       Max
                     </button>
@@ -176,35 +176,35 @@ export default function StakePage() {
                       <p className="text-sm text-red-400">Maximum duration is 730 days.</p>
                     )}
                     {selectedTier && (
-    <div className="flex items-center gap-2 text-sm">
-      <span className="font-semibold text-[#D8B13D]">{selectedTier.name}</span>
-      <span className="text-[#9a9a9a]">·</span>
-      <span className="text-[#9a9a9a]">{multiplierPreview ?? selectedTier.multiplier}× multiplier</span>
-     <span className="text-[#9a9a9a]">·</span>
-      <span className="text-[#9a9a9a]">{selectedTier.feeRebate}% fee rebate</span>
-    </div>
-  )}
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="font-semibold text-[#B87333]">{selectedTier.name}</span>
+                        <span className="text-[#9a9a9a]">·</span>
+                        <span className="text-[#9a9a9a]">{multiplierPreview ?? selectedTier.multiplier}× multiplier</span>
+                        <span className="text-[#9a9a9a]">·</span>
+                        <span className="text-[#9a9a9a]">{selectedTier.feeRebate}% fee rebate</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 {approveTxHash && step === 'approving' && (
-  <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
-    Waiting for SMAUG spending cap approval.
-    </div>
-  )}
-{approveTxHash && step === 'staking' && (
-  <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
-    Confirming stake...
-  </div>
-)}
-  {showSuccess && stakeTxHash && (
-  <div className="mt-3 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm text-green-400">
-    Stake created! Tx: {stakeTxHash?.slice(0, 10)}...
-  </div>
-)}
+                  <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
+                    Waiting for SMAUG spending cap approval.
+                  </div>
+                )}
+                {approveTxHash && step === 'staking' && (
+                  <div className="mt-3 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
+                    Confirming stake...
+                  </div>
+                )}
+                {showSuccess && stakeTxHash && (
+                  <div className="mt-3 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm text-green-400">
+                    Stake created! Tx: {stakeTxHash?.slice(0, 10)}...
+                  </div>
+                )}
                 <button
                   onClick={handleStake}
                   disabled={!isConnected || isPending || !selectedTier || !amount || isBelowMinimum}
-                  className="mt-4 w-full rounded-xl bg-[#D8B13D] px-5 py-4 font-bold text-black transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-4 w-full rounded-xl bg-[#B87333] px-5 py-4 font-bold text-black transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {!isConnected ? 'Connect wallet' : step === 'approving' ? 'Approving...' : step === 'staking' ? 'Staking...' : 'Create stake'}
                 </button>
@@ -230,11 +230,10 @@ export default function StakePage() {
                     <button
                       key={tier.name}
                       onClick={() => setDays(tier.min)}
-                      className={`w-full rounded-xl border p-4 text-left transition ${
-                        active
-                          ? 'border-[#D8B13D] bg-[#D8B13D]/10'
+                      className={`w-full rounded-xl border p-4 text-left transition ${active
+                          ? 'border-[#B87333] bg-[#B87333]/10'
                           : 'border-white/10 bg-[#09090B] hover:border-white/20'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -244,7 +243,7 @@ export default function StakePage() {
                             className="w-12 h-12 rounded"
                           />
                           <div>
-                            <div className={`font-semibold ${active ? 'text-[#D8B13D]' : ''}`}>
+                            <div className={`font-semibold ${active ? 'text-[#B87333]' : ''}`}>
                               {tier.name}
                             </div>
                             <div className="mt-0.5 text-sm text-[#9a9a9a]">
@@ -254,7 +253,7 @@ export default function StakePage() {
                           </div>
                         </div>
                         <div className="space-y-0.5 text-right text-sm">
-                          <div className="font-semibold text-[#D8B13D]">
+                          <div className="font-semibold text-[#B87333]">
                             {tier.multiplier}× multiplier
                           </div>
                           <div className="text-[#9a9a9a]">{tier.feeRebate}% fee rebate</div>

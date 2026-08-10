@@ -93,7 +93,7 @@ function FeedCard({ event }: { event: FeedEvent }) {
           <div className="min-w-0 flex-1">
             <div className="font-semibold text-[#e8e6e3]">Outcome Exchange</div>
             <div className="text-sm text-[#9a9a9a]">"{event.content.description}"</div>
-            <div className="mt-1 text-xs text-[#d4af37]">{event.content.stake} · {event.content.status}</div>
+            <div className="mt-1 text-xs text-[#B87333]">{event.content.stake} · {event.content.status}</div>
             <div className="mt-1 text-xs text-[#7c7a76]">{formatTime(event.timestamp)}</div>
           </div>
         </article>
@@ -105,7 +105,7 @@ function FeedCard({ event }: { event: FeedEvent }) {
           <div className="min-w-0 flex-1">
             <div className="font-semibold text-[#e8e6e3]">Probability Shop</div>
             <div className="text-sm text-[#9a9a9a]">"{event.content.question}"</div>
-            <div className="mt-1 text-xs text-[#d4af37]">{event.content.yes} YES · {event.content.pool} pool</div>
+            <div className="mt-1 text-xs text-[#B87333]">{event.content.yes} YES · {event.content.pool} pool</div>
             <div className="mt-1 text-xs text-[#7c7a76]">{formatTime(event.timestamp)}</div>
           </div>
         </article>
@@ -151,8 +151,8 @@ export function LiveFeed() {
     <section className="mx-auto max-w-3xl px-4 py-12 md:px-6">
       <div className="mb-6 flex items-center justify-center gap-2">
         <span className="relative flex h-2.5 w-2.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#d4af37] opacity-75" />
-          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#d4af37]" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#B87333] opacity-75" />
+          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#B87333]" />
         </span>
         <h3 className="font-sans text-sm font-semibold tracking-wide text-[#e8e6e3]">Live Ecosystem Feed</h3>
       </div>

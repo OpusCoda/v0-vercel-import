@@ -138,7 +138,7 @@ function BuyPanel({
           onChange={(e) => setAmount(e.target.value)}
           min={minimumBetPls}
           step="1000"
-          className="flex-1 rounded border border-[#2a2a35] bg-[#0a0a0c] px-2 py-1 font-sans text-xs text-[#e8e6e3] focus:border-[#d4af37] focus:outline-none"
+          className="flex-1 rounded border border-[#2a2a35] bg-[#0a0a0c] px-2 py-1 font-sans text-xs text-[#e8e6e3] focus:border-[#B87333] focus:outline-none"
         />
         <span className="font-sans text-xs text-[#7c7a76]">PLS</span>
       </div>
@@ -165,11 +165,10 @@ function BuyPanel({
           <button
             key={bps}
             onClick={() => setSlippageBps(bps)}
-            className={`rounded px-1.5 py-0.5 font-sans text-[10px] font-semibold transition-colors ${
-              slippageBps === bps
-                ? "bg-[#d4af37] text-[#0a0a0c]"
-                : "border border-[#2a2a35] text-[#b8b6b1] hover:border-[#d4af37]/50"
-            }`}
+            className={`rounded px-1.5 py-0.5 font-sans text-[10px] font-semibold transition-colors ${slippageBps === bps
+                ? "bg-[#B87333] text-[#0a0a0c]"
+                : "border border-[#2a2a35] text-[#b8b6b1] hover:border-[#B87333]/50"
+              }`}
           >
             {bps / 100}%
           </button>

@@ -46,7 +46,7 @@ export function AdminLogin({ onSuccess }: AdminLoginProps) {
     <div className="mx-auto max-w-md">
       <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-8">
         <div className="mb-6 flex items-center justify-center gap-2">
-          <Lock className="h-5 w-5 text-[#d4af37]" />
+          <Lock className="h-5 w-5 text-[#B87333]" />
           <h1 className="font-serif text-2xl font-bold text-[#e8e6e3]">Admin Access</h1>
         </div>
 
@@ -60,7 +60,7 @@ export function AdminLogin({ onSuccess }: AdminLoginProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter admin password"
-              className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#d4af37] focus:outline-none"
+              className="w-full rounded-lg border border-[#2a2a35] bg-[#0d0d12] px-3 py-2 font-sans text-sm text-[#e8e6e3] placeholder-[#7c7a76] focus:border-[#B87333] focus:outline-none"
               disabled={isLoading}
             />
           </div>
@@ -74,7 +74,7 @@ export function AdminLogin({ onSuccess }: AdminLoginProps) {
           <button
             type="submit"
             disabled={!password || isLoading}
-            className="w-full rounded-lg border border-[#d4af37] bg-[#d4af37]/10 px-4 py-2 font-sans font-semibold text-[#d4af37] transition-colors hover:bg-[#d4af37]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-lg border border-[#B87333] bg-[#B87333]/10 px-4 py-2 font-sans font-semibold text-[#B87333] transition-colors hover:bg-[#B87333]/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Verifying...' : 'Enter'}
           </button>

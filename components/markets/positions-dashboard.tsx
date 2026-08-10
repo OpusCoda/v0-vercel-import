@@ -23,12 +23,12 @@ export function PositionsDashboard() {
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
       {/* Probability Shop */}
       <section className="mb-10">
-        <h2 className="mb-4 font-serif text-xl font-semibold text-[#d4af37]">Probability Shop</h2>
+        <h2 className="mb-4 font-serif text-xl font-semibold text-[#B87333]">Probability Shop</h2>
         <MyMarketPositions />
       </section>
       {/* Wager Market — existing dashboard */}
       <section>
-        <h2 className="mb-4 font-serif text-xl font-semibold text-[#d4af37]">Wager Market</h2>
+        <h2 className="mb-4 font-serif text-xl font-semibold text-[#B87333]">Wager Market</h2>
         <MyWagers />
       </section>
     </div>

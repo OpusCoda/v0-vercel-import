@@ -96,13 +96,12 @@ function ResolutionCard({
           <p className="mt-1 font-sans text-xs text-[#7c7a76]">Market #{item.marketId.toString()}</p>
         </div>
         <span
-          className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${
-            disputed
+          className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${disputed
               ? 'border border-red-500/30 bg-red-500/10 text-red-400'
               : item.status === 'ChallengeWindow'
-                ? 'border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#d4af37]'
+                ? 'border border-[#B87333]/30 bg-[#B87333]/10 text-[#B87333]'
                 : 'border border-[#7c7a76]/30 bg-[#7c7a76]/10 text-[#b8b6b1]'
-          }`}
+            }`}
         >
           {disputed ? 'Disputed' : item.status === 'ChallengeWindow' ? 'Challenge window' : 'Awaiting proposal'}
         </span>
@@ -205,11 +204,11 @@ function ResolverSettleControls({
         <span className="font-sans text-[10px] text-[#7c7a76]">Proposer was:</span>
         <button
           onClick={() => setProposerCorrect(true)}
-          className={`rounded px-2 py-0.5 font-sans text-[10px] font-semibold ${proposerCorrect === true ? 'bg-[#d4af37] text-[#0a0a0c]' : 'border border-[#d4af37]/30 text-[#d4af37]'}`}
+          className={`rounded px-2 py-0.5 font-sans text-[10px] font-semibold ${proposerCorrect === true ? 'bg-[#B87333] text-[#0a0a0c]' : 'border border-[#B87333]/30 text-[#B87333]'}`}
         >Correct</button>
         <button
           onClick={() => setProposerCorrect(false)}
-          className={`rounded px-2 py-0.5 font-sans text-[10px] font-semibold ${proposerCorrect === false ? 'bg-[#d4af37] text-[#0a0a0c]' : 'border border-[#d4af37]/30 text-[#d4af37]'}`}
+          className={`rounded px-2 py-0.5 font-sans text-[10px] font-semibold ${proposerCorrect === false ? 'bg-[#B87333] text-[#0a0a0c]' : 'border border-[#B87333]/30 text-[#B87333]'}`}
         >Wrong</button>
       </div>
 
@@ -300,7 +299,7 @@ function ResetControl({ marketId, onDone }: { marketId: bigint; onDone: () => vo
     <button
       onClick={() => sim?.request && writeContract(sim.request)}
       disabled={!sim?.request || isPending || confirming}
-      className="rounded border border-[#2a2a35] px-3 py-1.5 font-sans text-xs font-semibold text-[#b8b6b1] hover:border-[#d4af37]/50 hover:text-[#d4af37] disabled:opacity-50"
+      className="rounded border border-[#2a2a35] px-3 py-1.5 font-sans text-xs font-semibold text-[#b8b6b1] hover:border-[#B87333]/50 hover:text-[#B87333] disabled:opacity-50"
     >
       {isPending ? 'Confirm…' : confirming ? 'Resetting…' : 'Reset proposal'}
       {error && <span className="ml-1 text-red-400">·failed</span>}

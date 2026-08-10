@@ -126,17 +126,17 @@ export function TokenOverview() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 md:px-6">
       <div className="mb-8 flex items-center justify-center gap-3">
-        <span className="h-px w-10 bg-linear-to-r from-transparent to-[#d4af37]/50" aria-hidden />
+        <span className="h-px w-10 bg-linear-to-r from-transparent to-[#B87333]/50" aria-hidden />
         <h2 className="text-center font-serif text-2xl font-bold text-[#e8e6e3] md:text-3xl">
           Anatomy of Smaug
         </h2>
-        <span className="h-px w-10 bg-linear-to-l from-transparent to-[#d4af37]/50" aria-hidden />
+        <span className="h-px w-10 bg-linear-to-l from-transparent to-[#B87333]/50" aria-hidden />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Tokenomics */}
         <div className="rounded-2xl border border-[#2a2a35] bg-[#0d0d12] p-7">
-          <h3 className="mb-4 text-center font-serif text-xl font-semibold text-[#d4af37]">Tokenomics — 6.50%</h3>
+          <h3 className="mb-4 text-center font-serif text-xl font-semibold text-[#B87333]">Tokenomics — 6.50%</h3>
           <ul className="space-y-2.5 font-sans text-sm text-[#b8b6b1]">
             <li className="flex justify-between"><span>Buy &amp; burn</span><span className="font-medium text-[#e8e6e3]">3.5%</span></li>
             <li className="flex justify-between"><span>Reflections to holders</span><span className="font-medium text-[#e8e6e3]">1.5%</span></li>
@@ -153,9 +153,9 @@ export function TokenOverview() {
         {/* Ledger: price / market cap / liquidity / ROI */}
         <div className="rounded-2xl border border-[#2a2a35] bg-[#0d0d12] p-7">
           <div className="mb-4 flex items-center justify-center gap-2">
-            <h3 className="font-serif text-xl font-semibold text-[#d4af37]">Smaug&apos;s Ledger</h3>
+            <h3 className="font-serif text-xl font-semibold text-[#B87333]">Smaug&apos;s Ledger</h3>
             <button type="button" onClick={refresh} title="Refresh data" className="cursor-pointer">
-              <RefreshCw className={`h-3.5 w-3.5 text-[#9ca3af] transition-colors hover:text-[#d4af37] ${isRefreshing ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-3.5 w-3.5 text-[#9ca3af] transition-colors hover:text-[#B87333] ${isRefreshing ? "animate-spin" : ""}`} />
             </button>
           </div>
           <ul className="space-y-3 font-sans text-sm text-[#b8b6b1]">
@@ -184,9 +184,9 @@ export function TokenOverview() {
         {/* Smaug's Vault */}
         <div className="rounded-2xl border border-[#2a2a35] bg-[#0d0d12] p-7">
           <div className="mb-2 flex items-center justify-center gap-2">
-            <h3 className="font-serif text-xl font-semibold text-[#d4af37]">Smaug&apos;s Vault</h3>
+            <h3 className="font-serif text-xl font-semibold text-[#B87333]">Smaug&apos;s Vault</h3>
             <button type="button" onClick={() => copy(SMAUG_VAULT_ADDRESS, "vault")} title="Copy the address" className="rounded p-1 transition-colors hover:bg-[#2a2a35]">
-              {copied === "vault" ? <Check className="h-4 w-4 text-[#4ade80]" /> : <Copy className="h-4 w-4 text-[#9ca3af] hover:text-[#d4af37]" />}
+              {copied === "vault" ? <Check className="h-4 w-4 text-[#4ade80]" /> : <Copy className="h-4 w-4 text-[#9ca3af] hover:text-[#B87333]" />}
             </button>
           </div>
           <p className="mb-5 text-center font-sans text-sm text-[#9ca3af]">
@@ -217,9 +217,9 @@ export function TokenOverview() {
         {/* Smaug's Hoard Wallet */}
         <div className="rounded-2xl border border-[#2a2a35] bg-[#0d0d12] p-7">
           <div className="mb-2 flex items-center justify-center gap-2">
-            <h3 className="font-serif text-xl font-semibold text-[#d4af37]">Smaug&apos;s Hoard Wallet</h3>
+            <h3 className="font-serif text-xl font-semibold text-[#B87333]">Smaug&apos;s Hoard Wallet</h3>
             <button type="button" onClick={() => copy(SMAUG_HOARD_ADDRESS, "hoard")} title="Copy the address" className="rounded p-1 transition-colors hover:bg-[#2a2a35]">
-              {copied === "hoard" ? <Check className="h-4 w-4 text-[#4ade80]" /> : <Copy className="h-4 w-4 text-[#9ca3af] hover:text-[#d4af37]" />}
+              {copied === "hoard" ? <Check className="h-4 w-4 text-[#4ade80]" /> : <Copy className="h-4 w-4 text-[#9ca3af] hover:text-[#B87333]" />}
             </button>
           </div>
           <p className="mb-5 text-center font-sans text-sm text-[#9ca3af]">
@@ -254,7 +254,7 @@ export function TokenOverview() {
 
       {/* Lonely Mountain Reserve */}
       <div className="mt-6 rounded-2xl border border-[#2a2a35] bg-[#0d0d12] p-7">
-        <h3 className="mb-3 flex items-center justify-center gap-2 font-serif text-xl font-semibold text-[#d4af37]">
+        <h3 className="mb-3 flex items-center justify-center gap-2 font-serif text-xl font-semibold text-[#B87333]">
           <Mountain className="h-5 w-5" /> The Lonely Mountain Reserve
         </h3>
         <p className="mx-auto max-w-3xl text-center font-sans text-sm leading-relaxed text-[#b8b6b1]">
