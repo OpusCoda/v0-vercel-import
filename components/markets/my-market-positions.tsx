@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { formatUnits } from "viem"
 import { useMyMarketPositions, type MarketPosition } from "@/hooks/useMyMarketPositions"
 import { useMarketClaim, type ClaimKind } from "@/hooks/useMarketClaim"
@@ -159,7 +159,7 @@ export function MyMarketPositions() {
                 {openPositions.flatMap((p) =>
                   p.sides.map((s) => (
                     <tr key={`${p.marketId}-${s.side}`} className="border-t border-[#2a2a35] hover:bg-[#0d0d12]/50">
-                      <td className="px-4 py-3 text-sm text-[#b8b6b1] max-w-xs"><span className="line-clamp-2">{p.market.question}</span></td>
+                      <td className="px-4 py-3 text-sm text-[#b8b6b1] max-w-xs">{p.market.question}</td>
                       <td className="px-4 py-3 text-sm font-semibold">
                         <span className={s.side === "YES" ? "text-green-400" : "text-red-400"}>{s.side}</span>
                       </td>
