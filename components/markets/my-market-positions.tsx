@@ -63,7 +63,7 @@ function Pnl({ pnl, basis }: { pnl: bigint; basis: bigint }) {
   const pct = basis > 0n ? (n / Number(formatUnits(basis, 18))) * 100 : undefined
   const up = pnl >= 0n
   return (
-    <span className={up ? "text-green-400" : "text-red-400"}>
+    <span className={up ? "text-green-400" : "text-orange-400"}>
       {up ? "+" : "−"}{fmtPls(pnl < 0n ? -pnl : pnl)} PLS
       {pct !== undefined && <> ({up ? "+" : "−"}{Math.abs(pct).toFixed(1)}%)</>}
     </span>
@@ -159,7 +159,7 @@ export function MyMarketPositions() {
                 {openPositions.flatMap((p) =>
                   p.sides.map((s) => (
                     <tr key={`${p.marketId}-${s.side}`} className="border-t border-[#2a2a35] hover:bg-[#0d0d12]/50">
-                      <td className="px-4 py-3 text-sm text-[#b8b6b1] max-w-xs truncate">{p.market.question}</td>
+                      <td className="px-4 py-3 text-sm text-[#b8b6b1] max-w-xs"><span className="line-clamp-2">{p.market.question}</span></td>
                       <td className="px-4 py-3 text-sm font-semibold">
                         <span className={s.side === "YES" ? "text-green-400" : "text-red-400"}>{s.side}</span>
                       </td>
@@ -169,45 +169,48 @@ export function MyMarketPositions() {
                         <Pnl pnl={s.unrealizedPnl} basis={s.costBasis} />
                       </td>
                     </tr>
-                  ))
+              ))
                 )}
-              </tbody>
-            </table>
-          </div>
+            </tbody>
+          </table>
         </div>
-      )}
-      {/* Settleable — resolved / voided, with claim buttons */}
-      {settleable.length > 0 && (
-        <div>
-          <h3 className="mb-3 font-serif text-lg font-semibold text-[#B87333]">Ready to claim</h3>
-          <div className="space-y-2 rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
-            {settleable.map((p) => {
-              const claimable = claimFor(p)
-              const statusLabel = p.market.voided ? "Voided" : p.market.resolved ? "Resolved" : "—"
-              return (
-                <div
-                  key={`settle-${p.marketId}`}
-                  className="flex items-center justify-between gap-3 rounded border border-[#2a2a35] bg-[#0d0d12] p-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-sans text-sm font-semibold text-[#e8e6e3]">
-                      {p.market.question}
-                    </div>
-                    <div className="mt-0.5 font-sans text-[10px] text-[#7c7a76]">{statusLabel}</div>
-                  </div>
-                  {claimable ? (
-                    <ClaimButton position={p} onClaimed={refetch} />
-                  ) : (
-                    <span className="shrink-0 font-sans text-xs text-[#7c7a76]">
-                      {p.claimed ? "Claimed" : "Nothing to claim"}
-                    </span>
-                  )}
+        </div>
+  )
+}
+{/* Settleable — resolved / voided, with claim buttons */ }
+{
+  settleable.length > 0 && (
+    <div>
+      <h3 className="mb-3 font-serif text-lg font-semibold text-[#B87333]">Ready to claim</h3>
+      <div className="space-y-2 rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+        {settleable.map((p) => {
+          const claimable = claimFor(p)
+          const statusLabel = p.market.voided ? "Voided" : p.market.resolved ? "Resolved" : "—"
+          return (
+            <div
+              key={`settle-${p.marketId}`}
+              className="flex items-center justify-between gap-3 rounded border border-[#2a2a35] bg-[#0d0d12] p-3"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-sans text-sm font-semibold text-[#e8e6e3]">
+                  {p.market.question}
                 </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+                <div className="mt-0.5 font-sans text-[10px] text-[#7c7a76]">{statusLabel}</div>
+              </div>
+              {claimable ? (
+                <ClaimButton position={p} onClaimed={refetch} />
+              ) : (
+                <span className="shrink-0 font-sans text-xs text-[#7c7a76]">
+                  {p.claimed ? "Claimed" : "Nothing to claim"}
+                </span>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
+  )
+}
+    </div >
   )
 }
