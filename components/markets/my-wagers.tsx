@@ -7,6 +7,7 @@ import { WagerActions } from '@/components/markets/wager-actions'
 import { useAllWagers } from '@/hooks/useAllWagers'
 import { wagerToCard } from '@/lib/wager-to-card'
 import { WAGER_MARKET_ADDRESS } from '@/lib/wager-market'
+import { WagerPositionCard } from '@/components/markets/wager-position-card'
 import type { WagerDetails } from '@/hooks/useOpenWagers'
 const ZERO = '0x0000000000000000000000000000000000000000'
 // getReferralInfo / claimReferralRewards exist on the deployed contract but not
@@ -241,39 +242,16 @@ export function MyWagers() {
               </div>
             </div>
           )}
-          {/* Active Positions - Unified Table */}
+          {/* Active Positions - rich cards */}
           {active.length > 0 && (
             <div>
               <h3 className="mb-4 font-serif text-lg font-semibold text-[#B87333]">
                 Active Positions
               </h3>
-              <div className="overflow-x-auto rounded-lg border border-[#2a2a35] bg-[#101017]">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-[#2a2a35] bg-[#0d0d12]">
-                      <th className="px-4 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Type</th>
-                      <th className="px-4 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Market</th>
-                      <th className="px-4 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Status</th>
-                      <th className="px-4 py-3 text-right font-sans text-xs font-semibold text-[#7c7a76]">Value</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {active.map((w) => {
-                      const isCreator = w.creator.toLowerCase() === me
-                      const myStake = isCreator ? plsNum(w.creatorStake) : plsNum(w.challengerStake)
-                      const card = wagerToCard(w)
-                      const statusLabel = w.status === 0 ? 'Pending' : w.status === 2 ? 'Voting' : 'Active'
-                      return (
-                        <tr key={`pos-${w.id.toString()}`} className="border-t border-[#2a2a35] hover:bg-[#0d0d12]/50">
-                          <td className="px-4 py-3 text-sm text-[#e8e6e3]">🤝 Outcome</td>
-                          <td className="px-4 py-3 text-sm text-[#b8b6b1]">{card.description}</td>
-                          <td className="px-4 py-3 text-sm text-[#7c7a76]">{statusLabel}</td>
-                          <td className="px-4 py-3 text-right text-sm font-semibold text-[#B87333]">{myStake.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+              <div className="space-y-3">
+                {active.map((w) => (
+                  <WagerPositionCard key={`pos-${w.id.toString()}`} w={w} />
+                ))}
               </div>
             </div>
           )}
