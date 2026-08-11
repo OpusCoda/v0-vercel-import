@@ -35,6 +35,7 @@ export type P2PCardData = {
   status: 'active' | 'open' | 'closed' | 'arbitration'
   id: string
   creator: string
+  challenger: string
   eventDateTs: number
   winnerShort: string  // '' if unresolved
 }
@@ -79,6 +80,7 @@ export function wagerToCard(w: WagerDetails): P2PCardData {
             : 'closed',
     id: w.id.toString(),
     creator: w.creator,
+    challenger: w.challenger,
     eventDateTs: Number(w.eventDate),
     winnerShort: shortAddr(w.winner),
   }

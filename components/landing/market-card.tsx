@@ -47,6 +47,7 @@ export type MarketCardProps =
     noData: P2PSide
     closesIn: string
     creator?: string
+    challenger?: string
     status?: 'open' | 'active' | 'closed' | 'arbitration'
     eventDateTs?: number
     winnerShort?: string
@@ -74,11 +75,13 @@ function AcceptSection({
   creatorStake,
   takerStake,
   creator,
+  challenger,
 }: {
   id: string
   creatorStake: number
   takerStake: number
   creator?: string
+  challenger?: string
 }) {
   const { address, isConnected } = useAccount()
   const wagerId = (() => {
@@ -111,6 +114,12 @@ function AcceptSection({
   } = useCancelWager(wagerId)
   const isCreator =
     !!address && !!creator && address.toLowerCase() === creator.toLowerCase()
+  const ZERO_ADDR = "0x0000000000000000000000000000000000000000"
+  const isExclusive = !!challenger && challenger.toLowerCase() !== ZERO_ADDR
+  const isDesignated =
+    isExclusive && !!address && address.toLowerCase() === challenger!.toLowerCase()
+  // Connected, not the creator, not the designated challenger → can't accept.
+  const lockedOut = isExclusive && !!address && !isCreator && !isDesignated  
   const disabled =
     !isConnected || isCreator || requiredLoading || isPending || isConfirming || isSuccess
   let btnLabel: string
@@ -129,9 +138,20 @@ function AcceptSection({
   else if (cancelPending) cancelLabel = "Confirm in wallet..."
   else if (cancelConfirming) cancelLabel = "Cancelling..."
   const cancelDisabled = cancelPending || cancelConfirming || cancelSuccess
+  const shortChallenger = challenger
+    ? `${challenger.slice(0, 6)}…${challenger.slice(-4)}`
+    : ""
   return (
     <div className="mb-3">
-      {isCreator ? (
+      {lockedOut ? (
+        <div className="rounded border border-[#2a2a35] bg-[#0d0d12] p-3 text-center">
+          <p className="font-sans text-xs font-semibold text-[#B87333]">Reserved wager</p>
+          <p className="mt-1 font-sans text-[11px] text-[#7c7a76]">
+            This wager can only be accepted by{" "}
+            <span className="font-mono text-[#b8b6b1]">{shortChallenger}</span>.
+          </p>
+        </div>
+      ) : isCreator ? (
         // Creator view: offer cancellation (only possible while unaccepted).
         <>
           <button
@@ -493,6 +513,12 @@ export function MarketCard(props: MarketCardProps) {
   // For price bets, show the directional opposite explicitly.
   const creatorPosition = "Backs this outcome"
   const takerPosition = "Backs the opposite outcome"
+  const ZERO_ADDR = "0x0000000000000000000000000000000000000000"
+  const isExclusive =
+    !!props.challenger && props.challenger.toLowerCase() !== ZERO_ADDR
+  const shortChallenger = props.challenger
+    ? `${props.challenger.slice(0, 6)}…${props.challenger.slice(-4)}`
+    : ""
   return (
     <div className="flex flex-col rounded-xl border border-[#2a2a35] bg-[#101017] p-4 transition-colors hover:border-[#B87333]/30">
       {/* Header */}
@@ -501,12 +527,24 @@ export function MarketCard(props: MarketCardProps) {
           <span className="text-xl">{props.icon || "🎯"}</span>
           <h3 className="font-sans text-xs font-bold text-[#B87333]">{props.betType}</h3>
         </div>
-        <span className="font-sans text-xs text-[#B87333] bg-[#1a1a20] px-2 py-1 rounded">{props.category}</span>
+        <div className="flex items-center gap-2">
+          {isExclusive && (
+            <span className="font-sans text-[10px] font-semibold text-[#B87333] border border-[#B87333]/40 bg-[#B87333]/10 px-2 py-1 rounded">
+              Reserved
+            </span>
+          )}
+          <span className="font-sans text-xs text-[#B87333] bg-[#1a1a20] px-2 py-1 rounded">{props.category}</span>
+        </div>
       </div>
       {/* Description + deadline */}
       <div className="pb-3 space-y-1">
         <p className="font-sans text-sm font-semibold text-[#e8e6e3]">{props.description}</p>
         <p className="font-sans text-xs text-[#b8b6b1]">{props.deadline}</p>
+        {isExclusive && (
+          <p className="font-sans text-[11px] text-[#7c7a76]">
+            Reserved for <span className="font-mono text-[#B87333]">{shortChallenger}</span>
+          </p>
+        )}
       </div>
       <div className="border-t border-[#2a2a35] my-3" />
       {/* Two sides: creator (taken) vs. you (open) */}
@@ -535,6 +573,7 @@ export function MarketCard(props: MarketCardProps) {
             creatorStake={creatorStake}
             takerStake={takerStake}
             creator={props.creator}
+            challenger={props.challenger}
           />
           <p className="font-sans text-xs text-[#7c7a76]">Time left to accept: {props.closesIn}</p>
           <button

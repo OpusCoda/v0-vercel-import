@@ -75,6 +75,7 @@ function CardFor({ w }: { w: WagerDetails }) {
       noData={m.noData}
       closesIn={m.closesIn}
       creator={m.creator}
+      challenger={m.challenger}
       status={m.status}
       eventDateTs={m.eventDateTs}
       winnerShort={m.winnerShort}
