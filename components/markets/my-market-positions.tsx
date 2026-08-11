@@ -174,10 +174,6 @@ export function MyMarketPositions() {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 font-sans text-[10px] text-[#57565a]">
-            Value is what you'd receive selling now (net of price impact). Exit or adjust from the
-            market card in the Probability Shop.
-          </p>
         </div>
       )}
       {/* Settleable — resolved / voided, with claim buttons */}

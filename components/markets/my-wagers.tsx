@@ -106,13 +106,13 @@ export function MyWagers() {
   }, [claimConfirmed, refetchReferral])
   const me = address?.toLowerCase()
   const now = Math.floor(Date.now() / 1000)
-  const { actionNeeded, active, history, lockedPLS, won, lost } = useMemo(() => {
-    const empty = { actionNeeded: [] as WagerDetails[], active: [] as WagerDetails[], history: [] as WagerDetails[], lockedPLS: 0n, won: 0, lost: 0 }
+  const { actionNeeded, awaiting, active, history, lockedPLS, won, lost } = useMemo(() => {
+    const empty = { actionNeeded: [] as WagerDetails[], awaiting: [] as WagerDetails[], active: [] as WagerDetails[], history: [] as WagerDetails[], lockedPLS: 0n, won: 0, lost: 0 }
     if (!me) return empty
     const mine = wagers.filter(
       (w) => w.creator.toLowerCase() === me || w.challenger.toLowerCase() === me
     )
-    const out = { ...empty, actionNeeded: [], active: [], history: [] } as typeof empty
+    const out = { ...empty, actionNeeded: [], awaiting: [], active: [], history: [] } as typeof empty
     for (const w of mine) {
       const isCreator = w.creator.toLowerCase() === me
       const myStake = isCreator ? w.creatorStake : w.challengerStake
@@ -126,13 +126,15 @@ export function MyWagers() {
         else out.lost++
       }
       const action = actionFor(w, me, now)
-      if (action) out.actionNeeded.push(w)
+      if (action === 'Awaiting acceptance') out.awaiting.push(w)
+      else if (action) out.actionNeeded.push(w)
       else if (w.status === 1 || w.status === 2 || w.status === 4 || w.status === 0) out.active.push(w)
       else out.history.push(w)
     }
     // Newest first in each group
     const byIdDesc = (a: WagerDetails, b: WagerDetails) => Number(b.id - a.id)
     out.actionNeeded.sort(byIdDesc)
+    out.awaiting.sort(byIdDesc)
     out.active.sort(byIdDesc)
     out.history.sort(byIdDesc)
     return out
@@ -145,7 +147,7 @@ export function MyWagers() {
     )
   }
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+    <section>
       {/* Global Metrics */}
       <GlobalMetrics
         lockedValuePLS={lockedPLS}
@@ -214,6 +216,32 @@ export function MyWagers() {
                     </div>
                   )
                 })}
+              </div>
+            </div>
+          )}
+          {/* Awaiting acceptance — your open wagers, waiting on a challenger */}
+          {awaiting.length > 0 && (
+            <div>
+              <h3 className="mb-4 font-serif text-lg font-semibold text-[#B87333]">
+                Awaiting acceptance
+              </h3>
+              <div className="space-y-3 rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
+                {awaiting.map((w) => (
+                  <div key={`await-${w.id.toString()}`} className="flex items-center justify-between rounded border border-[#2a2a35] bg-[#0d0d12] p-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-[#e8e6e3]">
+                        <span className="text-[#B87333] mr-2">🟡</span>
+                        Awaiting acceptance
+                      </div>
+                      <div className="mt-1 text-xs text-[#7c7a76]">
+                        {wagerToCard(w).description}
+                      </div>
+                    </div>
+                    <div className="ml-4 shrink-0">
+                      <WagerActions wagerId={w.id} />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

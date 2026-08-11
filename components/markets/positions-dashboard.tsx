@@ -2,6 +2,7 @@
 import { useAccount } from "wagmi"
 import { MyMarketPositions } from "@/components/markets/my-market-positions"
 import { MyWagers } from "@/components/markets/my-wagers"
+import { PositionsSummary } from "@/components/markets/positions-summary"
 /**
  * The "My Positions" tab. Two stacked sections:
  *   1. Probability Shop — open positions with live value + unrealized P/L,
@@ -21,16 +22,19 @@ export function PositionsDashboard() {
   }
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-      {/* Probability Shop */}
-      <section className="mb-10">
-        <h2 className="mb-4 font-serif text-xl font-semibold text-[#B87333]">Probability Shop</h2>
-        <MyMarketPositions />
-      </section>
-      {/* Wager Market — existing dashboard */}
-      <section>
-        <h2 className="mb-4 font-serif text-xl font-semibold text-[#B87333]">Wager Market</h2>
-        <MyWagers />
-      </section>
+      <PositionsSummary />
+      <div className="grid gap-8 lg:grid-cols-2 lg:divide-x lg:divide-[#2a2a35]">
+        {/* Probability Shop */}
+        <section className="lg:pr-8">
+          <h2 className="mb-4 font-serif text-xl font-semibold text-[#B87333]">Probability Shop</h2>
+          <MyMarketPositions />
+        </section>
+        {/* Wager Market — existing dashboard */}
+        <section className="lg:pl-8">
+          <h2 className="mb-4 font-serif text-xl font-semibold text-[#B87333]">Wager Market</h2>
+          <MyWagers />
+        </section>
+      </div>
     </div>
   )
 }
