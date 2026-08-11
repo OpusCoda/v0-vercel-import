@@ -76,22 +76,11 @@ export function useWagerActions() {
     })
   }
 
-  function resolvePriceBet(wagerId: bigint) {
-    reset()
-    writeContract({
-      address: WAGER_MARKET_ADDRESS,
-      abi: WAGER_MARKET_ABI,
-      functionName: 'resolvePriceBet',
-      args: [wagerId],
-    })
-  }
-
   return {
     acceptWager,
     cancelWager,
     submitVote,
     proposeEarlyResolution,
-    resolvePriceBet,
     isPending,
     isConfirming,
     isConfirmed,

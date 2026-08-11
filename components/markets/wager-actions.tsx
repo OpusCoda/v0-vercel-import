@@ -28,7 +28,6 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
     cancelWager,
     submitVote,
     proposeEarlyResolution,
-    resolvePriceBet,
     isPending,
     isConfirming,
     isConfirmed,
@@ -41,6 +40,20 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
     args: [wagerId],
     query: { refetchInterval: 15000 },
   })
+  const { data: myProposal } = useReadContract({
+    address: WAGER_MARKET_ADDRESS,
+    abi: WAGER_MARKET_ABI,
+    functionName: 'earlyResolutionVote',
+    args: address ? [wagerId, address] : undefined,
+    query: { enabled: !!address, refetchInterval: 15000 },
+  })
+  const { data: oppProposalRaw } = useReadContract({
+    address: WAGER_MARKET_ADDRESS,
+    abi: WAGER_MARKET_ABI,
+    functionName: 'earlyResolutionVote',
+    args: data ? [wagerId, ((data as any)[0].creator as string).toLowerCase() === address?.toLowerCase() ? (data as any)[0].challenger : (data as any)[0].creator] : undefined,
+    query: { enabled: !!data && !!address, refetchInterval: 15000 },
+  })
   // Refresh once a tx confirms (effect, not inline in render).
   useEffect(() => {
     if (isConfirmed) refetch()
@@ -49,7 +62,6 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
   const res = data as any
   const w = res[0]
   const status = Number(w.status)
-  const wagerType = Number(w.wagerType)
   const creator = w.creator as string
   const challenger = w.challenger as string
   const eventDate = Number(w.eventDate)
@@ -63,6 +75,7 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
   const isParty = isCreator || isChallenger
   const myVote = isCreator ? creatorVote : isChallenger ? challengerVote : ZERO
   const iVoted = myVote && myVote !== ZERO
+  const opponent = isCreator ? challenger : creator
   // Shared tx-status line
   const statusLine = isPending ? (
     <p className="text-xs text-[#B87333]">Confirm in wallet…</p>
@@ -118,24 +131,8 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
     }
     return <div className="text-center text-sm text-[#9a9a9a]">Awaiting acceptance</div>
   }
-  // ---- PRICE BET: resolvable by anyone once past eventDate ----
-  if (wagerType === 1 && status === 1 && now > eventDate) {
-    return (
-      <div className="flex flex-col items-center gap-2">
-        <button
-          onClick={guarded(() => resolvePriceBet(wagerId))}
-          disabled={busy}
-          className="rounded-lg bg-[#B87333] px-5 py-2 text-sm font-semibold text-black transition hover:bg-[#B87333]/90 disabled:opacity-50"
-        >
-          {busy ? 'Resolving…' : 'Resolve now (oracle)'}
-        </button>
-        {statusLine}
-      </div>
-    )
-  }
-  // ---- STANDARD: voting window (after eventDate, before votingDeadline) ----
+  // ---- Voting window (after eventDate, before votingDeadline) ----
   if (
-    wagerType === 0 &&
     (status === 1 || status === 2) &&
     now >= eventDate &&
     now <= votingDeadline
@@ -173,13 +170,50 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
       </div>
     )
   }
-  // ---- STANDARD: early resolution (before eventDate), party only ----
-  if (
-    wagerType === 0 &&
-    status === 1 &&
-    now < eventDate &&
-    isParty
-  ) {
+  // ---- Early resolution (before eventDate), party only ----
+  if (status === 1 && now < eventDate && isParty) {
+    const mine = (myProposal as string | undefined) ?? ZERO
+    const theirs = (oppProposalRaw as string | undefined) ?? ZERO
+    const iProposed = mine !== ZERO
+    const theyProposed = theirs !== ZERO
+    const nameFor = (a: string) =>
+      a.toLowerCase() === creator.toLowerCase() ? 'Creator' : 'Acceptor'
+
+    // Opponent proposed — one click to agree to the same winner resolves it.
+    if (theyProposed) {
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-center text-xs font-semibold text-[#B87333]">
+            Opponent proposed {nameFor(theirs)} as winner.
+            {iProposed && mine.toLowerCase() !== theirs.toLowerCase()
+              ? ' You proposed differently — agreeing resolves the wager.'
+              : ' Agree to resolve now.'}
+          </div>
+          <button
+            onClick={guarded(() => proposeEarlyResolution(wagerId, theirs as `0x${string}`))}
+            disabled={busy}
+            className="rounded-lg bg-[#B87333] px-5 py-2 text-sm font-semibold text-black transition hover:bg-[#B87333]/90 disabled:opacity-50"
+          >
+            {busy ? 'Resolving…' : `Agree: ${nameFor(theirs)} wins`}
+          </button>
+          {statusLine}
+        </div>
+      )
+    }
+
+    // You proposed, opponent hasn't — waiting.
+    if (iProposed) {
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-center text-xs font-semibold text-[#B87333]">
+            You proposed {nameFor(mine)} as winner. Resolves when your opponent proposes the same.
+          </div>
+          {statusLine}
+        </div>
+      )
+    }
+
+    // Neither proposed — the picker.
     return (
       <div className="flex flex-col items-center gap-2">
         <div className="text-xs text-[#9a9a9a]">Outcome already settled? Propose an early winner (resolves only if both agree)</div>
@@ -206,7 +240,7 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
   // ---- Fallback status labels ----
   if (status === 4) return <div className="text-center text-sm text-amber-400">In arbitration</div>
   if (status === 3) return <div className="text-center text-sm text-[#9a9a9a]">Resolved</div>
-  if (wagerType === 0 && now < eventDate) {
+  if (now < eventDate) {
     return <div className="text-center text-sm text-[#9a9a9a]">Matched — voting opens after the event date</div>
   }
   return null

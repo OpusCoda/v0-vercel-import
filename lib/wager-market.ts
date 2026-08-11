@@ -216,6 +216,16 @@ export const WAGER_MARKET_ABI = [
     type: 'function',
   },
   {
+    type: 'function',
+    stateMutability: 'view',
+    name: 'earlyResolutionVote',
+    inputs: [
+      { name: '', type: 'uint256' },
+      { name: '', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'address' }],
+  },
+  {
     inputs: [],
     name: 'openWagerCount',
     outputs: [{ type: 'uint256' }],
