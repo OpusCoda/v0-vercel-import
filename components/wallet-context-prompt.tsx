@@ -42,7 +42,6 @@ export function WalletContextPrompt() {
 
   return (
     <div className="mb-6 rounded-lg border border-[#2a2a35] bg-[#101017] p-4 text-center">
-      <p className="font-sans text-sm text-[#b8b6b1]">See your positions.</p>
       <div className="mt-2 flex items-center justify-center gap-4">
         <button
           onClick={() => openConnectModal?.()}
