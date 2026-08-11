@@ -206,7 +206,7 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
       return (
         <div className="flex flex-col items-center gap-2">
           <div className="text-center text-xs font-semibold text-[#B87333]">
-            You proposed {nameFor(mine)} as winner. Resolves when your opponent proposes the same.
+            You proposed {nameFor(mine)} as winner. Resolves early if your opponent proposes the same.
           </div>
           {statusLine}
         </div>
