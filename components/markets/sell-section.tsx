@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { useAccount, useReadContract } from "wagmi"
-import { formatUnits } from "viem"
+import { formatUnits, parseUnits } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useSellShares } from "@/hooks/useSellShares"
 const PREDICTION_MARKET_ADDRESS = "0x77b004A0029d725e353E5EE0D80102516A4e52a8"
@@ -106,8 +106,25 @@ function SellPanel({
 }) {
   // Shares to sell = held * pct / 100. Full exit (100%) sells the exact held
   // amount to avoid any rounding dust left behind.
+  // A typed amount (whole shares) overrides the percentage picker, capped at held.
+  const [manualShares, setManualShares] = useState<string>("")
+  const manualSharesWei = (() => {
+    if (manualShares.trim() === "") return null
+    const n = Number(manualShares.replace(/,/g, ""))
+    if (!Number.isFinite(n) || n <= 0) return null
+    try {
+      const wei = parseUnits(manualShares.replace(/,/g, ""), 18)
+      return wei > heldShares ? heldShares : wei
+    } catch {
+      return null
+    }
+  })()
   const sharesIn =
-    pct >= 100 ? heldShares : (heldShares * BigInt(pct)) / 100n
+    manualSharesWei !== null
+      ? manualSharesWei
+      : pct >= 100
+        ? heldShares
+        : (heldShares * BigInt(pct)) / 100n
   const {
     quote,
     quoteLoading,
@@ -180,6 +197,28 @@ function SellPanel({
             {p === 100 ? "Max" : `${p}%`}
           </button>
         ))}
+      </div>
+      {/* Manual amount — overrides the percentage picker when filled */}
+      <div className="mt-2">
+        <input
+          type="text"
+          inputMode="decimal"
+          value={manualShares}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/,/g, "")
+            if (raw === "" || /^\d*\.?\d*$/.test(raw)) setManualShares(raw)
+          }}
+          placeholder={`Or enter ${sideLabel} shares to sell`}
+          className="w-full rounded border border-[#2a2a35] bg-[#0a0a0c] px-3 py-1.5 font-sans text-xs text-[#e8e6e3] placeholder-[#57565a] focus:border-[#B87333] focus:outline-none"
+        />
+        {manualSharesWei !== null && (
+          <button
+            onClick={() => setManualShares("")}
+            className="mt-1 font-sans text-[10px] text-[#7c7a76] hover:text-[#b8b6b1]"
+          >
+            Clear — use % buttons
+          </button>
+        )}
       </div>
       {/* Slippage tolerance */}
       <div className="mt-2 flex items-center gap-2">
