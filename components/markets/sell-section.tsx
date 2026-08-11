@@ -119,12 +119,7 @@ function SellPanel({
       return null
     }
   })()
-  const sharesIn =
-    manualSharesWei !== null
-      ? manualSharesWei
-      : pct >= 100
-        ? heldShares
-        : (heldShares * BigInt(pct)) / 100n
+  const sharesIn = manualSharesWei !== null ? manualSharesWei : 0n
   const {
     quote,
     quoteLoading,
@@ -148,9 +143,8 @@ function SellPanel({
   // PLS out (from quote) and the portion of cost basis being exited.
   const plsOut = quote ? Number(formatUnits(quote.plsOut, 18)) : undefined
   const impactPct = quote ? Number(quote.priceImpactBps) / 100 : undefined
-  // Cost basis attributable to the shares being sold (pro-rata by pct).
   const exitCostBasisWei =
-    pct >= 100 ? costBasis : (costBasis * BigInt(pct)) / 100n
+    heldShares > 0n ? (costBasis * sharesIn) / heldShares : 0n
   const exitCostBasis = Number(formatUnits(exitCostBasisWei, 18))
   // Realized P/L on this exit = plsOut - cost basis of sold shares.
   const pnl =
@@ -162,7 +156,9 @@ function SellPanel({
   else if (isSuccess) btnLabel = "Sold ✓"
   else if (isPending) btnLabel = "Confirm in wallet…"
   else if (isConfirming) btnLabel = "Selling…"
-  else btnLabel = pct >= 100 ? `Close ${sideLabel} position` : `Sell ${pct}% of ${sideLabel}`
+  else btnLabel = sharesIn >= heldShares && sharesIn > 0n
+    ? `Close ${sideLabel} position`
+    : `Sell ${sideLabel} shares`
   const disabled =
     !isConnected || !quote || isPending || isConfirming || isSuccess || sharesIn === 0n
   return (
@@ -188,11 +184,13 @@ function SellPanel({
         {EXIT_PERCENTS.map((p) => (
           <button
             key={p}
-            onClick={() => setPct(p)}
-            className={`flex-1 rounded px-1.5 py-1 font-sans text-[10px] font-semibold transition-colors ${pct === p
-                ? "bg-[#B87333] text-[#0a0a0c]"
-                : "border border-[#2a2a35] text-[#b8b6b1] hover:border-[#B87333]/50"
-              }`}
+            onClick={() => {
+              // Populate the field with the share amount for this percentage.
+              // 100% uses the exact held balance to avoid rounding dust.
+              const wei = p >= 100 ? heldShares : (heldShares * BigInt(p)) / 100n
+              setManualShares(formatUnits(wei, 18))
+            }}
+            className="flex-1 rounded border border-[#2a2a35] px-1.5 py-1 font-sans text-[10px] font-semibold text-[#b8b6b1] transition-colors hover:border-[#B87333]/50"
           >
             {p === 100 ? "Max" : `${p}%`}
           </button>
