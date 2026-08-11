@@ -86,7 +86,7 @@ export function useAllMarkets() {
   } = useReadContracts({
     contracts: marketCalls,
     allowFailure: true,
-    query: { enabled: count > 0 },
+    query: { enabled: count > 0, refetchInterval: 5000 },
   })
 
   const markets = useMemo<MarketWithId[]>(() => {

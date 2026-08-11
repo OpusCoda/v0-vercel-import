@@ -177,17 +177,17 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
     const iProposed = mine !== ZERO
     const theyProposed = theirs !== ZERO
     const nameFor = (a: string) =>
-      a.toLowerCase() === creator.toLowerCase() ? 'Creator' : 'Acceptor'
+      a.toLowerCase() === creator.toLowerCase() ? 'creator' : 'acceptor'
 
     // Opponent proposed — one click to agree to the same winner resolves it.
     if (theyProposed) {
       return (
         <div className="flex flex-col items-center gap-2">
           <div className="text-center text-xs font-semibold text-[#B87333]">
-            Opponent proposed {nameFor(theirs)} as winner.
+            Opponent proposed the {nameFor(theirs)} as winner.
             {iProposed && mine.toLowerCase() !== theirs.toLowerCase()
-              ? ' You proposed differently — agreeing resolves the wager.'
-              : ' Agree to resolve now.'}
+              ? ' You proposed differently — agreeing resolves the wager early.'
+              : ' Agree to resolve early, or leave it to resolve by vote after the event date.'}
           </div>
           <button
             onClick={guarded(() => proposeEarlyResolution(wagerId, theirs as `0x${string}`))}
@@ -206,7 +206,7 @@ export function WagerActions({ wagerId }: { wagerId: bigint }) {
       return (
         <div className="flex flex-col items-center gap-2">
           <div className="text-center text-xs font-semibold text-[#B87333]">
-            You proposed {nameFor(mine)} as winner. Resolves early if your opponent proposes the same.
+            You proposed the {nameFor(mine)} as winner. Resolves early if your opponent proposes the same.
           </div>
           {statusLine}
         </div>
