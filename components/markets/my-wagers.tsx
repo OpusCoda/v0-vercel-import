@@ -182,20 +182,18 @@ export function MyWagers() {
         <div className="py-12 text-center">
           <p className="font-sans text-sm text-[#7c7a76]">Loading your wagers…</p>
         </div>
-      ) : actionNeeded.length + active.length + history.length === 0 ? (
-        <div className="py-12 text-center">
-          <p className="font-sans text-sm text-[#7c7a76]">
-            No wagers yet — create one or accept an open wager in the P2P market.
-          </p>
-        </div>
       ) : (
         <div className="space-y-8">
           {/* Needs your action */}
-          {actionNeeded.length > 0 && (
-            <div>
-              <h3 className="mb-4 font-serif text-lg font-semibold text-orange-400">
-                Needs your action
-              </h3>
+          <div>
+            <h3 className="mb-4 font-serif text-lg font-semibold text-orange-400">
+              Needs your action
+            </h3>
+            {actionNeeded.length === 0 ? (
+              <div className="rounded-lg border border-[#2a2a35] bg-[#101017] p-4 text-center">
+                <p className="font-sans text-sm text-[#7c7a76]">No action needed right now.</p>
+              </div>
+            ) : (
               <div className="space-y-3 rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
                 {actionNeeded.map((w) => {
                   const action = actionFor(w, me!, now)
@@ -217,8 +215,8 @@ export function MyWagers() {
                   )
                 })}
               </div>
-            </div>
-          )}
+            )}
+          </div>
           {/* Awaiting acceptance — your open wagers, waiting on a challenger */}
           {awaiting.length > 0 && (
             <div>
@@ -229,11 +227,8 @@ export function MyWagers() {
                 {awaiting.map((w) => (
                   <div key={`await-${w.id.toString()}`} className="flex items-center justify-between rounded border border-[#2a2a35] bg-[#0d0d12] p-3">
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-[#e8e6e3]">
-                        <span className="text-[#B87333] mr-2">🟡</span>
-                        Awaiting acceptance
-                      </div>
-                      <div className="mt-1 text-xs text-[#7c7a76]">
+                      <div className="text-sm text-[#e8e6e3]">
+                        <span className="text-[#7c7a76]">Wager: </span>
                         {wagerToCard(w).description}
                       </div>
                     </div>
