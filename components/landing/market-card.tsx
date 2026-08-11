@@ -145,10 +145,9 @@ function AcceptSection({
     <div className="mb-3">
       {lockedOut ? (
         <div className="rounded border border-[#2a2a35] bg-[#0d0d12] p-3 text-center">
-          <p className="font-sans text-xs font-semibold text-[#B87333]">Reserved wager</p>
-          <p className="mt-1 font-sans text-[11px] text-[#7c7a76]">
-            This wager can only be accepted by{" "}
-            <span className="font-mono text-[#b8b6b1]">{shortChallenger}</span>.
+          <p className="font-sans text-xs font-semibold text-[#B87333]">
+            This reserved wager can only be accepted by{" "}
+            <span className="font-mono">{shortChallenger}</span>.
           </p>
         </div>
       ) : isCreator ? (
