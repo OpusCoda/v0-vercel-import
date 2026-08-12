@@ -45,10 +45,22 @@ export interface ResolutionItem {
   proposal?: ProposalInfo
 }
 
+// A single read result under allowFailure.
+type ReadResult = {
+  status: "success" | "failure"
+  result?: unknown
+  error?: Error
+}
+
 /**
- * Gathers markets that need resolver/admin attention: those in
- * AwaitingResolution, ChallengeWindow, or with an active/disputed proposal.
+ * Gathers markets in AwaitingResolution or ChallengeWindow.
  * Reads marketCount, then getMarket/getStatus/getProposal per market.
+ *
+ * The contracts array is typed loosely (any[]) on purpose: wagmi's
+ * useReadContracts tries to infer a per-call return type from the ABI, and with
+ * three different functions against a large ABI that inference recurses past
+ * TypeScript's depth limit ("Type instantiation is excessively deep"). Casting
+ * the array sidesteps that without changing runtime behaviour.
  */
 export function useMarketsNeedingResolution() {
   const contract = {
@@ -60,18 +72,21 @@ export function useMarketsNeedingResolution() {
     ...contract,
     functionName: "marketCount",
   })
-  const count = countData !== undefined ? Number(countData as bigint) : 0
-  console.log('[resolution] count', count, 'countData', countData)
 
-// One getMarket + getStatus + getProposal per market.
+  const count = countData !== undefined ? Number(countData as bigint) : 0
+  console.log("[resolution] count", count, "countData", countData)
+
+  // One getMarket + getStatus + getProposal per market.
+  // Typed as any[] to stop deep type inference in useReadContracts.
   const calls = useMemo(() => {
-    const c = []
+    const c: any[] = []
     for (let i = 0; i < count; i++) {
       c.push({ ...contract, functionName: "getMarket", args: [BigInt(i)] })
       c.push({ ...contract, functionName: "getStatus", args: [BigInt(i)] })
       c.push({ ...contract, functionName: "getProposal", args: [BigInt(i)] })
     }
     return c
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count])
 
   const {
@@ -86,37 +101,35 @@ export function useMarketsNeedingResolution() {
 
   const items = useMemo<ResolutionItem[]>(() => {
     if (!reads) return []
-    // With allowFailure, each entry is { status: 'success'|'failure', result?: unknown, error?: Error }.
-    const results = reads as readonly {
-      status: "success" | "failure"
-      result?: unknown
-      error?: Error
-    }[]
+    const results = reads as unknown as ReadResult[]
+    console.log("[resolution] reads", results.map((r) => ({ status: r.status, result: r.result })))
+
     const out: ResolutionItem[] = []
     for (let i = 0; i < count; i++) {
       const marketRes = results[i * 3]
       const statusRes = results[i * 3 + 1]
       const proposalRes = results[i * 3 + 2]
+
       if (marketRes?.status !== "success" || statusRes?.status !== "success") continue
 
+      // getMarket returns a single tuple; wagmi gives it back as the struct object.
       const m = marketRes.result as {
         question: string
         bettingDeadline: bigint
         resolutionDeadline: bigint
       }
-      const statusCode = Number(statusRes.result as number)
+
+      const statusCode = Number(statusRes.result as bigint | number)
       const status = STATUS_LABELS[statusCode] ?? "Betting"
 
-      // Only surface markets that need attention.
-      // AwaitingResolution (1), ChallengeWindow (2). Skip Betting/Resolved/Voided.
+      // Only surface markets that need attention: AwaitingResolution (1), ChallengeWindow (2).
       if (statusCode !== 1 && statusCode !== 2) continue
 
       let proposal: ProposalInfo | undefined
-      if (proposalRes?.status === "success") {
+      if (proposalRes?.status === "success" && proposalRes.result) {
         const p = proposalRes.result as readonly [
           Address, boolean, bigint, bigint, boolean, bigint, bigint
         ]
-        // proposer address(0) means no active proposal.
         if (p[0] && p[0] !== "0x0000000000000000000000000000000000000000") {
           proposal = {
             proposer: p[0],
