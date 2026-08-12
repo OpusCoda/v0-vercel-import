@@ -12,8 +12,9 @@ function fmtShares(wei: bigint): string {
 // Which claim (if any) is available on a resolved/voided/abandoned market,
 // and a human label for the button.
 function claimFor(p: MarketPosition): { kind: ClaimKind; label: string } | null {
-  if (p.claimed) return null
-  if (p.canClaimWinnings) return { kind: "winnings", label: "Claim winnings" }
+  // Each claim flag is independent — the contract computes them. Don't let a
+  // completed winnings claim (p.claimed) suppress a still-available residual.
+  if (p.canClaimWinnings && !p.claimed) return { kind: "winnings", label: "Claim winnings" }
   if (p.canClaimVoidRefund) return { kind: "voidRefund", label: "Claim refund" }
   if (p.canClaimAbandoned) return { kind: "abandoned", label: "Claim refund" }
   if (p.canClaimResidual) return { kind: "residual", label: "Claim residual" }
@@ -184,6 +185,15 @@ export function MyMarketPositions() {
             {settleable.map((p) => {
               const claimable = claimFor(p)
               const statusLabel = p.market.voided ? "Voided" : p.market.resolved ? "Resolved" : "—"
+              const claimTypeLabel = claimable
+                ? claimable.kind === "winnings"
+                  ? "Winnings available"
+                  : claimable.kind === "residual"
+                    ? "Seed liquidity to reclaim"
+                    : claimable.kind === "voidRefund"
+                      ? "Refund available"
+                      : "Refund available"
+                : null
               return (
                 <div
                   key={`settle-${p.marketId}`}
@@ -193,8 +203,11 @@ export function MyMarketPositions() {
                     <div className="truncate font-sans text-sm font-semibold text-[#e8e6e3]">
                       {p.market.question}
                     </div>
-                    <div className="mt-0.5 font-sans text-[10px] text-[#7c7a76]">{statusLabel}</div>
-                  </div>
+                    <div className="mt-0.5 font-sans text-[10px] text-[#7c7a76]">
+                      {statusLabel}
+                      {claimTypeLabel && <span className="text-[#B87333]"> · {claimTypeLabel}</span>}
+                      </div>
+                    </div>
                   {claimable ? (
                     <ClaimButton position={p} onClaimed={refetch} />
                   ) : (
