@@ -78,7 +78,7 @@ function StakeRow({ stakeId }: StakeRowProps) {
   if (!stakeDetails) {
     return (
       <tr>
-        <td colSpan={7} className="px-6 py-4 text-center text-sm text-[#9a9a9a]">
+        <td colSpan={6} className="px-6 py-4 text-center text-sm text-[#9a9a9a]">
           Loading stake details...
         </td>
       </tr>
@@ -145,12 +145,6 @@ function StakeRow({ stakeId }: StakeRowProps) {
         <div className="space-y-1">
           <div className="text-[#6ea8fe]">{formatSmaugBalance(claimed.plsKept)} PLS</div>
           <div className="text-[#6ea8fe]">{formatSmaugBalance(claimed.smaugKept)} SMAUG</div>
-        </div>
-      </td>
-      <td className="px-6 py-4 text-sm">
-        <div className="space-y-1">
-          <div className="text-[#8a8a8a]">{formatSmaugBalance(claimed.plsForfeited)} PLS</div>
-          <div className="text-[#8a8a8a]">{formatSmaugBalance(claimed.smaugForfeited)} SMAUG</div>
         </div>
       </td>
       <td className="px-6 py-4 text-right">
@@ -292,7 +286,6 @@ export default function YourStakes() {
                 'Maturity',
                 'Pending',
                 'Claimed',
-                'Forfeited',
                 'Actions',
               ].map((heading) => (
                 <th key={heading} className="px-6 py-4 font-semibold">
@@ -311,7 +304,7 @@ export default function YourStakes() {
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-sm text-[#9a9a9a]">
+                <td colSpan={6} className="px-6 py-8 text-center text-sm text-[#9a9a9a]">
                   {isLoading ? 'Loading stakes...' : 'No stakes yet. Create your first stake!'}
                 </td>
               </tr>
