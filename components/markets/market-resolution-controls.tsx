@@ -194,6 +194,9 @@ function FinalizeOrDispute({
         </button>
       ) : (
         <>
+          <p className="font-sans text-[10px] text-[#7c7a76]">
+            Only dispute if you believe the proposed outcome is wrong — otherwise no action is needed.
+          </p>
           <button
             onClick={() => dispSim?.request && writeContract(dispSim.request)}
             disabled={!dispSim?.request || isPending || confirming}
@@ -202,7 +205,12 @@ function FinalizeOrDispute({
             {isPending ? "Confirm…" : confirming ? "Disputing…" : `Dispute — post ${bondLabel} PLS`}
           </button>
           <span className="font-sans text-[10px] text-[#7c7a76]">
-            Finalize available in ~{Math.max(0, Math.floor((expiresAt - now) / 60))} min if uncontested.
+            If uncontested, this market resolves in {(() => {
+              const s = Math.max(0, expiresAt - now)
+              const h = Math.floor(s / 3600)
+              const m = Math.floor((s % 3600) / 60)
+              return h > 0 ? `${h}h ${m}m` : `${m}m`
+            })()}.
           </span>
         </>
       )}
