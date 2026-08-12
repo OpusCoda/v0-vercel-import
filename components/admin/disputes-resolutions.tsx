@@ -25,7 +25,6 @@ function short(addr?: string) {
 }
 
 export function DisputesResolutions() {
-  console.log('[DR] mounted')
   const { address } = useAccount()
   const { items, isLoading, refetch } = useMarketsNeedingResolution()
 

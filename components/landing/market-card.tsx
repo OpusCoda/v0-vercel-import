@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useAccount, useReadContract } from "wagmi"
+import { MarketResolutionControls } from "@/components/markets/market-resolution-controls"
 import { BuySection } from "@/components/markets/buy-section"
 import { SellSection } from "@/components/markets/sell-section"
 import { useAcceptWager } from "@/hooks/useAcceptWager"
@@ -439,6 +440,9 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
           />
         )
       )}
+      {/* Permissionless resolution — propose / finalize / dispute once betting closes */}
+      {marketId !== undefined && <MarketResolutionControls marketId={marketId} />}
+
       {/* Resolution details — collapsible; renders only when data is passed in */}
       {(props.resolutionCriteria || props.source || props.resolutionDeadline) && (
         <details className="mt-3 rounded-lg border border-[#2a2a35] bg-[#0d0d12] p-3">
