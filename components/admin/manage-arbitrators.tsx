@@ -13,7 +13,7 @@ import { isAddress, getAddress } from 'viem'
 import type { Address } from 'viem'
 import { outcomeExchangeAbi } from '@/lib/abis/outcome-exchange'
 
-const OUTCOME_EXCHANGE_ADDRESS = '0x5c806d98Ab3fBAA7eDFa04749F69580E1f753167' as Address
+const OUTCOME_EXCHANGE_ADDRESS = '0x6FaE169714ba3BE839332785291f798d627BCE8c' as Address
 
 // From the contract: max 5 arbitrators, threshold 3.
 const MAX_ARBITRATORS = 5

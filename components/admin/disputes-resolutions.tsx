@@ -17,7 +17,7 @@ import {
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ('0x77b004A0029d725e353E5EE0D80102516A4e52a8' as Address)
+  ('0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691' as Address)
 
 function short(addr?: string) {
   if (!addr) return ''
@@ -97,10 +97,10 @@ function ResolutionCard({
         </div>
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${disputed
-              ? 'border border-red-500/30 bg-red-500/10 text-red-400'
-              : item.status === 'ChallengeWindow'
-                ? 'border border-[#B87333]/30 bg-[#B87333]/10 text-[#B87333]'
-                : 'border border-[#7c7a76]/30 bg-[#7c7a76]/10 text-[#b8b6b1]'
+            ? 'border border-red-500/30 bg-red-500/10 text-red-400'
+            : item.status === 'ChallengeWindow'
+              ? 'border border-[#B87333]/30 bg-[#B87333]/10 text-[#B87333]'
+              : 'border border-[#7c7a76]/30 bg-[#7c7a76]/10 text-[#b8b6b1]'
             }`}
         >
           {disputed ? 'Disputed' : item.status === 'ChallengeWindow' ? 'Challenge window' : 'Awaiting proposal'}

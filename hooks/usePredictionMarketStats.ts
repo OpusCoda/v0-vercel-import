@@ -1,6 +1,6 @@
 import { useReadContract } from "wagmi"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
-const PREDICTION_MARKET_ADDRESS = "0x77b004A0029d725e353E5EE0D80102516A4e52a8"
+const PREDICTION_MARKET_ADDRESS = "0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691"
 export interface PredictionMarketStats {
   cumulativeVolume: bigint
   resolvedMarketCount: bigint

@@ -1,4 +1,4 @@
-export const WAGER_MARKET_ADDRESS = '0x5c806d98Ab3fBAA7eDFa04749F69580E1f753167' as const
+export const WAGER_MARKET_ADDRESS = '0x6FaE169714ba3BE839332785291f798d627BCE8c' as const
 // enum DepositWindow { H24, H48, W1, M1 }
 export const DEPOSIT_WINDOWS = [
   { value: 0, label: '24 hours' },

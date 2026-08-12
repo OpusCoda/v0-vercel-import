@@ -7,7 +7,7 @@ import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useBuyShares } from "@/hooks/useBuyShares"
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ("0x77b004A0029d725e353E5EE0D80102516A4e52a8" as Address)
+  ("0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691" as Address)
 // Fallback until the on-chain minimumBet loads.
 const FALLBACK_MINIMUM_BET_PLS = 5_000
 function fmt(v: number, dp = 0) {
@@ -166,8 +166,8 @@ function BuyPanel({
             key={bps}
             onClick={() => setSlippageBps(bps)}
             className={`rounded px-1.5 py-0.5 font-sans text-[10px] font-semibold transition-colors ${slippageBps === bps
-                ? "bg-[#B87333] text-[#0a0a0c]"
-                : "border border-[#2a2a35] text-[#b8b6b1] hover:border-[#B87333]/50"
+              ? "bg-[#B87333] text-[#0a0a0c]"
+              : "border border-[#2a2a35] text-[#b8b6b1] hover:border-[#B87333]/50"
               }`}
           >
             {bps / 100}%

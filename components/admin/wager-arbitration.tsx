@@ -11,7 +11,7 @@ import {
 import type { Address } from 'viem'
 import { outcomeExchangeAbi } from '@/lib/abis/outcome-exchange'
 
-const OUTCOME_EXCHANGE_ADDRESS = '0x5c806d98Ab3fBAA7eDFa04749F69580E1f753167' as Address
+const OUTCOME_EXCHANGE_ADDRESS = '0x6FaE169714ba3BE839332785291f798d627BCE8c' as Address
 
 // WagerMarket status enum:
 // 0 Created, 1 Active, 2 Voting, 3 Resolved, 4 Arbitration, 5 Cancelled, 6 Voided
@@ -208,8 +208,8 @@ function WagerRow({
         </div>
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${isArbitration
-              ? 'border border-red-500/30 bg-red-500/10 text-red-400'
-              : 'border border-[#B87333]/30 bg-[#B87333]/10 text-[#B87333]'
+            ? 'border border-red-500/30 bg-red-500/10 text-red-400'
+            : 'border border-[#B87333]/30 bg-[#B87333]/10 text-[#B87333]'
             }`}
         >
           {isArbitration ? 'Arbitration' : 'Voting'}
@@ -378,8 +378,8 @@ function CastVoteControls({
         <button
           onClick={() => setWinner(creator)}
           className={`rounded px-2 py-0.5 font-sans text-[10px] font-semibold ${winner === creator
-              ? 'bg-[#B87333] text-[#0a0a0c]'
-              : 'border border-[#B87333]/30 text-[#B87333]'
+            ? 'bg-[#B87333] text-[#0a0a0c]'
+            : 'border border-[#B87333]/30 text-[#B87333]'
             }`}
         >
           Creator {short(creator)}
@@ -387,8 +387,8 @@ function CastVoteControls({
         <button
           onClick={() => setWinner(challenger)}
           className={`rounded px-2 py-0.5 font-sans text-[10px] font-semibold ${winner === challenger
-              ? 'bg-[#B87333] text-[#0a0a0c]'
-              : 'border border-[#B87333]/30 text-[#B87333]'
+            ? 'bg-[#B87333] text-[#0a0a0c]'
+            : 'border border-[#B87333]/30 text-[#B87333]'
             }`}
         >
           Challenger {short(challenger)}

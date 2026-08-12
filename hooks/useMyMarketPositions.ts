@@ -7,7 +7,7 @@ import { useAllMarkets, type MarketWithId } from "@/hooks/useAllMarkets"
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ("0x77b004A0029d725e353E5EE0D80102516A4e52a8" as Address)
+  ("0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691" as Address)
 
 // getUserPosition tuple (must match the NEW cost-basis struct order):
 // yesShares, noShares, netCollateral, yesCostBasis, noCostBasis, hasTraded,
@@ -101,10 +101,10 @@ export function useMyMarketPositions() {
     () =>
       address
         ? markets.map((m) => ({
-            ...contract,
-            functionName: "getUserPosition" as const,
-            args: [m.marketId, address] as const,
-          }))
+          ...contract,
+          functionName: "getUserPosition" as const,
+          args: [m.marketId, address] as const,
+        }))
         : [],
     [markets, address]
   )

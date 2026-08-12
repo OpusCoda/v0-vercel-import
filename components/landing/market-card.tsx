@@ -9,7 +9,7 @@ import { useCancelWager } from "@/hooks/useCancelWager"
 import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from "@/lib/wager-market"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { WagerActions } from "@/components/markets/wager-actions"
-const PREDICTION_MARKET_ADDRESS = "0x77b004A0029d725e353E5EE0D80102516A4e52a8"
+const PREDICTION_MARKET_ADDRESS = "0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691"
 export type ProbabilityOutcome = {
   label: string
   odds: number // percentage 0-100
@@ -120,7 +120,7 @@ function AcceptSection({
   const isDesignated =
     isExclusive && !!address && address.toLowerCase() === challenger!.toLowerCase()
   // Connected, not the creator, not the designated challenger → can't accept.
-  const lockedOut = isExclusive && !!address && !isCreator && !isDesignated  
+  const lockedOut = isExclusive && !!address && !isCreator && !isDesignated
   const disabled =
     !isConnected || isCreator || requiredLoading || isPending || isConfirming || isSuccess
   let btnLabel: string
@@ -359,10 +359,10 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
         {props.status && (
           <span
             className={`shrink-0 rounded-full px-2 py-0.5 font-sans text-[10px] font-semibold ${props.status === "Open"
-                ? "bg-green-400/10 text-green-400 border border-green-400/30"
-                : props.status === "Resolved"
-                  ? "bg-[#B87333]/10 text-[#B87333] border border-[#B87333]/30"
-                  : "bg-[#7c7a76]/10 text-[#b8b6b1] border border-[#7c7a76]/30"
+              ? "bg-green-400/10 text-green-400 border border-green-400/30"
+              : props.status === "Resolved"
+                ? "bg-[#B87333]/10 text-[#B87333] border border-[#B87333]/30"
+                : "bg-[#7c7a76]/10 text-[#b8b6b1] border border-[#7c7a76]/30"
               }`}
           >
             {props.status}

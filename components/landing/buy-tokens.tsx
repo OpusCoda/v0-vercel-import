@@ -51,13 +51,13 @@ const protocolContracts = [
   },
   {
     name: "Probability Shop",
-    address: "0x77b004A0029d725e353E5EE0D80102516A4e52a8",
-    url: "https://otter.pulsechain.com/address/0x77b004A0029d725e353E5EE0D80102516A4e52a8",
+    address: "0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691",
+    url: "https://otter.pulsechain.com/address/0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691",
   },
   {
     name: "Wager Market",
-    address: "0x5c806d98Ab3fBAA7eDFa04749F69580E1f753167",
-    url: "https://otter.pulsechain.com/address/0x5c806d98Ab3fBAA7eDFa04749F69580E1f753167",
+    address: "0x6FaE169714ba3BE839332785291f798d627BCE8c",
+    url: "https://otter.pulsechain.com/address/0x6FaE169714ba3BE839332785291f798d627BCE8c",
   },
 ]
 // Testing summary per contract — describes the self-testing / AI-review work

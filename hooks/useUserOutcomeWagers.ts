@@ -5,7 +5,7 @@ import { useAccount, useReadContract, useReadContracts } from "wagmi"
 import type { Address } from "viem"
 import { outcomeExchangeAbi } from "@/lib/abis/outcome-exchange"
 
-const OUTCOME_EXCHANGE_ADDRESS = '0x5c806d98Ab3fBAA7eDFa04749F69580E1f753167' as Address
+const OUTCOME_EXCHANGE_ADDRESS = '0x6FaE169714ba3BE839332785291f798d627BCE8c' as Address
 
 const PAGE_SIZE = 100n
 
@@ -96,31 +96,31 @@ export function useOutcomeAccountSummary(address?: Address) {
     allowFailure: true,
     contracts: address
       ? [
-          {
-            address: OUTCOME_EXCHANGE_ADDRESS,
-            abi: outcomeExchangeAbi,
-            functionName: "getReputation",
-            args: [address],
-          },
-          {
-            address: OUTCOME_EXCHANGE_ADDRESS,
-            abi: outcomeExchangeAbi,
-            functionName: "getReferralInfo",
-            args: [address],
-          },
-          {
-            address: OUTCOME_EXCHANGE_ADDRESS,
-            abi: outcomeExchangeAbi,
-            functionName: "getUserFeeInfo",
-            args: [address],
-          },
-          {
-            address: OUTCOME_EXCHANGE_ADDRESS,
-            abi: outcomeExchangeAbi,
-            functionName: "protocolFeeAccrued",
-            args: [address],
-          },
-        ]
+        {
+          address: OUTCOME_EXCHANGE_ADDRESS,
+          abi: outcomeExchangeAbi,
+          functionName: "getReputation",
+          args: [address],
+        },
+        {
+          address: OUTCOME_EXCHANGE_ADDRESS,
+          abi: outcomeExchangeAbi,
+          functionName: "getReferralInfo",
+          args: [address],
+        },
+        {
+          address: OUTCOME_EXCHANGE_ADDRESS,
+          abi: outcomeExchangeAbi,
+          functionName: "getUserFeeInfo",
+          args: [address],
+        },
+        {
+          address: OUTCOME_EXCHANGE_ADDRESS,
+          abi: outcomeExchangeAbi,
+          functionName: "protocolFeeAccrued",
+          args: [address],
+        },
+      ]
       : [],
     query: {
       enabled: Boolean(address),

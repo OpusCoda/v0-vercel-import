@@ -4,7 +4,7 @@ import { useAccount, useReadContract } from "wagmi"
 import { formatUnits, parseUnits } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useSellShares } from "@/hooks/useSellShares"
-const PREDICTION_MARKET_ADDRESS = "0x77b004A0029d725e353E5EE0D80102516A4e52a8"
+const PREDICTION_MARKET_ADDRESS = "0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691"
 function fmt(v: number, dp = 0) {
   return v.toLocaleString(undefined, { maximumFractionDigits: dp })
 }
@@ -226,8 +226,8 @@ function SellPanel({
             key={bps}
             onClick={() => setSlippageBps(bps)}
             className={`rounded px-1.5 py-0.5 font-sans text-[10px] font-semibold transition-colors ${slippageBps === bps
-                ? "bg-[#B87333] text-[#0a0a0c]"
-                : "border border-[#2a2a35] text-[#b8b6b1] hover:border-[#B87333]/50"
+              ? "bg-[#B87333] text-[#0a0a0c]"
+              : "border border-[#2a2a35] text-[#b8b6b1] hover:border-[#B87333]/50"
               }`}
           >
             {bps / 100}%

@@ -1,7 +1,7 @@
 "use client"
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
-const PREDICTION_MARKET_ADDRESS = "0x77b004A0029d725e353E5EE0D80102516A4e52a8"
+const PREDICTION_MARKET_ADDRESS = "0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691"
 /**
  * Owner-only: sweep a resolved market's remaining balance after the 90-day
  * unclaimed window. Splits 50% stakers / 50% dev on-chain. One marketId.

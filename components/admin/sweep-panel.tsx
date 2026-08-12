@@ -4,7 +4,7 @@ import { useReadContract, useReadContracts } from "wagmi"
 import { formatUnits } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useSweepUnclaimed } from "@/hooks/useSweepUnclaimed"
-const PREDICTION_MARKET_ADDRESS = "0x77b004A0029d725e353E5EE0D80102516A4e52a8"
+const PREDICTION_MARKET_ADDRESS = "0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691"
 // Must match the contract constant UNCLAIMED_SWEEP_WINDOW.
 const SWEEP_WINDOW_SECONDS = 90n * 24n * 60n * 60n // 90 days
 function fmtPls(wei: bigint, dp = 2): string {

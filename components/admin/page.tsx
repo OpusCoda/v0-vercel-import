@@ -16,9 +16,9 @@ import { outcomeExchangeAbi } from '@/lib/abis/outcome-exchange'
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ('0x77b004A0029d725e353E5EE0D80102516A4e52a8' as Address)
+  ('0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691' as Address)
 
-const OUTCOME_EXCHANGE_ADDRESS = '0x5c806d98Ab3fBAA7eDFa04749F69580E1f753167' as Address
+const OUTCOME_EXCHANGE_ADDRESS = '0x6FaE169714ba3BE839332785291f798d627BCE8c' as Address
 
 type AdminTab = 'resolve' | 'create-market' | 'manage-admins' | 'manage-arbitrators'
 
