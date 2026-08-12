@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { useStakeDetails, usePendingPLS, usePendingSmaugReward, usePendingSmaugReflection, getMaturityInfo, formatDate } from '@/hooks/useStakeDetails'
 import { formatSmaugBalance, STAKING_CONTRACT, STAKING_ABI } from '@/lib/staking'
-import { UnstakeWarning } from '@/components/staking/unstake-warning'
+import { UnstakeWarning } from '@/components/stake/unstake-warning'
 import { useClaimedRewards } from '@/hooks/useClaimedRewards'
 import { useCompletedStakes } from '@/hooks/useCompletedStakes'
 const TIERS = ['Hatchling', 'Drake', 'Dragon', 'Elder Dragon', 'Smaug']
