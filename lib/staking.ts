@@ -88,6 +88,16 @@ export const STAKING_ABI = [
     type: 'function',
   },
   {
+  type: 'function',
+  name: 'previewUnstakePrincipal',
+  inputs: [{ type: 'uint256', name: 'sid' }],
+  outputs: [
+    { type: 'uint256', name: 'returned' },
+    { type: 'uint256', name: 'forfeited' },
+  ],
+  stateMutability: 'view',
+},
+  {
     inputs: [],
     name: 'stakeCount',
     outputs: [{ type: 'uint256' }],

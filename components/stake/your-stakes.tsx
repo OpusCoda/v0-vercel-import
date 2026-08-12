@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { useStakeDetails, usePendingPLS, usePendingSmaugReward, usePendingSmaugReflection, getMaturityInfo, formatDate } from '@/hooks/useStakeDetails'
 import { formatSmaugBalance, STAKING_CONTRACT, STAKING_ABI } from '@/lib/staking'
+import { UnstakeWarning } from '@/components/staking/unstake-warning'
 import { useClaimedRewards } from '@/hooks/useClaimedRewards'
 import { useCompletedStakes } from '@/hooks/useCompletedStakes'
 const TIERS = ['Hatchling', 'Drake', 'Dragon', 'Elder Dragon', 'Smaug']
@@ -184,12 +185,13 @@ function StakeRow({ stakeId }: StakeRowProps) {
           {/* End stake */}
           {showUnstakeConfirm ? (
             <div className="space-y-2 text-right">
+              {!inBurnPhase && <UnstakeWarning stakeId={stakeId} isMature={isMature} />}
               <div className={inBurnPhase ? "text-xs text-orange-400" : isMature ? "text-xs text-green-400" : "text-xs text-red-400"}>
                 {inBurnPhase
                   ? 'Returns remaining principal and rewards.'
                   : isMature
                     ? 'Matured — returns your principal and all rewards, no penalty.'
-                    : `You keep ${keepPct}% of rewards. Principal is returned in full.`}
+                    : `You keep ${keepPct}% of rewards.`}
               </div>
               <div className="flex justify-end gap-2">
                 <button
