@@ -61,6 +61,7 @@ export function useMarketsNeedingResolution() {
     functionName: "marketCount",
   })
   const count = countData !== undefined ? Number(countData as bigint) : 0
+  console.log('[resolution] count', count, 'countData', countData, 'reads', reads)
 
 // One getMarket + getStatus + getProposal per market.
   const calls = useMemo(() => {
