@@ -1,6 +1,6 @@
 import { parseUnits } from 'viem'
 
-export const STAKING_CONTRACT = '0x46cDdbe5084c7A2A5AD1c5BF74f39f3579725f5a'
+export const STAKING_CONTRACT = '0x8Fa4a2f0E465d63C287d4147638d5514bDE2f38D'
 
 export const SMAUG_TOKEN = '0xf4754Aa585caBf38537A68660469A17E203D8632'
 
@@ -274,6 +274,30 @@ export const STAKING_ABI = [
     outputs: [{ type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
+  },
+  {
+  inputs: [
+    { name: 'start', type: 'uint256' },
+    { name: 'count', type: 'uint256' },
+  ],
+  name: 'getSweepableStakes',
+  outputs: [{ type: 'uint256[]' }],
+  stateMutability: 'view',
+  type: 'function',
+  },
+  {
+  inputs: [{ name: 'stakeId', type: 'uint256' }],
+  name: 'sweepAbandonedRewards',
+  outputs: [],
+  stateMutability: 'nonpayable',
+  type: 'function',
+  },
+  {
+  type: 'function',
+  name: 'burnForfeitedSmaug',
+  inputs: [],
+  outputs: [],
+  stateMutability: 'nonpayable',
   },
   {
     inputs: [],

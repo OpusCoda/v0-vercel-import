@@ -46,8 +46,8 @@ const contracts = [
 const protocolContracts = [
   {
     name: "Smaug Staking",
-    address: "0x46cDdbe5084c7A2A5AD1c5BF74f39f3579725f5a",
-    url: "https://otter.pulsechain.com/address/0x46cDdbe5084c7A2A5AD1c5BF74f39f3579725f5a",
+    address: "0x8Fa4a2f0E465d63C287d4147638d5514bDE2f38D",
+    url: "https://otter.pulsechain.com/address/0x8Fa4a2f0E465d63C287d4147638d5514bDE2f38D",
   },
   {
     name: "Probability Shop",
