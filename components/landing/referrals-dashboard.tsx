@@ -1,16 +1,26 @@
 "use client"
 import { useEffect, useState } from "react"
-import { useAccount } from "wagmi"
+import { useAccount, useReadContract } from "wagmi"
+import { formatEther } from "viem"
+import type { Address } from "viem"
 import { Check, Copy, Link2, Users, Gift, Percent, Layers, Clock, Share2 } from "lucide-react"
 import { ConnectWalletButton } from "@/components/landing/connect-wallet-button"
 import { ReferralClaim } from "@/components/landing/referral-claim"
 import { registerReferralName, getReferralStats } from "@/app/actions"
 import { buildReferralLink, getPendingReferrer } from "@/lib/referral"
+import { predictionMarketAbi } from "@/lib/abis/prediction-market"
+import { outcomeExchangeAbi } from "@/lib/abis/outcome-exchange"
 
 const NAME_PATTERN = /^[a-z0-9-]{3,20}$/
 
 // Fixed production base for the ?ref= prefix shown next to the input.
 const SITE_HOST = "opuseco.com"
+
+// On-chain contracts — keep these identical to referral-claim.tsx.
+const PREDICTION_MARKET_ADDRESS =
+  (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
+  ("0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392" as Address)
+const OUTCOME_EXCHANGE_ADDRESS = "0x6FaE169714ba3BE839332785291f798d627BCE8c" as Address
 
 function OrnamentHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -44,6 +54,44 @@ export function ReferralsDashboard() {
   const [copied, setCopied] = useState(false)
   const [pendingRef, setPendingRef] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+
+  // On-chain referral figures — authoritative, since these are the same
+  // bindings that pay rewards. Read from both markets and combined below.
+  const { data: pmInfo } = useReadContract({
+    address: PREDICTION_MARKET_ADDRESS,
+    abi: predictionMarketAbi,
+    functionName: "getReferralInfo",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address, refetchInterval: 20000 },
+  })
+  const { data: oeInfo } = useReadContract({
+    address: OUTCOME_EXCHANGE_ADDRESS,
+    abi: outcomeExchangeAbi,
+    functionName: "getReferralInfo",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address, refetchInterval: 20000 },
+  })
+
+  // getReferralInfo names its outputs, so wagmi returns a NAMED OBJECT, not a
+  // positional array — reading index [6]/[5] gives undefined. Read by name,
+  // with a positional fallback so either shape works.
+  // Fields: referredByAddr, startTime, isActive, expiresAt, discountBps,
+  //         pendingRewards(5), peopleReferred(6)
+  function referredCount(info: unknown): number {
+    if (!info) return 0
+    const o = info as any
+    const v = o.peopleReferred ?? o[6]
+    return v != null ? Number(v) : 0
+  }
+  function pendingRewards(info: unknown): bigint {
+    if (!info) return 0n
+    const o = info as any
+    const v = o.pendingRewards ?? o[5]
+    return v != null ? (v as bigint) : 0n
+  }
+
+  const onChainReferralCount = referredCount(pmInfo) + referredCount(oeInfo)
+  const totalFeesEarned = pendingRewards(pmInfo) + pendingRewards(oeInfo)
 
   // Live client-side validation mirror of the server rules.
   const trimmed = nameInput.trim().toLowerCase()
@@ -267,8 +315,8 @@ export function ReferralsDashboard() {
             <Users className="h-8 w-8 text-[#B87333]" aria-hidden />
             <span className="flex flex-col">
               <span className="font-sans text-[11px] tracking-[0.12em] text-[#9ca3af]">PEOPLE REFERRED</span>
-              <span className="mt-1 font-serif text-2xl font-bold text-[#e8e6e3]">{stats.referralCount}</span>
-              {stats.referralCount === 0 && stats.name && (
+              <span className="mt-1 font-serif text-2xl font-bold text-[#e8e6e3]">{onChainReferralCount}</span>
+              {onChainReferralCount === 0 && stats.name && (
                 <span className="mt-0.5 font-sans text-xs text-[#7c7a76]">Share your link to start</span>
               )}
             </span>
@@ -276,8 +324,10 @@ export function ReferralsDashboard() {
           <div className="flex items-center gap-4 bg-[#0d0d12] px-6 py-7">
             <Gift className="h-8 w-8 text-[#B87333]" aria-hidden />
             <span className="flex flex-col">
-              <span className="font-sans text-[11px] tracking-[0.12em] text-[#9ca3af]">FEES EARNED</span>
-              <span className="mt-1 font-serif text-2xl font-bold text-[#e8e6e3]">—</span>
+              <span className="font-sans text-[11px] tracking-[0.12em] text-[#9ca3af]">FEES EARNED (UNCLAIMED)</span>
+              <span className="mt-1 font-serif text-2xl font-bold text-[#e8e6e3]">
+                {Number(formatEther(totalFeesEarned)).toLocaleString("en-US", { maximumFractionDigits: 2 })} PLS
+              </span>
             </span>
           </div>
           <div className="flex items-center gap-4 bg-[#0d0d12] px-6 py-7">
