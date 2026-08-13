@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { useAccount } from "wagmi"
 import { Check, Copy, Link2, Users, Gift, Percent, Layers, Clock, Share2 } from "lucide-react"
 import { ConnectWalletButton } from "@/components/landing/connect-wallet-button"
+import { ReferralClaim } from "@/components/landing/referral-claim"
 import { registerReferralName, getReferralStats } from "@/app/actions"
 import { buildReferralLink, getPendingReferrer } from "@/lib/referral"
 
@@ -288,6 +289,8 @@ export function ReferralsDashboard() {
           </div>
         </div>
       )}
+      {/* On-chain referral rewards */}
+      <ReferralClaim />
 
       {/* Fee model explainer */}
       <div className="mt-12">
