@@ -179,6 +179,14 @@ export function BuyTokens() {
       <div className="mt-16">
         <OrnamentHeading as="h3">Contract addresses</OrnamentHeading>
         <div className="mt-6 space-y-2 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6">
+          {/* Tokens label */}
+          <div className="mb-3 flex items-center gap-3 px-3">
+            <div className="h-px flex-1 bg-[#2a2a35]" />
+            <span className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">
+              Tokens
+            </span>
+            <div className="h-px flex-1 bg-[#2a2a35]" />
+          </div>
           {/* Token contracts */}
           {contracts.map((contract) => (
             <AddressRow key={contract.name} contract={contract} copiedId={copiedId} onCopy={handleCopy} />
