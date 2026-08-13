@@ -149,8 +149,37 @@ export function PortfolioDashboard() {
   }
   // Save edited wallets and fetch real data
   const handleSaveEditedWallets = async () => {
-    console.log('[v0] handleSaveEditedWallets called with', editingWallets.length, 'wallets')
-    console.log('[v0] editingWallets:', editingWallets)
+    // Fold in a pending typed-but-not-added address so users don't have to
+    // click "+" before saving.
+    let walletsToSave = editingWallets
+    if (newWalletAddress.trim()) {
+      if (!ethers.isAddress(newWalletAddress)) {
+        alert('Invalid wallet address format')
+        return
+      }
+      const checksummed = ethers.getAddress(newWalletAddress)
+      // Skip if this address is already in the list.
+      const alreadyPresent = editingWallets.some(
+        (w) => w.address.toLowerCase() === checksummed.toLowerCase()
+      )
+      if (!alreadyPresent) {
+        walletsToSave = [
+          ...editingWallets,
+          {
+            id: Math.random().toString(36).substr(2, 9),
+            name: newWalletName || 'Wallet',
+            address: checksummed,
+            balance: 0,
+            percentage: 0,
+            selected: true,
+          },
+        ]
+      }
+      setNewWalletAddress('')
+      setNewWalletName('')
+    }
+
+    console.log('[v0] handleSaveEditedWallets called with', walletsToSave.length, 'wallets')
 
     // Save wallet list locally and to API if it was loaded from a saved list
     if (loadedWalletListName) {
