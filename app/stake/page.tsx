@@ -90,7 +90,7 @@ export default function StakePage() {
           <header className="space-y-6">
             <div>
               <p className="mt-3 max-w-xl text-lg text-[#9a9a9a]">
-                Stake SMAUG to earn rewards and fee rebates across the ecosystem.
+                Stake Smaug to earn rewards and get fee rebates across the ecosystem.
               </p>
             </div>
             {/* Stats strip — single bordered row, no individual cards */}
@@ -214,7 +214,7 @@ export default function StakePage() {
             <div className="rounded-2xl border border-white/10 bg-[#111116] p-6">
               <h2 className="font-serif text-2xl font-bold">Tier progression</h2>
               <p className="mb-5 mt-1 text-sm text-[#9a9a9a]">
-                Select a tier to set duration automatically.
+                Select a tier to set a duration automatically.
               </p>
               <div className="space-y-2">
                 {TIERS.map((tier) => {

@@ -29,7 +29,7 @@ const ways = [
     title: "Challenge",
     art: "/landing/wager-book.png",
     accent: "#9b7fc4",
-    body: "Create or accept peer-to-peer wagers and settle outcomes onchain.",
+    body: "Create or accept peer-to-peer wagers in the Outcome Exchange.",
     cta: "Open P2P Market",
     href: "#markets",
   },
