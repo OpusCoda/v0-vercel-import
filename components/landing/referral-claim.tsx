@@ -9,11 +9,21 @@ import { outcomeExchangeAbi } from "@/lib/abis/outcome-exchange"
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ("0x77b004A0029d725e353E5EE0D80102516A4e52a8" as Address)
-const OUTCOME_EXCHANGE_ADDRESS = "0x5c806d98Ab3fBAA7eDFa04749F69580E1f753167" as Address
+  ("0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392" as Address)
+const OUTCOME_EXCHANGE_ADDRESS = "0x6FaE169714ba3BE839332785291f798d627BCE8c" as Address
 
 function fmtPls(wei: bigint): string {
   return Number(formatEther(wei)).toLocaleString("en-US", { maximumFractionDigits: 2 })
+}
+
+// getReferralInfo names its outputs, so wagmi returns a NAMED OBJECT, not a
+// positional array — reading index [5] gives undefined. Read by name, with a
+// positional fallback so either shape works.
+function pendingRewards(info: unknown): bigint {
+  if (!info) return 0n
+  const o = info as any
+  const v = o.pendingRewards ?? o[5]
+  return v != null ? (v as bigint) : 0n
 }
 
 /**
@@ -76,7 +86,7 @@ function ClaimCard({
   })
 
   // getReferralInfo → [referredByAddr, startTime, isActive, expiresAt, discountBps, pendingRewards, peopleReferred]
-  const pending = info ? (info as readonly unknown[])[5] as bigint : 0n
+  const pending = pendingRewards(info)
   const hasRewards = pending > 0n
 
   const { data: hash, writeContract, isPending, error } = useWriteContract()
