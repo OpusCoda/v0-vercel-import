@@ -7,6 +7,7 @@ import { formatSmaugBalance, STAKING_CONTRACT, STAKING_ABI } from '@/lib/staking
 import { UnstakeWarning } from '@/components/stake/unstake-warning'
 import { useClaimedRewards } from '@/hooks/useClaimedRewards'
 import { useCompletedStakes } from '@/hooks/useCompletedStakes'
+import { useSavedWallets } from '@/hooks/useSavedWallets'
 const TIERS = ['Hatchling', 'Drake', 'Dragon', 'Elder Dragon', 'Smaug']
 const TIER_IMAGES: Record<string, string> = {
   'Hatchling': '/tiers/hatchling.png',
@@ -16,10 +17,19 @@ const TIER_IMAGES: Record<string, string> = {
   'Smaug': '/tiers/smaug.png',
 }
 const TIER_MULTIPLIERS = ['1', '1.5', '2', '3', '5']
+
+function shortAddr(a: string): string {
+  return `${a.slice(0, 6)}…${a.slice(-4)}`
+}
+
 interface StakeRowProps {
   stakeId: string
+  // When true, this stake belongs to a tracked (watch-only) wallet, not the
+  // connected one — render read-only, since claim/unstake require the owner to sign.
+  readOnly?: boolean
+  owner: string
 }
-function StakeRow({ stakeId }: StakeRowProps) {
+function StakeRow({ stakeId, readOnly = false, owner }: StakeRowProps) {
   const stakeDetails = useStakeDetails(stakeId)
   const plsReward = usePendingPLS(stakeId)
   const smaugReward = usePendingSmaugReward(stakeId)
@@ -89,9 +99,11 @@ function StakeRow({ stakeId }: StakeRowProps) {
   if (stakeDetails.amount === 0n) return null
   const { amount, startTime, endTime, tierIndex, weightedAmount } = stakeDetails
   const multiplierFormatted = (() => {
-    if (!multiplierData) return TIER_MULTIPLIERS[tierIndex] || '1'
-    const val = Number(multiplierData) / 100
-    return val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)
+    if (!multiplierData) {
+      const fallback = TIER_MULTIPLIERS[tierIndex]
+      return fallback ? Number(fallback).toFixed(2) : '1.00'
+    }
+    return (Number(multiplierData) / 100).toFixed(2)
   })()
   const tierName = TIERS[tierIndex] || 'Unknown'
   const tierImagePath = TIER_IMAGES[tierName] || TIER_IMAGES['Hatchling']
@@ -103,6 +115,9 @@ function StakeRow({ stakeId }: StakeRowProps) {
     <tr className="hover:bg-[#09090B]">
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">
         <div>{amountFormatted} SMAUG</div>
+        <div className="mt-1 font-mono text-xs text-[#7c7a76]" title={owner}>
+          {shortAddr(owner)}
+        </div>
       </td>
       <td className="px-6 py-4 text-sm text-[#f4f4f4]">
         <div className="flex items-center gap-3">
@@ -149,84 +164,113 @@ function StakeRow({ stakeId }: StakeRowProps) {
         </div>
       </td>
       <td className="px-6 py-4 text-right">
-        <div className="space-y-2">
-          {/* Claim rewards — reverts on-chain during burn phase, so hide it there */}
-          {inBurnPhase ? null : showConfirm ? (
-            <div className="space-y-2 text-right">
-              <div className="text-xs text-red-400">
-                You will keep {keepPct}% of your rewards.{' '}
-                {100 - keepPct}% will be forfeited.
+        {readOnly ? (
+          // Watch-only wallet: display stake but no actions — only the owner can sign.
+          <span className="font-sans text-xs text-[#7c7a76]">
+            Connect this wallet to manage
+          </span>
+        ) : (
+          <div className="space-y-2">
+            {/* Claim rewards — reverts on-chain during burn phase, so hide it there */}
+            {inBurnPhase ? null : showConfirm ? (
+              <div className="space-y-2 text-right">
+                <div className="text-xs text-red-400">
+                  You will keep {keepPct}% of your rewards.{' '}
+                  {100 - keepPct}% will be forfeited.
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setShowConfirm(false)}
+                    className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-[#9a9a9a] hover:border-white/20 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleClaim}
+                    disabled={isPending}
+                    className="rounded-lg border border-[#B87333]/40 px-3 py-1.5 text-xs font-semibold text-[#B87333] hover:bg-[#B87333]/10 transition-colors disabled:opacity-50"
+                  >
+                    {isPending ? 'Claiming...' : 'Confirm'}
+                  </button>
+                </div>
               </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-[#9a9a9a] hover:border-white/20 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleClaim}
-                  disabled={isPending}
-                  className="rounded-lg border border-[#B87333]/40 px-3 py-1.5 text-xs font-semibold text-[#B87333] hover:bg-[#B87333]/10 transition-colors disabled:opacity-50"
-                >
-                  {isPending ? 'Claiming...' : 'Confirm'}
-                </button>
+            ) : (
+              <button
+                onClick={() => isMature ? handleClaim() : setShowConfirm(true)}
+                disabled={isPending}
+                className="w-full rounded-lg border border-[#B87333]/40 px-3 py-1.5 text-sm font-semibold text-[#B87333] hover:bg-[#B87333]/10 transition-colors disabled:opacity-50"
+              >
+                {isPending ? 'Claiming...' : 'Claim rewards'}
+              </button>
+            )}
+            {/* End stake */}
+            {showUnstakeConfirm ? (
+              <div className="space-y-2 text-right">
+                {!inBurnPhase && <UnstakeWarning stakeId={stakeId} isMature={isMature} />}
+                <div className={inBurnPhase ? "text-xs text-orange-400" : isMature ? "text-xs text-green-400" : "text-xs text-red-400"}>
+                  {inBurnPhase
+                    ? 'Returns remaining principal and rewards.'
+                    : isMature
+                      ? 'Matured — returns your principal and all rewards, no penalty.'
+                      : `You keep ${keepPct}% of rewards.`}
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setShowUnstakeConfirm(false)}
+                    className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-[#9a9a9a] hover:border-white/20 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleUnstake}
+                    disabled={unstakePending}
+                    className="rounded-lg border border-red-500/40 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                  >
+                    {unstakePending ? 'Ending...' : 'Confirm end'}
+                  </button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => isMature ? handleClaim() : setShowConfirm(true)}
-              disabled={isPending}
-              className="w-full rounded-lg border border-[#B87333]/40 px-3 py-1.5 text-sm font-semibold text-[#B87333] hover:bg-[#B87333]/10 transition-colors disabled:opacity-50"
-            >
-              {isPending ? 'Claiming...' : 'Claim rewards'}
-            </button>
-          )}
-          {/* End stake */}
-          {showUnstakeConfirm ? (
-            <div className="space-y-2 text-right">
-              {!inBurnPhase && <UnstakeWarning stakeId={stakeId} isMature={isMature} />}
-              <div className={inBurnPhase ? "text-xs text-orange-400" : isMature ? "text-xs text-green-400" : "text-xs text-red-400"}>
-                {inBurnPhase
-                  ? 'Returns remaining principal and rewards.'
+            ) : (
+              <button
+                onClick={() => setShowUnstakeConfirm(true)}
+                disabled={unstakePending}
+                className={inBurnPhase
+                  ? "w-full rounded-lg border border-orange-500/40 px-3 py-1.5 text-sm font-semibold text-orange-400 hover:bg-orange-500/10 transition-colors disabled:opacity-50"
                   : isMature
-                    ? 'Matured — returns your principal and all rewards, no penalty.'
-                    : `You keep ${keepPct}% of rewards.`}
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setShowUnstakeConfirm(false)}
-                  className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-[#9a9a9a] hover:border-white/20 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleUnstake}
-                  disabled={unstakePending}
-                  className="rounded-lg border border-red-500/40 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                >
-                  {unstakePending ? 'Ending...' : 'Confirm end'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowUnstakeConfirm(true)}
-              disabled={unstakePending}
-              className={inBurnPhase
-                ? "w-full rounded-lg border border-orange-500/40 px-3 py-1.5 text-sm font-semibold text-orange-400 hover:bg-orange-500/10 transition-colors disabled:opacity-50"
-                : isMature
-                  ? "w-full rounded-lg border border-green-500/40 px-3 py-1.5 text-sm font-semibold text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-50"
-                  : "w-full rounded-lg border border-red-500/20 px-3 py-1.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"}
-            >
-              {unstakePending ? 'Ending...' : inBurnPhase ? 'End stake' : isMature ? 'End stake (no penalty)' : 'End stake'}
-            </button>
-          )}
-        </div>
+                    ? "w-full rounded-lg border border-green-500/40 px-3 py-1.5 text-sm font-semibold text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-50"
+                    : "w-full rounded-lg border border-red-500/20 px-3 py-1.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"}
+              >
+                {unstakePending ? 'Ending...' : inBurnPhase ? 'End stake' : isMature ? 'End stake (no penalty)' : 'End stake'}
+              </button>
+            )}
+          </div>
+        )}
       </td>
     </tr>
   )
 }
+
+// Renders one wallet's active stakes. Fetches that wallet's stake IDs and maps
+// them to rows. `readOnly` marks tracked (non-connected) wallets as view-only.
+function WalletStakeRows({ owner, readOnly }: { owner: string; readOnly: boolean }) {
+  const { data: idsData } = useReadContract({
+    address: STAKING_CONTRACT as `0x${string}`,
+    abi: STAKING_ABI,
+    functionName: 'getUserStakeIds',
+    args: [owner as `0x${string}`],
+    query: { refetchInterval: 30000 },
+  })
+  const ids = ((idsData as bigint[]) ?? []).map((id) => id.toString())
+  if (ids.length === 0) return null
+  return (
+    <>
+      {ids.map((stakeId) => (
+        <StakeRow key={`${owner}-${stakeId}`} stakeId={stakeId} readOnly={readOnly} owner={owner} />
+      ))}
+    </>
+  )
+}
+
 // A completed (unstaked) stake — the on-chain struct is deleted, so we show
 // reward history (which survives) plus the principal returned from the event.
 function CompletedStakeRow({ stakeId, principalReturned }: { stakeId: string; principalReturned: bigint }) {
@@ -261,7 +305,16 @@ function CompletedStakeRow({ stakeId, principalReturned }: { stakeId: string; pr
 }
 export default function YourStakes() {
   const { address } = useAccount()
-  // Self-fetch active stake IDs (one call, no index probing).
+  const { selectedAddresses } = useSavedWallets()
+
+  const connected = address?.toLowerCase()
+  // Tracked wallets that are NOT the connected one → rendered read-only.
+  // De-dupe and exclude the connected address so it isn't shown twice.
+  const trackedReadOnly = Array.from(
+    new Set(selectedAddresses.map((a) => a.toLowerCase()))
+  ).filter((a) => a !== connected)
+
+  // Connected wallet's own stakes — used for the empty-state check.
   const { data: stakeIdsData, isLoading } = useReadContract({
     address: STAKING_CONTRACT as `0x${string}`,
     abi: STAKING_ABI,
@@ -269,14 +322,23 @@ export default function YourStakes() {
     args: address ? [address] : undefined,
     query: { enabled: !!address, refetchInterval: 30000 },
   })
-  const userStakeIds = ((stakeIdsData as bigint[]) ?? []).map((id) => id.toString())
+  const connectedIds = ((stakeIdsData as bigint[]) ?? []).map((id) => id.toString())
+  const nothingToShow = connectedIds.length === 0 && trackedReadOnly.length === 0
+
   const { completed } = useCompletedStakes()
   return (
     <div className="rounded-2xl border border-white/10 bg-[#111116]">
       <div className="border-b border-white/10 p-6">
-        <h2 className="font-serif text-2xl font-bold text-[#f4f4f4]">
-          Your Stakes
-        </h2>
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="font-serif text-2xl font-bold text-[#f4f4f4]">
+            Your Stakes
+          </h2>
+          {address && (
+            <span className="font-sans text-xs text-[#7c7a76]" title={address}>
+              Currently connected: <span className="font-mono">{shortAddr(address)}</span>
+            </span>
+          )}
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1100px] text-left">
@@ -297,14 +359,13 @@ export default function YourStakes() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
-            {userStakeIds.length > 0 ? (
-              userStakeIds.map((stakeId) => (
-                <StakeRow
-                  key={stakeId}
-                  stakeId={stakeId}
-                />
-              ))
-            ) : (
+            {/* Connected wallet's stakes — fully actionable */}
+            {address && <WalletStakeRows owner={address} readOnly={false} />}
+            {/* Tracked wallets' stakes — view-only */}
+            {trackedReadOnly.map((addr) => (
+              <WalletStakeRows key={addr} owner={addr} readOnly={true} />
+            ))}
+            {nothingToShow && (
               <tr>
                 <td colSpan={6} className="px-6 py-8 text-center text-sm text-[#9a9a9a]">
                   {isLoading ? 'Loading stakes...' : 'No stakes yet. Create your first stake!'}

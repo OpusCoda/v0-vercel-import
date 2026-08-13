@@ -100,12 +100,10 @@ export function PortfolioDashboard() {
     try {
       const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
       const prices = await fetchTokenPrices()
-
       // Aggregate balances by token across all wallets
       const tokenBalances: { [symbol: string]: { balance: number; token: typeof TOKEN_CONTRACTS[0] } } = {}
       for (const token of TOKEN_CONTRACTS) {
         let totalBalance = 0
-
         if (token.symbol === 'PLS') {
           // Handle native PLS separately
           for (const address of addresses) {
@@ -119,7 +117,6 @@ export function PortfolioDashboard() {
             totalBalance += Number(ethers.formatUnits(balance, token.decimals))
           }
         }
-
         if (totalBalance > 0) {
           tokenBalances[token.symbol] = { balance: totalBalance, token }
         }
@@ -184,13 +181,13 @@ export function PortfolioDashboard() {
     // Save wallet list locally and to API if it was loaded from a saved list
     if (loadedWalletListName) {
       try {
-        const walletsData = editingWallets.map(w => ({
+        const walletsData = walletsToSave.map(w => ({
           address: w.address,
           name: w.name,
           selected: w.selected
         }))
         // Save to localStorage for quick retrieval
-        localStorage.setItem('currentWalletList', JSON.stringify({ name: loadedWalletListName, wallets: editingWallets }))
+        localStorage.setItem('currentWalletList', JSON.stringify({ name: loadedWalletListName, wallets: walletsToSave }))
         // Also send updated wallets to API to persist changes
         await fetch(`/api/saved-wallets`, {
           method: 'PUT',
@@ -201,11 +198,12 @@ export function PortfolioDashboard() {
         console.error('Error saving wallets:', error)
       }
     }
+
     // Update state with edited wallets - this will trigger the useEffect to fetch data
-    console.log('[v0] Calling setWallets with', editingWallets.length, 'wallets')
-    setWallets(editingWallets)
+    console.log('[v0] Calling setWallets with', walletsToSave.length, 'wallets')
+    setWallets(walletsToSave)
     setShowEditWalletsModal(false)
-    const selectedAddresses = editingWallets.filter(w => w.selected).map(w => w.address)
+    const selectedAddresses = walletsToSave.filter(w => w.selected).map(w => w.address)
     if (selectedAddresses.length > 0) {
       fetchTokenBalances(selectedAddresses)
     } else {
@@ -279,10 +277,8 @@ export function PortfolioDashboard() {
       setLoadedWalletListName(loadWalletName)
       setLoadWalletName('')
       setShowLoadWalletModal(false)
-
       // Save to localStorage for quick restoration
       localStorage.setItem('currentWalletList', JSON.stringify({ name: loadWalletName, wallets: loadedWallets }))
-
       // Fetch real data for loaded wallets
       const selectedAddresses = loadedWallets.map(w => w.address)
       fetchTokenBalances(selectedAddresses)
@@ -335,7 +331,6 @@ export function PortfolioDashboard() {
         <div className="mb-16">
           <div className="flex items-end justify-between mb-8">
             <h1 className="font-serif text-5xl font-bold text-[#f4f4f4]">Portfolio dashboard</h1>
-
             {/* Total Portfolio Value - Positioned to the right */}
             {wallets.length > 0 && (
               <div className="text-right">
@@ -568,6 +563,9 @@ export function PortfolioDashboard() {
                     +
                   </button>
                 </div>
+                <p className="mt-2 font-sans text-xs text-[#7c7a76]">
+                  Tip: you can just type an address and hit Save — it&apos;ll be added automatically. Use + only to add several at once.
+                </p>
               </div>
               {/* Actions */}
               <div className="flex gap-3 border-t border-[#2a2a35] pt-6">
