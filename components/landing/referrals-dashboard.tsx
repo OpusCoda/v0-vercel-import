@@ -1,0 +1,333 @@
+"use client"
+import { useEffect, useState } from "react"
+import { useAccount } from "wagmi"
+import { Check, Copy, Link2, Users, Gift, Percent, Layers, Clock, Share2 } from "lucide-react"
+import { ConnectWalletButton } from "@/components/landing/connect-wallet-button"
+import { ReferralClaim } from "@/components/landing/referral-claim"
+import { registerReferralName, getReferralStats } from "@/app/actions"
+import { buildReferralLink, getPendingReferrer } from "@/lib/referral"
+
+const NAME_PATTERN = /^[a-z0-9-]{3,20}$/
+
+// Fixed production base for the ?ref= prefix shown next to the input.
+const SITE_HOST = "opuseco.com"
+
+function OrnamentHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-center gap-4">
+      <span className="text-[#B87333]/50">&#9670;&mdash;</span>
+      <h2 className="text-center font-serif text-xl font-bold text-[#B87333] md:text-2xl">{children}</h2>
+      <span className="text-[#B87333]/50">&mdash;&#9670;</span>
+    </div>
+  )
+}
+
+// Shorten a wallet address for display, e.g. 0xB6…31B7
+function shortAddress(addr: string): string {
+  if (!addr || addr.length < 10) return addr
+  return `${addr.slice(0, 4)}…${addr.slice(-4)}`
+}
+
+type Stats = {
+  name: string | null
+  referredBy: { referrer_wallet: string; referrer_name: string | null } | null
+  referralCount: number
+}
+
+export function ReferralsDashboard() {
+  const { address, isConnected } = useAccount()
+  const [nameInput, setNameInput] = useState("")
+  const [registering, setRegistering] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [loadingStats, setLoadingStats] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [pendingRef, setPendingRef] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState(false)
+
+  // Live client-side validation mirror of the server rules.
+  const trimmed = nameInput.trim().toLowerCase()
+  const validFormat = NAME_PATTERN.test(trimmed)
+
+  const loadStats = async (addr: string) => {
+    setLoadingStats(true)
+    try {
+      const res = await getReferralStats(addr)
+      if (res.success) {
+        setStats({ name: res.name, referredBy: res.referredBy, referralCount: res.referralCount })
+      }
+    } catch (err) {
+      console.error("[v0] Error loading referral stats:", err)
+    } finally {
+      setLoadingStats(false)
+    }
+  }
+
+  useEffect(() => {
+    if (isConnected && address) {
+      loadStats(address)
+    } else {
+      setStats(null)
+    }
+  }, [isConnected, address])
+
+  useEffect(() => {
+    const pending = getPendingReferrer()
+    if (pending) setPendingRef(pending.ref)
+  }, [])
+
+  const handleRegister = async () => {
+    if (!address) return
+    setError(null)
+    setRegistering(true)
+    try {
+      const res = await registerReferralName(trimmed, address)
+      if (res.success) {
+        setNameInput("")
+        setConfirming(false)
+        await loadStats(address)
+      } else {
+        setError(res.error ?? "Failed to register name.")
+        setConfirming(false)
+      }
+    } catch (err) {
+      console.error("[v0] Error registering name:", err)
+      setError("Failed to register name.")
+      setConfirming(false)
+    } finally {
+      setRegistering(false)
+    }
+  }
+
+  const referralLink = stats?.name ? buildReferralLink(stats.name) : ""
+
+  const handleCopy = async () => {
+    if (!referralLink) return
+    try {
+      await navigator.clipboard.writeText(referralLink)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    } catch {
+      // ignore
+    }
+  }
+
+  const shareMessage = "Opus on PulseChain now has two ways to trade outcomes:\n\n• Probability Shop: YES/NO prediction markets\n• Outcome Exchange: Trustlessly resolved peer-to-peer bets\n\nSame idea, different mechanics."
+  const shareX = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(referralLink)}`
+  const shareTelegram = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareMessage)}`
+
+  // Friendly display for who referred the current user.
+  const referredByDisplay = stats?.referredBy
+    ? stats.referredBy.referrer_name ?? shortAddress(stats.referredBy.referrer_wallet)
+    : "—"
+
+  return (
+    <section className="mx-auto max-w-5xl px-4 py-16 md:px-6 md:py-20">
+      <OrnamentHeading>Refer friends, earn together</OrnamentHeading>
+      <p className="mx-auto mt-4 max-w-2xl text-pretty text-center font-sans text-base leading-relaxed text-[#b8b6b1]">
+        Claim a referral name, share your link, and earn a share of protocol fees when the people you invite use the Probability Shop and Outcome Exchange. Your friends get a fee discount, too.
+      </p>
+
+      {pendingRef && (
+        <p className="mx-auto mt-4 max-w-2xl rounded-lg border border-[#B87333]/30 bg-[#B87333]/5 px-4 py-3 text-center font-sans text-sm text-[#B87333]">
+          You were referred by <span className="font-semibold">{pendingRef}</span>. This links automatically on your first protocol interaction.
+        </p>
+      )}
+
+      {/* Claim / manage name */}
+      <div className="mt-12 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 md:p-8">
+        {!isConnected ? (
+          <div className="flex flex-col items-center gap-4 py-4 text-center">
+            <p className="font-sans text-sm text-[#b8b6b1]">Connect your wallet to claim a referral name.</p>
+            <ConnectWalletButton />
+          </div>
+        ) : loadingStats ? (
+          <p className="py-4 text-center font-sans text-sm text-[#9ca3af]">Loading your referral profile…</p>
+        ) : stats?.name ? (
+          <div>
+            <div className="flex items-center gap-2 font-sans text-xs uppercase tracking-[0.15em] text-[#9ca3af]">
+              <Link2 className="h-4 w-4 text-[#B87333]" aria-hidden />
+              Your referral link
+            </div>
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <code className="flex-1 truncate rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-3 font-mono text-sm text-[#e8e6e3]">
+                {referralLink}
+              </code>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="flex items-center justify-center gap-2 rounded-lg bg-[#B87333] px-5 py-3 font-sans text-sm font-semibold text-[#0a0a0c] transition-colors hover:bg-[#c19b2e]"
+              >
+                {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
+                {copied ? "Copied" : "Copy"}
+              </button>
+            </div>
+
+            {/* Share buttons */}
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="flex items-center gap-1.5 font-sans text-xs text-[#7c7a76]">
+                <Share2 className="h-3.5 w-3.5" aria-hidden />
+                Share:
+              </span>
+              <a
+                href={shareX}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-[#2a2a35] px-4 py-2 font-sans text-xs font-medium text-[#b8b6b1] transition-colors hover:border-[#B87333]/50 hover:text-[#e8e6e3]"
+              >
+                Share on X
+              </a>
+              <a
+                href={shareTelegram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-[#2a2a35] px-4 py-2 font-sans text-xs font-medium text-[#b8b6b1] transition-colors hover:border-[#B87333]/50 hover:text-[#e8e6e3]"
+              >
+                Share on Telegram
+              </a>
+            </div>
+
+            <p className="mt-4 font-sans text-sm text-[#9ca3af]">
+              Referral name: <span className="font-semibold text-[#B87333]">{stats.name}</span>
+            </p>
+          </div>
+        ) : (
+          <div>
+            <label htmlFor="referral-name" className="font-sans text-sm font-semibold text-[#e8e6e3]">
+              Claim your referral name
+            </label>
+            <p className="mt-1 font-sans text-xs text-[#9ca3af]">
+              3–20 characters · lowercase letters, numbers, and hyphens only. One name per wallet, permanent.
+            </p>
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <div className="flex flex-1 items-center rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-3">
+                <span className="shrink-0 font-mono text-sm text-[#7c7a76]">{SITE_HOST}/?ref=</span>
+                <input
+                  id="referral-name"
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => {
+                    setNameInput(e.target.value)
+                    setError(null)
+                    setConfirming(false)
+                  }}
+                  placeholder="your-name"
+                  autoComplete="off"
+                  className="w-full bg-transparent px-1 py-3 font-mono text-sm text-[#e8e6e3] outline-none placeholder:text-[#5c5a56]"
+                />
+              </div>
+              {!confirming ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirming(true)}
+                  disabled={!validFormat}
+                  className="rounded-lg bg-[#B87333] px-6 py-3 font-sans text-sm font-semibold text-[#0a0a0c] transition-colors hover:bg-[#c19b2e] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Claim name
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleRegister}
+                  disabled={registering}
+                  className="rounded-lg bg-[#B87333] px-6 py-3 font-sans text-sm font-semibold text-[#0a0a0c] transition-colors hover:bg-[#c19b2e] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {registering ? "Claiming…" : "Confirm"}
+                </button>
+              )}
+            </div>
+
+            {confirming && !registering && (
+              <p className="mt-3 rounded-lg border border-[#B87333]/30 bg-[#B87333]/5 px-4 py-3 font-sans text-xs text-[#B87333]">
+                Claim <span className="font-semibold">{trimmed}</span> permanently? This name is tied to your wallet and can’t be changed later.{" "}
+                <button
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  className="underline hover:text-[#e8e6e3]"
+                >
+                  Cancel
+                </button>
+              </p>
+            )}
+
+            {nameInput && !validFormat && (
+              <p className="mt-2 font-sans text-xs text-[#e06a5e]">
+                Name must be 3–20 characters using lowercase letters, numbers, or hyphens.
+              </p>
+            )}
+            {error && <p className="mt-2 font-sans text-xs text-[#e06a5e]">{error}</p>}
+          </div>
+        )}
+      </div>
+
+      {/* Stats */}
+      {isConnected && stats && (
+        <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-[#2a2a35] bg-[#2a2a35] sm:grid-cols-3">
+          <div className="flex items-center gap-4 bg-[#0d0d12] px-6 py-7">
+            <Users className="h-8 w-8 text-[#B87333]" aria-hidden />
+            <span className="flex flex-col">
+              <span className="font-sans text-[11px] tracking-[0.12em] text-[#9ca3af]">PEOPLE REFERRED</span>
+              <span className="mt-1 font-serif text-2xl font-bold text-[#e8e6e3]">{stats.referralCount}</span>
+              {stats.referralCount === 0 && stats.name && (
+                <span className="mt-0.5 font-sans text-xs text-[#7c7a76]">Share your link to start</span>
+              )}
+            </span>
+          </div>
+          <div className="flex items-center gap-4 bg-[#0d0d12] px-6 py-7">
+            <Gift className="h-8 w-8 text-[#B87333]" aria-hidden />
+            <span className="flex flex-col">
+              <span className="font-sans text-[11px] tracking-[0.12em] text-[#9ca3af]">FEES EARNED</span>
+              <span className="mt-1 font-serif text-2xl font-bold text-[#e8e6e3]">—</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-4 bg-[#0d0d12] px-6 py-7">
+            <Percent className="h-8 w-8 text-[#B87333]" aria-hidden />
+            <span className="flex flex-col">
+              <span className="font-sans text-[11px] tracking-[0.12em] text-[#9ca3af]">REFERRED BY</span>
+              <span className="mt-1 font-serif text-lg font-bold text-[#e8e6e3]">{referredByDisplay}</span>
+            </span>
+          </div>
+        </div>
+      )}
+      {/* On-chain referral rewards */}
+      <ReferralClaim />
+
+      {/* Fee model explainer */}
+      <div className="mt-12">
+        <OrnamentHeading>How referral rewards work</OrnamentHeading>
+        <div className="mt-8 grid gap-6 md:grid-cols-2">
+          {[
+            {
+              Icon: Percent,
+              title: "20% fee discount for your invitees",
+              body: "Anyone who joins through your link pays 20% lower protocol fees on trades in the Probability Shop and Outcome Exchange.",
+            },
+            {
+              Icon: Gift,
+              title: "10% referral reward",
+              body: "You earn 10% of every protocol fee your invitee pays, paid instantly in PLS.",
+            },
+            {
+              Icon: Layers,
+              title: "Stacking capped at 50%",
+              body: "Combined discounts and bonuses from referrals and Smaug staking are capped at 50%.",
+            },
+            {
+              Icon: Clock,
+              title: "12-month reward window",
+              body: "You earn referral rewards from each invitee's activity for 12 months after they bind to your link.",
+            },
+          ].map((item) => (
+            <div key={item.title} className="flex gap-4 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6">
+              <item.Icon className="mt-0.5 h-6 w-6 shrink-0 text-[#B87333]" aria-hidden />
+              <div>
+                <p className="font-sans text-sm font-semibold text-[#e8e6e3]">{item.title}</p>
+                <p className="mt-1 font-sans text-sm leading-relaxed text-[#b8b6b1]">{item.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}

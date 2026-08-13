@@ -1,0 +1,116 @@
+import type { LucideIcon } from "lucide-react"
+import { Swords, Users, User, Gavel, Coins, TrendingUp, Percent, ChartCandlestick } from "lucide-react"
+
+type Product = {
+  name: string
+  tagline: string
+  accent: string
+  Icon: LucideIcon
+  description: string
+  audience: { Icon: LucideIcon; label: string }
+  features: { Icon: LucideIcon; title: string; body: string }[]
+}
+
+const products: Product[] = [
+  {
+    name: "Probability Shop",
+    tagline: "Prediction market",
+    accent: "#5b9bd5",
+    Icon: ChartCandlestick,
+    audience: { Icon: Users, label: "One-to-many · anyone can take a position" },
+    description:
+      "Browse open markets and buy YES or NO positions on real-world outcomes using PLS. Markets are created on topics like crypto prices, sport, politics, and macroeconomic events. Your YES/NO positions can also be sold while the market is open.",
+    features: [
+      {
+        Icon: TrendingUp,
+        title: "AMM-priced odds",
+        body: "Positions are priced by a constant-product AMM — the more people buy YES, the pricier YES becomes and the cheaper NO gets, reflecting the crowd's current probability estimate.",
+      },
+      {
+        Icon: Coins,
+        title: "Winner takes the pot",
+        body: "When a market resolves, the winning side shares the full pot proportionally to their positions.",
+      },
+      {
+        Icon: Percent,
+        title: "Smaug fee discount",
+        body: "Holding and staking Smaug gives a fee discount on all trades, shared with the Outcome Exchange via SmaugStaking.",
+      },
+    ],
+  },
+  {
+    name: "Outcome Exchange",
+    tagline: "Peer-to-peer wager escrow",
+    accent: "#B87333",
+    Icon: Swords,
+    audience: { Icon: User, label: "One-to-one · creator vs. challenger" },
+    description:
+      "Two parties lock PLS against each other on the outcome of any event — a sports result, a price milestone, a real-world prediction, anything they agree on. The creator sets the terms, the odds, and how long the offer stays open. A challenger accepts by matching their side.",
+    features: [
+      {
+        Icon: Gavel,
+        title: "Trustless resolution",
+        body: "After the event, both parties vote on the winner. If they agree, payout is automatic. If they disagree, three-of-five community arbitrators resolve the dispute.",
+      },
+      {
+        Icon: TrendingUp,
+        title: "Bet on anything",
+        body: 'Any event works — sports, politics, or a price milestone (e.g. "PLS above $0.0001 on January 1"). Both parties agree the terms up front.',
+      },
+      {
+        Icon: Coins,
+        title: "On-chain & non-custodial",
+        body: "Every wager is escrowed on-chain. Smaug stakers receive a fee discount on all wagers.",
+      },
+    ],
+  },
+]
+
+export default function MarketsOverview() {
+  return (
+    <section id="markets-explainer" className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
+      <div className="grid gap-6 lg:grid-cols-2">
+        {products.map((product) => (
+          <article
+            id={`${product.name.toLowerCase().replace(' ', '-')}-explainer`}
+            key={product.name}
+            className="scroll-mt-24 flex flex-col rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 transition-colors hover:border-[#B87333]/30 md:p-8"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-[#2a2a35] bg-[#0a0a0c]"
+                  style={{ boxShadow: `0 0 32px -14px ${product.accent}` }}
+                >
+                  <product.Icon className="h-7 w-7" style={{ color: product.accent }} aria-hidden />
+                </span>
+                <div>
+                  <h3 className="font-serif text-2xl font-bold" style={{ color: product.accent }}>
+                    {product.name}
+                  </h3>
+                  <p className="font-sans text-sm text-[#9ca3af]">{product.tagline}</p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 flex items-center gap-2 font-sans text-xs text-[#9ca3af]">
+              <product.audience.Icon className="h-4 w-4" style={{ color: product.accent }} aria-hidden />
+              {product.audience.label}
+            </div>
+            <p className="mt-4 text-pretty font-sans text-sm leading-relaxed text-[#b8b6b1]">{product.description}</p>
+            <ul className="mt-6 flex flex-col gap-4 border-t border-[#2a2a35] pt-6">
+              {product.features.map((feature) => (
+                <li key={feature.title} className="flex gap-3">
+                  <feature.Icon className="mt-0.5 h-5 w-5 shrink-0" style={{ color: product.accent }} aria-hidden />
+                  <div>
+                    <p className="font-sans text-sm font-semibold text-[#e8e6e3]">{feature.title}</p>
+                    <p className="mt-1 font-sans text-sm leading-relaxed text-[#b8b6b1]">{feature.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}

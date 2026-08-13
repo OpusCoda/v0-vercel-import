@@ -1,0 +1,1 @@
+export { StakingStats as default } from '@/components/stake/staking-stats'

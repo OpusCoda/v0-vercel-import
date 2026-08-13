@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+
 @custom-variant dark (&:is(.dark *));
 
 /* -------------------------------------------------
@@ -25,7 +26,6 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-
   --radius: 0.625rem;
 }
 
@@ -56,13 +56,9 @@
    Tailwind theme bindings
 ------------------------------------------------- */
 @theme inline {
-  /* Font hierarchy — matches layout.tsx */
+  /* Font hierarchy — 2 core fonts optimized for performance */
   --font-serif: var(--font-serif), Georgia, serif;       /* Merriweather */
   --font-ui: var(--font-inter), system-ui, sans-serif;   /* Inter */
-  --font-decorative: var(--font-sacramento), cursive;    /* Sacramento */
-  --font-strong: var(--font-roboto), system-ui, sans-serif;
-  --font-marcellus: var(--font-marcellus-sc), Georgia, serif;
-
   --font-sans: var(--font-ui);
   --font-mono: ui-monospace, SFMono-Regular, monospace;
 
@@ -99,51 +95,51 @@
   * {
     @apply border-border outline-ring/50;
   }
-
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     background-color: #0a0a0c;
-    color: #e8e6e3;
-    font-family: var(--font-serif);
+    color: #F5F5F0;
+    font-family: var(--font-ui);
+    font-weight: 300;
     font-size: 16px;
     line-height: 1.6;
     letter-spacing: 0.01em;
   }
-
   /* Headings — restrained, classical */
   h1, h2, h3 {
     font-family: var(--font-serif);
     font-weight: 700;
     letter-spacing: 0.01em;
   }
-
   h1 {
     font-size: 2rem;
     line-height: 1.25;
   }
-
   h2 {
     font-size: 1.375rem;
     line-height: 1.35;
   }
-
   h3 {
     font-size: 1.125rem;
     line-height: 1.4;
   }
-
   p {
     line-height: 1.6;
   }
-
   /* UI / controls */
   button,
   input {
     font-family: var(--font-ui);
     font-size: 15px;
   }
-
   strong {
     font-family: var(--font-strong);
+  }
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
   }
 }
 
@@ -153,36 +149,32 @@
 @layer utilities {
   /* Gold instead of green for gains */
   .text-gain {
-    color: #d4af37;
+    color: #B87333;
   }
-
   .text-loss {
     color: #c9302c;
   }
-
   .text-neutral {
     color: #9ca3af;
   }
-
   .bg-card {
     background-color: #12121a;
   }
-
   .border-card {
     border-color: #2a2a35;
   }
-
   .bg-accent {
-    background-color: #d4af37;
+    background-color: #B87333;
     color: #0a0a0c;
   }
-
   .bg-accent-hover {
-    background-color: #c19b2e;
+    background-color: #9c5f2a;
   }
-
-  /* Decorative accent */
-  .font-decorative {
-    font-family: var(--font-decorative);
-  }
+}
+body {
+  background-color: #0a0b0d;
+  background-image:
+    radial-gradient(60% 50% at 50% 0%, rgba(255, 191, 0, 0.06) 0%, transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }

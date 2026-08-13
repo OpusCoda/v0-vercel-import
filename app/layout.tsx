@@ -1,35 +1,23 @@
 import type React from "react"
 import "./globals.css"
-import { Sacramento, Inter, Merriweather, Roboto, Marcellus_SC } from "next/font/google"
+import "@rainbow-me/rainbowkit/styles.css"
+import { Spectral, Fraunces } from "next/font/google"
+import { TopBar } from "@/components/top-bar"
+import { Providers } from "@/components/providers"
+import { ReferralCapture } from "@/components/referral-capture"
 
-const sacramento = Sacramento({
+const spectral = Spectral({
   subsets: ["latin"],
-  weight: "400",
-  variable: "--font-sacramento",
-})
-
-const merriweather = Merriweather({
-  subsets: ["latin"],
-  weight: ["400", "700"],
+  weight: ["300", "400", "500", "600"],
   display: "swap",
-  variable: "--font-serif",
-})
-
-const inter = Inter({
-  subsets: ["latin"],
   variable: "--font-inter",
 })
 
-const roboto = Roboto({
+const fraunces = Fraunces({
   subsets: ["latin"],
-  weight: ["700"],
-  variable: "--font-roboto",
-})
-
-const marcellusSC = Marcellus_SC({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-marcellus-sc",
+  weight: ["400", "500"],
+  display: "swap",
+  variable: "--font-serif",
 })
 
 export const metadata = {
@@ -53,8 +41,12 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${merriweather.variable} ${sacramento.variable} ${inter.variable} ${roboto.variable} ${marcellusSC.variable}`}>
-        {children}
+      <body className={`${fraunces.variable} ${spectral.variable}`}>
+        <Providers>
+          <ReferralCapture />
+          <TopBar />
+          {children}
+        </Providers>
       </body>
     </html>
   )
