@@ -23,7 +23,7 @@ export function Hero() {
             Earn on PulseChain <span className="text-[#B87333]">by holding, staking, and predicting.</span>
           </h1>
           <p className="mt-6 max-w-md text-pretty font-sans text-base leading-relaxed text-[#b8b6b1] md:text-lg">
-            Hold Opus, earn PLS. Hold Coda, earn PLSX. Stake Smaug for amplified rewards on a supply that only shrinks.
+            Hold Opus, earn PLS. Hold Coda, earn PLSX. Stake Smaug for rewards on a supply that only shrinks. Refer others to claim a share of fees.
           </p>
 
           <p className="mt-8 flex items-center gap-2 font-sans text-sm text-[#9ca3af]">
