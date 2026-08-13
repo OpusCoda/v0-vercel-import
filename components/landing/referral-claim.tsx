@@ -3,7 +3,7 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
 import { formatEther } from "viem"
 import type { Address } from "viem"
-import { Gift } from "lucide-react"
+import { Coins } from "lucide-react"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { outcomeExchangeAbi } from "@/lib/abis/outcome-exchange"
 
@@ -23,7 +23,20 @@ function fmtPls(wei: bigint): string {
  */
 export function ReferralClaim() {
   const { address, isConnected } = useAccount()
-  if (!isConnected || !address) return null
+
+  if (!isConnected || !address) {
+    return (
+      <div className="mt-6 rounded-2xl border border-[#2a2a35] bg-[#101017] p-6 text-center">
+        <div className="flex items-center justify-center gap-2 font-sans text-[11px] uppercase tracking-[0.12em] text-[#9ca3af]">
+          <Coins className="h-4 w-4 text-[#B87333]" aria-hidden />
+          Referral rewards
+        </div>
+        <p className="mt-2 font-sans text-sm text-[#b8b6b1]">
+          Connect your wallet to view and claim referral rewards earned from the Probability Shop and Wager Market.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="mt-6 grid gap-6 md:grid-cols-2">
@@ -82,7 +95,7 @@ function ClaimCard({
   return (
     <div className="rounded-2xl border border-[#2a2a35] bg-[#101017] p-6">
       <div className="flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.12em] text-[#9ca3af]">
-        <Gift className="h-4 w-4 text-[#B87333]" aria-hidden />
+        <Coins className="h-4 w-4 text-[#B87333]" aria-hidden />
         {label} rewards
       </div>
 
