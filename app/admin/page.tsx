@@ -20,7 +20,7 @@ import { outcomeExchangeAbi } from '@/lib/abis/outcome-exchange'
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ('0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691' as Address)
+  ('0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392' as Address)
 
 const OUTCOME_EXCHANGE_ADDRESS = '0x6FaE169714ba3BE839332785291f798d627BCE8c' as Address
 

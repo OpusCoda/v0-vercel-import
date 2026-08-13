@@ -7,7 +7,7 @@ import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ("0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691" as Address)
+  ("0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392" as Address)
 
 // The Market struct as returned by getMarket (32 fields). Only the fields the
 // UI needs are typed here; the rest come back but we ignore them.

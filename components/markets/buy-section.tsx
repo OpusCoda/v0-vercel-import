@@ -7,7 +7,7 @@ import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useBuyShares } from "@/hooks/useBuyShares"
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ("0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691" as Address)
+  ("0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392" as Address)
 // Fallback until the on-chain minimumBet loads.
 const FALLBACK_MINIMUM_BET_PLS = 5_000
 function fmt(v: number, dp = 0) {

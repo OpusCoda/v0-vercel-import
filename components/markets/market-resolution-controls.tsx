@@ -12,7 +12,7 @@ import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
-  ("0x302Ab8bdc02235CB9b428DE1EDA6A978A819B691" as Address)
+  ("0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392" as Address)
 
 const ZERO = "0x0000000000000000000000000000000000000000"
 
