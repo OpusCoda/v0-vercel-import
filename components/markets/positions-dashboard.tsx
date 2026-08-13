@@ -7,7 +7,7 @@ import { PositionsSummary } from "@/components/markets/positions-summary"
  * The "My Positions" tab. Two stacked sections:
  *   1. Probability Shop — open positions with live value + unrealized P/L,
  *      and claim buttons for resolved/voided markets (winners must claim).
- *   2. Wager Market — the existing MyWagers dashboard (action items, active
+ *   2. Outcome Exchange — the existing MyWagers dashboard (action items, active
  *      wagers, history, referral claims). Wager winnings are auto-paid on
  *      resolution, so no winnings-claim button is needed there.
  */
@@ -29,9 +29,9 @@ export function PositionsDashboard() {
           <h2 className="mb-4 font-serif text-xl font-semibold text-[#B87333]">Probability Shop</h2>
           <MyMarketPositions />
         </section>
-        {/* Wager Market — existing dashboard */}
+        {/* Outcome Exchange — existing dashboard */}
         <section className="lg:pl-8">
-          <h2 className="mb-4 font-serif text-xl font-semibold text-[#B87333]">Wager Market</h2>
+          <h2 className="mb-4 font-serif text-xl font-semibold text-[#B87333]">Outcome Exchange</h2>
           <MyWagers />
         </section>
       </div>

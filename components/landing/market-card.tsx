@@ -289,7 +289,7 @@ function shareOnX(title: string, yesOdds: number, noOdds: number) {
 }
 // Build the X (Twitter) share intent URL for an open wager.
 function shareWagerOnX(description: string, creatorStake: number) {
-  const text = `Someone just offered ${creatorStake.toLocaleString()} PLS on this wager:\n"${description}"\n\nThink they're wrong? Take the other side on the Opus Wager Market.`
+  const text = `Someone just offered ${creatorStake.toLocaleString()} PLS on this wager:\n"${description}"\n\nThink they're wrong? Take the other side on the Opus P2P Outcome Exchange Market.`
   const url = typeof window !== "undefined" ? window.location.href : "https://opuseco.com/markets"
   const intent =
     "https://twitter.com/intent/tweet?text=" +

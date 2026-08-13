@@ -55,7 +55,7 @@ const protocolContracts = [
     url: "https://otter.pulsechain.com/address/0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392",
   },
   {
-    name: "Wager Market",
+    name: "Outcome Exchange",
     address: "0x6FaE169714ba3BE839332785291f798d627BCE8c",
     url: "https://otter.pulsechain.com/address/0x6FaE169714ba3BE839332785291f798d627BCE8c",
   },
@@ -98,7 +98,7 @@ const testSummaries: { name: string; items: string[] }[] = [
     ],
   },
   {
-    name: "Wager Market",
+    name: "Outcome Exchange",
     items: [
       "Peer-to-peer wager escrow with a dual-vote resolution model: both parties vote, agreement auto-pays the winner, disagreement escalates to an admin arbitration panel (3-of-5).",
 

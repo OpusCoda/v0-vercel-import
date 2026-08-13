@@ -178,7 +178,7 @@ export default function AdminPage() {
           <div className="mt-10 mb-6 border-t border-[#2a2a35] pt-8">
             <h2 className="font-serif text-2xl font-bold text-[#e8e6e3]">Wager Arbitration</h2>
             <p className="mt-2 font-sans text-sm text-[#7c7a76]">
-              Wager Market bets in voting or arbitration.
+              Outcome Exchange bets in voting or arbitration.
             </p>
           </div>
           <WagerArbitration />

@@ -77,7 +77,7 @@ export function PlatformOverview() {
       {/* Outcome Exchange segment */}
       <div className="flex items-center gap-4 rounded-xl border border-[#2a2a35] bg-[#101017] px-5 py-3">
         <span className="font-sans text-[10px] font-semibold uppercase tracking-wider text-[#b8b6b1]">
-          Wager Market
+          Outcome Exchange 
         </span>
         <Stat value={fmtPls(wager.totalVolume)} label="Vol" zero={oeVolZero} />
         <Stat value={fmtCount(wager.openWagerCount)} label="Open" zero={oeOpenZero} />

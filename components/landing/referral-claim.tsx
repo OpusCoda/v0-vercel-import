@@ -32,7 +32,7 @@ export function ReferralClaim() {
           Referral rewards
         </div>
         <p className="mt-2 font-sans text-sm text-[#b8b6b1]">
-          Connect your wallet to view and claim referral rewards earned from the Probability Shop and Wager Market.
+          Connect your wallet to view and claim referral rewards earned from the Probability Shop and Outcome Exchange.
         </p>
       </div>
     )
@@ -47,7 +47,7 @@ export function ReferralClaim() {
         user={address}
       />
       <ClaimCard
-        label="Wager Market"
+        label="Outcome Exchange"
         contractAddress={OUTCOME_EXCHANGE_ADDRESS}
         abi={outcomeExchangeAbi}
         user={address}

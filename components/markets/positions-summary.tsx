@@ -41,7 +41,7 @@ export function PositionsSummary() {
       if (p.claimableAmount > 0n) predictionClaimableWei += p.claimableAmount
     }
 
-    // ── Wager Market side ──
+    // ── Outcome Exchange side ──
     // Locked principal in active wagers + pending referral is handled in the
     // wager column; here we count locked stake and open positions only.
     let wagerLockedWei = 0n
