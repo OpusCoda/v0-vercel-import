@@ -19,7 +19,7 @@ const products: Product[] = [
     Icon: ChartCandlestick,
     audience: { Icon: Users, label: "One-to-many · anyone can take a position" },
     description:
-      "Browse open markets and buy YES or NO positions on real-world outcomes using PLS. Markets are created by the protocol on topics like crypto prices, sports results, politics, and macroeconomic events.",
+      "Browse open markets and buy YES or NO positions on real-world outcomes using PLS. Markets are created on topics like crypto prices, sport, politics, and macroeconomic events. Your YES/NO positions can also be sold while the market is open",
     features: [
       {
         Icon: TrendingUp,
