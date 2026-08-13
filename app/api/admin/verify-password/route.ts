@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 
-const ADMIN_PASSWORD = "cornucopia"
+const ADMIN_PASSWORD = "copus"
 
 function generateToken(): string {
   return crypto.randomBytes(32).toString('hex')

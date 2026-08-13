@@ -1,7 +1,7 @@
 // Admin configuration - store admin password hash and authorized addresses
 // In production, store the password hash securely in environment variables
 
-export const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "cornucopia"
+export const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "copus"
 
 // Authorized admin wallet addresses (will be checked against contract owner/isAdmin)
 export const AUTHORIZED_ADMINS = [
