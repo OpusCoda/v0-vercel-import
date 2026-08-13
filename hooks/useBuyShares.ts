@@ -1,13 +1,14 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   useReadContract,
   useSimulateContract,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi"
-import { parseEther } from "viem"
+import { isAddress, parseEther } from "viem"
+import { getPendingReferrer } from "@/lib/referral"
 import type { Address } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 
@@ -38,6 +39,17 @@ export function useBuyShares(
   slippageBps: number = 100 // 1% default tolerance
 ) {
   const [submitted, setSubmitted] = useState(false)
+
+  const [referrer, setReferrer] = useState<Address>(NO_REFERRER)
+
+useEffect(() => {
+  const pending = getPendingReferrer()
+
+  if (pending?.wallet && isAddress(pending.wallet)) {
+    setReferrer(pending.wallet as Address)
+  }
+}, [])
+
 
   const contract = {
     address: PREDICTION_MARKET_ADDRESS,
@@ -93,7 +105,7 @@ export function useBuyShares(
     functionName: "buyShares",
     args:
       canSubmit && minSharesOut !== undefined
-        ? [marketId!, side, minSharesOut, NO_REFERRER]
+        ? [marketId!, side, minSharesOut, referrer]
         : undefined,
     value: plsIn,
     query: { enabled: canSubmit },
