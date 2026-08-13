@@ -27,7 +27,7 @@ export default function TokensPage() {
           className="group mt-5 inline-flex items-center gap-2 font-sans text-sm font-medium text-[#B87333] transition-colors hover:text-[#e8e6e3]"
         >
           <Play className="h-4 w-4 fill-current" />
-          <span>What are Opus and Coda? Watch the 2-minute explainer</span>
+          <span>Want to learn more about how Opus and Coda work? Watch the 2-minute explainer</span>
         </a>
       </div>
 
