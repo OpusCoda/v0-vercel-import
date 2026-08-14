@@ -518,7 +518,9 @@ export function MarketCard(props: MarketCardProps) {
   const takerPosition = "Backs the opposite outcome"
   const ZERO_ADDR = "0x0000000000000000000000000000000000000000"
   const isExclusive =
-    !!props.challenger && props.challenger.toLowerCase() !== ZERO_ADDR
+    props.status === "open" &&
+    !!props.challenger &&
+    props.challenger.toLowerCase() !== ZERO_ADDR
   const shortChallenger = props.challenger
     ? `${props.challenger.slice(0, 6)}…${props.challenger.slice(-4)}`
     : ""
