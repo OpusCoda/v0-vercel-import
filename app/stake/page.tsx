@@ -10,6 +10,15 @@ import YourStakes from '@/components/stake/your-stakes'
 import { useReadContract } from 'wagmi'
 import { STAKING_CONTRACT, STAKING_ABI, parseSmaugAmount } from '@/lib/staking'
 import { WalletContextPrompt } from '@/components/wallet-context-prompt'
+function OrnamentHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-center gap-4">
+      <span className="text-[#B87333]/50">&#9670;&mdash;</span>
+      <h2 className="text-center font-serif text-xl font-bold text-[#B87333] md:text-2xl">{children}</h2>
+      <span className="text-[#B87333]/50">&mdash;&#9670;</span>
+    </div>
+  )
+}
 const TIERS = [
   { name: 'Hatchling', min: 30, max: 89, multiplier: 1, feeRebate: 5, icon: '🥚' },
   { name: 'Drake', min: 90, max: 179, multiplier: 1.5, feeRebate: 10, icon: '🥚' },
@@ -89,16 +98,17 @@ export default function StakePage() {
           {/* ── Header ─────────────────────────────────────── */}
           <header className="space-y-6">
             <div>
-              <p className="mt-3 max-w-xl text-lg text-[#9a9a9a]">
-                Stake Smaug to earn rewards and get fee rebates across the ecosystem.
+              <p className="mx-auto mt-3 max-w-2xl text-center text-xl text-[#9a9a9a] md:text-2xl">
+                Stake Smaug to earn rewards and get fee rebates across the ecosystem. 
               </p>
             </div>
             {/* Stats strip — single bordered row, no individual cards */}
+            <OrnamentHeading>Global stats</OrnamentHeading>
             <div className="flex divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-[#111116]">
               {[
                 { label: 'Total staked', value: isLoading ? '—' : `${totalStaked} SMAUG` },
                 { label: 'Stakers', value: isLoading ? '—' : totalStakers },
-                { label: 'Your active stakes', value: isConnected ? userStakeIds.length.toLocaleString() : '—' },
+                { label: 'Stakes created', value: stakeCount != null ? stakeCount.toLocaleString() : '—' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex-1 px-6 py-4">
                   <div className="text-xs font-semibold uppercase tracking-wide text-[#8f8f8f]">
