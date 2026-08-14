@@ -96,9 +96,9 @@ export default function StakePage() {
             {/* Stats strip — single bordered row, no individual cards */}
             <div className="flex divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-[#111116]">
               {[
-                { label: 'Total staked', value: isLoading ? '—' : `${totalStaked} SMAUG` },
+                { label: 'Stakes created', value: isLoading ? '—' : `${totalStaked} SMAUG` },
                 { label: 'Stakers', value: isLoading ? '—' : totalStakers },
-                { label: 'Your active stakes', value: isConnected ? userStakeIds.length.toLocaleString() : '—' },
+                { label: 'Total stakes', value: stakeCount != null ? stakeCount.toLocaleString() : '—' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex-1 px-6 py-4">
                   <div className="text-xs font-semibold uppercase tracking-wide text-[#8f8f8f]">
