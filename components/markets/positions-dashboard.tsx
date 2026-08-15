@@ -3,14 +3,8 @@ import { useAccount } from "wagmi"
 import { MyMarketPositions } from "@/components/markets/my-market-positions"
 import { MyWagers } from "@/components/markets/my-wagers"
 import { PositionsSummary } from "@/components/markets/positions-summary"
-/**
- * The "My Positions" tab. Two stacked sections:
- *   1. Probability Shop — open positions with live value + unrealized P/L,
- *      and claim buttons for resolved/voided markets (winners must claim).
- *   2. Outcome Exchange — the existing MyWagers dashboard (action items, active
- *      wagers, history, referral claims). Wager winnings are auto-paid on
- *      resolution, so no winnings-claim button is needed there.
- */
+import { TradeHistory } from "@/components/markets/trade-history"
+
 export function PositionsDashboard() {
   const { isConnected } = useAccount()
   if (!isConnected) {
@@ -28,6 +22,9 @@ export function PositionsDashboard() {
         <section className="lg:pr-8">
           <h2 className="mb-4 font-serif text-xl font-semibold text-[#B87333]">Probability Shop</h2>
           <MyMarketPositions />
+          <div className="mt-6">
+            <TradeHistory />
+          </div>
         </section>
         {/* Outcome Exchange — existing dashboard */}
         <section className="lg:pl-8">
