@@ -264,9 +264,24 @@ export function MyWagers() {
               <div className="space-y-2 rounded-lg border border-[#2a2a35] bg-[#101017] p-4">
                 {history.map((w) => {
                   const isCreator = w.creator.toLowerCase() === me
-                  const myStake = isCreator ? plsNum(w.creatorStake) : plsNum(w.challengerStake)
+                  const myStakeWei = isCreator ? w.creatorStake : w.challengerStake
+                  const oppStakeWei = isCreator ? w.challengerStake : w.creatorStake
+                  const isVoided = w.status === 6 // Voided → stakes refunded, no win/loss
                   const won = w.winner.toLowerCase() === me
                   const card = wagerToCard(w)
+
+                  // Win  → profit ≈ opponent's stake, less ~0.5% fee on winnings (rebates ignored here).
+                  // Loss → you forfeit your stake.
+                  // Void → net zero (both refunded).
+                  let pnlWei: bigint
+                  if (isVoided) pnlWei = 0n
+                  else if (won) pnlWei = oppStakeWei - (oppStakeWei * 50n) / 10000n
+                  else pnlWei = -myStakeWei
+
+                  const pnl = plsNum(pnlWei < 0n ? -pnlWei : pnlWei)
+                  const color = isVoided ? 'text-[#7c7a76]' : won ? 'text-green-400' : 'text-red-400'
+                  const sign = isVoided ? '' : won ? '+' : '−'
+
                   return (
                     <div key={`hist-${w.id.toString()}`} className="flex items-center justify-between rounded border border-[#2a2a35] bg-[#0d0d12] p-3">
                       <div className="flex-1 min-w-0">
@@ -274,8 +289,8 @@ export function MyWagers() {
                           {card.description}
                         </div>
                       </div>
-                      <div className={`ml-4 shrink-0 text-sm font-semibold ${won ? 'text-green-400' : 'text-red-400'}`}>
-                        {won ? '+' : '−'}{myStake.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
+                      <div className={`ml-4 shrink-0 text-sm font-semibold ${color}`}>
+                        {isVoided ? 'Voided' : `${sign}${pnl.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS`}
                       </div>
                     </div>
                   )
