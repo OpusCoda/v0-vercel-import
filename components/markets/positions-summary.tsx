@@ -33,13 +33,15 @@ export function PositionsSummary() {
     let openMarketPositions = 0
 
     for (const p of positions) {
-      openMarketPositions++
-      for (const s of p.sides) {
-        predictionValueWei += s.currentValue
-        predictionPnlWei += s.unrealizedPnl
-      }
-      if (p.claimableAmount > 0n) predictionClaimableWei += p.claimableAmount
-    }
+  const settled = p.market.resolved || p.market.voided
+  // Only count as an open position if it has live share sides and isn't settled.
+  if (p.sides.length > 0 && !settled) openMarketPositions++
+  for (const s of p.sides) {
+    predictionValueWei += s.currentValue
+    predictionPnlWei += s.unrealizedPnl
+  }
+  if (p.claimableAmount > 0n) predictionClaimableWei += p.claimableAmount
+}
 
     // ── Outcome Exchange side ──
     // Locked principal in active wagers + pending referral is handled in the
