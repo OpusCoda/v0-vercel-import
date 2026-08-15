@@ -6,6 +6,7 @@ import {
   injectedWallet,
 } from "@rainbow-me/rainbowkit/wallets"
 import { createConfig, createConnector, http } from "wagmi"
+import { walletConnectWallet } from "@rainbow-me/rainbowkit/wallets"
 import { injected } from "wagmi/connectors"
 import { defineChain } from "viem"
 
@@ -146,7 +147,7 @@ const connectors = connectorsForWallets(
     },
     {
       groupName: "Popular",
-      wallets: [injectedWallet, metaMaskWallet],
+      wallets: [injectedWallet, metaMaskWallet, walletConnectWallet],
     },
   ],
   { appName: "OpusEco", projectId },
