@@ -260,11 +260,17 @@ export function CreateWager() {
               className="w-full rounded-lg border border-white/10 bg-[#09090B] px-4 py-3 text-[#f4f4f4] placeholder-[#666] focus:border-[#B87333] focus:outline-none"
               required
             />
-            <p className="text-xs text-[#666] mt-1 leading-relaxed">
-              If you mention a date/time in the description, make sure it matches the
-              Event Date &amp; Time set below. If they differ, the Event Date &amp; Time
-              (shown in UTC) is what settles the wager.
-            </p>
+            <div className="mt-2 rounded-lg border border-[#B87333]/30 bg-[#B87333]/5 px-3 py-2.5 text-xs leading-relaxed text-[#b8b6b1]">
+              <p>
+                <span className="font-semibold text-[#f4f4f4]">Your bet must be a statement, not a question.</span>{' '}
+                Example: <span className="font-semibold text-[#f4f4f4]">"PLS will reach $0.0001 by 1 November."</span>{' '}
+                You are betting on this event happening.
+              </p>
+              <p className="mt-1.5">
+                If you mention a date/time in the description, make sure it matches the Event Date &amp; Time set below. If they differ, the{' '}
+                <span className="font-semibold text-[#f4f4f4]">Event Date &amp; Time (UTC)</span> is what settles the wager.
+              </p>
+            </div>
           </div>
 
           {/* My Stake */}
