@@ -264,7 +264,7 @@ export function CreateWager() {
               <p>
                 <span className="font-semibold text-[#f4f4f4]">Your bet must be a statement, not a question.</span>{' '}
                 Example: <span className="font-semibold text-[#f4f4f4]">"PLS will reach $0.0001 by 1 November."</span>{' '}
-                You are betting on this event happening.
+                In this case you are betting on this event happening.
               </p>
               <p className="mt-1.5">
                 If you mention a date/time in the description, make sure it matches the Event Date &amp; Time set below. If they differ, the{' '}
