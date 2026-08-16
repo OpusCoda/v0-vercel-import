@@ -76,6 +76,7 @@ export function CreateWager() {
   const [challengerStake, setChallengerStake] = useState('')
   const [challengerAddress, setChallengerAddress] = useState('')
   const [category, setCategory] = useState('0') // enum index
+  const [creatorBacks, setCreatorBacks] = useState<'yes' | 'no'>('yes')
 
   const [referrer, setReferrer] = useState('')
 
@@ -198,14 +199,17 @@ export function CreateWager() {
       //   creatorStake = msg.value - voteDeposit
       // So sending stake + 5% makes creatorStake == stake.
       const msgValue = stake + (stake * BigInt(500)) / BigInt(10000)
-
+      const stanceTag = creatorBacks === 'yes'
+        ? ' — Creator backs YES (this happens)'
+        : " — Creator backs NO (this won't happen)"
+      const fullDescription = description + stanceTag
       writeContract({
         address: WAGER_MARKET_ADDRESS,
         abi: WAGER_MARKET_ABI,
         functionName: 'createWager',
         args: [
           resolvedChallenger as `0x${string}`,
-          description,
+          fullDescription,
           BigInt(eventTimestamp),
           depositWindowEnum,
           challengerStakeWei,
@@ -261,15 +265,39 @@ export function CreateWager() {
               required
             />
             <div className="mt-2 rounded-lg border border-[#B87333]/30 bg-[#B87333]/5 px-3 py-2.5 text-xs leading-relaxed text-[#b8b6b1]">
-              <p>
-                <span className="font-semibold text-[#f4f4f4]">Your bet must be a statement, not a question.</span>{' '}
-                Example: <span className="font-semibold text-[#f4f4f4]">"PLS will reach $0.0001 by 1 November."</span>{' '}
-                Here you are betting that this event occurs.
-              </p>
               <p className="mt-1.5">
                 If you mention a date/time in the description, make sure it matches the Event Date &amp; Time set below. If they differ, the{' '}
                 <span className="font-semibold text-[#f4f4f4]">Event Date &amp; Time (UTC)</span> is what settles the wager.
               </p>
+            </div>
+          </div>
+
+          {/* Which side the creator backs */}
+          <div>
+            <label className="block text-sm font-semibold text-[#f4f4f4] mb-2">Your position</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setCreatorBacks('yes')}
+                className={`rounded-lg border px-4 py-3 text-sm font-semibold transition ${
+                  creatorBacks === 'yes'
+                    ? 'border-green-400/50 bg-green-400/10 text-green-400'
+                    : 'border-white/10 bg-[#09090B] text-[#9a9a9a] hover:border-white/20'
+                }`}
+              >
+                Backs YES — that this happens
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreatorBacks('no')}
+                className={`rounded-lg border px-4 py-3 text-sm font-semibold transition ${
+                  creatorBacks === 'no'
+                    ? 'border-red-400/50 bg-red-400/10 text-red-400'
+                    : 'border-white/10 bg-[#09090B] text-[#9a9a9a] hover:border-white/20'
+                }`}
+              >
+                Backs NO — that this won't happen
+              </button>
             </div>
           </div>
 
