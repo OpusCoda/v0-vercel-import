@@ -23,9 +23,24 @@ function OrnamentHeading({
 }
 
 const buys = [
-  { name: "Buy Opus", img: "/opus-circle.png", accent: "#b1cbdc", href: "#" },
-  { name: "Buy Coda", img: "/coda-circle.png", accent: "#b1cbdc", href: "#" },
-  { name: "Buy Smaug", img: "/smaug-circle.png", accent: "#b1cbdc", href: "#" },
+  {
+    name: "Buy Opus",
+    img: "/opus-circle.png",
+    accent: "#b1cbdc",
+    href: "https://ipfs.app.pulsex.com?outputCurrency=0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a",
+  },
+  {
+    name: "Buy Coda",
+    img: "/coda-circle.png",
+    accent: "#b1cbdc",
+    href: "https://ipfs.app.pulsex.com?outputCurrency=0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28",
+  },
+  {
+    name: "Buy Smaug",
+    img: "/smaug-circle.png",
+    accent: "#b1cbdc",
+    href: "https://ipfs.app.pulsex.com/?inputCurrency=0xA1077a294dDE1B09bB078844df40758a5D0f9a27&outputCurrency=0xf4754Aa585caBf38537A68660469A17E203D8632",
+  },
 ]
 
 const contracts = [
@@ -120,6 +135,8 @@ export function BuyTokens() {
           <a
             key={b.name}
             href={b.href}
+            target="_blank"
+            rel="noopener noreferrer"
             className="group flex items-center justify-between rounded-2xl border border-[#2a2a35] bg-[#101017] px-6 py-5 transition-colors hover:border-[#B87333]/50"
           >
             <span className="flex items-center gap-4">
