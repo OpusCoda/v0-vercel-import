@@ -82,7 +82,7 @@ export function Tokenomics() {
             </div>
 
             <a
-              href="#tokens"
+              href="tokens"
               className="mt-4 inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[#B87333] hover:underline"
             >
               View full tokenomics <ArrowRight className="h-4 w-4" />
