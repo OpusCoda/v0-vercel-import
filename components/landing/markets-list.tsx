@@ -82,6 +82,7 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
           e.market.question.toLowerCase().includes(searchQuery.toLowerCase())
         return matchesStatus && matchesSearch
       })
+      .reverse()
       .map(marketToCard)
   }, [markets, searchQuery, probabilityFilter])
 
