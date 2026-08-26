@@ -84,6 +84,17 @@ export function SiteNav() {
               </li>
             ))}
           </ul>
+          {/* Docs — external, so it's a plain anchor not a nav Link */}
+          <a
+            href="https://docs.google.com/document/d/1jC_cfg87C_B7n6tAtYmGpV5KJwjM_vzXIIHsZXaSAAw/preview"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="mt-1 flex items-center gap-2 rounded-md px-3 py-2.5 font-sans text-sm text-[#cfcdc8] transition-colors hover:bg-[#12121a] hover:text-[#B87333]"
+          >
+            <BookOpen className="h-4 w-4" />
+            Docs
+          </a>
           <div className="mt-3">
             <ConnectWalletButton fullWidth />
           </div>
