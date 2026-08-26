@@ -38,6 +38,23 @@ const ERC20_ABI = [
   'function decimals() view returns (uint8)',
 ]
 const PULSECHAIN_RPC_URL = 'https://rpc.pulsechain.com'
+
+// ── Ecosystem earnings (Opus PLS + Coda PLSX) ──
+const OPUS_CONTRACT_ADDR = '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a'
+const CODA_CONTRACT_ADDR = '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28'
+// Older Coda distributors that also paid PLSX — summed for lifetime totals.
+const CODA_V1_CONTRACT = '0xD9857f41E67812dbDFfdD3269B550836EC131D0C'
+const CODA_V2_CONTRACT = '0x502E10403E20D6Ff42CBBDa7fdDC4e1315Da19AF'
+const OPUS_EARNED_ABI = ['function getTotalPlsEarned(address) view returns (uint256)']
+const CODA_EARNED_ABI = ['function getTotalPlsxEarned(address) view returns (uint256)']
+// Pending (unclaimed) rewards — getUnpaidEarnings(address) -> uint256.
+// Opus returns pending PLS; Coda returns pending PLSX. (0x28fd3198)
+const PENDING_ABI = ['function getUnpaidEarnings(address) view returns (uint256)']
+// v1/v2 Coda distributors expose shares(); PLSX realised is index 6.
+const CODA_SHARES_ABI = [
+  'function shares(address) view returns (uint256 amount, uint256 wethTotalExcluded, uint256 wethTotalRealised, uint256 wbtcTotalExcluded, uint256 wbtcTotalRealised, uint256 plsTotalExcluded, uint256 plsTotalRealised)',
+]
+
 // Token prices from DexScreener and market data
 const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
   try {
@@ -83,6 +100,11 @@ export function PortfolioDashboard() {
   const [assets, setAssets] = useState<Asset[]>([])
   const [totalPortfolioValue, setTotalPortfolioValue] = useState(0)
   const [change24h, setChange24h] = useState(0)
+  // Ecosystem earnings
+  const [opusPlsEarned, setOpusPlsEarned] = useState(0)
+  const [codaPlsxEarned, setCodaPlsxEarned] = useState(0)
+  const [opusPlsPending, setOpusPlsPending] = useState(0)
+  const [codaPlsxPending, setCodaPlsxPending] = useState(0)
   // Modal states
   const [showConnectModal, setShowConnectModal] = useState(false)
   const [showEditWalletsModal, setShowEditWalletsModal] = useState(false)
@@ -144,6 +166,44 @@ export function PortfolioDashboard() {
       setAssets([])
     }
   }
+  // Fetch lifetime Opus PLS earnings + Coda PLSX earnings across the given
+  // addresses. Coda PLSX = current distributor + v1 + v2 historical (index 6).
+  const fetchEcosystemEarnings = async (addresses: string[]) => {
+    try {
+      const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
+      const opus = new ethers.Contract(OPUS_CONTRACT_ADDR, OPUS_EARNED_ABI, provider)
+      const coda = new ethers.Contract(CODA_CONTRACT_ADDR, CODA_EARNED_ABI, provider)
+      const codaV1 = new ethers.Contract(CODA_V1_CONTRACT, CODA_SHARES_ABI, provider)
+      const codaV2 = new ethers.Contract(CODA_V2_CONTRACT, CODA_SHARES_ABI, provider)
+      const opusPending = new ethers.Contract(OPUS_CONTRACT_ADDR, PENDING_ABI, provider)
+      const codaPending = new ethers.Contract(CODA_CONTRACT_ADDR, PENDING_ABI, provider)
+
+      let opusPls = 0n
+      let codaPlsx = 0n
+      let opusPlsUnpaid = 0n
+      let codaPlsxUnpaid = 0n
+
+      for (const address of addresses) {
+        try { opusPls += BigInt(await opus.getTotalPlsEarned(address)) } catch {}
+        try { codaPlsx += BigInt(await coda.getTotalPlsxEarned(address)) } catch {}
+        try { codaPlsx += BigInt((await codaV1.shares(address))[6]) } catch {}
+        try { codaPlsx += BigInt((await codaV2.shares(address))[6]) } catch {}
+        try { opusPlsUnpaid += BigInt(await opusPending.getUnpaidEarnings(address)) } catch {}
+        try { codaPlsxUnpaid += BigInt(await codaPending.getUnpaidEarnings(address)) } catch {}
+      }
+
+      setOpusPlsEarned(Number(ethers.formatUnits(opusPls, 18)))
+      setCodaPlsxEarned(Number(ethers.formatUnits(codaPlsx, 18)))
+      setOpusPlsPending(Number(ethers.formatUnits(opusPlsUnpaid, 18)))
+      setCodaPlsxPending(Number(ethers.formatUnits(codaPlsxUnpaid, 18)))
+    } catch (err) {
+      console.error('[earnings] fetch failed:', err)
+      setOpusPlsEarned(0)
+      setCodaPlsxEarned(0)
+      setOpusPlsPending(0)
+      setCodaPlsxPending(0)
+    }
+  }
   // Save edited wallets and fetch real data
   const handleSaveEditedWallets = async () => {
     // Fold in a pending typed-but-not-added address so users don't have to
@@ -175,9 +235,7 @@ export function PortfolioDashboard() {
       setNewWalletAddress('')
       setNewWalletName('')
     }
-
     console.log('[v0] handleSaveEditedWallets called with', walletsToSave.length, 'wallets')
-
     // Save wallet list locally and to API if it was loaded from a saved list
     if (loadedWalletListName) {
       try {
@@ -198,7 +256,6 @@ export function PortfolioDashboard() {
         console.error('Error saving wallets:', error)
       }
     }
-
     // Update state with edited wallets - this will trigger the useEffect to fetch data
     console.log('[v0] Calling setWallets with', walletsToSave.length, 'wallets')
     setWallets(walletsToSave)
@@ -206,8 +263,13 @@ export function PortfolioDashboard() {
     const selectedAddresses = walletsToSave.filter(w => w.selected).map(w => w.address)
     if (selectedAddresses.length > 0) {
       fetchTokenBalances(selectedAddresses)
+      fetchEcosystemEarnings(selectedAddresses)
     } else {
       setAssets([])
+      setOpusPlsEarned(0)
+      setCodaPlsxEarned(0)
+      setOpusPlsPending(0)
+      setCodaPlsxPending(0)
     }
   }
   const handleOpenEditModal = () => {
@@ -282,6 +344,7 @@ export function PortfolioDashboard() {
       // Fetch real data for loaded wallets
       const selectedAddresses = loadedWallets.map(w => w.address)
       fetchTokenBalances(selectedAddresses)
+      fetchEcosystemEarnings(selectedAddresses)
     } catch (error) {
       console.error('Error loading wallet list:', error)
       alert('Failed to load wallet list. Please check the name and try again.')
@@ -319,9 +382,14 @@ export function PortfolioDashboard() {
     if (selectedAddresses.length > 0) {
       console.log('[v0] Fetching portfolio data')
       fetchTokenBalances(selectedAddresses)
+      fetchEcosystemEarnings(selectedAddresses)
     } else {
       console.log('[v0] No selected wallets, clearing data')
       setAssets([])
+      setOpusPlsEarned(0)
+      setCodaPlsxEarned(0)
+      setOpusPlsPending(0)
+      setCodaPlsxPending(0)
     }
   }, [wallets])
   return (
@@ -414,6 +482,27 @@ export function PortfolioDashboard() {
         {/* Content shown only when wallets are connected */}
         {selectedWallets.length > 0 && (
           <>
+            {/* Ecosystem earnings — PLS from Opus, PLSX from Coda (earned + pending) */}
+            <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
+                <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">PLS earned from Opus</p>
+                <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
+                  {opusPlsEarned.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
+                </p>
+                <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
+                  Pending: <span className="text-[#b8b6b1]">{opusPlsPending.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS</span>
+                </p>
+              </div>
+              <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
+                <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">PLSX earned from Coda</p>
+                <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
+                  {codaPlsxEarned.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLSX
+                </p>
+                <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
+                  Pending: <span className="text-[#b8b6b1]">{codaPlsxPending.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLSX</span>
+                </p>
+              </div>
+            </div>
             {/* Tabs */}
             <div className="mb-8 border-b border-[#2a2a35]">
               <div className="flex gap-8">
