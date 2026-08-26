@@ -27,6 +27,20 @@ const tokens = [
   },
 ]
 
+// Holding Smaug boosts your PLS (Opus) and PLSX (Coda) reward payouts.
+const smaugTiers = [
+  { held: "< 0.0001%", multiplier: "1.00x", bonus: "+0%" },
+  { held: "≥ 0.0001%", multiplier: "1.02x", bonus: "+2%" },
+  { held: "≥ 0.0005%", multiplier: "1.04x", bonus: "+4%" },
+  { held: "≥ 0.005%", multiplier: "1.08x", bonus: "+8%" },
+  { held: "≥ 0.015%", multiplier: "1.10x", bonus: "+10%" },
+  { held: "≥ 0.05%", multiplier: "1.12x", bonus: "+12%" },
+  { held: "≥ 0.10%", multiplier: "1.15x", bonus: "+15%" },
+  { held: "≥ 0.25%", multiplier: "1.17x", bonus: "+17%" },
+  { held: "≥ 0.50%", multiplier: "1.19x", bonus: "+19%" },
+  { held: "≥ 1.00%", multiplier: "1.20x", bonus: "+20%" },
+]
+
 export function Tokens() {
   return (
     <section
@@ -86,6 +100,42 @@ export function Tokens() {
             </div>
           </article>
         ))}
+      </div>
+
+      {/* Smaug supply tier multipliers */}
+      <div className="mt-6 rounded-2xl border border-[#2a2a35] bg-[#101017] p-7">
+        <h3 className="font-serif text-2xl font-bold text-[#cd7f32]">
+          Smaug Supply Tier Multipliers
+        </h3>
+        <p className="mt-1 font-sans text-sm leading-relaxed text-[#b8b6b1]">
+          Holding a larger share of the circulating Smaug supply boosts the
+          rewards you earn from both Opus (PLS) and Coda (PLSX).
+        </p>
+
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full min-w-[420px] text-left">
+            <thead>
+              <tr className="border-b border-[#2a2a35] font-sans text-xs uppercase tracking-wide text-[#9ca3af]">
+                <th className="pb-3 pr-4 font-semibold">Circulating Smaug Held</th>
+                <th className="pb-3 pr-4 font-semibold">Multiplier</th>
+                <th className="pb-3 font-semibold">Reward Bonus</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#2a2a35]/60">
+              {smaugTiers.map((tier) => (
+                <tr key={tier.held} className="font-sans text-sm">
+                  <td className="py-2.5 pr-4 text-[#b8b6b1]">{tier.held}</td>
+                  <td className="py-2.5 pr-4 text-[#e8e6e3]">{tier.multiplier}</td>
+                  <td className="py-2.5 font-semibold text-[#cd7f32]">{tier.bonus}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="mt-4 font-sans text-xs text-[#9ca3af]">
+          Bonus applies to both PLS (Opus) and PLSX (Coda) reward payouts.
+        </p>
       </div>
     </section>
   )
