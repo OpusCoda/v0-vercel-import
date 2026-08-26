@@ -134,7 +134,7 @@ export function Tokens() {
         </div>
 
         <p className="mt-4 font-sans text-xs text-[#9ca3af]">
-          Bonus applies to both PLS (Opus) and PLSX (Coda) reward payouts.
+          Example: If you hold 0.20% of the circulating Smaug supply, you receive a 15% higher rewards payouts from Opus (rewards PLS) and Coda (rewards PLSX).
         </p>
       </div>
     </section>
