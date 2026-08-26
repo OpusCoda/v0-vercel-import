@@ -105,11 +105,10 @@ export function Tokens() {
       {/* Smaug supply tier multipliers */}
       <div className="mt-6 rounded-2xl border border-[#2a2a35] bg-[#101017] p-7">
         <h3 className="font-serif text-2xl font-bold text-[#cd7f32]">
-          Smaug Supply Tier Multipliers
+          Tier Multipliers
         </h3>
         <p className="mt-1 font-sans text-sm leading-relaxed text-[#b8b6b1]">
-          Holding a larger share of the circulating Smaug supply boosts the
-          rewards you earn from both Opus (PLS) and Coda (PLSX).
+          Holding a larger share of the circulating Smaug supply boosts the rewards you earn from both Opus and Coda.
         </p>
 
         <div className="mt-6 overflow-x-auto">
