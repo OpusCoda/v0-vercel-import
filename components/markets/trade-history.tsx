@@ -129,7 +129,7 @@ export function TradeHistory() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-right font-sans text-sm font-semibold">
-                          <RealizedPnl realized={m.realized} cost={m.totalBought} />
+                          <RealizedPnl realized={m.realized} cost={m.totalBought - m.remainingCost} />
                         </td>
                       </tr>
                     ))}

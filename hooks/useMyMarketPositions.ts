@@ -120,6 +120,16 @@ export function useMyMarketPositions() {
     query: { enabled: !!address && markets.length > 0 },
   })
 
+  const statusCalls = useMemo(
+  () => markets.map((m) => ({ ...contract, functionName: "getStatus" as const, args: [m.marketId] as const })),
+  [markets]
+  )
+  const { data: statusReads } = useReadContracts({
+  contracts: statusCalls,
+  allowFailure: true,
+  query: { enabled: markets.length > 0 },
+  })
+
   // Figure out which (market, side) pairs the user actually holds AND are still
   // tradable, so we only quoteSell those.
   const sellQuoteTargets = useMemo(() => {
@@ -129,13 +139,14 @@ export function useMyMarketPositions() {
       if (res.status !== "success" || !res.result) return
       const p = res.result as unknown as RawUserPosition
       const mkt = markets[i]?.market
-      const tradable = mkt && !mkt.resolved && !mkt.voided
+      const status = statusReads?.[i]?.status === "success" ? Number(statusReads[i].result) : undefined
+  const tradable = status === 0
       if (!tradable) return
       if (p.yesShares > 0n) targets.push({ marketId: markets[i].marketId, side: true, shares: p.yesShares })
       if (p.noShares > 0n) targets.push({ marketId: markets[i].marketId, side: false, shares: p.noShares })
     })
     return targets
-  }, [positionReads, markets])
+  }, [positionReads, markets, statusReads])
 
   // Pass 2 — quoteSell for each held, tradable side.
   const sellQuoteCalls = useMemo(
@@ -185,6 +196,8 @@ export function useMyMarketPositions() {
       if (res.status !== "success" || !res.result) return
       const p = res.result as unknown as RawUserPosition
       const m = markets[i]
+      const status = statusReads?.[i]?.status === "success" ? Number(statusReads[i].result) : undefined
+      const isPending = status === 1 || status === 2
       if (!m) return
       if (p.yesShares === 0n && p.noShares === 0n && !p.hasTraded) return
 
@@ -193,7 +206,7 @@ export function useMyMarketPositions() {
       const sides: MarketPositionSide[] = []
 
       if (p.yesShares > 0n) {
-        const currentValue = quoteByKey.get(`${m.marketId.toString()}:YES`) ?? 0n
+        const currentValue = isPending ? p.yesCostBasis : (quoteByKey.get(`${m.marketId.toString()}:YES`) ?? 0n)
         // avg entry prob ~ costBasis per share, expressed as bps of 1e18-priced share.
         // pricePerShare would be costBasis*1e18/shares; as a probability that's
         // (costBasis / shares) scaled to bps. Simplest stable proxy: cost per
@@ -211,7 +224,7 @@ export function useMyMarketPositions() {
         })
       }
       if (p.noShares > 0n) {
-        const currentValue = quoteByKey.get(`${m.marketId.toString()}:NO`) ?? 0n
+        const currentValue = isPending ? p.noCostBasis : (quoteByKey.get(`${m.marketId.toString()}:NO`) ?? 0n)
         const avgEntryBps = p.noShares > 0n ? Number((p.noCostBasis * 10000n) / p.noShares) : 0
         sides.push({
           side: "NO",
@@ -239,7 +252,7 @@ export function useMyMarketPositions() {
     })
 
     return out
-  }, [positionReads, markets, quoteByKey, address])
+  }, [positionReads, markets, quoteByKey, address, statusReads])
 
   function refetch() {
     refetchMarkets()
