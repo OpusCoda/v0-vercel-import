@@ -83,19 +83,17 @@ export function computeRealizedPnl(events: TradeEvent[]): {
         a.realized += e.pls
       }
     } else if (e.kind === "claim") {
-      // Winning claim: realize payout minus remaining basis on the held
-      // winning side. We infer the winning side as whichever still has shares.
+      // Winning claim. We don't infer the winning side (a user can hold both
+      // sides at resolution); instead net the payout against total cost basis
+      // spent on this market and zero both lots. Correct at the per-market
+      // level the UI displays.
       a.totalClaimed += e.pls
       const y = lots.get(lotKey(e.marketId, true))
       const n = lots.get(lotKey(e.marketId, false))
-      const lot = (y && y.shares > 0n) ? y : (n && n.shares > 0n) ? n : null
-      if (lot) {
-        a.realized += e.pls - lot.cost
-        lot.shares = 0n
-        lot.cost = 0n
-      } else {
-        a.realized += e.pls
-      }
+      const totalCost = (y?.cost ?? 0n) + (n?.cost ?? 0n)
+      a.realized += e.pls - totalCost   // payout minus everything spent on this market
+      if (y) { y.shares = 0n; y.cost = 0n }
+      if (n) { n.shares = 0n; n.cost = 0n }
     }
   }
 

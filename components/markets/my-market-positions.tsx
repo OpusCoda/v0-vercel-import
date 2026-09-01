@@ -2,9 +2,7 @@
 import { useEffect, useMemo } from "react"
 import { formatUnits } from "viem"
 import { useMyMarketPositions, type MarketPosition } from "@/hooks/useMyMarketPositions"
-import { useMyTradeHistory } from "@/hooks/useMyTradeHistory"
 import { useMarketClaim, type ClaimKind } from "@/hooks/useMarketClaim"
-import { computeRealizedPnl } from "@/lib/realized-pnl"
 function fmtPls(wei: bigint, dp = 0): string {
   return Number(formatUnits(wei, 18)).toLocaleString(undefined, { maximumFractionDigits: dp })
 }
@@ -74,15 +72,6 @@ function Pnl({ pnl, basis }: { pnl: bigint; basis: bigint }) {
 }
 export function MyMarketPositions() {
   const { positions, isLoading, refetch } = useMyMarketPositions()
-  // TEMP TEST — remove after verifying
-  const hist = useMyTradeHistory(true)
-  useEffect(() => {
-    if (!hist.isLoading) {
-      console.log("[history]", hist.events, hist.error)
-      const pnl = computeRealizedPnl(hist.events)
-      console.log("[realized]", pnl.byMarket, "total:", pnl.totalRealized)
-    }
-  }, [hist.events, hist.isLoading, hist.error])
   const { openPositions, settleable, totalValue, totalPnl, totalClaimable } = useMemo(() => {
     const open: MarketPosition[] = []
     const settle: MarketPosition[] = []
