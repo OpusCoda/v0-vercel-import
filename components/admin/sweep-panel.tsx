@@ -4,6 +4,7 @@ import { useReadContract, useReadContracts } from "wagmi"
 import { formatUnits } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useSweepUnclaimed } from "@/hooks/useSweepUnclaimed"
+import { useMarketClaim } from "@/hooks/useMarketClaim"
 const PREDICTION_MARKET_ADDRESS = "0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392"
 // Must match the contract constant UNCLAIMED_SWEEP_WINDOW.
 const SWEEP_WINDOW_SECONDS = 90n * 24n * 60n * 60n // 90 days
@@ -23,17 +24,26 @@ interface SweepRow {
   question: string
   resolvedAt: bigint
   remainingBalance: bigint
+  remainingSettlementPool: bigint
   totalWinningShares: bigint
   claimedWinningShares: bigint
   residualClaimed: boolean
+  residualClaimable: boolean
   sweepAt: bigint // resolvedAt + window
 }
 // One market's sweep card.
 function SweepCard({ row, nowSec, onSwept }: { row: SweepRow; nowSec: bigint; onSwept: () => void }) {
   const { sweep, isPending, isConfirming, isSuccess, writeError } = useSweepUnclaimed()
+  const {
+    claim,
+    isPending: claimPending,
+    isConfirming: claimConfirming,
+    isSuccess: claimSuccess,
+    writeError: claimError,
+  } = useMarketClaim()
   useEffect(() => {
-    if (isSuccess) onSwept()
-  }, [isSuccess, onSwept])
+    if (isSuccess || claimSuccess) onSwept()
+  }, [isSuccess, claimSuccess, onSwept])
   const windowPassed = nowSec >= row.sweepAt
   const hasBalance = row.remainingBalance > 0n
   const alreadySettled = row.residualClaimed
@@ -76,6 +86,14 @@ function SweepCard({ row, nowSec, onSwept }: { row: SweepRow; nowSec: bigint; on
             {fmtPls(row.remainingBalance)} PLS
           </span>
         </div>
+        {row.remainingSettlementPool > 0n && (
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="font-sans text-xs text-[#7c7a76]">Unclaimed winnings</span>
+            <span className="font-sans text-sm font-semibold text-orange-400">
+              {fmtPls(row.remainingSettlementPool)} PLS
+            </span>
+          </div>
+        )}
         {row.totalWinningShares > 0n && (
           <div className="flex items-baseline justify-between gap-3">
             <span className="font-sans text-xs text-[#7c7a76]">Winners unclaimed</span>
@@ -94,15 +112,39 @@ function SweepCard({ row, nowSec, onSwept }: { row: SweepRow; nowSec: bigint; on
           </p>
         </div>
       )}
-      <button
-        onClick={() => sweep(row.marketId)}
-        disabled={!canSweep || isPending || isConfirming || isSuccess}
-        className="w-full rounded border border-[#B87333]/30 bg-[#1a1a20] py-1.5 font-sans text-xs font-semibold text-[#B87333] transition-colors hover:bg-[#2a2a35] disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {alreadySettled ? "Settled" : !hasBalance ? "Nothing to sweep" : btnLabel}
-      </button>
-      {writeError && (
-        <p className="mt-1.5 font-sans text-[10px] text-red-400">Sweep failed — see wallet / console.</p>
+      {row.residualClaimable ? (
+        <>
+          <div className="mb-2 rounded border border-[#B87333]/20 bg-[#B87333]/5 px-2 py-1.5">
+            <p className="font-sans text-[10px] leading-relaxed text-[#b8b6b1]">
+              All winners have claimed. The market creator can now reclaim the remaining{" "}
+              <span className="text-[#B87333]">{fmtPls(row.remainingBalance)} PLS</span> of seed
+              liquidity. (Callable by the market creator only.)
+            </p>
+          </div>
+          <button
+            onClick={() => claim(row.marketId, "residual")}
+            disabled={claimPending || claimConfirming || claimSuccess}
+            className="w-full rounded border border-[#B87333]/30 bg-[#1a1a20] py-1.5 font-sans text-xs font-semibold text-[#B87333] transition-colors hover:bg-[#2a2a35] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {claimSuccess ? "Residual claimed ✓" : claimPending ? "Confirm in wallet…" : claimConfirming ? "Claiming…" : "Claim residual liquidity"}
+          </button>
+          {claimError && (
+            <p className="mt-1.5 font-sans text-[10px] text-red-400">Claim failed — see wallet / console.</p>
+          )}
+        </>
+      ) : (
+        <>
+          <button
+            onClick={() => sweep(row.marketId)}
+            disabled={!canSweep || isPending || isConfirming || isSuccess}
+            className="w-full rounded border border-[#B87333]/30 bg-[#1a1a20] py-1.5 font-sans text-xs font-semibold text-[#B87333] transition-colors hover:bg-[#2a2a35] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {alreadySettled ? "Settled" : !hasBalance ? "Nothing to sweep" : btnLabel}
+          </button>
+          {writeError && (
+            <p className="mt-1.5 font-sans text-[10px] text-red-400">Sweep failed — see wallet / console.</p>
+          )}
+        </>
       )}
     </div>
   )
@@ -166,7 +208,9 @@ export function SweepPanel() {
       // getSettlementInfo: settlementPool, remainingSettlementPool,
       // totalWinningShares, claimedWinningShares, remainingMarketBalance,
       // residualClaimable, residualClaimed
+      const remainingSettlementPool = s[1]
       const remainingBalance = s[4]
+      const residualClaimable = s[5]
       const residualClaimed = s[6]
       // Skip markets with nothing left AND already settled — no action possible.
       if (remainingBalance === 0n && residualClaimed) continue
@@ -175,9 +219,11 @@ export function SweepPanel() {
         question: m.question,
         resolvedAt: m.resolvedAt,
         remainingBalance,
+        remainingSettlementPool,
         totalWinningShares: s[2],
         claimedWinningShares: s[3],
         residualClaimed,
+        residualClaimable,
         sweepAt: m.resolvedAt + SWEEP_WINDOW_SECONDS,
       })
     }
