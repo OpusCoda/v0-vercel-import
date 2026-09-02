@@ -151,11 +151,7 @@ export function StakingStats() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatBox
           label="Total staked"
-          value={
-    totalStaked !== undefined
-      ? `${Math.round(Number(totalStaked) / 1e18).toLocaleString()}   SMAUG`
-      : '—'
-    }
+          value={totalStaked !== undefined ? `${formatSmaugBalance(totalStaked)} SMAUG` : '—'}
           sub={
             pctOfSupply !== undefined
               ? `${pctOfSupply.toFixed(2)}% of circulating supply`
