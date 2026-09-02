@@ -32,7 +32,14 @@ export function marketToCard(entry: MarketWithId): MarketCardProps {
   const total = yes + no
   // Spot probability from pools. Guard against an empty pool (shouldn't happen
   // since markets are seeded, but be safe).
-  const yesOdds = total > 0 ? Math.round((yes / total) * 100) : 50
+    // Resolved markets show the winner at 100%, loser at 0% — not the last AMM
+  // pool ratio. Live markets use the spot probability from the pools.
+  let yesOdds: number
+  if (m.resolved) {
+    yesOdds = m.outcome ? 100 : 0
+  } else {
+    yesOdds = total > 0 ? Math.round((yes / total) * 100) : 50
+  }
   const noOdds = 100 - yesOdds
   const categoryLabel = CATEGORY_LABELS[m.category] ?? "Misc"
   // Derive the status label.

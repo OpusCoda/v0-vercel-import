@@ -82,7 +82,13 @@ export function MarketsList({ variant = "all" }: { variant?: MarketsVariant }) {
           e.market.question.toLowerCase().includes(searchQuery.toLowerCase())
         return matchesStatus && matchesSearch
       })
-      .reverse()
+            .reverse()
+      .sort((a, b) => {
+        // Resolved markets sink to the bottom; keep newest-first within each group.
+        const aResolved = a.market.resolved ? 1 : 0
+        const bResolved = b.market.resolved ? 1 : 0
+        return aResolved - bResolved
+      })
       .map(marketToCard)
   }, [markets, searchQuery, probabilityFilter])
 
