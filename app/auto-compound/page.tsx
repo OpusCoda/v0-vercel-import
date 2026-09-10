@@ -1,7 +1,6 @@
 // app/auto-compound/page.tsx
 "use client"
 
-import { SiteNav } from "@/components/landing/site-nav"
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { formatUnits, parseUnits, maxUint256 } from "viem"
@@ -11,6 +10,7 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi"
+import { SiteNav } from "@/components/landing/site-nav"
 import { ConnectWalletButton } from "@/components/landing/connect-wallet-button"
 import {
   VAULTS,
@@ -155,6 +155,7 @@ export default function AutoCompoundPage() {
   const [withdrawAmt, setWithdrawAmt] = useState("")
   const [pctDraft, setPctDraft] = useState<number | null>(null)
 
+  const [txError, setTxError] = useState<string | null>(null)
   const { writeContract, data: txHash, isPending } = useWriteContract()
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: txHash })
   const busy = isPending || isConfirming
@@ -194,25 +195,52 @@ export default function AutoCompoundPage() {
   const depositWei = toWei(depositAmt)
   const needsApproval = depositWei > 0n && allowance < depositWei
 
-  const pct = pctDraft ?? Number(compoundPct)
-  const pctChanged = pctDraft !== null && pctDraft !== Number(compoundPct)
+  // A wallet that has never interacted returns compoundPct = 0 (uninitialised
+  // struct). Anyone who has deposited returns 5-100. That distinguishes a
+  // first-time depositor from a returning one.
+  const isNewDepositor = Number(compoundPct) === 0
+  const storedPct = isNewDepositor ? 100 : Number(compoundPct)
+
+  const pct = pctDraft ?? storedPct
+  const pctChanged = pctDraft !== null && pctDraft !== storedPct
+
+  // A first-timer who has staged a non-default rate must save it BEFORE
+  // depositing: deposit() assigns the 100% default to any wallet that has not
+  // been initialised, which would overwrite their choice.
+  const rateNeedsTx = isNewDepositor && pctChanged
 
   const nextTier = useMemo(() => {
     if (!circulating) return null
     return smaugForNextTier(Number(tier), circulating)
   }, [tier, circulating])
 
-  const send = (fn: string, args: readonly unknown[] = []) =>
+  /** Strips viem's multi-paragraph error down to the first useful line. */
+  const readableError = (e: unknown) => {
+    const msg = e instanceof Error ? e.message : String(e)
+    if (/User rejected|denied transaction/i.test(msg)) return null // not an error
+    const named = msg.match(/reverted with the following reason:\s*(.+)/i)
+    if (named) return named[1].split("\n")[0].trim()
+    const custom = msg.match(/Error:\s*([A-Za-z]+)\(\)/)
+    if (custom) return custom[1]
+    return msg.split("\n")[0].slice(0, 160)
+  }
+
+  const send = (fn: string, args: readonly unknown[] = []) => {
+    setTxError(null)
     writeContract(
       { address: cfg.vault, abi: VAULT_ABI, functionName: fn as never, args: args as never },
-      { onSuccess: () => refetchUser() },
+      {
+        onSuccess: () => refetchUser(),
+        onError: (e) => setTxError(readableError(e)),
+      },
     )
+  }
 
   // Principal shown to the user is what's settled plus what's credited but not
   // yet folded in. The split is an implementation detail.
   const balance = principal + pendingIn
 
-    return (
+  return (
     <>
       <SiteNav />
       <main className="mx-auto max-w-5xl px-4 py-10 md:px-6">
@@ -391,17 +419,47 @@ export default function AutoCompoundPage() {
                 max={walletToken}
                 symbol={cfg.tokenSymbol}
               />
+
+              <div className="rounded-md border border-[#2a2a35] bg-[#0a0a0c] p-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-sans text-xs text-[#9ca3af]">
+                    Reinvestment rate
+                  </span>
+                  <span className="font-sans text-sm text-[#B87333] tabular-nums">
+                    {pct}%
+                  </span>
+                </div>
+                <p className="mt-2 font-sans text-xs leading-relaxed text-[#6b7280]">
+                  {pct === 100
+                    ? `Everything you earn buys more ${cfg.tokenSymbol}.`
+                    : `${pct}% buys more ${cfg.tokenSymbol}; the other ${
+                        100 - pct
+                      }% is yours to claim as ${cfg.rewardSymbol}.`}
+                  {" Set it in the Reinvestment rate panel."}
+                </p>
+                {rateNeedsTx && (
+                  <p className="mt-2 font-sans text-xs leading-relaxed text-[#B87333]">
+                    Press Save rate first — it needs its own transaction, and
+                    depositing before it lands would set you to 100%.
+                  </p>
+                )}
+              </div>
+
               <div className="flex flex-wrap gap-2">
                 {needsApproval && (
                   <Button
-                    onClick={() =>
-                      writeContract({
-                        address: cfg.token,
-                        abi: ERC20_ABI,
-                        functionName: "approve",
-                        args: [cfg.vault, maxUint256],
-                      })
-                    }
+                    onClick={() => {
+                      setTxError(null)
+                      writeContract(
+                        {
+                          address: cfg.token,
+                          abi: ERC20_ABI,
+                          functionName: "approve",
+                          args: [cfg.vault, maxUint256],
+                        },
+                        { onError: (e) => setTxError(readableError(e)) },
+                      )
+                    }}
                     disabled={busy}
                   >
                     Approve {cfg.tokenSymbol}
@@ -412,13 +470,13 @@ export default function AutoCompoundPage() {
                     send("deposit", [depositWei])
                     setDepositAmt("")
                   }}
-                  disabled={busy || needsApproval || depositWei === 0n}
+                  disabled={busy || needsApproval || rateNeedsTx || depositWei === 0n}
                 >
                   Deposit
                 </Button>
               </div>
               <p className="font-sans text-xs leading-relaxed text-[#6b7280]">
-                New deposits start at 100% reinvestment. Change it any time above.
+                You can change your reinvestment rate any time after depositing.
               </p>
             </div>
           </Panel>
@@ -463,7 +521,13 @@ export default function AutoCompoundPage() {
       {busy && (
         <p className="mt-6 font-sans text-sm text-[#B87333]">Waiting for confirmation…</p>
       )}
-    </main>
+
+      {txError && !busy && (
+        <div className="mt-6 rounded-md border border-[#7f1d1d] bg-[#7f1d1d]/10 px-4 py-3">
+          <p className="font-sans text-sm text-[#fca5a5]">{txError}</p>
+        </div>
+      )}
+      </main>
     </>
   )
 }
