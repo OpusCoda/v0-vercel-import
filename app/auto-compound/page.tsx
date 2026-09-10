@@ -1,6 +1,7 @@
 // app/auto-compound/page.tsx
 "use client"
 
+import { SiteNav } from "@/components/landing/site-nav"
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { formatUnits, parseUnits, maxUint256 } from "viem"
@@ -10,6 +11,7 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi"
+import { ConnectWalletButton } from "@/components/landing/connect-wallet-button"
 import {
   VAULTS,
   VAULT_ABI,
@@ -159,17 +161,14 @@ export default function AutoCompoundPage() {
 
   const { data: vaultData } = useReadContracts({
     contracts: [
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "vaultTier" },
       { address: cfg.vault, abi: VAULT_ABI, functionName: "totalPrincipal" },
       { address: cfg.vault, abi: VAULT_ABI, functionName: "smaugCirculating" },
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "depositorCount" },
     ],
     query: { refetchInterval: 30_000 },
   })
 
-  const vaultTier = vaultData?.[0]?.result as bigint | undefined
-  const totalPrincipal = vaultData?.[1]?.result as bigint | undefined
-  const circulating = vaultData?.[2]?.result as bigint | undefined
+  const totalPrincipal = vaultData?.[0]?.result as bigint | undefined
+  const circulating = vaultData?.[1]?.result as bigint | undefined
 
   const { data: userData, refetch: refetchUser } = useReadContracts({
     contracts: address
@@ -213,8 +212,10 @@ export default function AutoCompoundPage() {
   // yet folded in. The split is an implementation detail.
   const balance = principal + pendingIn
 
-  return (
-    <main className="mx-auto max-w-5xl px-4 py-10 md:px-6">
+    return (
+    <>
+      <SiteNav />
+      <main className="mx-auto max-w-5xl px-4 py-10 md:px-6">
       <header className="mb-8">
         <h1 className="font-serif text-3xl text-[#e8e6e3]">Auto-Compounder</h1>
         <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-[#9ca3af]">
@@ -253,12 +254,7 @@ export default function AutoCompoundPage() {
         ))}
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-5 rounded-lg border border-[#2a2a35] bg-[#0e0e13] p-5 sm:grid-cols-3">
-        <Stat
-          label="Vault reward tier"
-          value={vaultTier ? formatTier(vaultTier) : "—"}
-          hint="Applied to everything the vault earns"
-        />
+      <div className="mb-6 grid grid-cols-2 gap-5 rounded-lg border border-[#2a2a35] bg-[#0e0e13] p-5">
         <Stat label={`${cfg.tokenSymbol} deposited`} value={fmt(totalPrincipal, 0)} />
         <Stat label="Your tier" value={formatTier(tier)} hint="From Smaug in your wallet" />
       </div>
@@ -268,6 +264,9 @@ export default function AutoCompoundPage() {
           <p className="font-sans text-sm text-[#9ca3af]">
             Connect your wallet to deposit {cfg.tokenSymbol} and see your position.
           </p>
+          <div className="mt-4">
+            <ConnectWalletButton />
+          </div>
         </Panel>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
@@ -465,5 +464,6 @@ export default function AutoCompoundPage() {
         <p className="mt-6 font-sans text-sm text-[#B87333]">Waiting for confirmation…</p>
       )}
     </main>
+    </>
   )
 }
