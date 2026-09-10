@@ -6,7 +6,6 @@ import Link from "next/link"
 import { formatUnits, parseUnits, maxUint256 } from "viem"
 import {
   useAccount,
-  useReadContract,
   useReadContracts,
   useWriteContract,
   useWaitForTransactionReceipt,
@@ -22,7 +21,7 @@ import {
   type VaultKey,
 } from "@/lib/auto-compounder"
 
-/* ── small presentational pieces ─────────────────────────────────── */
+/* ── presentational pieces ───────────────────────────────────────── */
 
 function Panel({
   title,
@@ -56,12 +55,8 @@ function Stat({
   return (
     <div>
       <div className="font-sans text-xs text-[#9ca3af]">{label}</div>
-      <div className="mt-1 font-sans text-lg text-[#e8e6e3] tabular-nums">
-        {value}
-      </div>
-      {hint && (
-        <div className="mt-0.5 font-sans text-xs text-[#6b7280]">{hint}</div>
-      )}
+      <div className="mt-1 font-sans text-lg text-[#e8e6e3] tabular-nums">{value}</div>
+      {hint && <div className="mt-0.5 font-sans text-xs text-[#6b7280]">{hint}</div>}
     </div>
   )
 }
@@ -71,13 +66,11 @@ function Button({
   onClick,
   disabled,
   variant = "primary",
-  full,
 }: {
   children: React.ReactNode
   onClick?: () => void
   disabled?: boolean
   variant?: "primary" | "quiet"
-  full?: boolean
 }) {
   const base =
     "rounded-md px-4 py-2.5 font-sans text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B87333]"
@@ -86,12 +79,7 @@ function Button({
       ? "bg-[#B87333] text-[#0a0a0c] hover:bg-[#c98442]"
       : "border border-[#2a2a35] text-[#cfcdc8] hover:border-[#B87333]/50 hover:text-[#B87333]"
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`${base} ${styles} ${full ? "w-full" : ""}`}
-    >
+    <button type="button" onClick={onClick} disabled={disabled} className={`${base} ${styles}`}>
       {children}
     </button>
   )
@@ -162,66 +150,33 @@ export default function AutoCompoundPage() {
   const { address, isConnected } = useAccount()
 
   const [depositAmt, setDepositAmt] = useState("")
-  const [smaugAmt, setSmaugAmt] = useState("")
   const [withdrawAmt, setWithdrawAmt] = useState("")
-  const [withdrawSmaug, setWithdrawSmaug] = useState("")
   const [pctDraft, setPctDraft] = useState<number | null>(null)
 
   const { writeContract, data: txHash, isPending } = useWriteContract()
-  const { isLoading: isConfirming } = useWaitForTransactionReceipt({
-    hash: txHash,
-  })
+  const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: txHash })
   const busy = isPending || isConfirming
 
-  /* vault-wide reads */
   const { data: vaultData } = useReadContracts({
     contracts: [
       { address: cfg.vault, abi: VAULT_ABI, functionName: "vaultTier" },
       { address: cfg.vault, abi: VAULT_ABI, functionName: "totalPrincipal" },
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "totalSmaug" },
       { address: cfg.vault, abi: VAULT_ABI, functionName: "smaugCirculating" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "depositorCount" },
     ],
     query: { refetchInterval: 30_000 },
   })
 
   const vaultTier = vaultData?.[0]?.result as bigint | undefined
   const totalPrincipal = vaultData?.[1]?.result as bigint | undefined
-  const circulating = vaultData?.[3]?.result as bigint | undefined
+  const circulating = vaultData?.[2]?.result as bigint | undefined
 
-  /* per-user reads */
   const { data: userData, refetch: refetchUser } = useReadContracts({
     contracts: address
       ? [
-          {
-            address: cfg.vault,
-            abi: VAULT_ABI,
-            functionName: "positionOf",
-            args: [address],
-          },
-          {
-            address: cfg.token,
-            abi: ERC20_ABI,
-            functionName: "balanceOf",
-            args: [address],
-          },
-          {
-            address: cfg.token,
-            abi: ERC20_ABI,
-            functionName: "allowance",
-            args: [address, cfg.vault],
-          },
-          {
-            address: SMAUG_ADDRESS,
-            abi: ERC20_ABI,
-            functionName: "balanceOf",
-            args: [address],
-          },
-          {
-            address: SMAUG_ADDRESS,
-            abi: ERC20_ABI,
-            functionName: "allowance",
-            args: [address, cfg.vault],
-          },
+          { address: cfg.vault, abi: VAULT_ABI, functionName: "positionOf", args: [address] },
+          { address: cfg.token, abi: ERC20_ABI, functionName: "balanceOf", args: [address] },
+          { address: cfg.token, abi: ERC20_ABI, functionName: "allowance", args: [address, cfg.vault] },
         ]
       : [],
     query: { enabled: !!address, refetchInterval: 15_000 },
@@ -231,18 +186,14 @@ export default function AutoCompoundPage() {
     | readonly [bigint, bigint, bigint, bigint, bigint, bigint, number]
     | undefined
 
-  const [principal, smaugStaked, tier, , pendingIn, claimable, compoundPct] =
+  const [principal, smaugInWallet, tier, , pendingIn, claimable, compoundPct] =
     position ?? [0n, 0n, 100n, 0n, 0n, 0n, 100]
 
   const walletToken = (userData?.[1]?.result as bigint) ?? 0n
-  const tokenAllowance = (userData?.[2]?.result as bigint) ?? 0n
-  const walletSmaug = (userData?.[3]?.result as bigint) ?? 0n
-  const smaugAllowance = (userData?.[4]?.result as bigint) ?? 0n
+  const allowance = (userData?.[2]?.result as bigint) ?? 0n
 
   const depositWei = toWei(depositAmt)
-  const smaugWei = toWei(smaugAmt)
-  const needsTokenApproval = depositWei > 0n && tokenAllowance < depositWei
-  const needsSmaugApproval = smaugWei > 0n && smaugAllowance < smaugWei
+  const needsApproval = depositWei > 0n && allowance < depositWei
 
   const pct = pctDraft ?? Number(compoundPct)
   const pctChanged = pctDraft !== null && pctDraft !== Number(compoundPct)
@@ -258,16 +209,9 @@ export default function AutoCompoundPage() {
       { onSuccess: () => refetchUser() },
     )
 
-  const approve = (token: `0x${string}`) =>
-    writeContract({
-      address: token,
-      abi: ERC20_ABI,
-      functionName: "approve",
-      args: [cfg.vault, maxUint256],
-    })
-
-  const notDeployed =
-    cfg.vault === "0x0000000000000000000000000000000000000000"
+  // Principal shown to the user is what's settled plus what's credited but not
+  // yet folded in. The split is an implementation detail.
+  const balance = principal + pendingIn
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 md:px-6">
@@ -275,12 +219,11 @@ export default function AutoCompoundPage() {
         <h1 className="font-serif text-3xl text-[#e8e6e3]">Auto-Compounder</h1>
         <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-[#9ca3af]">
           Deposit {cfg.tokenSymbol} and your rewards are bought back into more{" "}
-          {cfg.tokenSymbol} for you. Choose how much to reinvest and how much to
-          take as {cfg.rewardSymbol}. Add Smaug to raise your reward tier.
-          Withdraw whenever you like — nothing is locked.
+          {cfg.tokenSymbol} for you. Choose how much to reinvest and how much to take
+          as {cfg.rewardSymbol}. Nothing is locked — withdraw whenever you like.
         </p>
         <p className="mt-3 font-sans text-sm text-[#6b7280]">
-          Looking to lock Smaug for a bigger multiplier?{" "}
+          Prefer to lock Smaug for a larger multiplier?{" "}
           <Link href="/stake" className="text-[#B87333] hover:underline">
             Staking
           </Link>{" "}
@@ -288,7 +231,6 @@ export default function AutoCompoundPage() {
         </p>
       </header>
 
-      {/* token switch */}
       <div className="mb-6 inline-flex rounded-md border border-[#2a2a35] p-1">
         {(Object.keys(VAULTS) as VaultKey[]).map((k) => (
           <button
@@ -297,6 +239,8 @@ export default function AutoCompoundPage() {
             onClick={() => {
               setActive(k)
               setPctDraft(null)
+              setDepositAmt("")
+              setWithdrawAmt("")
             }}
             className={`rounded px-4 py-1.5 font-sans text-sm transition-colors ${
               active === k
@@ -309,83 +253,90 @@ export default function AutoCompoundPage() {
         ))}
       </div>
 
-      {notDeployed && (
-        <div className="mb-6 rounded-md border border-[#B87333]/40 bg-[#B87333]/5 px-4 py-3 font-sans text-sm text-[#cfcdc8]">
-          The {cfg.tokenSymbol} vault isn&apos;t live yet. Check back shortly.
-        </div>
-      )}
-
-      {/* vault summary */}
       <div className="mb-6 grid grid-cols-2 gap-5 rounded-lg border border-[#2a2a35] bg-[#0e0e13] p-5 sm:grid-cols-3">
         <Stat
           label="Vault reward tier"
           value={vaultTier ? formatTier(vaultTier) : "—"}
           hint="Applied to everything the vault earns"
         />
-        <Stat
-          label={`${cfg.tokenSymbol} deposited`}
-          value={fmt(totalPrincipal, 0)}
-        />
-        <Stat label="Your tier" value={formatTier(tier)} />
+        <Stat label={`${cfg.tokenSymbol} deposited`} value={fmt(totalPrincipal, 0)} />
+        <Stat label="Your tier" value={formatTier(tier)} hint="From Smaug in your wallet" />
       </div>
 
       {!isConnected ? (
         <Panel title="Connect to get started">
           <p className="font-sans text-sm text-[#9ca3af]">
-            Connect your wallet to deposit {cfg.tokenSymbol} and see your
-            position.
+            Connect your wallet to deposit {cfg.tokenSymbol} and see your position.
           </p>
         </Panel>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* position */}
           <Panel title="Your position">
-            <div className="grid grid-cols-2 gap-5">
-              <Stat
-                label={`${cfg.tokenSymbol} deposited`}
-                value={fmt(principal)}
-                hint={pendingIn > 0n ? `+${fmt(pendingIn)} pending` : undefined}
-              />
-              <Stat label="Smaug added" value={fmt(smaugStaked, 0)} />
-            </div>
-
-            {nextTier && (
-              <p className="mt-4 font-sans text-xs leading-relaxed text-[#6b7280]">
-                Add {fmt(nextTier.smaug - smaugStaked, 0)} more Smaug to reach{" "}
-                {formatTier(nextTier.tier)}.
-              </p>
-            )}
+            <Stat
+              label={`${cfg.tokenSymbol} in the vault`}
+              value={fmt(balance)}
+              hint={
+                balance > 0n && pct > 0
+                  ? `Growing at ${pct}% reinvestment`
+                  : undefined
+              }
+            />
 
             <div className="mt-5 border-t border-[#2a2a35] pt-5">
-              <Stat
-                label={`${cfg.rewardSymbol} ready to claim`}
-                value={fmt(claimable)}
-              />
+              <Stat label={`${cfg.rewardSymbol} ready to claim`} value={fmt(claimable)} />
               <div className="mt-3">
-                <Button
-                  onClick={() => send("claim")}
-                  disabled={busy || claimable === 0n}
-                >
+                <Button onClick={() => send("claim")} disabled={busy || claimable === 0n}>
                   Claim {cfg.rewardSymbol}
                 </Button>
               </div>
             </div>
           </Panel>
 
-          {/* compound rate */}
+          <Panel title="Your Smaug tier" aside={<span className="font-sans text-sm text-[#B87333]">{formatTier(tier)}</span>}>
+            <p className="font-sans text-sm leading-relaxed text-[#9ca3af]">
+              Your tier is read from the Smaug in your wallet. Nothing to deposit,
+              nothing to lock — it keeps earning Smaug reflections while it sits
+              there.
+            </p>
+
+            <div className="mt-4">
+              <Stat label="Smaug in your wallet" value={fmt(smaugInWallet, 0)} />
+            </div>
+
+            {nextTier ? (
+              <p className="mt-4 font-sans text-xs leading-relaxed text-[#6b7280]">
+                Hold {fmt(nextTier.smaug, 0)} Smaug to reach {formatTier(nextTier.tier)}.
+              </p>
+            ) : (
+              <p className="mt-4 font-sans text-xs text-[#6b7280]">
+                You&apos;re at the highest tier.
+              </p>
+            )}
+
+            <div className="mt-4">
+              <Button
+                variant="quiet"
+                onClick={() => send("refreshWeight", [address])}
+                disabled={busy}
+              >
+                Refresh my tier
+              </Button>
+            </div>
+            <p className="mt-2 font-sans text-xs leading-relaxed text-[#6b7280]">
+              Your tier updates automatically over time. Refresh it yourself if you
+              just changed your Smaug balance.
+            </p>
+          </Panel>
+
           <Panel
             title="Reinvestment rate"
-            aside={
-              <span className="font-sans text-sm text-[#B87333] tabular-nums">
-                {pct}%
-              </span>
-            }
+            aside={<span className="font-sans text-sm text-[#B87333] tabular-nums">{pct}%</span>}
           >
             <p className="font-sans text-sm leading-relaxed text-[#9ca3af]">
               {pct}% of your rewards buys more {cfg.tokenSymbol}.{" "}
               {100 - pct > 0
                 ? `The other ${100 - pct}% is yours to claim as ${cfg.rewardSymbol}.`
-                : `Nothing is held back to claim.`}
+                : "Nothing is held back to claim."}
             </p>
 
             <input
@@ -421,21 +372,17 @@ export default function AutoCompoundPage() {
             </div>
 
             <div className="mt-5">
-              <Button
-                onClick={() => send("setCompoundPct", [pct])}
-                disabled={busy || !pctChanged}
-              >
+              <Button onClick={() => send("setCompoundPct", [pct])} disabled={busy || !pctChanged}>
                 {pctChanged ? "Save rate" : "Rate saved"}
               </Button>
             </div>
 
             <p className="mt-3 font-sans text-xs leading-relaxed text-[#6b7280]">
-              Changes apply to rewards from here on. Anything already earned
-              keeps the split it was earned under.
+              Changes apply to rewards from here on. Anything already earned keeps the
+              split it was earned under.
             </p>
           </Panel>
 
-          {/* deposit */}
           <Panel title={`Deposit ${cfg.tokenSymbol}`}>
             <div className="space-y-4">
               <AmountInput
@@ -445,95 +392,69 @@ export default function AutoCompoundPage() {
                 max={walletToken}
                 symbol={cfg.tokenSymbol}
               />
-              <AmountInput
-                label={`Smaug, optional — ${fmt(walletSmaug, 0)} in wallet`}
-                value={smaugAmt}
-                onChange={setSmaugAmt}
-                max={walletSmaug}
-                symbol="SMAUG"
-              />
-              <p className="font-sans text-xs leading-relaxed text-[#6b7280]">
-                Smaug you deposit here sets your tier. Smaug left in your wallet
-                doesn&apos;t count toward it.
-              </p>
-
               <div className="flex flex-wrap gap-2">
-                {needsTokenApproval && (
-                  <Button onClick={() => approve(cfg.token)} disabled={busy}>
+                {needsApproval && (
+                  <Button
+                    onClick={() =>
+                      writeContract({
+                        address: cfg.token,
+                        abi: ERC20_ABI,
+                        functionName: "approve",
+                        args: [cfg.vault, maxUint256],
+                      })
+                    }
+                    disabled={busy}
+                  >
                     Approve {cfg.tokenSymbol}
-                  </Button>
-                )}
-                {needsSmaugApproval && (
-                  <Button onClick={() => approve(SMAUG_ADDRESS)} disabled={busy}>
-                    Approve Smaug
                   </Button>
                 )}
                 <Button
                   onClick={() => {
-                    send("deposit", [depositWei, smaugWei])
+                    send("deposit", [depositWei])
                     setDepositAmt("")
-                    setSmaugAmt("")
                   }}
-                  disabled={
-                    busy ||
-                    notDeployed ||
-                    needsTokenApproval ||
-                    needsSmaugApproval ||
-                    (depositWei === 0n && smaugWei === 0n)
-                  }
+                  disabled={busy || needsApproval || depositWei === 0n}
                 >
                   Deposit
                 </Button>
               </div>
+              <p className="font-sans text-xs leading-relaxed text-[#6b7280]">
+                New deposits start at 100% reinvestment. Change it any time above.
+              </p>
             </div>
           </Panel>
 
-          {/* withdraw */}
           <Panel title="Withdraw">
             <div className="space-y-4">
               <AmountInput
-                label={`${cfg.tokenSymbol} — ${fmt(principal)} deposited`}
+                label={`Amount — ${fmt(balance)} in the vault`}
                 value={withdrawAmt}
                 onChange={setWithdrawAmt}
                 max={principal}
                 symbol={cfg.tokenSymbol}
               />
-              <AmountInput
-                label={`Smaug — ${fmt(smaugStaked, 0)} deposited`}
-                value={withdrawSmaug}
-                onChange={setWithdrawSmaug}
-                max={smaugStaked}
-                symbol="SMAUG"
-              />
-
               <div className="flex flex-wrap gap-2">
                 <Button
                   onClick={() => {
-                    send("withdraw", [toWei(withdrawAmt), toWei(withdrawSmaug)])
+                    send("withdraw", [toWei(withdrawAmt)])
                     setWithdrawAmt("")
-                    setWithdrawSmaug("")
                   }}
-                  disabled={
-                    busy ||
-                    (toWei(withdrawAmt) === 0n && toWei(withdrawSmaug) === 0n)
-                  }
+                  disabled={busy || toWei(withdrawAmt) === 0n}
                 >
                   Withdraw
                 </Button>
                 <Button
                   variant="quiet"
                   onClick={() => send("withdrawAll")}
-                  disabled={
-                    busy ||
-                    (principal === 0n && smaugStaked === 0n && claimable === 0n)
-                  }
+                  disabled={busy || (principal === 0n && claimable === 0n)}
                 >
                   Withdraw everything
                 </Button>
               </div>
-
               <p className="font-sans text-xs leading-relaxed text-[#6b7280]">
-                No lock-up and no exit fee. Withdrawing Smaug lowers your tier.
+                No lock-up and no exit fee. Withdrawing leaves your{" "}
+                {cfg.rewardSymbol} behind — claim it separately, or use Withdraw
+                everything to take both.
               </p>
             </div>
           </Panel>
@@ -541,9 +462,7 @@ export default function AutoCompoundPage() {
       )}
 
       {busy && (
-        <p className="mt-6 font-sans text-sm text-[#B87333]">
-          Waiting for confirmation…
-        </p>
+        <p className="mt-6 font-sans text-sm text-[#B87333]">Waiting for confirmation…</p>
       )}
     </main>
   )

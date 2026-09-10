@@ -1,12 +1,9 @@
-// lib/auto-compounder.ts
 import type { Address } from "viem"
 
-/** Fill these in after deploying OpusAutoCompounder and CodaAutoCompounder. */
 export const VAULTS = {
   OPUS: {
     key: "OPUS" as const,
-    label: "Opus",
-    vault: "0x0000000000000000000000000000000000000000" as Address, // TODO
+    vault: "0xEf5B436f6832F19D34b81897FFAE0751c6612830" as Address,
     token: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" as Address,
     tokenSymbol: "OPUS",
     rewardSymbol: "PLS",
@@ -15,8 +12,7 @@ export const VAULTS = {
   },
   CODA: {
     key: "CODA" as const,
-    label: "Coda",
-    vault: "0x0000000000000000000000000000000000000000" as Address, // TODO
+    vault: "0x630ce372979B784db03e277A7c888D1A8b47819E" as Address,
     token: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" as Address,
     tokenSymbol: "CODA",
     rewardSymbol: "PLSX",
@@ -39,7 +35,7 @@ export const VAULT_ABI = [
     inputs: [{ name: "account", type: "address" }],
     outputs: [
       { name: "principal", type: "uint256" },
-      { name: "smaug", type: "uint256" },
+      { name: "smaugInWallet", type: "uint256" },
       { name: "tier", type: "uint256" },
       { name: "weight", type: "uint256" },
       { name: "pendingIn", type: "uint256" },
@@ -47,13 +43,10 @@ export const VAULT_ABI = [
       { name: "compoundPct", type: "uint8" },
     ],
   },
-  {
-    type: "function",
-    name: "vaultTier",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ type: "uint256" }],
-  },
+  { type: "function", name: "vaultTier", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "totalPrincipal", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "depositorCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "smaugCirculating", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   {
     type: "function",
     name: "tierFor",
@@ -63,52 +56,19 @@ export const VAULT_ABI = [
   },
   {
     type: "function",
-    name: "smaugCirculating",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "totalPrincipal",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "totalSmaug",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ type: "uint256" }],
-  },
-  {
-    type: "function",
     name: "deposit",
     stateMutability: "nonpayable",
-    inputs: [
-      { name: "principalAmount", type: "uint256" },
-      { name: "smaugAmount", type: "uint256" },
-    ],
+    inputs: [{ name: "principalAmount", type: "uint256" }],
     outputs: [],
   },
   {
     type: "function",
     name: "withdraw",
     stateMutability: "nonpayable",
-    inputs: [
-      { name: "principalAmount", type: "uint256" },
-      { name: "smaugAmount", type: "uint256" },
-    ],
+    inputs: [{ name: "principalAmount", type: "uint256" }],
     outputs: [],
   },
-  {
-    type: "function",
-    name: "withdrawAll",
-    stateMutability: "nonpayable",
-    inputs: [],
-    outputs: [],
-  },
+  { type: "function", name: "withdrawAll", stateMutability: "nonpayable", inputs: [], outputs: [] },
   {
     type: "function",
     name: "setCompoundPct",
@@ -116,11 +76,12 @@ export const VAULT_ABI = [
     inputs: [{ name: "pct", type: "uint8" }],
     outputs: [],
   },
+  { type: "function", name: "claim", stateMutability: "nonpayable", inputs: [], outputs: [] },
   {
     type: "function",
-    name: "claim",
+    name: "refreshWeight",
     stateMutability: "nonpayable",
-    inputs: [],
+    inputs: [{ name: "account", type: "address" }],
     outputs: [],
   },
 ] as const
@@ -169,7 +130,7 @@ export const TIER_LADDER: { ppm: bigint; tier: number }[] = [
   { ppm: 1n, tier: 102 },
 ]
 
-/** SMAUG needed to reach the next tier above `currentTier`. */
+/** SMAUG a wallet needs to hold to reach the next tier above `currentTier`. */
 export function smaugForNextTier(
   currentTier: number,
   circulating: bigint,
