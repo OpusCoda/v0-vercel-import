@@ -414,16 +414,9 @@ export default function AutoCompoundPage() {
       <header className="mb-8">
         <h1 className="font-serif text-3xl text-[#e8e6e3]">Auto-Compounder</h1>
         <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-[#9ca3af]">
-          Deposit {cfg.tokenSymbol} and your rewards are bought back into more{" "}
-          {cfg.tokenSymbol} for you. Choose how much to reinvest and how much to take
+          Deposit {cfg.tokenSymbol} and your rewards are swapped for more{" "}
+          {cfg.tokenSymbol}. Choose how much to reinvest and how much to take
           as {cfg.rewardSymbol}. Nothing is locked — withdraw whenever you like.
-        </p>
-        <p className="mt-3 font-sans text-sm text-[#6b7280]">
-          Prefer to lock Smaug for a larger multiplier?{" "}
-          <Link href="/stake" className="text-[#B87333] hover:underline">
-            Staking
-          </Link>{" "}
-          works differently.
         </p>
       </header>
 
@@ -602,7 +595,7 @@ export default function AutoCompoundPage() {
             <p className="mt-3 font-sans text-xs leading-relaxed text-[#6b7280]">
               {isNewDepositor
                 ? "100% is the default — deposit without changing anything and everything you earn is reinvested. Pick another rate here and save it before your first deposit."
-                : "Changes apply to rewards from here on. Anything already earned keeps the split it was earned under."}
+                : "Changes apply to rewards from here on."}
             </p>
           </Panel>
 
@@ -672,7 +665,7 @@ export default function AutoCompoundPage() {
                 </Button>
               </div>
               <p className="font-sans text-xs leading-relaxed text-[#6b7280]">
-                You can change your reinvestment rate any time after depositing.
+                You can change your reinvestment rate at any time.
               </p>
             </div>
           </Panel>
