@@ -1,8 +1,11 @@
+
 'use client'
+
 import { useState, useEffect } from 'react'
 import { Trash2, X } from 'lucide-react'
 import { ConnectWalletButton } from './connect-wallet-button'
 import { ethers } from 'ethers'
+
 interface Wallet {
   id: string
   name: string
@@ -11,202 +14,460 @@ interface Wallet {
   percentage: number
   selected: boolean
 }
+
 interface Asset {
   symbol: string
   name: string
   address: string
   balance: number
-  value: number
-  change24h: number
+  price: number | null
+  value: number | null
+  change24h: number | null
 }
+
 const OPUS_VAULT_ADDR = '0xEf5B436f6832F19D34b81897FFAE0751c6612830'
 const CODA_VAULT_ADDR = '0x630ce372979B784db03e277A7c888D1A8b47819E'
+
 const TOKEN_CONTRACTS = [
-  { symbol: 'OPUS', name: 'Opus', address: '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a', decimals: 18 },
-  { symbol: 'CODA', name: 'Coda', address: '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28', decimals: 18 },
-  { symbol: 'SMAUG', name: 'Smaug', address: '0xf4754Aa585caBf38537A68660469A17E203D8632', decimals: 18 },
-  { symbol: 'PRVX', name: 'Privex', address: '0x7f681a5ad615238357ba148c281e2eaefd2de55a', decimals: 18 },
-  { symbol: 'PLS', name: 'Pulse', address: 'native', decimals: 18 },
-  { symbol: 'PLSX', name: 'PulseX', address: '0x95B303987A60C71504D99Aa1b13B4DA07b0790ab', decimals: 18 },
-  { symbol: 'INC', name: 'Incentive', address: '0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d', decimals: 18 },
-  { symbol: 'HEX', name: 'HEX', address: '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39', decimals: 8 },
-  { symbol: 'eHEX', name: 'eHEX (Ethereum)', address: '0x57fde0a71132198BBeC939B98976993d8D89D225', decimals: 8 },
-  { symbol: 'WETH', name: 'WETH', address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C', decimals: 18 },
-  { symbol: 'WBTC', name: 'Wrapped Bitcoin', address: '0xb17D901469B9208B17d916112988A3FeD19b5cA1', decimals: 8 },
-  { symbol: 'eBTC', name: 'eBTC (WBTC from Ethereum)', address: '0xb17D901469B9208B17d916112988A3FeD19b5cA1', decimals: 8 },
+  {
+    symbol: 'OPUS',
+    name: 'Opus',
+    address: '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a',
+    decimals: 18,
+  },
+  {
+    symbol: 'CODA',
+    name: 'Coda',
+    address: '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28',
+    decimals: 18,
+  },
+  {
+    symbol: 'SMAUG',
+    name: 'Smaug',
+    address: '0xf4754Aa585caBf38537A68660469A17E203D8632',
+    decimals: 18,
+  },
+  {
+    symbol: 'PRVX',
+    name: 'Privex',
+    address: '0x7f681a5ad615238357ba148c281e2eaefd2de55a',
+    decimals: 18,
+  },
+  {
+    symbol: 'PLS',
+    name: 'Pulse',
+    address: 'native',
+    decimals: 18,
+  },
+  {
+    symbol: 'PLSX',
+    name: 'PulseX',
+    address: '0x95B303987A60C71504D99Aa1b13B4DA07b0790ab',
+    decimals: 18,
+  },
+  {
+    symbol: 'INC',
+    name: 'Incentive',
+    address: '0x2fa878Ab3F87CC1C9737Fc071108F904c0B0C95d',
+    decimals: 18,
+  },
+  {
+    symbol: 'HEX',
+    name: 'HEX',
+    address: '0x2b591e99afe9f32eaa6214f7b7629768c40eeb39',
+    decimals: 8,
+  },
+  {
+    symbol: 'eHEX',
+    name: 'eHEX (Ethereum)',
+    address: '0x57fde0a71132198BBeC939B98976993d8D89D225',
+    decimals: 8,
+  },
+  {
+    symbol: 'WETH',
+    name: 'WETH',
+    address: '0x02DcdD04e3F455D838cd1249292C58f3B79e3C3C',
+    decimals: 18,
+  },
+  {
+    symbol: 'WBTC',
+    name: 'Wrapped Bitcoin',
+    address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+    decimals: 8,
+  },
+  {
+    symbol: 'eBTC',
+    name: 'eBTC (WBTC from Ethereum)',
+    address: '0xb17D901469B9208B17d916112988A3FeD19b5cA1',
+    decimals: 8,
+  },
 ]
+
 const ERC20_ABI = [
   'function balanceOf(address) view returns (uint256)',
-  'function decimals() view returns (uint8)',
 ]
+
 const PULSECHAIN_RPC_URL = 'https://rpc.pulsechain.com'
 
+// WPLS is used to obtain a live market price for native PLS.
+const WPLS_ADDRESS = '0xA1077a294dDE1B09bB078844df40758a5D0f9a27'
+
 // ── Ecosystem earnings (Opus PLS + Coda PLSX) ──
-const OPUS_CONTRACT_ADDR = '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a'
-const CODA_CONTRACT_ADDR = '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28'
+const OPUS_CONTRACT_ADDR =
+  '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a'
+
+const CODA_CONTRACT_ADDR =
+  '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28'
+
 // Older Coda distributors that also paid PLSX — summed for lifetime totals.
-const CODA_V1_CONTRACT = '0xD9857f41E67812dbDFfdD3269B550836EC131D0C'
-const CODA_V2_CONTRACT = '0x502E10403E20D6Ff42CBBDa7fdDC4e1315Da19AF'
-const OPUS_EARNED_ABI = ['function getTotalPlsEarned(address) view returns (uint256)']
-const CODA_EARNED_ABI = ['function getTotalPlsxEarned(address) view returns (uint256)']
-// Pending (unclaimed) rewards — getUnpaidEarnings(address) -> uint256.
-// Opus returns pending PLS; Coda returns pending PLSX. (0x28fd3198)
-const PENDING_ABI = ['function getUnpaidEarnings(address) view returns (uint256)']
+const CODA_V1_CONTRACT =
+  '0xD9857f41E67812dbDFfdD3269B550836EC131D0C'
+
+const CODA_V2_CONTRACT =
+  '0x502E10403E20D6Ff42CBBDa7fdDC4e1315Da19AF'
+
+const OPUS_EARNED_ABI = [
+  'function getTotalPlsEarned(address) view returns (uint256)',
+]
+
+const CODA_EARNED_ABI = [
+  'function getTotalPlsxEarned(address) view returns (uint256)',
+]
+
+// Pending (unclaimed) rewards.
+const PENDING_ABI = [
+  'function getUnpaidEarnings(address) view returns (uint256)',
+]
+
 // v1/v2 Coda distributors expose shares(); PLSX realised is index 6.
 const CODA_SHARES_ABI = [
   'function shares(address) view returns (uint256 amount, uint256 wethTotalExcluded, uint256 wethTotalRealised, uint256 wbtcTotalExcluded, uint256 wbtcTotalRealised, uint256 plsTotalExcluded, uint256 plsTotalRealised)',
 ]
-// Auto-compounder vaults. principal + pendingIn is what a depositor holds;
-// claimableNow is reward token waiting for them.
+
+// Auto-compounder vaults.
 const VAULT_POSITION_ABI = [
   'function positionOf(address) view returns (uint256 principal, uint256 smaugInWallet, uint256 tier, uint256 weight, uint256 pendingIn, uint256 claimableNow, uint8 compoundPct)',
 ]
 
-// Token prices from DexScreener and market data
-const fetchTokenPrices = async (): Promise<{ [key: string]: number }> => {
+/**
+ * Fetch a live market price from DexScreener.
+ *
+ * IMPORTANT:
+ * There is deliberately NO fallback price here.
+ *
+ * A price is returned only when DexScreener provides a finite,
+ * positive USD price. Otherwise null is returned.
+ */
+const fetchDexPrice = async (
+  tokenAddress: string
+): Promise<number | null> => {
   try {
-    const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=pulsechain,pulsex,hex,ethereum,bitcoin&vs_currencies=usd'
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10000)
+
+    const res = await fetch(
+      `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`,
+      {
+        cache: 'no-store',
+        signal: controller.signal,
+      }
     )
-    const data = await response.json()
-    return {
-      PLS: data.pulsechain?.usd || 0.000006246,
-      PLSX: data.pulsex?.usd || 0.055490,
-      HEX: data.hex?.usd || 0.001344,
-      eHEX: 0.0006348,
-      OPUS: 0.0004037,
-      CODA: 0.0004,
-      SMAUG: 0.0002213,
-      PRVX: 0.00000001,
-      INC: 0.30,
-      WETH: data.ethereum?.usd || 2500,
-      WBTC: data.bitcoin?.usd || 45000,
-      eBTC: data.bitcoin?.usd || 45000,
+
+    clearTimeout(timeout)
+
+    if (!res.ok) {
+      console.error(
+        `[prices] DexScreener returned HTTP ${res.status} for ${tokenAddress}`
+      )
+      return null
     }
+
+    const data = await res.json()
+
+    const pairs = Array.isArray(data?.pairs)
+      ? data.pairs
+          .filter((pair: any) => {
+            const price = Number(pair?.priceUsd)
+            const liquidity = Number(pair?.liquidity?.usd ?? 0)
+
+            return (
+              Number.isFinite(price) &&
+              price > 0 &&
+              Number.isFinite(liquidity)
+            )
+          })
+          .sort(
+            (a: any, b: any) =>
+              Number(b?.liquidity?.usd ?? 0) -
+              Number(a?.liquidity?.usd ?? 0)
+          )
+      : []
+
+    if (pairs.length === 0) {
+      console.warn(`[prices] No valid DexScreener price for ${tokenAddress}`)
+      return null
+    }
+
+    const price = Number(pairs[0].priceUsd)
+
+    if (!Number.isFinite(price) || price <= 0) {
+      return null
+    }
+
+    return price
   } catch (error) {
-    console.error('Error fetching prices:', error)
-    return {
-      OPUS: 0.0004037,
-      CODA: 0.0004,
-      SMAUG: 0.0002213,
-      PRVX: 0.00000001,
-      PLS: 0.000006246,
-      PLSX: 0.055490,
-      HEX: 0.001344,
-      eHEX: 0.0006348,
-      INC: 0.30,
-      WETH: 2500,
-      WBTC: 45000,
-      eBTC: 45000,
-    }
+    console.error(
+      `[prices] Failed to fetch DexScreener price for ${tokenAddress}:`,
+      error
+    )
+
+    return null
   }
 }
+
+/**
+ * Fetch all token prices.
+ *
+ * There are intentionally NO hard-coded prices anywhere in this function.
+ *
+ * Every returned price must come from DexScreener.
+ * Missing/unavailable prices are represented by null.
+ */
+const fetchTokenPrices = async (): Promise<{
+  [key: string]: number | null
+}> => {
+  const prices: { [key: string]: number | null } = {}
+
+  // Native PLS gets its market price from the WPLS market.
+  const priceRequests = TOKEN_CONTRACTS
+    .filter((token) => token.symbol !== 'PLS')
+    .map(async (token) => {
+      const price = await fetchDexPrice(token.address)
+      prices[token.symbol] = price
+    })
+
+  const plsPriceRequest = (async () => {
+    const price = await fetchDexPrice(WPLS_ADDRESS)
+    prices.PLS = price
+  })()
+
+  await Promise.all([...priceRequests, plsPriceRequest])
+
+  console.log('[prices] Live prices:', prices)
+
+  return prices
+}
+
 export function PortfolioDashboard() {
   const [activeTab, setActiveTab] = useState('assets')
   const [wallets, setWallets] = useState<Wallet[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
-  const [totalPortfolioValue, setTotalPortfolioValue] = useState(0)
-  const [change24h, setChange24h] = useState(0)
+
+  const [totalPortfolioValue, setTotalPortfolioValue] =
+    useState<number | null>(null)
+
+  const [change24h, setChange24h] = useState<number | null>(null)
+
   // Ecosystem earnings
   const [opusPlsEarned, setOpusPlsEarned] = useState(0)
   const [codaPlsxEarned, setCodaPlsxEarned] = useState(0)
   const [opusPlsPending, setOpusPlsPending] = useState(0)
   const [codaPlsxPending, setCodaPlsxPending] = useState(0)
-  // Auto-compounder positions, summed across selected wallets
+
+  // Auto-compounder positions
   const [opusVaultBalance, setOpusVaultBalance] = useState(0)
   const [codaVaultBalance, setCodaVaultBalance] = useState(0)
   const [opusVaultClaimable, setOpusVaultClaimable] = useState(0)
   const [codaVaultClaimable, setCodaVaultClaimable] = useState(0)
+
   // Modal states
   const [showConnectModal, setShowConnectModal] = useState(false)
   const [showEditWalletsModal, setShowEditWalletsModal] = useState(false)
   const [showLoadWalletModal, setShowLoadWalletModal] = useState(false)
+
   // Edit wallets state
   const [editingWallets, setEditingWallets] = useState<Wallet[]>([])
   const [newWalletAddress, setNewWalletAddress] = useState('')
   const [newWalletName, setNewWalletName] = useState('')
+
   // Load Wallet state
   const [loadWalletName, setLoadWalletName] = useState('')
   const [loadingWallets, setLoadingWallets] = useState(false)
-  const [loadedWalletListName, setLoadedWalletListName] = useState<string | null>(null)
-  // Clear every derived figure at once — used whenever nothing is selected.
+  const [loadedWalletListName, setLoadedWalletListName] =
+    useState<string | null>(null)
+
+  // Clear every derived figure at once.
   const clearAllData = () => {
     setAssets([])
+    setTotalPortfolioValue(null)
+    setChange24h(null)
+
     setOpusPlsEarned(0)
     setCodaPlsxEarned(0)
     setOpusPlsPending(0)
     setCodaPlsxPending(0)
+
     setOpusVaultBalance(0)
     setCodaVaultBalance(0)
     setOpusVaultClaimable(0)
     setCodaVaultClaimable(0)
   }
+
   // Fetch everything for a set of addresses.
   const fetchAllData = (addresses: string[]) => {
     fetchTokenBalances(addresses)
     fetchEcosystemEarnings(addresses)
     fetchVaultPositions(addresses)
   }
-  // Fetch token balances for wallets
+
+  // Fetch token balances for wallets.
   const fetchTokenBalances = async (addresses: string[]) => {
     try {
       const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
       const prices = await fetchTokenPrices()
-      // Aggregate balances by token across all wallets
-      const tokenBalances: { [symbol: string]: { balance: number; token: typeof TOKEN_CONTRACTS[0] } } = {}
+
+      const tokenBalances: {
+        [symbol: string]: {
+          balance: number
+          token: (typeof TOKEN_CONTRACTS)[number]
+        }
+      } = {}
+
       for (const token of TOKEN_CONTRACTS) {
         let totalBalance = 0
+
         if (token.symbol === 'PLS') {
-          // Handle native PLS separately
           for (const address of addresses) {
-            const balance = await provider.getBalance(address)
-            totalBalance += Number(ethers.formatUnits(balance, 18))
+            try {
+              const balance = await provider.getBalance(address)
+              totalBalance += Number(
+                ethers.formatUnits(balance, 18)
+              )
+            } catch (error) {
+              console.error(
+                `[balances] Failed to fetch PLS balance for ${address}:`,
+                error
+              )
+            }
           }
         } else {
-          const tokenContract = new ethers.Contract(token.address, ERC20_ABI, provider)
+          const tokenContract = new ethers.Contract(
+            token.address,
+            ERC20_ABI,
+            provider
+          )
+
           for (const address of addresses) {
-            const balance = await tokenContract.balanceOf(address)
-            totalBalance += Number(ethers.formatUnits(balance, token.decimals))
+            try {
+              const balance = await tokenContract.balanceOf(address)
+
+              totalBalance += Number(
+                ethers.formatUnits(balance, token.decimals)
+              )
+            } catch (error) {
+              console.error(
+                `[balances] Failed to fetch ${token.symbol} balance for ${address}:`,
+                error
+              )
+            }
           }
         }
+
         if (totalBalance > 0) {
-          tokenBalances[token.symbol] = { balance: totalBalance, token }
+          tokenBalances[token.symbol] = {
+            balance: totalBalance,
+            token,
+          }
         }
       }
-      // Convert to assets and filter by balance > 0 and value > 0
+
       const fetchedAssets: Asset[] = Object.entries(tokenBalances)
         .map(([symbol, { balance, token }]) => {
-          const price = prices[symbol] || 0
-          const value = balance * price
+          const price = prices[symbol] ?? null
+
+          const value =
+            price !== null && Number.isFinite(price) && price > 0
+              ? balance * price
+              : null
+
           return {
             symbol,
             name: token.name,
             address: token.address,
             balance,
+            price,
             value,
-            change24h: 0,
+            change24h: null,
           }
         })
-        .filter(asset => asset.balance > 0 && asset.value > 0)
-        .sort((a, b) => b.value - a.value)
+        // IMPORTANT:
+        // We only filter on actual balance.
+        // An asset with an unavailable price must still be shown as N/A.
+        .filter((asset) => asset.balance > 0)
+        .sort((a, b) => {
+          if (a.value === null && b.value === null) return 0
+          if (a.value === null) return 1
+          if (b.value === null) return -1
+          return b.value - a.value
+        })
+
       setAssets(fetchedAssets)
-      console.log('[v0] Fetched', fetchedAssets.length, 'assets for', addresses.length, 'wallets')
+
+      console.log(
+        '[balances] Fetched',
+        fetchedAssets.length,
+        'assets for',
+        addresses.length,
+        'wallets'
+      )
     } catch (error) {
-      console.error('[v0] Error fetching token balances:', error)
+      console.error('[balances] Error fetching token balances:', error)
       setAssets([])
+      setTotalPortfolioValue(null)
+      setChange24h(null)
     }
   }
-  // Fetch lifetime Opus PLS earnings + Coda PLSX earnings across the given
-  // addresses. Coda PLSX = current distributor + v1 + v2 historical (index 6).
+
+  // Fetch lifetime Opus PLS earnings + Coda PLSX earnings.
   const fetchEcosystemEarnings = async (addresses: string[]) => {
     try {
       const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
-      const opus = new ethers.Contract(OPUS_CONTRACT_ADDR, OPUS_EARNED_ABI, provider)
-      const coda = new ethers.Contract(CODA_CONTRACT_ADDR, CODA_EARNED_ABI, provider)
-      const codaV1 = new ethers.Contract(CODA_V1_CONTRACT, CODA_SHARES_ABI, provider)
-      const codaV2 = new ethers.Contract(CODA_V2_CONTRACT, CODA_SHARES_ABI, provider)
-      const opusPending = new ethers.Contract(OPUS_CONTRACT_ADDR, PENDING_ABI, provider)
-      const codaPending = new ethers.Contract(CODA_CONTRACT_ADDR, PENDING_ABI, provider)
+
+      const opus = new ethers.Contract(
+        OPUS_CONTRACT_ADDR,
+        OPUS_EARNED_ABI,
+        provider
+      )
+
+      const coda = new ethers.Contract(
+        CODA_CONTRACT_ADDR,
+        CODA_EARNED_ABI,
+        provider
+      )
+
+      const codaV1 = new ethers.Contract(
+        CODA_V1_CONTRACT,
+        CODA_SHARES_ABI,
+        provider
+      )
+
+      const codaV2 = new ethers.Contract(
+        CODA_V2_CONTRACT,
+        CODA_SHARES_ABI,
+        provider
+      )
+
+      const opusPending = new ethers.Contract(
+        OPUS_CONTRACT_ADDR,
+        PENDING_ABI,
+        provider
+      )
+
+      const codaPending = new ethers.Contract(
+        CODA_CONTRACT_ADDR,
+        PENDING_ABI,
+        provider
+      )
 
       let opusPls = 0n
       let codaPlsx = 0n
@@ -214,37 +475,84 @@ export function PortfolioDashboard() {
       let codaPlsxUnpaid = 0n
 
       for (const address of addresses) {
-        try { opusPls += BigInt(await opus.getTotalPlsEarned(address)) } catch {}
-        try { codaPlsx += BigInt(await coda.getTotalPlsxEarned(address)) } catch {}
-        try { codaPlsx += BigInt((await codaV1.shares(address))[6]) } catch {}
-        try { codaPlsx += BigInt((await codaV2.shares(address))[6]) } catch {}
-        try { opusPlsUnpaid += BigInt(await opusPending.getUnpaidEarnings(address)) } catch {}
-        try { codaPlsxUnpaid += BigInt(await codaPending.getUnpaidEarnings(address)) } catch {}
+        try {
+          opusPls += BigInt(
+            await opus.getTotalPlsEarned(address)
+          )
+        } catch {}
+
+        try {
+          codaPlsx += BigInt(
+            await coda.getTotalPlsxEarned(address)
+          )
+        } catch {}
+
+        try {
+          codaPlsx += BigInt(
+            (await codaV1.shares(address))[6]
+          )
+        } catch {}
+
+        try {
+          codaPlsx += BigInt(
+            (await codaV2.shares(address))[6]
+          )
+        } catch {}
+
+        try {
+          opusPlsUnpaid += BigInt(
+            await opusPending.getUnpaidEarnings(address)
+          )
+        } catch {}
+
+        try {
+          codaPlsxUnpaid += BigInt(
+            await codaPending.getUnpaidEarnings(address)
+          )
+        } catch {}
       }
 
-      setOpusPlsEarned(Number(ethers.formatUnits(opusPls, 18)))
-      setCodaPlsxEarned(Number(ethers.formatUnits(codaPlsx, 18)))
-      setOpusPlsPending(Number(ethers.formatUnits(opusPlsUnpaid, 18)))
-      setCodaPlsxPending(Number(ethers.formatUnits(codaPlsxUnpaid, 18)))
+      setOpusPlsEarned(
+        Number(ethers.formatUnits(opusPls, 18))
+      )
+
+      setCodaPlsxEarned(
+        Number(ethers.formatUnits(codaPlsx, 18))
+      )
+
+      setOpusPlsPending(
+        Number(ethers.formatUnits(opusPlsUnpaid, 18))
+      )
+
+      setCodaPlsxPending(
+        Number(ethers.formatUnits(codaPlsxUnpaid, 18))
+      )
     } catch (err) {
       console.error('[earnings] fetch failed:', err)
+
       setOpusPlsEarned(0)
       setCodaPlsxEarned(0)
       setOpusPlsPending(0)
       setCodaPlsxPending(0)
     }
   }
+
   // Auto-compounder positions across the given addresses.
-  //
-  // Does NOT overlap with fetchEcosystemEarnings. Once a depositor's tokens
-  // are in a vault, the VAULT is the distributor's shareholder — so
-  // getTotalPlsEarned on a user address stops counting those rewards. They
-  // show up here instead, as a growing vault balance and a claimable amount.
   const fetchVaultPositions = async (addresses: string[]) => {
     try {
       const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
-      const opusVault = new ethers.Contract(OPUS_VAULT_ADDR, VAULT_POSITION_ABI, provider)
-      const codaVault = new ethers.Contract(CODA_VAULT_ADDR, VAULT_POSITION_ABI, provider)
+
+      const opusVault = new ethers.Contract(
+        OPUS_VAULT_ADDR,
+        VAULT_POSITION_ABI,
+        provider
+      )
+
+      const codaVault = new ethers.Contract(
+        CODA_VAULT_ADDR,
+        VAULT_POSITION_ABI,
+        provider
+      )
 
       let opusBal = 0n
       let codaBal = 0n
@@ -254,48 +562,75 @@ export function PortfolioDashboard() {
       for (const address of addresses) {
         try {
           const p = await opusVault.positionOf(address)
-          opusBal += BigInt(p.principal) + BigInt(p.pendingIn)
+
+          opusBal +=
+            BigInt(p.principal) +
+            BigInt(p.pendingIn)
+
           opusClaim += BigInt(p.claimableNow)
         } catch {}
+
         try {
           const p = await codaVault.positionOf(address)
-          codaBal += BigInt(p.principal) + BigInt(p.pendingIn)
+
+          codaBal +=
+            BigInt(p.principal) +
+            BigInt(p.pendingIn)
+
           codaClaim += BigInt(p.claimableNow)
         } catch {}
       }
 
-      setOpusVaultBalance(Number(ethers.formatUnits(opusBal, 18)))
-      setCodaVaultBalance(Number(ethers.formatUnits(codaBal, 18)))
-      setOpusVaultClaimable(Number(ethers.formatUnits(opusClaim, 18)))
-      setCodaVaultClaimable(Number(ethers.formatUnits(codaClaim, 18)))
+      setOpusVaultBalance(
+        Number(ethers.formatUnits(opusBal, 18))
+      )
+
+      setCodaVaultBalance(
+        Number(ethers.formatUnits(codaBal, 18))
+      )
+
+      setOpusVaultClaimable(
+        Number(ethers.formatUnits(opusClaim, 18))
+      )
+
+      setCodaVaultClaimable(
+        Number(ethers.formatUnits(codaClaim, 18))
+      )
     } catch (err) {
       console.error('[vaults] fetch failed:', err)
+
       setOpusVaultBalance(0)
       setCodaVaultBalance(0)
       setOpusVaultClaimable(0)
       setCodaVaultClaimable(0)
     }
   }
-  // Save edited wallets and fetch real data
+
+  // Save edited wallets and fetch real data.
   const handleSaveEditedWallets = async () => {
-    // Fold in a pending typed-but-not-added address so users don't have to
-    // click "+" before saving.
     let walletsToSave = editingWallets
+
     if (newWalletAddress.trim()) {
       if (!ethers.isAddress(newWalletAddress)) {
         alert('Invalid wallet address format')
         return
       }
+
       const checksummed = ethers.getAddress(newWalletAddress)
-      // Skip if this address is already in the list.
+
       const alreadyPresent = editingWallets.some(
-        (w) => w.address.toLowerCase() === checksummed.toLowerCase()
+        (w) =>
+          w.address.toLowerCase() ===
+          checksummed.toLowerCase()
       )
+
       if (!alreadyPresent) {
         walletsToSave = [
           ...editingWallets,
           {
-            id: Math.random().toString(36).substr(2, 9),
+            id: Math.random()
+              .toString(36)
+              .substr(2, 9),
             name: newWalletName || 'Wallet',
             address: checksummed,
             balance: 0,
@@ -304,354 +639,758 @@ export function PortfolioDashboard() {
           },
         ]
       }
+
       setNewWalletAddress('')
       setNewWalletName('')
     }
-    console.log('[v0] handleSaveEditedWallets called with', walletsToSave.length, 'wallets')
-    // Save wallet list locally and to API if it was loaded from a saved list
+
+    console.log(
+      '[wallets] Saving',
+      walletsToSave.length,
+      'wallets'
+    )
+
     if (loadedWalletListName) {
       try {
-        const walletsData = walletsToSave.map(w => ({
+        const walletsData = walletsToSave.map((w) => ({
           address: w.address,
           name: w.name,
-          selected: w.selected
+          selected: w.selected,
         }))
-        // Save to localStorage for quick retrieval
-        localStorage.setItem('currentWalletList', JSON.stringify({ name: loadedWalletListName, wallets: walletsToSave }))
-        // Also send updated wallets to API to persist changes
-        await fetch(`/api/saved-wallets`, {
+
+        localStorage.setItem(
+          'currentWalletList',
+          JSON.stringify({
+            name: loadedWalletListName,
+            wallets: walletsToSave,
+          })
+        )
+
+        await fetch('/api/saved-wallets', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: loadedWalletListName, wallets: walletsData })
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: loadedWalletListName,
+            wallets: walletsData,
+          }),
         })
       } catch (error) {
-        console.error('Error saving wallets:', error)
+        console.error(
+          'Error saving wallets:',
+          error
+        )
       }
     }
-    // Update state with edited wallets - this will trigger the useEffect to fetch data
-    console.log('[v0] Calling setWallets with', walletsToSave.length, 'wallets')
+
     setWallets(walletsToSave)
     setShowEditWalletsModal(false)
-    const selectedAddresses = walletsToSave.filter(w => w.selected).map(w => w.address)
+
+    const selectedAddresses = walletsToSave
+      .filter((w) => w.selected)
+      .map((w) => w.address)
+
     if (selectedAddresses.length > 0) {
       fetchAllData(selectedAddresses)
     } else {
       clearAllData()
     }
   }
+
   const handleOpenEditModal = () => {
-    // Auto-select all wallets when opening Edit modal for convenience (only if wallets exist)
     if (wallets.length > 0) {
-      const selectedWallets = wallets.map(w => ({ ...w, selected: true }))
+      const selectedWallets = wallets.map((w) => ({
+        ...w,
+        selected: true,
+      }))
+
       setEditingWallets(selectedWallets)
     } else {
       setEditingWallets([])
     }
+
     setShowEditWalletsModal(true)
   }
-  const handleUpdateWalletName = (id: string, newName: string) => {
-    setEditingWallets(editingWallets.map((w) => (w.id === id ? { ...w, name: newName } : w)))
-  }
-  const handleDeleteWallet = (id: string) => {
-    setEditingWallets(editingWallets.filter((w) => w.id !== id))
-  }
-  const handleToggleWalletSelection = (id: string) => {
+
+  const handleUpdateWalletName = (
+    id: string,
+    newName: string
+  ) => {
     setEditingWallets(
-      editingWallets.map((w) => (w.id === id ? { ...w, selected: !w.selected } : w))
+      editingWallets.map((w) =>
+        w.id === id
+          ? { ...w, name: newName }
+          : w
+      )
     )
   }
+
+  const handleDeleteWallet = (id: string) => {
+    setEditingWallets(
+      editingWallets.filter((w) => w.id !== id)
+    )
+  }
+
+  const handleToggleWalletSelection = (id: string) => {
+    setEditingWallets(
+      editingWallets.map((w) =>
+        w.id === id
+          ? { ...w, selected: !w.selected }
+          : w
+      )
+    )
+  }
+
   const handleAddNewWallet = () => {
     if (!newWalletAddress) {
       alert('Please enter a wallet address')
       return
     }
-    // Validate wallet address format
+
     if (!ethers.isAddress(newWalletAddress)) {
       alert('Invalid wallet address format')
       return
     }
+
     const newWallet: Wallet = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random()
+        .toString(36)
+        .substr(2, 9),
       name: newWalletName || 'Wallet',
-      address: ethers.getAddress(newWalletAddress), // Normalize address to checksum format
+      address: ethers.getAddress(newWalletAddress),
       balance: 0,
       percentage: 0,
       selected: true,
     }
-    setEditingWallets([...editingWallets, newWallet])
+
+    setEditingWallets([
+      ...editingWallets,
+      newWallet,
+    ])
+
     setNewWalletAddress('')
     setNewWalletName('')
   }
+
   const handleLoadWallets = async () => {
     if (!loadWalletName) {
       alert('Please enter a wallet list name')
       return
     }
+
     setLoadingWallets(true)
+
     try {
-      const response = await fetch(`/api/saved-wallets?name=${encodeURIComponent(loadWalletName)}`)
+      const response = await fetch(
+        `/api/saved-wallets?name=${encodeURIComponent(
+          loadWalletName
+        )}`
+      )
+
       if (!response.ok) {
         throw new Error('Wallet list not found')
       }
+
       const data = await response.json()
-      const loadedWallets: Wallet[] = data.addresses.map((address: string, index: number) => ({
-        id: Math.random().toString(36).substr(2, 9),
-        name: `Wallet ${index + 1}`,
-        address,
-        balance: 0,
-        percentage: 0,
-        selected: true,
-      }))
+
+      const loadedWallets: Wallet[] =
+        data.addresses.map(
+          (address: string, index: number) => ({
+            id: Math.random()
+              .toString(36)
+              .substr(2, 9),
+            name: `Wallet ${index + 1}`,
+            address,
+            balance: 0,
+            percentage: 0,
+            selected: true,
+          })
+        )
+
       setWallets(loadedWallets)
       setLoadedWalletListName(loadWalletName)
       setLoadWalletName('')
       setShowLoadWalletModal(false)
-      // Save to localStorage for quick restoration
-      localStorage.setItem('currentWalletList', JSON.stringify({ name: loadWalletName, wallets: loadedWallets }))
-      // Fetch real data for loaded wallets
-      const selectedAddresses = loadedWallets.map(w => w.address)
+
+      localStorage.setItem(
+        'currentWalletList',
+        JSON.stringify({
+          name: loadWalletName,
+          wallets: loadedWallets,
+        })
+      )
+
+      const selectedAddresses =
+        loadedWallets.map((w) => w.address)
+
       fetchAllData(selectedAddresses)
     } catch (error) {
-      console.error('Error loading wallet list:', error)
-      alert('Failed to load wallet list. Please check the name and try again.')
+      console.error(
+        'Error loading wallet list:',
+        error
+      )
+
+      alert(
+        'Failed to load wallet list. Please check the name and try again.'
+      )
     } finally {
       setLoadingWallets(false)
     }
   }
-  const selectedWallets = wallets.filter((w) => w.selected)
-  // Calculate total portfolio value from assets
+
+  const selectedWallets = wallets.filter(
+    (w) => w.selected
+  )
+
+  // Calculate total portfolio value.
+  //
+  // IMPORTANT:
+  // If even one held asset lacks a valid market price,
+  // the total is shown as N/A rather than presenting a
+  // misleading partial total.
   useEffect(() => {
-    if (assets.length > 0) {
-      const total = assets.reduce((sum, asset) => sum + asset.value, 0)
-      const avgChange = assets.reduce((sum, asset) => sum + asset.change24h, 0) / assets.length
+    if (assets.length === 0) {
+      setTotalPortfolioValue(null)
+      setChange24h(null)
+      return
+    }
+
+    const hasMissingPrice = assets.some(
+      (asset) =>
+        asset.price === null ||
+        asset.value === null
+    )
+
+    if (hasMissingPrice) {
+      setTotalPortfolioValue(null)
+    } else {
+      const total = assets.reduce(
+        (sum, asset) => sum + (asset.value ?? 0),
+        0
+      )
+
       setTotalPortfolioValue(total)
-      setChange24h(Math.round(avgChange * 100) / 100)
+    }
+
+    const assetsWithChange = assets.filter(
+      (asset) => asset.change24h !== null
+    )
+
+    if (assetsWithChange.length > 0) {
+      const avgChange =
+        assetsWithChange.reduce(
+          (sum, asset) =>
+            sum + (asset.change24h ?? 0),
+          0
+        ) / assetsWithChange.length
+
+      setChange24h(
+        Math.round(avgChange * 100) / 100
+      )
+    } else {
+      setChange24h(null)
     }
   }, [assets])
-  // Load wallets from localStorage on mount
+
+  // Load wallets from localStorage on mount.
   useEffect(() => {
-    const savedWallets = localStorage.getItem('currentWalletList')
+    const savedWallets =
+      localStorage.getItem(
+        'currentWalletList'
+      )
+
     if (savedWallets) {
       try {
-        const parsed = JSON.parse(savedWallets)
+        const parsed =
+          JSON.parse(savedWallets)
+
         setWallets(parsed.wallets)
-        setLoadedWalletListName(parsed.name)
+        setLoadedWalletListName(
+          parsed.name
+        )
       } catch (e) {
-        console.error('Error loading saved wallets:', e)
+        console.error(
+          'Error loading saved wallets:',
+          e
+        )
       }
     }
   }, [])
-  // Fetch data when selected wallets change
+
+  // Fetch data when selected wallets change.
   useEffect(() => {
-    const selectedAddresses = wallets.filter(w => w.selected).map(w => w.address)
-    console.log('[v0] Wallets changed, selected:', selectedAddresses.length, 'wallets')
+    const selectedAddresses =
+      wallets
+        .filter((w) => w.selected)
+        .map((w) => w.address)
+
+    console.log(
+      '[wallets] Selected:',
+      selectedAddresses.length,
+      'wallets'
+    )
+
     if (selectedAddresses.length > 0) {
-      console.log('[v0] Fetching portfolio data')
       fetchAllData(selectedAddresses)
     } else {
-      console.log('[v0] No selected wallets, clearing data')
       clearAllData()
     }
   }, [wallets])
+
   return (
     <main className="min-h-screen bg-[#0b0b0e] px-6 py-12 md:px-8 md:py-16">
       <div className="mx-auto max-w-7xl">
-        {/* Header with Title and Stats */}
+
+        {/* Header */}
         <div className="mb-16">
           <div className="flex items-end justify-between mb-8">
-            <h1 className="font-serif text-5xl font-bold text-[#f4f4f4]">Portfolio dashboard</h1>
-            {/* Total Portfolio Value - Positioned to the right */}
+            <h1 className="font-serif text-5xl font-bold text-[#f4f4f4]">
+              Portfolio dashboard
+            </h1>
+
             {wallets.length > 0 && (
               <div className="text-right">
-                <p className="font-sans text-xs font-medium text-[#9a9a9a] mb-1">Total Portfolio Value</p>
-                <p className="font-serif text-3xl font-bold text-[#f4f4f4]">${totalPortfolioValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</p>
+                <p className="font-sans text-xs font-medium text-[#9a9a9a] mb-1">
+                  Total Portfolio Value
+                </p>
+
+                <p className="font-serif text-3xl font-bold text-[#f4f4f4]">
+                  {totalPortfolioValue === null
+                    ? 'N/A'
+                    : `$${totalPortfolioValue.toLocaleString(
+                        'en-US',
+                        {
+                          maximumFractionDigits: 2,
+                        }
+                      )}`}
+                </p>
               </div>
             )}
           </div>
+
           {/* Action Buttons */}
           <div className="flex gap-4">
-            <button onClick={() => setShowConnectModal(true)} className="bg-[#B87333] text-[#0b0b0e] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#e8c860] transition-colors">
+            <button
+              onClick={() =>
+                setShowConnectModal(true)
+              }
+              className="bg-[#B87333] text-[#0b0b0e] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#e8c860] transition-colors"
+            >
               Connect Wallet
             </button>
-            <button onClick={() => handleOpenEditModal()} className="border border-[#B87333] text-[#B87333] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#B87333]/5 transition-colors">
-              {wallets.length > 0 ? 'Edit Wallets' : 'Add Wallet'}
+
+            <button
+              onClick={() =>
+                handleOpenEditModal()
+              }
+              className="border border-[#B87333] text-[#B87333] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#B87333]/5 transition-colors"
+            >
+              {wallets.length > 0
+                ? 'Edit Wallets'
+                : 'Add Wallet'}
             </button>
-            <button onClick={() => setShowLoadWalletModal(true)} className="border border-[#B87333] text-[#B87333] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#B87333]/5 transition-colors">
+
+            <button
+              onClick={() =>
+                setShowLoadWalletModal(true)
+              }
+              className="border border-[#B87333] text-[#B87333] px-6 py-2.5 rounded font-sans font-semibold text-sm hover:bg-[#B87333]/5 transition-colors"
+            >
               Load Saved Wallet
             </button>
           </div>
         </div>
+
         {/* Your Wallets Section */}
         {wallets.length > 0 && (
           <div className="mb-16 pb-12 border-b border-[rgba(255,255,255,0.08)]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="font-serif text-2xl font-bold text-[#f4f4f4]">Your Wallets <span className="text-[#B87333]">({selectedWallets.length} selected)</span></h2>
+              <h2 className="font-serif text-2xl font-bold text-[#f4f4f4]">
+                Your Wallets{' '}
+                <span className="text-[#B87333]">
+                  ({selectedWallets.length}{' '}
+                  selected)
+                </span>
+              </h2>
+
               <div className="flex gap-2">
-                <button onClick={() => {
-                  const allSelected = wallets.every(w => w.selected)
-                  if (allSelected) {
-                    setWallets(wallets.map(w => ({ ...w, selected: false })))
-                  } else {
-                    setWallets(wallets.map(w => ({ ...w, selected: true })))
-                  }
-                }} className="font-sans text-sm text-[#B87333] hover:text-[#e8c860]">
-                  {wallets.every(w => w.selected) ? 'Deselect All' : 'Select All'}
+                <button
+                  onClick={() => {
+                    const allSelected =
+                      wallets.every(
+                        (w) => w.selected
+                      )
+
+                    if (allSelected) {
+                      setWallets(
+                        wallets.map((w) => ({
+                          ...w,
+                          selected: false,
+                        }))
+                      )
+                    } else {
+                      setWallets(
+                        wallets.map((w) => ({
+                          ...w,
+                          selected: true,
+                        }))
+                      )
+                    }
+                  }}
+                  className="font-sans text-sm text-[#B87333] hover:text-[#e8c860]"
+                >
+                  {wallets.every(
+                    (w) => w.selected
+                  )
+                    ? 'Deselect All'
+                    : 'Select All'}
                 </button>
               </div>
             </div>
+
             <div className="flex flex-wrap gap-3">
               {wallets.map((wallet) => (
-                <button
+                <div
                   key={wallet.id}
-                  onClick={() => {
-                    const updated = wallets.map(w =>
-                      w.id === wallet.id ? { ...w, selected: !w.selected } : w
-                    )
-                    setWallets(updated)
-                  }}
                   className="flex items-center gap-3 border border-[rgba(255,255,255,0.08)] rounded-lg px-4 py-3 bg-[#121218] hover:border-[#3b82f6]/50 transition-all text-left group"
                 >
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className={`w-2 h-2 rounded-full ${wallet.selected ? 'bg-[#3b82f6]' : 'bg-[#3a3a40]'}`}></div>
-                    <div>
-                      <p className="font-sans font-semibold text-[#f4f4f4] text-sm">{wallet.name}</p>
-                      <p className="font-sans text-xs text-[#9a9a9a]">{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}</p>
-                    </div>
-                  </div>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      const textarea = document.createElement('textarea')
-                      textarea.value = wallet.address
-                      document.body.appendChild(textarea)
-                      textarea.select()
-                      document.execCommand('copy')
-                      document.body.removeChild(textarea)
+                    onClick={() => {
+                      const updated =
+                        wallets.map((w) =>
+                          w.id === wallet.id
+                            ? {
+                                ...w,
+                                selected:
+                                  !w.selected,
+                              }
+                            : w
+                        )
+
+                      setWallets(updated)
+                    }}
+                    className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        wallet.selected
+                          ? 'bg-[#3b82f6]'
+                          : 'bg-[#3a3a40]'
+                      }`}
+                    />
+
+                    <div>
+                      <p className="font-sans font-semibold text-[#f4f4f4] text-sm">
+                        {wallet.name}
+                      </p>
+
+                      <p className="font-sans text-xs text-[#9a9a9a]">
+                        {wallet.address.slice(
+                          0,
+                          6
+                        )}
+                        ...
+                        {wallet.address.slice(
+                          -4
+                        )}
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      navigator.clipboard
+                        ?.writeText(
+                          wallet.address
+                        )
+                        .catch(() => {})
                     }}
                     className="ml-2 p-1 rounded hover:bg-[rgba(255,255,255,0.05)] transition-colors"
                     title="Copy address"
                   >
-                    <svg className="w-4 h-4 text-[#9a9a9a] hover:text-[#f4f4f4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    <svg
+                      className="w-4 h-4 text-[#9a9a9a] hover:text-[#f4f4f4]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
                     </svg>
                   </button>
-                </button>
+                </div>
               ))}
             </div>
           </div>
         )}
-        {/* Content shown only when wallets are connected */}
+
+        {/* Content shown only when wallets are selected */}
         {selectedWallets.length > 0 && (
           <>
-            {/* Ecosystem earnings — PLS from Opus, PLSX from Coda (earned + pending) */}
+            {/* Ecosystem earnings */}
             <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
-                <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">PLS earned from Opus</p>
-                <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
-                  {opusPlsEarned.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS
+                <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">
+                  PLS earned from Opus
                 </p>
+
+                <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
+                  {opusPlsEarned.toLocaleString(
+                    undefined,
+                    {
+                      maximumFractionDigits: 0,
+                    }
+                  )}{' '}
+                  PLS
+                </p>
+
                 <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
-                  Pending: <span className="text-[#b8b6b1]">{opusPlsPending.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS</span>
+                  Pending:{' '}
+                  <span className="text-[#b8b6b1]">
+                    {opusPlsPending.toLocaleString(
+                      undefined,
+                      {
+                        maximumFractionDigits: 0,
+                      }
+                    )}{' '}
+                    PLS
+                  </span>
                 </p>
               </div>
+
               <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
-                <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">PLSX earned from Coda</p>
-                <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
-                  {codaPlsxEarned.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLSX
+                <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">
+                  PLSX earned from Coda
                 </p>
+
+                <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
+                  {codaPlsxEarned.toLocaleString(
+                    undefined,
+                    {
+                      maximumFractionDigits: 0,
+                    }
+                  )}{' '}
+                  PLSX
+                </p>
+
                 <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
-                  Pending: <span className="text-[#b8b6b1]">{codaPlsxPending.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLSX</span>
+                  Pending:{' '}
+                  <span className="text-[#b8b6b1]">
+                    {codaPlsxPending.toLocaleString(
+                      undefined,
+                      {
+                        maximumFractionDigits: 0,
+                      }
+                    )}{' '}
+                    PLSX
+                  </span>
                 </p>
               </div>
             </div>
-            {/* Auto-Compounder positions.
-                Distinct from the earnings above: once tokens are in a vault the
-                VAULT is the distributor's shareholder, so getTotalPlsEarned on a
-                user address stops counting those rewards. They appear here as a
-                growing vault balance and a claimable amount instead. */}
-            {(opusVaultBalance > 0 || codaVaultBalance > 0) && (
+
+            {/* Auto-Compounder */}
+            {(opusVaultBalance > 0 ||
+              codaVaultBalance > 0) && (
               <div className="mb-8">
-                <h3 className="mb-4 font-serif text-xl font-bold text-[#B87333]">Auto-Compounder</h3>
+                <h3 className="mb-4 font-serif text-xl font-bold text-[#B87333]">
+                  Auto-Compounder
+                </h3>
+
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
-                    <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">OPUS in the vault</p>
-                    <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
-                      {opusVaultBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })} OPUS
+                    <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">
+                      OPUS in the vault
                     </p>
+
+                    <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
+                      {opusVaultBalance.toLocaleString(
+                        undefined,
+                        {
+                          maximumFractionDigits: 0,
+                        }
+                      )}{' '}
+                      OPUS
+                    </p>
+
                     <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
-                      Claimable: <span className="text-[#b8b6b1]">{opusVaultClaimable.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS</span>
+                      Claimable:{' '}
+                      <span className="text-[#b8b6b1]">
+                        {opusVaultClaimable.toLocaleString(
+                          undefined,
+                          {
+                            maximumFractionDigits: 0,
+                          }
+                        )}{' '}
+                        PLS
+                      </span>
                     </p>
                   </div>
+
                   <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
-                    <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">CODA in the vault</p>
-                    <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
-                      {codaVaultBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })} CODA
+                    <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">
+                      CODA in the vault
                     </p>
+
+                    <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
+                      {codaVaultBalance.toLocaleString(
+                        undefined,
+                        {
+                          maximumFractionDigits: 0,
+                        }
+                      )}{' '}
+                      CODA
+                    </p>
+
                     <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
-                      Claimable: <span className="text-[#b8b6b1]">{codaVaultClaimable.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLSX</span>
+                      Claimable:{' '}
+                      <span className="text-[#b8b6b1]">
+                        {codaVaultClaimable.toLocaleString(
+                          undefined,
+                          {
+                            maximumFractionDigits: 0,
+                          }
+                        )}{' '}
+                        PLSX
+                      </span>
                     </p>
                   </div>
                 </div>
+
                 <p className="mt-3 font-sans text-xs text-[#7c7a76]">
                   Deposit, withdraw and claim on the{' '}
-                  <a href="/auto-compound" className="text-[#B87333] hover:underline">Auto-Compounder</a> page.
+                  <a
+                    href="/auto-compound"
+                    className="text-[#B87333] hover:underline"
+                  >
+                    Auto-Compounder
+                  </a>{' '}
+                  page.
                 </p>
               </div>
             )}
+
             {/* Tabs */}
             <div className="mb-8 border-b border-[#2a2a35]">
               <div className="flex gap-8">
                 {[
-                  { id: 'assets', label: 'Assets' },
+                  {
+                    id: 'assets',
+                    label: 'Assets',
+                  },
                 ].map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`pb-4 font-sans text-sm font-semibold transition-colors ${activeTab === tab.id
-                      ? 'border-b-2 border-[#B87333] text-[#B87333]'
-                      : 'text-[#7c7a76] hover:text-[#b8b6b1]'
-                      }`}
+                    onClick={() =>
+                      setActiveTab(tab.id)
+                    }
+                    className={`pb-4 font-sans text-sm font-semibold transition-colors ${
+                      activeTab === tab.id
+                        ? 'border-b-2 border-[#B87333] text-[#B87333]'
+                        : 'text-[#7c7a76] hover:text-[#b8b6b1]'
+                    }`}
                   >
                     {tab.label}
                   </button>
                 ))}
               </div>
             </div>
+
             {/* Assets Tab */}
             {activeTab === 'assets' && (
               <div className="mb-12">
-                <h3 className="mb-6 font-serif text-xl font-bold text-[#B87333]">Your Holdings</h3>
+                <h3 className="mb-6 font-serif text-xl font-bold text-[#B87333]">
+                  Your Holdings
+                </h3>
+
                 <div className="rounded-lg border border-[#2a2a35] bg-[#101017] overflow-hidden">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-[#2a2a35]">
-                        <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Token</th>
-                        <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Balance</th>
-                        <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">Value (USD)</th>
-                        <th className="px-6 py-3 text-right font-sans text-xs font-semibold text-[#7c7a76]">Price</th>
+                        <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">
+                          Token
+                        </th>
+
+                        <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">
+                          Balance
+                        </th>
+
+                        <th className="px-6 py-3 text-left font-sans text-xs font-semibold text-[#7c7a76]">
+                          Value (USD)
+                        </th>
+
+                        <th className="px-6 py-3 text-right font-sans text-xs font-semibold text-[#7c7a76]">
+                          Price
+                        </th>
                       </tr>
                     </thead>
+
                     <tbody>
-                      {assets.filter(a => a.value > 0.5).map((asset) => {
-                        const price = asset.balance > 0 ? asset.value / asset.balance : 0
-                        return (
-                          <tr key={asset.symbol} className="border-b border-[#2a2a35] last:border-b-0 hover:bg-[#0a0a0c] transition-colors">
-                            <td className="px-6 py-4">
-                              <div>
-                                <p className="font-sans font-semibold text-[#b8b6b1]">{asset.name}</p>
-                                <p className="font-sans text-xs text-[#7c7a76]">{asset.symbol}</p>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 font-sans text-sm text-[#b8b6b1]">{asset.balance.toLocaleString()}</td>
-                            <td className="px-6 py-4 font-serif font-semibold text-[#B87333]">${asset.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
-                            <td className="px-6 py-4 text-right">
-                              <span className="font-sans text-sm font-semibold text-[#B87333]">
-                                ${price.toLocaleString('en-US', { maximumFractionDigits: price < 0.01 ? 8 : 4 })}
-                              </span>
-                            </td>
-                          </tr>
-                        )
-                      })}
+                      {assets.map((asset) => (
+                        <tr
+                          key={asset.symbol}
+                          className="border-b border-[#2a2a35] last:border-b-0 hover:bg-[#0a0a0c] transition-colors"
+                        >
+                          <td className="px-6 py-4">
+                            <div>
+                              <p className="font-sans font-semibold text-[#b8b6b1]">
+                                {asset.name}
+                              </p>
+
+                              <p className="font-sans text-xs text-[#7c7a76]">
+                                {asset.symbol}
+                              </p>
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4 font-sans text-sm text-[#b8b6b1]">
+                            {asset.balance.toLocaleString()}
+                          </td>
+
+                          <td className="px-6 py-4 font-serif font-semibold text-[#B87333]">
+                            {asset.value === null
+                              ? 'N/A'
+                              : `$${asset.value.toLocaleString(
+                                  'en-US',
+                                  {
+                                    maximumFractionDigits: 2,
+                                  }
+                                )}`}
+                          </td>
+
+                          <td className="px-6 py-4 text-right">
+                            <span className="font-sans text-sm font-semibold text-[#B87333]">
+                              {asset.price === null
+                                ? 'N/A'
+                                : `$${asset.price.toLocaleString(
+                                    'en-US',
+                                    {
+                                      maximumFractionDigits:
+                                        asset.price <
+                                        0.01
+                                          ? 8
+                                          : 4,
+                                    }
+                                  )}`}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+
+                      {assets.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className="px-6 py-8 text-center font-sans text-sm text-[#7c7a76]"
+                          >
+                            No token balances found.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -659,62 +1398,107 @@ export function PortfolioDashboard() {
             )}
           </>
         )}
+
         {/* Connect Wallet Modal */}
         {showConnectModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="w-full max-w-md rounded-lg bg-[#101017] p-6 border border-[#2a2a35]">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-serif text-xl font-bold text-[#B87333]">Connect Wallet</h3>
-                <button onClick={() => setShowConnectModal(false)} className="text-[#7c7a76] hover:text-[#B87333]">
+                <h3 className="font-serif text-xl font-bold text-[#B87333]">
+                  Connect Wallet
+                </h3>
+
+                <button
+                  onClick={() =>
+                    setShowConnectModal(false)
+                  }
+                  className="text-[#7c7a76] hover:text-[#B87333]"
+                >
                   <X className="h-5 w-5" />
                 </button>
               </div>
+
               <div className="mb-6">
                 <ConnectWalletButton />
               </div>
+
               <p className="font-sans text-xs text-center text-[#7c7a76]">
-                Connect your wallet to track your portfolio across multiple chains.
+                Connect your wallet to track your
+                portfolio across multiple chains.
               </p>
             </div>
           </div>
         )}
+
         {/* Edit Wallets Modal */}
         {showEditWalletsModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="w-full max-w-2xl rounded-lg bg-[#101017] p-6 border border-[#2a2a35] max-h-[90vh] overflow-y-auto">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-serif text-2xl font-bold text-[#B87333]">Edit Addresses</h3>
-                <button onClick={() => setShowEditWalletsModal(false)} className="text-[#7c7a76] hover:text-[#B87333]">
+                <h3 className="font-serif text-2xl font-bold text-[#B87333]">
+                  Edit Addresses
+                </h3>
+
+                <button
+                  onClick={() =>
+                    setShowEditWalletsModal(false)
+                  }
+                  className="text-[#7c7a76] hover:text-[#B87333]"
+                >
                   <X className="h-5 w-5" />
                 </button>
               </div>
+
               <div className="mb-6 flex gap-2 border-b border-[#2a2a35] pb-4">
                 <button className="rounded-lg bg-[#2a2a35] px-4 py-2 font-sans text-sm font-semibold text-[#B87333]">
-                  {editingWallets.length} Addresses
+                  {editingWallets.length}{' '}
+                  Addresses
                 </button>
               </div>
+
               {/* Existing Wallets */}
               <div className="space-y-4 mb-8">
                 {editingWallets.map((wallet) => (
-                  <div key={wallet.id} className="flex items-center gap-4 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] p-4">
+                  <div
+                    key={wallet.id}
+                    className="flex items-center gap-4 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] p-4"
+                  >
                     <input
                       type="checkbox"
                       checked={wallet.selected}
-                      onChange={() => handleToggleWalletSelection(wallet.id)}
+                      onChange={() =>
+                        handleToggleWalletSelection(
+                          wallet.id
+                        )
+                      }
                       className="w-5 h-5 rounded border-[#2a2a35] bg-[#0a0a0c] accent-[#B87333] cursor-pointer"
                     />
+
                     <div className="flex-1 min-w-0">
-                      <p className="font-sans text-sm text-[#b8b6b1] truncate">{wallet.address}</p>
+                      <p className="font-sans text-sm text-[#b8b6b1] truncate">
+                        {wallet.address}
+                      </p>
                     </div>
+
                     <input
                       type="text"
                       value={wallet.name}
-                      onChange={(e) => handleUpdateWalletName(wallet.id, e.target.value)}
+                      onChange={(e) =>
+                        handleUpdateWalletName(
+                          wallet.id,
+                          e.target.value
+                        )
+                      }
                       placeholder="Wallet name"
                       className="rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-3 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#B87333] outline-none transition-colors w-40"
                     />
+
                     <button
-                      onClick={() => handleDeleteWallet(wallet.id)}
+                      onClick={() =>
+                        handleDeleteWallet(
+                          wallet.id
+                        )
+                      }
                       className="p-2 text-[#7c7a76] hover:text-[#ff6b4a] transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -722,88 +1506,139 @@ export function PortfolioDashboard() {
                   </div>
                 ))}
               </div>
+
               {/* Add New Address */}
               <div className="mb-6 border-t border-[#2a2a35] pt-6">
-                <p className="mb-4 font-sans text-sm font-semibold text-[#B87333]">Add new Address</p>
+                <p className="mb-4 font-sans text-sm font-semibold text-[#B87333]">
+                  Add new Address
+                </p>
+
                 <div className="flex items-center gap-3">
                   <input
                     type="text"
                     value={newWalletAddress}
-                    onChange={(e) => setNewWalletAddress(e.target.value)}
+                    onChange={(e) =>
+                      setNewWalletAddress(
+                        e.target.value
+                      )
+                    }
                     placeholder="0x..."
                     className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#B87333] outline-none transition-colors"
                   />
+
                   <input
                     type="text"
                     value={newWalletName}
-                    onChange={(e) => setNewWalletName(e.target.value)}
+                    onChange={(e) =>
+                      setNewWalletName(
+                        e.target.value
+                      )
+                    }
                     placeholder="Wallet name"
                     className="rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#B87333] outline-none transition-colors w-40"
                   />
+
                   <button
-                    onClick={handleAddNewWallet}
+                    onClick={
+                      handleAddNewWallet
+                    }
                     className="rounded-lg bg-[#B87333] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]"
                   >
                     +
                   </button>
                 </div>
+
                 <p className="mt-2 font-sans text-xs text-[#7c7a76]">
-                  Tip: you can just type an address and hit Save — it&apos;ll be added automatically. Use + only to add several at once.
+                  Tip: you can just type an address
+                  and hit Save — it&apos;ll be added
+                  automatically. Use + only to add
+                  several at once.
                 </p>
               </div>
+
               {/* Actions */}
               <div className="flex gap-3 border-t border-[#2a2a35] pt-6">
                 <button
-                  onClick={() => setShowEditWalletsModal(false)}
+                  onClick={() =>
+                    setShowEditWalletsModal(false)
+                  }
                   className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans font-semibold text-[#B87333] transition-colors hover:border-[#B87333]/50"
                 >
                   Cancel
                 </button>
+
                 <button
-                  onClick={handleSaveEditedWallets}
+                  onClick={
+                    handleSaveEditedWallets
+                  }
                   className="flex-1 rounded-lg bg-[#B87333] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860]"
                 >
-                  {loadedWalletListName ? 'Save Changes' : 'Save Wallets'}
+                  {loadedWalletListName
+                    ? 'Save Changes'
+                    : 'Save Wallets'}
                 </button>
               </div>
             </div>
           </div>
         )}
+
         {/* Load Saved Wallet Modal */}
         {showLoadWalletModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="w-full max-w-md rounded-lg bg-[#101017] p-6 border border-[#2a2a35]">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-serif text-xl font-bold text-[#B87333]">Load Saved Wallet</h3>
-                <button onClick={() => setShowLoadWalletModal(false)} className="text-[#7c7a76] hover:text-[#B87333]">
+                <h3 className="font-serif text-xl font-bold text-[#B87333]">
+                  Load Saved Wallet
+                </h3>
+
+                <button
+                  onClick={() =>
+                    setShowLoadWalletModal(false)
+                  }
+                  className="text-[#7c7a76] hover:text-[#B87333]"
+                >
                   <X className="h-5 w-5" />
                 </button>
               </div>
+
               <div className="space-y-4 mb-6">
                 <div>
-                  <label className="block font-sans text-xs font-semibold text-[#7c7a76] mb-2">Wallet List Name</label>
+                  <label className="block font-sans text-xs font-semibold text-[#7c7a76] mb-2">
+                    Wallet List Name
+                  </label>
+
                   <input
                     type="text"
                     placeholder="e.g., My Portfolio"
                     value={loadWalletName}
-                    onChange={(e) => setLoadWalletName(e.target.value)}
+                    onChange={(e) =>
+                      setLoadWalletName(
+                        e.target.value
+                      )
+                    }
                     className="w-full rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans text-sm text-[#b8b6b1] placeholder-[#7c7a76] focus:border-[#B87333] outline-none transition-colors"
                   />
                 </div>
               </div>
+
               <div className="flex gap-3">
                 <button
-                  onClick={() => setShowLoadWalletModal(false)}
+                  onClick={() =>
+                    setShowLoadWalletModal(false)
+                  }
                   className="flex-1 rounded-lg border border-[#2a2a35] bg-[#0a0a0c] px-4 py-2 font-sans font-semibold text-[#B87333] transition-colors hover:border-[#B87333]/50"
                 >
                   Cancel
                 </button>
+
                 <button
                   onClick={handleLoadWallets}
                   disabled={loadingWallets}
                   className="flex-1 rounded-lg bg-[#B87333] px-4 py-2 font-sans font-semibold text-[#0a0a0c] transition-colors hover:bg-[#e8c860] disabled:opacity-50"
                 >
-                  {loadingWallets ? 'Loading...' : 'Load'}
+                  {loadingWallets
+                    ? 'Loading...'
+                    : 'Load'}
                 </button>
               </div>
             </div>
