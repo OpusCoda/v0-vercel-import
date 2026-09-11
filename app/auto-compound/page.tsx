@@ -222,18 +222,25 @@ function useLifetimeEarned(
 ) {
   const client = usePublicClient()
   const [totals, setTotals] = useState<{ compounded: bigint; claimed: bigint } | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    if (!client || !account || deployBlock === 0n) {
+    if (!client || !account) {
       setTotals(null)
+      return
+    }
+    if (deployBlock === 0n) {
+      setError("deployBlock not set in lib/auto-compounder.ts")
       return
     }
 
     const run = async () => {
       try {
         const latest = await client.getBlockNumber()
-        const CHUNK = 50_000n
+        // Public PulseChain RPCs cap getLogs ranges, often well below 50k.
+        // Smaller chunks mean more requests but far fewer outright rejections.
+        const CHUNK = 9_000n
 
         let compounded = 0n
         let claimed = 0n
@@ -264,11 +271,24 @@ function useLifetimeEarned(
           if (cancelled) return
         }
 
-        if (!cancelled) setTotals({ compounded, claimed })
-      } catch {
-        // Range or rate limits are routine on public endpoints. Hide the
-        // figure rather than showing a wrong one.
-        if (!cancelled) setTotals(null)
+        if (!cancelled) {
+          setTotals({ compounded, claimed })
+          setError(null)
+          console.log(
+            `[auto-compound] ${vault} lifetime for ${account}:`,
+            { compounded: compounded.toString(), claimed: claimed.toString(),
+              scannedFrom: deployBlock.toString(), to: latest.toString() },
+          )
+        }
+      } catch (e) {
+        // Surface it rather than hiding — a silently missing figure is much
+        // harder to diagnose than a visible one.
+        const msg = e instanceof Error ? e.message.split("\n")[0] : String(e)
+        console.error("[auto-compound] lifetime scan failed:", e)
+        if (!cancelled) {
+          setTotals(null)
+          setError(msg.slice(0, 120))
+        }
       }
     }
 
@@ -278,7 +298,7 @@ function useLifetimeEarned(
     }
   }, [client, vault, deployBlock, account])
 
-  return totals
+  return { totals, error }
 }
 
 /* ── page ────────────────────────────────────────────────────────── */
@@ -308,7 +328,11 @@ export default function AutoCompoundPage() {
   const totalPrincipal = vaultData?.[0]?.result as bigint | undefined
   const circulating = vaultData?.[1]?.result as bigint | undefined
   const lastCompound = useLastCompound(cfg.vault)
-  const lifetime = useLifetimeEarned(cfg.vault, cfg.deployBlock, address)
+  const { totals: lifetime, error: lifetimeError } = useLifetimeEarned(
+    cfg.vault,
+    cfg.deployBlock,
+    address,
+  )
 
   const { data: userData, refetch: refetchUser } = useReadContracts({
     contracts: address
@@ -453,19 +477,22 @@ export default function AutoCompoundPage() {
               }
             />
 
-            {lifetime && (lifetime.compounded > 0n || lifetime.claimed > 0n) && (
-              <div className="mt-4 grid grid-cols-2 gap-5 border-t border-[#2a2a35] pt-4">
-                <Stat
-                  label="Earned by compounding"
-                  value={`+${fmt(lifetime.compounded + pendingIn)}`}
-                  hint={cfg.tokenSymbol}
-                />
-                <Stat
-                  label="Claimed so far"
-                  value={fmt(lifetime.claimed)}
-                  hint={cfg.rewardSymbol}
-                />
-              </div>
+            <div className="mt-4 grid grid-cols-2 gap-5 border-t border-[#2a2a35] pt-4">
+              <Stat
+                label="Earned by compounding"
+                value={lifetime ? `+${fmt(lifetime.compounded + pendingIn)}` : "—"}
+                hint={cfg.tokenSymbol}
+              />
+              <Stat
+                label="Claimed so far"
+                value={lifetime ? fmt(lifetime.claimed) : "—"}
+                hint={cfg.rewardSymbol}
+              />
+            </div>
+            {lifetimeError && (
+              <p className="mt-2 font-sans text-xs text-[#6b7280]">
+                History unavailable: {lifetimeError}
+              </p>
             )}
 
             <div className="mt-5 border-t border-[#2a2a35] pt-5">

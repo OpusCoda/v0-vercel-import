@@ -9,7 +9,7 @@ export const VAULTS = {
     tokenSymbol: "OPUS",
     rewardSymbol: "PLS",
     rewardToken: null,
-    deployBlock: 27509909,
+    deployBlock: 27509909n,
   },
   CODA: {
     key: "CODA" as const,
@@ -18,7 +18,7 @@ export const VAULTS = {
     tokenSymbol: "CODA",
     rewardSymbol: "PLSX",
     rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
-    deployBlock: 27509915,
+    deployBlock: 27509915n,
   },
 } as const
 
