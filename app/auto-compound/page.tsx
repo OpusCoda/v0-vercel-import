@@ -321,16 +321,19 @@ export default function AutoCompoundPage() {
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: txHash })
   const busy = isPending || isConfirming
 
-  const { data: vaultData } = useReadContracts({
+    const { data: vaultData } = useReadContracts({
     contracts: [
       { address: cfg.vault, abi: VAULT_ABI, functionName: "totalPrincipal" },
       { address: cfg.vault, abi: VAULT_ABI, functionName: "smaugCirculating" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "depositorCount" },
     ],
     query: { refetchInterval: 30_000 },
   })
 
   const totalPrincipal = vaultData?.[0]?.result as bigint | undefined
   const circulating = vaultData?.[1]?.result as bigint | undefined
+  const depositorCount = vaultData?.[2]?.result as bigint | undefined
+
   const lastCompound = useLastCompound(cfg.vault)
   const { totals: lifetime, error: lifetimeError } = useLifetimeEarned(
     cfg.vault,
@@ -443,8 +446,15 @@ export default function AutoCompoundPage() {
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-5 rounded-lg border border-[#2a2a35] bg-[#0e0e13] p-5 sm:grid-cols-3">
-        <Stat label={`${cfg.tokenSymbol} deposited`} value={fmt(totalPrincipal, 0)} />
-        <Stat label="Your tier" value={formatTier(tier)} hint="From Smaug in your wallet" />
+        <Stat
+          label={`Total ${cfg.tokenSymbol} deposited`}
+          value={fmt(totalPrincipal, 0)}
+          hint="All depositors"
+        />
+        <Stat
+          label="Depositors"
+          value={depositorCount !== undefined ? depositorCount.toString() : "—"}
+        />
         <Stat
           label="Last compounded"
           value={lastCompound ? timeAgo(lastCompound) : "—"}
