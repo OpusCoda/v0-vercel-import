@@ -322,11 +322,12 @@ export default function AutoCompoundPage() {
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: txHash })
   const busy = isPending || isConfirming
 
-    const { data: vaultData } = useReadContracts({
+  // Vault-wide reads. Positional — the indices below must match this order.
+  const { data: vaultData } = useReadContracts({
     contracts: [
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "totalPrincipal" },
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "smaugCirculating" },
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "depositorCount" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "totalPrincipal" },         // [0]
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "smaugCirculating" },       // [1]
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "depositorCount" },         // [2]
       { address: cfg.vault, abi: VAULT_ABI, functionName: "totalWeight" },            // [3]
       { address: cfg.vault, abi: VAULT_ABI, functionName: "totalCompoundWeight" },    // [4]
       { address: cfg.vault, abi: VAULT_ABI, functionName: "sweepableRewards" },       // [5]
@@ -336,14 +337,19 @@ export default function AutoCompoundPage() {
   })
 
   const totalPrincipal = vaultData?.[0]?.result as bigint | undefined
+  const circulating = vaultData?.[1]?.result as bigint | undefined
+  const depositorCount = vaultData?.[2]?.result as bigint | undefined
+
+  // Reinvestment rate across the vault, weighted by position size.
   const avgCompoundPct = weightedCompoundPct(
     vaultData?.[4]?.result as bigint | undefined,
     vaultData?.[3]?.result as bigint | undefined,
   )
+
+  // What the next compound will act on: reward already held, plus what the
+  // distributor still owes. compound() harvests before it splits.
   const pendingRewards =
     ((vaultData?.[5]?.result as bigint) ?? 0n) + ((vaultData?.[6]?.result as bigint) ?? 0n)
-  const circulating = vaultData?.[1]?.result as bigint | undefined
-  const depositorCount = vaultData?.[2]?.result as bigint | undefined
 
   const lastCompound = useLastCompound(cfg.vault)
   const { totals: lifetime, error: lifetimeError } = useLifetimeEarned(
@@ -456,7 +462,8 @@ export default function AutoCompoundPage() {
         ))}
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-5 rounded-lg border border-[#2a2a35] bg-[#0e0e13] p-5 sm:grid-cols-3">
+      {/* Vault-wide figures. Nothing here is specific to the connected wallet. */}
+      <div className="mb-6 grid grid-cols-2 gap-5 rounded-lg border border-[#2a2a35] bg-[#0e0e13] p-5 sm:grid-cols-3 lg:grid-cols-5">
         <Stat
           label={`Total ${cfg.tokenSymbol} deposited`}
           value={fmt(totalPrincipal, 0)}
@@ -465,6 +472,15 @@ export default function AutoCompoundPage() {
         <Stat
           label="Depositors"
           value={depositorCount !== undefined ? depositorCount.toString() : "—"}
+        />
+        <Stat
+          label="Average reinvestment"
+          value={avgCompoundPct !== null ? `${avgCompoundPct.toFixed(0)}%` : "—"}
+          hint="Weighted by position size"
+        />
+        <Stat
+          label={`${cfg.rewardSymbol} awaiting compound`}
+          value={fmt(pendingRewards, 0)}
         />
         <Stat
           label="Last compounded"
