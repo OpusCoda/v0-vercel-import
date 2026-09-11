@@ -1,11 +1,12 @@
 // app/auto-compound/page.tsx
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { formatUnits, parseUnits, maxUint256 } from "viem"
 import {
   useAccount,
+  usePublicClient,
   useReadContracts,
   useWriteContract,
   useWaitForTransactionReceipt,
@@ -20,6 +21,10 @@ import {
   MIN_COMPOUND_PCT,
   formatTier,
   smaugForNextTier,
+  timeAgo,
+  COMPOUNDED_EVENT,
+  SETTLED_EVENT,
+  CLAIMED_EVENT,
   type VaultKey,
 } from "@/lib/auto-compounder"
 
@@ -144,6 +149,138 @@ function toWei(v: string): bigint {
   }
 }
 
+/* ── last compound ───────────────────────────────────────────────── */
+
+/**
+ * Timestamp of the most recent Compounded event, or null.
+ *
+ * Scans back a bounded window rather than from genesis — most public RPCs cap
+ * getLogs ranges, and an unbounded scan would either fail or crawl. If nothing
+ * is found in the window the display simply hides, which is the right outcome
+ * for a vault that has not compounded in weeks.
+ */
+function useLastCompound(vault: `0x${string}`) {
+  const client = usePublicClient()
+  const [ts, setTs] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    if (!client) return
+
+    const run = async () => {
+      try {
+        const latest = await client.getBlockNumber()
+        const LOOKBACK = 60_000n // ~7 days at PulseChain's ~10s blocks
+        const fromBlock = latest > LOOKBACK ? latest - LOOKBACK : 0n
+
+        const logs = await client.getLogs({
+          address: vault,
+          event: COMPOUNDED_EVENT,
+          fromBlock,
+          toBlock: latest,
+        })
+        if (cancelled || logs.length === 0) {
+          if (!cancelled) setTs(null)
+          return
+        }
+
+        const last = logs[logs.length - 1]
+        const block = await client.getBlock({ blockNumber: last.blockNumber })
+        if (!cancelled) setTs(Number(block.timestamp))
+      } catch {
+        // Range limits and rate limits are routine here. Hide rather than fail.
+        if (!cancelled) setTs(null)
+      }
+    }
+
+    run()
+    const id = setInterval(run, 120_000)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [client, vault])
+
+  return ts
+}
+
+/**
+ * Lifetime totals for one account, summed from events.
+ *
+ * The contract stores current state, not history — principal just grows, so
+ * without this a depositor has no way to tell what they started with. Summing
+ * Settled.compounded gives principal gained from compounding; summing Claimed
+ * gives reward token taken.
+ *
+ * Scanned in chunks from the vault's deploy block, because public RPCs cap
+ * getLogs ranges. Both events are indexed on user, so each chunk is cheap.
+ */
+function useLifetimeEarned(
+  vault: `0x${string}`,
+  deployBlock: bigint,
+  account?: `0x${string}`,
+) {
+  const client = usePublicClient()
+  const [totals, setTotals] = useState<{ compounded: bigint; claimed: bigint } | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    if (!client || !account || deployBlock === 0n) {
+      setTotals(null)
+      return
+    }
+
+    const run = async () => {
+      try {
+        const latest = await client.getBlockNumber()
+        const CHUNK = 50_000n
+
+        let compounded = 0n
+        let claimed = 0n
+
+        for (let from = deployBlock; from <= latest; from += CHUNK) {
+          const to = from + CHUNK - 1n > latest ? latest : from + CHUNK - 1n
+
+          const [settled, claims] = await Promise.all([
+            client.getLogs({
+              address: vault,
+              event: SETTLED_EVENT,
+              args: { user: account },
+              fromBlock: from,
+              toBlock: to,
+            }),
+            client.getLogs({
+              address: vault,
+              event: CLAIMED_EVENT,
+              args: { user: account },
+              fromBlock: from,
+              toBlock: to,
+            }),
+          ])
+
+          for (const log of settled) compounded += log.args.compounded ?? 0n
+          for (const log of claims) claimed += log.args.amount ?? 0n
+
+          if (cancelled) return
+        }
+
+        if (!cancelled) setTotals({ compounded, claimed })
+      } catch {
+        // Range or rate limits are routine on public endpoints. Hide the
+        // figure rather than showing a wrong one.
+        if (!cancelled) setTotals(null)
+      }
+    }
+
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [client, vault, deployBlock, account])
+
+  return totals
+}
+
 /* ── page ────────────────────────────────────────────────────────── */
 
 export default function AutoCompoundPage() {
@@ -170,6 +307,8 @@ export default function AutoCompoundPage() {
 
   const totalPrincipal = vaultData?.[0]?.result as bigint | undefined
   const circulating = vaultData?.[1]?.result as bigint | undefined
+  const lastCompound = useLastCompound(cfg.vault)
+  const lifetime = useLifetimeEarned(cfg.vault, cfg.deployBlock, address)
 
   const { data: userData, refetch: refetchUser } = useReadContracts({
     contracts: address
@@ -282,9 +421,14 @@ export default function AutoCompoundPage() {
         ))}
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-5 rounded-lg border border-[#2a2a35] bg-[#0e0e13] p-5">
+      <div className="mb-6 grid grid-cols-2 gap-5 rounded-lg border border-[#2a2a35] bg-[#0e0e13] p-5 sm:grid-cols-3">
         <Stat label={`${cfg.tokenSymbol} deposited`} value={fmt(totalPrincipal, 0)} />
         <Stat label="Your tier" value={formatTier(tier)} hint="From Smaug in your wallet" />
+        <Stat
+          label="Last compounded"
+          value={lastCompound ? timeAgo(lastCompound) : "—"}
+          hint={lastCompound ? undefined : "No compound in the last week"}
+        />
       </div>
 
       {!isConnected ? (
@@ -308,6 +452,21 @@ export default function AutoCompoundPage() {
                   : undefined
               }
             />
+
+            {lifetime && (lifetime.compounded > 0n || lifetime.claimed > 0n) && (
+              <div className="mt-4 grid grid-cols-2 gap-5 border-t border-[#2a2a35] pt-4">
+                <Stat
+                  label="Earned by compounding"
+                  value={`+${fmt(lifetime.compounded + pendingIn)}`}
+                  hint={cfg.tokenSymbol}
+                />
+                <Stat
+                  label="Claimed so far"
+                  value={fmt(lifetime.claimed)}
+                  hint={cfg.rewardSymbol}
+                />
+              </div>
+            )}
 
             <div className="mt-5 border-t border-[#2a2a35] pt-5">
               <Stat label={`${cfg.rewardSymbol} ready to claim`} value={fmt(claimable)} />
@@ -393,7 +552,7 @@ export default function AutoCompoundPage() {
                       : "border-[#2a2a35] text-[#9ca3af] hover:text-[#e8e6e3]"
                   }`}
                 >
-                  {p}%
+                  {p}%{p === 100 ? " · default" : ""}
                 </button>
               ))}
             </div>
@@ -405,8 +564,9 @@ export default function AutoCompoundPage() {
             </div>
 
             <p className="mt-3 font-sans text-xs leading-relaxed text-[#6b7280]">
-              Changes apply to rewards from here on. Anything already earned keeps the
-              split it was earned under.
+              {isNewDepositor
+                ? "100% is the default — deposit without changing anything and everything you earn is reinvested. Pick another rate here and save it before your first deposit."
+                : "Changes apply to rewards from here on. Anything already earned keeps the split it was earned under."}
             </p>
           </Panel>
 
@@ -423,7 +583,7 @@ export default function AutoCompoundPage() {
               <div className="rounded-md border border-[#2a2a35] bg-[#0a0a0c] p-4">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="font-sans text-xs text-[#9ca3af]">
-                    Reinvestment rate
+                    Reinvestment rate{isNewDepositor && !pctChanged ? " (default)" : ""}
                   </span>
                   <span className="font-sans text-sm text-[#B87333] tabular-nums">
                     {pct}%

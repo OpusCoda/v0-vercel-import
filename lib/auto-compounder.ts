@@ -1,3 +1,4 @@
+// lib/auto-compounder.ts
 import type { Address } from "viem"
 
 export const VAULTS = {
@@ -7,8 +8,8 @@ export const VAULTS = {
     token: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" as Address,
     tokenSymbol: "OPUS",
     rewardSymbol: "PLS",
-    /** Native PLS has no contract address. */
     rewardToken: null,
+    deployBlock: 27509909,
   },
   CODA: {
     key: "CODA" as const,
@@ -17,6 +18,7 @@ export const VAULTS = {
     tokenSymbol: "CODA",
     rewardSymbol: "PLSX",
     rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
+    deployBlock: 27509915,
   },
 } as const
 
@@ -86,6 +88,37 @@ export const VAULT_ABI = [
   },
 ] as const
 
+/** Emitted whenever a position settles. `compounded` is principal folded in. */
+export const SETTLED_EVENT = {
+  type: "event",
+  name: "Settled",
+  inputs: [
+    { name: "user", type: "address", indexed: true },
+    { name: "compounded", type: "uint256", indexed: false },
+    { name: "rewardAccrued", type: "uint256", indexed: false },
+  ],
+} as const
+
+/** Emitted when a user takes their reward token. */
+export const CLAIMED_EVENT = {
+  type: "event",
+  name: "Claimed",
+  inputs: [
+    { name: "user", type: "address", indexed: true },
+    { name: "amount", type: "uint256", indexed: false },
+  ],
+} as const
+
+/** Emitted once per successful compound. Indexed for "last compounded". */
+export const COMPOUNDED_EVENT = {
+  type: "event",
+  name: "Compounded",
+  inputs: [
+    { name: "rewardSpent", type: "uint256", indexed: false },
+    { name: "principalReceived", type: "uint256", indexed: false },
+  ],
+} as const
+
 export const ERC20_ABI = [
   {
     type: "function",
@@ -144,4 +177,16 @@ export function smaugForNextTier(
 
 export function formatTier(tier: number | bigint): string {
   return `${(Number(tier) / 100).toFixed(2)}×`
+}
+
+/** "3 hours ago" from a unix timestamp in seconds. */
+export function timeAgo(unixSeconds: number): string {
+  const secs = Math.max(0, Math.floor(Date.now() / 1000) - unixSeconds)
+  if (secs < 90) return "just now"
+  const mins = Math.round(secs / 60)
+  if (mins < 60) return `${mins} min ago`
+  const hours = Math.round(mins / 60)
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`
+  const days = Math.round(hours / 24)
+  return `${days} day${days === 1 ? "" : "s"} ago`
 }
