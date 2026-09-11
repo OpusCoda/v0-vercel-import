@@ -217,9 +217,13 @@ function useLastCompound(vault: `0x${string}`) {
  */
 function useLifetimeEarned(
   vault: `0x${string}`,
-  deployBlock: bigint,
+  deployBlockInput: bigint | number | string,
   account?: `0x${string}`,
 ) {
+  // Accept a plain number too — a config value written as 24500000 rather
+  // than 24500000n would otherwise blow up on the first bigint arithmetic.
+  const deployBlock = BigInt(deployBlockInput)
+
   const client = usePublicClient()
   const [totals, setTotals] = useState<{ compounded: bigint; claimed: bigint } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -467,21 +471,28 @@ export default function AutoCompoundPage() {
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           <Panel title="Your position">
-            <Stat
-              label={`${cfg.tokenSymbol} in the vault`}
-              value={fmt(balance)}
-              hint={
-                balance > 0n && pct > 0
-                  ? `Growing at ${pct}% reinvestment`
-                  : undefined
-              }
-            />
-
-            <div className="mt-4 grid grid-cols-2 gap-5 border-t border-[#2a2a35] pt-4">
+            {/* Grouped by token: principal figures above, reward below. */}
+            <div className="grid grid-cols-2 gap-5">
+              <Stat
+                label={`${cfg.tokenSymbol} in the vault`}
+                value={fmt(balance)}
+                hint={
+                  balance > 0n && pct > 0
+                    ? `Growing at ${pct}% reinvestment`
+                    : undefined
+                }
+              />
               <Stat
                 label="Earned by compounding"
                 value={lifetime ? `+${fmt(lifetime.compounded + pendingIn)}` : "—"}
                 hint={cfg.tokenSymbol}
+              />
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-5 border-t border-[#2a2a35] pt-5">
+              <Stat
+                label={`${cfg.rewardSymbol} ready to claim`}
+                value={fmt(claimable)}
               />
               <Stat
                 label="Claimed so far"
@@ -489,20 +500,18 @@ export default function AutoCompoundPage() {
                 hint={cfg.rewardSymbol}
               />
             </div>
+
+            <div className="mt-4">
+              <Button onClick={() => send("claim")} disabled={busy || claimable === 0n}>
+                Claim {cfg.rewardSymbol}
+              </Button>
+            </div>
+
             {lifetimeError && (
-              <p className="mt-2 font-sans text-xs text-[#6b7280]">
+              <p className="mt-3 font-sans text-xs text-[#6b7280]">
                 History unavailable: {lifetimeError}
               </p>
             )}
-
-            <div className="mt-5 border-t border-[#2a2a35] pt-5">
-              <Stat label={`${cfg.rewardSymbol} ready to claim`} value={fmt(claimable)} />
-              <div className="mt-3">
-                <Button onClick={() => send("claim")} disabled={busy || claimable === 0n}>
-                  Claim {cfg.rewardSymbol}
-                </Button>
-              </div>
-            </div>
           </Panel>
 
           <Panel title="Your Smaug tier" aside={<span className="font-sans text-sm text-[#B87333]">{formatTier(tier)}</span>}>
