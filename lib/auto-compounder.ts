@@ -49,6 +49,28 @@ export const VAULT_ABI = [
   { type: "function", name: "totalPrincipal", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "depositorCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "smaugCirculating", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+
+  // ── Vault-wide stats ──────────────────────────────────────────────
+  // totalCompoundWeight / totalWeight is the reinvestment rate weighted by
+  // position size — there is no stored average, it is derived from these.
+  { type: "function", name: "totalWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "totalCompoundWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "totalClaimWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+
+  // Reward waiting to be compounded. sweepableRewards() is what the vault
+  // already holds; unpaidEarnings() is what the distributor still owes it.
+  // compound() harvests before it splits, so the sum is what the next run
+  // will actually act on.
+  { type: "function", name: "sweepableRewards", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "unpaidEarnings", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+
+  // Protocol surplus: the gap between what the vault collects at its own
+  // Smaug tier and what its members are individually entitled to, in basis
+  // points of incoming rewards. Falls toward zero as depositors' own Smaug
+  // holdings approach the 1.20x cap.
+  { type: "function", name: "surplusBps", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "accruedSurplus", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+
   {
     type: "function",
     name: "tierFor",
@@ -177,6 +199,21 @@ export function smaugForNextTier(
 
 export function formatTier(tier: number | bigint): string {
   return `${(Number(tier) / 100).toFixed(2)}×`
+}
+
+/**
+ * Reinvestment rate across the vault, weighted by position size.
+ *
+ * Not a plain average of depositors — a large position at 25% moves this far
+ * more than a small one at 100%. Returns null until both reads land.
+ */
+export function weightedCompoundPct(
+  totalCompoundWeight: bigint | undefined,
+  totalWeight: bigint | undefined,
+): number | null {
+  if (totalWeight === undefined || totalCompoundWeight === undefined) return null
+  if (totalWeight === 0n) return null
+  return Number((totalCompoundWeight * 10_000n) / totalWeight) / 100
 }
 
 /** "3 hours ago" from a unix timestamp in seconds. */

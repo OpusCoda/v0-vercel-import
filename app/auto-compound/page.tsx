@@ -20,6 +20,7 @@ import {
   SMAUG_ADDRESS,
   MIN_COMPOUND_PCT,
   formatTier,
+  weightedCompoundPct,
   smaugForNextTier,
   timeAgo,
   COMPOUNDED_EVENT,
@@ -326,11 +327,21 @@ export default function AutoCompoundPage() {
       { address: cfg.vault, abi: VAULT_ABI, functionName: "totalPrincipal" },
       { address: cfg.vault, abi: VAULT_ABI, functionName: "smaugCirculating" },
       { address: cfg.vault, abi: VAULT_ABI, functionName: "depositorCount" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "totalWeight" },            // [3]
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "totalCompoundWeight" },    // [4]
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "sweepableRewards" },       // [5]
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "unpaidEarnings" },         // [6]
     ],
     query: { refetchInterval: 30_000 },
   })
 
   const totalPrincipal = vaultData?.[0]?.result as bigint | undefined
+  const avgCompoundPct = weightedCompoundPct(
+    vaultData?.[4]?.result as bigint | undefined,
+    vaultData?.[3]?.result as bigint | undefined,
+  )
+  const pendingRewards =
+    ((vaultData?.[5]?.result as bigint) ?? 0n) + ((vaultData?.[6]?.result as bigint) ?? 0n)
   const circulating = vaultData?.[1]?.result as bigint | undefined
   const depositorCount = vaultData?.[2]?.result as bigint | undefined
 
