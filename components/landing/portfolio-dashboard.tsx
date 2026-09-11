@@ -19,6 +19,8 @@ interface Asset {
   value: number
   change24h: number
 }
+const OPUS_VAULT_ADDR = '0xEf5B436f6832F19D34b81897FFAE0751c6612830'
+const CODA_VAULT_ADDR = '0x630ce372979B784db03e277A7c888D1A8b47819E'
 const TOKEN_CONTRACTS = [
   { symbol: 'OPUS', name: 'Opus', address: '0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a', decimals: 18 },
   { symbol: 'CODA', name: 'Coda', address: '0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28', decimals: 18 },
@@ -53,6 +55,11 @@ const PENDING_ABI = ['function getUnpaidEarnings(address) view returns (uint256)
 // v1/v2 Coda distributors expose shares(); PLSX realised is index 6.
 const CODA_SHARES_ABI = [
   'function shares(address) view returns (uint256 amount, uint256 wethTotalExcluded, uint256 wethTotalRealised, uint256 wbtcTotalExcluded, uint256 wbtcTotalRealised, uint256 plsTotalExcluded, uint256 plsTotalRealised)',
+]
+// Auto-compounder vaults. principal + pendingIn is what a depositor holds;
+// claimableNow is reward token waiting for them.
+const VAULT_POSITION_ABI = [
+  'function positionOf(address) view returns (uint256 principal, uint256 smaugInWallet, uint256 tier, uint256 weight, uint256 pendingIn, uint256 claimableNow, uint8 compoundPct)',
 ]
 
 // Token prices from DexScreener and market data
@@ -105,6 +112,11 @@ export function PortfolioDashboard() {
   const [codaPlsxEarned, setCodaPlsxEarned] = useState(0)
   const [opusPlsPending, setOpusPlsPending] = useState(0)
   const [codaPlsxPending, setCodaPlsxPending] = useState(0)
+  // Auto-compounder positions, summed across selected wallets
+  const [opusVaultBalance, setOpusVaultBalance] = useState(0)
+  const [codaVaultBalance, setCodaVaultBalance] = useState(0)
+  const [opusVaultClaimable, setOpusVaultClaimable] = useState(0)
+  const [codaVaultClaimable, setCodaVaultClaimable] = useState(0)
   // Modal states
   const [showConnectModal, setShowConnectModal] = useState(false)
   const [showEditWalletsModal, setShowEditWalletsModal] = useState(false)
@@ -117,6 +129,24 @@ export function PortfolioDashboard() {
   const [loadWalletName, setLoadWalletName] = useState('')
   const [loadingWallets, setLoadingWallets] = useState(false)
   const [loadedWalletListName, setLoadedWalletListName] = useState<string | null>(null)
+  // Clear every derived figure at once — used whenever nothing is selected.
+  const clearAllData = () => {
+    setAssets([])
+    setOpusPlsEarned(0)
+    setCodaPlsxEarned(0)
+    setOpusPlsPending(0)
+    setCodaPlsxPending(0)
+    setOpusVaultBalance(0)
+    setCodaVaultBalance(0)
+    setOpusVaultClaimable(0)
+    setCodaVaultClaimable(0)
+  }
+  // Fetch everything for a set of addresses.
+  const fetchAllData = (addresses: string[]) => {
+    fetchTokenBalances(addresses)
+    fetchEcosystemEarnings(addresses)
+    fetchVaultPositions(addresses)
+  }
   // Fetch token balances for wallets
   const fetchTokenBalances = async (addresses: string[]) => {
     try {
@@ -204,6 +234,48 @@ export function PortfolioDashboard() {
       setCodaPlsxPending(0)
     }
   }
+  // Auto-compounder positions across the given addresses.
+  //
+  // Does NOT overlap with fetchEcosystemEarnings. Once a depositor's tokens
+  // are in a vault, the VAULT is the distributor's shareholder — so
+  // getTotalPlsEarned on a user address stops counting those rewards. They
+  // show up here instead, as a growing vault balance and a claimable amount.
+  const fetchVaultPositions = async (addresses: string[]) => {
+    try {
+      const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
+      const opusVault = new ethers.Contract(OPUS_VAULT_ADDR, VAULT_POSITION_ABI, provider)
+      const codaVault = new ethers.Contract(CODA_VAULT_ADDR, VAULT_POSITION_ABI, provider)
+
+      let opusBal = 0n
+      let codaBal = 0n
+      let opusClaim = 0n
+      let codaClaim = 0n
+
+      for (const address of addresses) {
+        try {
+          const p = await opusVault.positionOf(address)
+          opusBal += BigInt(p.principal) + BigInt(p.pendingIn)
+          opusClaim += BigInt(p.claimableNow)
+        } catch {}
+        try {
+          const p = await codaVault.positionOf(address)
+          codaBal += BigInt(p.principal) + BigInt(p.pendingIn)
+          codaClaim += BigInt(p.claimableNow)
+        } catch {}
+      }
+
+      setOpusVaultBalance(Number(ethers.formatUnits(opusBal, 18)))
+      setCodaVaultBalance(Number(ethers.formatUnits(codaBal, 18)))
+      setOpusVaultClaimable(Number(ethers.formatUnits(opusClaim, 18)))
+      setCodaVaultClaimable(Number(ethers.formatUnits(codaClaim, 18)))
+    } catch (err) {
+      console.error('[vaults] fetch failed:', err)
+      setOpusVaultBalance(0)
+      setCodaVaultBalance(0)
+      setOpusVaultClaimable(0)
+      setCodaVaultClaimable(0)
+    }
+  }
   // Save edited wallets and fetch real data
   const handleSaveEditedWallets = async () => {
     // Fold in a pending typed-but-not-added address so users don't have to
@@ -262,14 +334,9 @@ export function PortfolioDashboard() {
     setShowEditWalletsModal(false)
     const selectedAddresses = walletsToSave.filter(w => w.selected).map(w => w.address)
     if (selectedAddresses.length > 0) {
-      fetchTokenBalances(selectedAddresses)
-      fetchEcosystemEarnings(selectedAddresses)
+      fetchAllData(selectedAddresses)
     } else {
-      setAssets([])
-      setOpusPlsEarned(0)
-      setCodaPlsxEarned(0)
-      setOpusPlsPending(0)
-      setCodaPlsxPending(0)
+      clearAllData()
     }
   }
   const handleOpenEditModal = () => {
@@ -343,8 +410,7 @@ export function PortfolioDashboard() {
       localStorage.setItem('currentWalletList', JSON.stringify({ name: loadWalletName, wallets: loadedWallets }))
       // Fetch real data for loaded wallets
       const selectedAddresses = loadedWallets.map(w => w.address)
-      fetchTokenBalances(selectedAddresses)
-      fetchEcosystemEarnings(selectedAddresses)
+      fetchAllData(selectedAddresses)
     } catch (error) {
       console.error('Error loading wallet list:', error)
       alert('Failed to load wallet list. Please check the name and try again.')
@@ -381,15 +447,10 @@ export function PortfolioDashboard() {
     console.log('[v0] Wallets changed, selected:', selectedAddresses.length, 'wallets')
     if (selectedAddresses.length > 0) {
       console.log('[v0] Fetching portfolio data')
-      fetchTokenBalances(selectedAddresses)
-      fetchEcosystemEarnings(selectedAddresses)
+      fetchAllData(selectedAddresses)
     } else {
       console.log('[v0] No selected wallets, clearing data')
-      setAssets([])
-      setOpusPlsEarned(0)
-      setCodaPlsxEarned(0)
-      setOpusPlsPending(0)
-      setCodaPlsxPending(0)
+      clearAllData()
     }
   }, [wallets])
   return (
@@ -503,6 +564,40 @@ export function PortfolioDashboard() {
                 </p>
               </div>
             </div>
+            {/* Auto-Compounder positions.
+                Distinct from the earnings above: once tokens are in a vault the
+                VAULT is the distributor's shareholder, so getTotalPlsEarned on a
+                user address stops counting those rewards. They appear here as a
+                growing vault balance and a claimable amount instead. */}
+            {(opusVaultBalance > 0 || codaVaultBalance > 0) && (
+              <div className="mb-8">
+                <h3 className="mb-4 font-serif text-xl font-bold text-[#B87333]">Auto-Compounder</h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
+                    <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">OPUS in the vault</p>
+                    <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
+                      {opusVaultBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })} OPUS
+                    </p>
+                    <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
+                      Claimable: <span className="text-[#b8b6b1]">{opusVaultClaimable.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLS</span>
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
+                    <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">CODA in the vault</p>
+                    <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
+                      {codaVaultBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })} CODA
+                    </p>
+                    <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
+                      Claimable: <span className="text-[#b8b6b1]">{codaVaultClaimable.toLocaleString(undefined, { maximumFractionDigits: 0 })} PLSX</span>
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-3 font-sans text-xs text-[#7c7a76]">
+                  Deposit, withdraw and claim on the{' '}
+                  <a href="/auto-compound" className="text-[#B87333] hover:underline">Auto-Compounder</a> page.
+                </p>
+              </div>
+            )}
             {/* Tabs */}
             <div className="mb-8 border-b border-[#2a2a35]">
               <div className="flex gap-8">
