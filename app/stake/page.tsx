@@ -106,7 +106,7 @@ export default function StakePage() {
             <OrnamentHeading>Global stats</OrnamentHeading>
             <div className="flex divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-[#111116]">
               {[
-                { label: 'Total staked', value: isLoading ? '—' : `${totalStaked} SMAUG` },
+                { label: 'Total staked', value: isLoading ? '—' : `${Math.round(Number(totalStaked.replace(/,/g, ''))).toLocaleString()} SMAUG` },
                 { label: 'Stakers', value: isLoading ? '—' : totalStakers },
                 { label: 'Stakes created', value: stakeCount != null ? stakeCount.toLocaleString() : '—' },
               ].map(({ label, value }) => (

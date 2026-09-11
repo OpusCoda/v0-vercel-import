@@ -68,6 +68,16 @@ const protocolContracts = [
     url: "https://otter.pulsechain.com/address/0x8Fa4a2f0E465d63C287d4147638d5514bDE2f38D",
   },
   {
+    name: "Opus Auto-Compounder",
+    address: "0xEf5B436f6832F19D34b81897FFAE0751c6612830",
+    url: "https://otter.pulsechain.com/address/0xEf5B436f6832F19D34b81897FFAE0751c6612830",
+  },
+  {
+    name: "Coda Auto-Compounder",
+    address: "0x630ce372979B784db03e277A7c888D1A8b47819E",
+    url: "https://otter.pulsechain.com/address/0x630ce372979B784db03e277A7c888D1A8b47819E",
+  },
+  {
     name: "Probability Shop",
     address: "0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392",
     url: "https://otter.pulsechain.com/address/0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392",

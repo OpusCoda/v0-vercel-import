@@ -166,8 +166,10 @@ export function SweepPanel() {
   })
   const count = countData !== undefined ? Number(countData as bigint) : 0
   // getMarket + getSettlementInfo per market.
-  const calls = useMemo(() => {
-    const c = []
+    const calls = useMemo(() => {
+    // Typed as any[] to avoid wagmi's deep ABI type-inference blowing the
+    // TS instantiation-depth limit (ts2589). Runtime behaviour is unchanged.
+    const c: any[] = []
     for (let i = 0; i < count; i++) {
       c.push({ ...contract, functionName: "getMarket", args: [BigInt(i)] })
       c.push({ ...contract, functionName: "getSettlementInfo", args: [BigInt(i)] })
