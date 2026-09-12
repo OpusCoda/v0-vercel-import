@@ -24,6 +24,37 @@ export const VAULTS = {
 
 export type VaultKey = keyof typeof VAULTS
 
+/**
+ * Addresses excluded when working out effective circulating supply.
+ *
+ * The line is drawn at supply that is not circulating or cannot earn: the
+ * burn address, the LP pair, the token contract's own accumulated fees, and
+ * the named wallets that take no rewards.
+ *
+ * Protocol contracts holding USER deposits — the auto-compounder itself, the
+ * Probability Shop, the Outcome Exchange — are deliberately NOT excluded.
+ * Those tokens still belong to holders, and excluding the vault while
+ * measuring what share sits in the vault would make the figure meaningless.
+ */
+export const CIRCULATING_EXCLUSIONS: Record<VaultKey, Address[]> = {
+  OPUS: [
+    "0x0000000000000000000000000000000000000369", // burn
+    "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a", // token contract (fee balance)
+    "0x15dD01082095F1234f48AC920997621D66687972", // OPUS/PLS LP
+    "0x542Cc63EceD96F89D61B3cF727f3E87e67eC7d93", // no rewards
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330", // no rewards
+    "0x0C24Ac492a01F8ddC9776f448A58De574C0eEdbE", // no rewards
+  ] as Address[],
+  CODA: [
+    "0x0000000000000000000000000000000000000369", // burn
+    "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28", // token contract (fee balance)
+    "0xaA73Ad940094d0453AE547f1aCB7eB00A49f729e", // CODA/PLS LP
+    "0x85Dc2c3B8b6f341227a461212DFf59c4fF08AFb3", // no rewards
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330", // no rewards
+    "0x2694f6cB721396256418f33f68700c9a7029A9c1", // no rewards
+  ] as Address[],
+}
+
 export const SMAUG_ADDRESS =
   "0xf4754Aa585caBf38537A68660469A17E203D8632" as Address
 
@@ -144,6 +175,13 @@ export const COMPOUNDED_EVENT = {
 export const ERC20_ABI = [
   {
     type: "function",
+    name: "totalSupply",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
     name: "balanceOf",
     stateMutability: "view",
     inputs: [{ name: "account", type: "address" }],
@@ -214,6 +252,28 @@ export function weightedCompoundPct(
   if (totalWeight === undefined || totalCompoundWeight === undefined) return null
   if (totalWeight === 0n) return null
   return Number((totalCompoundWeight * 10_000n) / totalWeight) / 100
+}
+
+/**
+ * Share of effective circulating supply sitting in the vault, as a percentage.
+ *
+ * Effective circulating = totalSupply minus every excluded balance. Returns
+ * null until the reads land, or if the denominator comes out at zero.
+ */
+export function vaultShareOfCirculating(
+  totalPrincipal: bigint | undefined,
+  totalSupply: bigint | undefined,
+  excludedBalances: (bigint | undefined)[],
+): number | null {
+  if (totalPrincipal === undefined || totalSupply === undefined) return null
+  if (excludedBalances.some((b) => b === undefined)) return null
+
+  const excluded = excludedBalances.reduce<bigint>((sum, b) => sum + (b ?? 0n), 0n)
+  if (excluded >= totalSupply) return null
+  const circulating = totalSupply - excluded
+  if (circulating === 0n) return null
+
+  return Number((totalPrincipal * 1_000_000n) / circulating) / 10_000
 }
 
 /** "3 hours ago" from a unix timestamp in seconds. */
