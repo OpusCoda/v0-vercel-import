@@ -7,6 +7,7 @@ import { formatUnits, parseUnits, maxUint256 } from "viem"
 import {
   useAccount,
   usePublicClient,
+  useReadContract,
   useReadContracts,
   useWriteContract,
   useWaitForTransactionReceipt,
@@ -21,6 +22,8 @@ import {
   MIN_COMPOUND_PCT,
   formatTier,
   weightedCompoundPct,
+  vaultShareOfCirculating,
+  CIRCULATING_EXCLUSIONS,
   smaugForNextTier,
   timeAgo,
   COMPOUNDED_EVENT,
@@ -351,6 +354,55 @@ export default function AutoCompoundPage() {
   const pendingRewards =
     ((vaultData?.[5]?.result as bigint) ?? 0n) + ((vaultData?.[6]?.result as bigint) ?? 0n)
 
+  // Effective circulating supply: total minus burn, the LP pair, the token's
+  // own accumulated fee balance, and the wallets that take no rewards.
+  //
+  // Two hooks rather than one array: mixing a no-arg call with mapped
+  // balanceOf calls makes TypeScript infer a single element type from the
+  // mapped entries and reject the odd one out.
+  const exclusions = CIRCULATING_EXCLUSIONS[active]
+
+  const { data: tokenTotalSupply } = useReadContract({
+    address: cfg.token,
+    abi: ERC20_ABI,
+    functionName: "totalSupply",
+    query: { refetchInterval: 60_000 },
+  })
+
+  const { data: excludedBalances } = useReadContracts({
+    contracts: exclusions.map((addr) => ({
+      address: cfg.token,
+      abi: ERC20_ABI,
+      functionName: "balanceOf" as const,
+      args: [addr] as const,
+    })),
+    query: { refetchInterval: 60_000 },
+  })
+
+  const shareOfCirculating = vaultShareOfCirculating(
+    totalPrincipal,
+    tokenTotalSupply as bigint | undefined,
+    (excludedBalances ?? []).map((r) => r?.result as bigint | undefined),
+  )
+
+  // The share falls back to "All depositors" whenever any read is missing,
+  // which is impossible to diagnose from the page. Log what came back so a
+  // failing call is visible.
+  useEffect(() => {
+    if (!excludedBalances) return
+    console.log("[auto-compound] circulating supply reads", {
+      vault: active,
+      totalSupply: (tokenTotalSupply as bigint | undefined)?.toString(),
+      totalPrincipal: totalPrincipal?.toString(),
+      exclusions: exclusions.map((a, i) => [
+        a,
+        (excludedBalances[i]?.result as bigint | undefined)?.toString(),
+        excludedBalances[i]?.status,
+      ]),
+      shareOfCirculating,
+    })
+  }, [excludedBalances, tokenTotalSupply, totalPrincipal, exclusions, active, shareOfCirculating])
+
   const lastCompound = useLastCompound(cfg.vault)
   const { totals: lifetime, error: lifetimeError } = useLifetimeEarned(
     cfg.vault,
@@ -423,9 +475,15 @@ export default function AutoCompoundPage() {
     )
   }
 
-  // Principal shown to the user is what's settled plus what's credited but not
+    // Principal shown to the user is what's settled plus what's credited but not
   // yet folded in. The split is an implementation detail.
-  const balance = principal + pendingIn
+    const balance = principal + pendingIn
+
+  // The depositor's share of the whole vault, by principal.
+    const shareOfVault =
+    totalPrincipal !== undefined && totalPrincipal > 0n && balance > 0n
+      ? Number((balance * 1_000_000n) / totalPrincipal) / 10_000
+      : null
 
   return (
     <>
@@ -467,7 +525,11 @@ export default function AutoCompoundPage() {
         <Stat
           label={`Total ${cfg.tokenSymbol} deposited`}
           value={fmt(totalPrincipal, 0)}
-          hint="All depositors"
+          hint={
+            shareOfCirculating !== null
+              ? `${shareOfCirculating.toFixed(2)}% of circulating`
+              : "All depositors"
+          }
         />
         <Stat
           label="Depositors"
@@ -507,8 +569,8 @@ export default function AutoCompoundPage() {
                 label={`${cfg.tokenSymbol} in the vault`}
                 value={fmt(balance)}
                 hint={
-                  balance > 0n && pct > 0
-                    ? `Growing at ${pct}% reinvestment`
+                  shareOfVault !== null
+                    ? `${shareOfVault.toFixed(2)}% of the vault · ${pct}% reinvestment`
                     : undefined
                 }
               />
