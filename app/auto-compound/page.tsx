@@ -448,7 +448,7 @@ export default function AutoCompoundPage() {
       <SiteNav />
       <main className="mx-auto max-w-5xl px-4 py-10 md:px-6">
       <header className="mb-8">
-        <h1 className="font-serif text-3xl text-[#e8e6e3]">Reward Mill</h1>
+        <h1 className="font-serif text-3xl text-[#e8e6e3]">Reward Accumulator</h1>
         <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-[#9ca3af]">
           Deposit {cfg.tokenSymbol} and choose where your rewards go. Some of it
           reinvests into more {cfg.tokenSymbol}, the rest comes to you as{" "}
