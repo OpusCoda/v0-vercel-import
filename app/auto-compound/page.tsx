@@ -20,6 +20,8 @@ import {
   ERC20_ABI,
   SMAUG_ADDRESS,
   MIN_COMPOUND_PCT,
+  PRINCIPALS,
+  vaultsForPrincipal,
   formatTier,
   weightedCompoundPct,
   vaultShareOfCirculating,
@@ -30,6 +32,7 @@ import {
   SETTLED_EVENT,
   CLAIMED_EVENT,
   type VaultKey,
+  type PrincipalKey,
 } from "@/lib/auto-compounder"
 
 /* ── presentational pieces ───────────────────────────────────────── */
@@ -137,9 +140,12 @@ function AmountInput({
 
 /* ── helpers ─────────────────────────────────────────────────────── */
 
-function fmt(v: bigint | undefined, dp = 2): string {
+// Principal-token amounts (deposits, principal-side lifetime totals) are
+// always 18 decimals — OPUS and CODA both are. Only target/claim-side
+// amounts vary (HEX is 8), so those call sites pass `decimals` explicitly.
+function fmt(v: bigint | undefined, dp = 2, decimals = 18): string {
   if (v === undefined) return "—"
-  const n = Number(formatUnits(v, 18))
+  const n = Number(formatUnits(v, decimals))
   if (n === 0) return "0"
   if (n < 0.01) return "<0.01"
   return n.toLocaleString(undefined, { maximumFractionDigits: dp })
@@ -155,14 +161,6 @@ function toWei(v: string): bigint {
 
 /* ── last compound ───────────────────────────────────────────────── */
 
-/**
- * Timestamp of the most recent Compounded event, or null.
- *
- * Scans back a bounded window rather than from genesis — most public RPCs cap
- * getLogs ranges, and an unbounded scan would either fail or crawl. If nothing
- * is found in the window the display simply hides, which is the right outcome
- * for a vault that has not compounded in weeks.
- */
 function useLastCompound(vault: `0x${string}`) {
   const client = usePublicClient()
   const [ts, setTs] = useState<number | null>(null)
@@ -174,7 +172,7 @@ function useLastCompound(vault: `0x${string}`) {
     const run = async () => {
       try {
         const latest = await client.getBlockNumber()
-        const LOOKBACK = 60_000n // ~7 days at PulseChain's ~10s blocks
+        const LOOKBACK = 60_000n
         const fromBlock = latest > LOOKBACK ? latest - LOOKBACK : 0n
 
         const logs = await client.getLogs({
@@ -192,7 +190,6 @@ function useLastCompound(vault: `0x${string}`) {
         const block = await client.getBlock({ blockNumber: last.blockNumber })
         if (!cancelled) setTs(Number(block.timestamp))
       } catch {
-        // Range limits and rate limits are routine here. Hide rather than fail.
         if (!cancelled) setTs(null)
       }
     }
@@ -208,24 +205,11 @@ function useLastCompound(vault: `0x${string}`) {
   return ts
 }
 
-/**
- * Lifetime totals for one account, summed from events.
- *
- * The contract stores current state, not history — principal just grows, so
- * without this a depositor has no way to tell what they started with. Summing
- * Settled.compounded gives principal gained from compounding; summing Claimed
- * gives reward token taken.
- *
- * Scanned in chunks from the vault's deploy block, because public RPCs cap
- * getLogs ranges. Both events are indexed on user, so each chunk is cheap.
- */
 function useLifetimeEarned(
   vault: `0x${string}`,
   deployBlockInput: bigint | number | string,
   account?: `0x${string}`,
 ) {
-  // Accept a plain number too — a config value written as 24500000 rather
-  // than 24500000n would otherwise blow up on the first bigint arithmetic.
   const deployBlock = BigInt(deployBlockInput)
 
   const client = usePublicClient()
@@ -246,8 +230,6 @@ function useLifetimeEarned(
     const run = async () => {
       try {
         const latest = await client.getBlockNumber()
-        // Public PulseChain RPCs cap getLogs ranges, often well below 50k.
-        // Smaller chunks mean more requests but far fewer outright rejections.
         const CHUNK = 9_000n
 
         let compounded = 0n
@@ -282,15 +264,8 @@ function useLifetimeEarned(
         if (!cancelled) {
           setTotals({ compounded, claimed })
           setError(null)
-          console.log(
-            `[auto-compound] ${vault} lifetime for ${account}:`,
-            { compounded: compounded.toString(), claimed: claimed.toString(),
-              scannedFrom: deployBlock.toString(), to: latest.toString() },
-          )
         }
       } catch (e) {
-        // Surface it rather than hiding — a silently missing figure is much
-        // harder to diagnose than a visible one.
         const msg = e instanceof Error ? e.message.split("\n")[0] : String(e)
         console.error("[auto-compound] lifetime scan failed:", e)
         if (!cancelled) {
@@ -312,8 +287,13 @@ function useLifetimeEarned(
 /* ── page ────────────────────────────────────────────────────────── */
 
 export default function AutoCompoundPage() {
-  const [active, setActive] = useState<VaultKey>("OPUS")
+  const [principal, setPrincipal] = useState<PrincipalKey>("OPUS")
+  const [targetIdx, setTargetIdx] = useState(0)
+
+  const options = vaultsForPrincipal(principal)
+  const active = options[targetIdx] ?? options[0]
   const cfg = VAULTS[active]
+
   const { address, isConnected } = useAccount()
 
   const [depositAmt, setDepositAmt] = useState("")
@@ -325,16 +305,21 @@ export default function AutoCompoundPage() {
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: txHash })
   const busy = isPending || isConfirming
 
-  // Vault-wide reads. Positional — the indices below must match this order.
+  const resetInputs = () => {
+    setPctDraft(null)
+    setDepositAmt("")
+    setWithdrawAmt("")
+  }
+
   const { data: vaultData } = useReadContracts({
     contracts: [
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "totalPrincipal" },         // [0]
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "smaugCirculating" },       // [1]
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "depositorCount" },         // [2]
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "totalWeight" },            // [3]
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "totalCompoundWeight" },    // [4]
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "sweepableRewards" },       // [5]
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "unpaidEarnings" },         // [6]
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "totalPrincipal" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "smaugCirculating" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "depositorCount" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "totalWeight" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "totalCompoundWeight" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "sweepableRewards" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "unpaidEarnings" },
     ],
     query: { refetchInterval: 30_000 },
   })
@@ -343,23 +328,24 @@ export default function AutoCompoundPage() {
   const circulating = vaultData?.[1]?.result as bigint | undefined
   const depositorCount = vaultData?.[2]?.result as bigint | undefined
 
-  // Reinvestment rate across the vault, weighted by position size.
   const avgCompoundPct = weightedCompoundPct(
     vaultData?.[4]?.result as bigint | undefined,
     vaultData?.[3]?.result as bigint | undefined,
   )
 
-  // What the next compound will act on: reward already held, plus what the
-  // distributor still owes. compound() harvests before it splits.
   const pendingRewards =
     ((vaultData?.[5]?.result as bigint) ?? 0n) + ((vaultData?.[6]?.result as bigint) ?? 0n)
 
-  // Effective circulating supply: total minus burn, the LP pair, the token's
-  // own accumulated fee balance, and the wallets that take no rewards.
-  //
-  // Two hooks rather than one array: mixing a no-arg call with mapped
-  // balanceOf calls makes TypeScript infer a single element type from the
-  // mapped entries and reject the odd one out.
+  // Converter-only: PLS already collected on the claim side but not yet
+  // swapped into the target token. Separate read since only some vaults have it.
+  const { data: pendingTargetData } = useReadContract({
+    address: cfg.vault,
+    abi: VAULT_ABI,
+    functionName: "pendingTargetConversion",
+    query: { enabled: cfg.isConverter, refetchInterval: 30_000 },
+  })
+  const pendingTargetConversion = pendingTargetData as bigint | undefined
+
   const exclusions = CIRCULATING_EXCLUSIONS[active]
 
   const { data: tokenTotalSupply } = useReadContract({
@@ -385,24 +371,6 @@ export default function AutoCompoundPage() {
     (excludedBalances ?? []).map((r) => r?.result as bigint | undefined),
   )
 
-  // The share falls back to "All depositors" whenever any read is missing,
-  // which is impossible to diagnose from the page. Log what came back so a
-  // failing call is visible.
-  useEffect(() => {
-    if (!excludedBalances) return
-    console.log("[auto-compound] circulating supply reads", {
-      vault: active,
-      totalSupply: (tokenTotalSupply as bigint | undefined)?.toString(),
-      totalPrincipal: totalPrincipal?.toString(),
-      exclusions: exclusions.map((a, i) => [
-        a,
-        (excludedBalances[i]?.result as bigint | undefined)?.toString(),
-        excludedBalances[i]?.status,
-      ]),
-      shareOfCirculating,
-    })
-  }, [excludedBalances, tokenTotalSupply, totalPrincipal, exclusions, active, shareOfCirculating])
-
   const lastCompound = useLastCompound(cfg.vault)
   const { totals: lifetime, error: lifetimeError } = useLifetimeEarned(
     cfg.vault,
@@ -425,7 +393,7 @@ export default function AutoCompoundPage() {
     | readonly [bigint, bigint, bigint, bigint, bigint, bigint, number]
     | undefined
 
-  const [principal, smaugInWallet, tier, , pendingIn, claimable, compoundPct] =
+  const [principalAmt, smaugInWallet, tier, , pendingIn, claimable, compoundPct] =
     position ?? [0n, 0n, 100n, 0n, 0n, 0n, 100]
 
   const walletToken = (userData?.[1]?.result as bigint) ?? 0n
@@ -434,18 +402,12 @@ export default function AutoCompoundPage() {
   const depositWei = toWei(depositAmt)
   const needsApproval = depositWei > 0n && allowance < depositWei
 
-  // A wallet that has never interacted returns compoundPct = 0 (uninitialised
-  // struct). Anyone who has deposited returns 5-100. That distinguishes a
-  // first-time depositor from a returning one.
   const isNewDepositor = Number(compoundPct) === 0
   const storedPct = isNewDepositor ? 100 : Number(compoundPct)
 
   const pct = pctDraft ?? storedPct
   const pctChanged = pctDraft !== null && pctDraft !== storedPct
 
-  // A first-timer who has staged a non-default rate must save it BEFORE
-  // depositing: deposit() assigns the 100% default to any wallet that has not
-  // been initialised, which would overwrite their choice.
   const rateNeedsTx = isNewDepositor && pctChanged
 
   const nextTier = useMemo(() => {
@@ -453,10 +415,9 @@ export default function AutoCompoundPage() {
     return smaugForNextTier(Number(tier), circulating)
   }, [tier, circulating])
 
-  /** Strips viem's multi-paragraph error down to the first useful line. */
   const readableError = (e: unknown) => {
     const msg = e instanceof Error ? e.message : String(e)
-    if (/User rejected|denied transaction/i.test(msg)) return null // not an error
+    if (/User rejected|denied transaction/i.test(msg)) return null
     const named = msg.match(/reverted with the following reason:\s*(.+)/i)
     if (named) return named[1].split("\n")[0].trim()
     const custom = msg.match(/Error:\s*([A-Za-z]+)\(\)/)
@@ -475,12 +436,9 @@ export default function AutoCompoundPage() {
     )
   }
 
-    // Principal shown to the user is what's settled plus what's credited but not
-  // yet folded in. The split is an implementation detail.
-    const balance = principal + pendingIn
+  const balance = principalAmt + pendingIn
 
-  // The depositor's share of the whole vault, by principal.
-    const shareOfVault =
+  const shareOfVault =
     totalPrincipal !== undefined && totalPrincipal > 0n && balance > 0n
       ? Number((balance * 1_000_000n) / totalPrincipal) / 10_000
       : null
@@ -490,37 +448,61 @@ export default function AutoCompoundPage() {
       <SiteNav />
       <main className="mx-auto max-w-5xl px-4 py-10 md:px-6">
       <header className="mb-8">
-        <h1 className="font-serif text-3xl text-[#e8e6e3]">Auto-Compounder</h1>
+        <h1 className="font-serif text-3xl text-[#e8e6e3]">Reward Mill</h1>
         <p className="mt-2 max-w-2xl font-sans text-sm leading-relaxed text-[#9ca3af]">
-          Deposit {cfg.tokenSymbol} and your rewards are swapped for more{" "}
-          {cfg.tokenSymbol}. Choose how much to reinvest and how much to take
-          as {cfg.rewardSymbol}. Nothing is locked — withdraw whenever you like.
+          Deposit {cfg.tokenSymbol} and choose where your rewards go. Some of it
+          reinvests into more {cfg.tokenSymbol}, the rest comes to you as{" "}
+          {cfg.targetSymbol}. Nothing is locked — withdraw whenever you like.
         </p>
       </header>
 
-      <div className="mb-6 inline-flex rounded-md border border-[#2a2a35] p-1">
-        {(Object.keys(VAULTS) as VaultKey[]).map((k) => (
+      {/* Principal selector */}
+      <div className="mb-3 inline-flex rounded-md border border-[#2a2a35] p-1">
+        {PRINCIPALS.map((p) => (
           <button
-            key={k}
+            key={p}
             type="button"
             onClick={() => {
-              setActive(k)
-              setPctDraft(null)
-              setDepositAmt("")
-              setWithdrawAmt("")
+              setPrincipal(p)
+              setTargetIdx(0)
+              resetInputs()
             }}
             className={`rounded px-4 py-1.5 font-sans text-sm transition-colors ${
-              active === k
+              principal === p
                 ? "bg-[#B87333] text-[#0a0a0c]"
                 : "text-[#9ca3af] hover:text-[#e8e6e3]"
             }`}
           >
-            {VAULTS[k].tokenSymbol}
+            {p}
           </button>
         ))}
       </div>
 
-      {/* Vault-wide figures. Nothing here is specific to the connected wallet. */}
+      {/* Target selector — only shown when a principal has more than one option */}
+      {options.length > 1 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <span className="font-sans text-xs text-[#6b7280]">Reward:</span>
+          {options.map((k, i) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => {
+                setTargetIdx(i)
+                resetInputs()
+              }}
+              className={`rounded border px-3 py-1 font-sans text-xs transition-colors ${
+                targetIdx === i
+                  ? "border-[#B87333] text-[#B87333]"
+                  : "border-[#2a2a35] text-[#9ca3af] hover:text-[#e8e6e3]"
+              }`}
+            >
+              {VAULTS[k].targetSymbol}
+            </button>
+          ))}
+        </div>
+      )}
+      {options.length <= 1 && <div className="mb-6" />}
+
       <div className="mb-6 grid grid-cols-2 gap-5 rounded-lg border border-[#2a2a35] bg-[#0e0e13] p-5 sm:grid-cols-3 lg:grid-cols-5">
         <Stat
           label={`Total ${cfg.tokenSymbol} deposited`}
@@ -544,11 +526,19 @@ export default function AutoCompoundPage() {
           label={`${cfg.rewardSymbol} awaiting compound`}
           value={fmt(pendingRewards, 0)}
         />
-        <Stat
-          label="Last compounded"
-          value={lastCompound ? timeAgo(lastCompound) : "—"}
-          hint={lastCompound ? undefined : "No compound in the last week"}
-        />
+        {cfg.isConverter ? (
+          <Stat
+            label={`Awaiting conversion to ${cfg.targetSymbol}`}
+            value={fmt(pendingTargetConversion, 2)}
+            hint={cfg.rewardSymbol}
+          />
+        ) : (
+          <Stat
+            label="Last compounded"
+            value={lastCompound ? timeAgo(lastCompound) : "—"}
+            hint={lastCompound ? undefined : "No compound in the last week"}
+          />
+        )}
       </div>
 
       {!isConnected ? (
@@ -563,7 +553,6 @@ export default function AutoCompoundPage() {
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           <Panel title="Your position">
-            {/* Grouped by token: principal figures above, reward below. */}
             <div className="grid grid-cols-2 gap-5">
               <Stat
                 label={`${cfg.tokenSymbol} in the vault`}
@@ -583,19 +572,19 @@ export default function AutoCompoundPage() {
 
             <div className="mt-5 grid grid-cols-2 gap-5 border-t border-[#2a2a35] pt-5">
               <Stat
-                label={`${cfg.rewardSymbol} ready to claim`}
-                value={fmt(claimable)}
+                label={`${cfg.targetSymbol} ready to claim`}
+                value={fmt(claimable, 2, cfg.targetDecimals)}
               />
               <Stat
                 label="Claimed so far"
-                value={lifetime ? fmt(lifetime.claimed) : "—"}
-                hint={cfg.rewardSymbol}
+                value={lifetime ? fmt(lifetime.claimed, 2, cfg.targetDecimals) : "—"}
+                hint={cfg.targetSymbol}
               />
             </div>
 
             <div className="mt-4">
               <Button onClick={() => send("claim")} disabled={busy || claimable === 0n}>
-                Claim {cfg.rewardSymbol}
+                Claim {cfg.targetSymbol}
               </Button>
             </div>
 
@@ -649,7 +638,7 @@ export default function AutoCompoundPage() {
             <p className="font-sans text-sm leading-relaxed text-[#9ca3af]">
               {pct}% of your rewards buys more {cfg.tokenSymbol}.{" "}
               {100 - pct > 0
-                ? `The other ${100 - pct}% is yours to claim as ${cfg.rewardSymbol}.`
+                ? `The other ${100 - pct}% is yours to claim as ${cfg.targetSymbol}.`
                 : "Nothing is held back to claim."}
             </p>
 
@@ -669,7 +658,7 @@ export default function AutoCompoundPage() {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              {[25, 50, 75, 100].map((p) => (
+              {[0, 25, 50, 75, 100].map((p) => (
                 <button
                   key={p}
                   type="button"
@@ -680,7 +669,7 @@ export default function AutoCompoundPage() {
                       : "border-[#2a2a35] text-[#9ca3af] hover:text-[#e8e6e3]"
                   }`}
                 >
-                  {p}%{p === 100 ? " · default" : ""}
+                  {p}%{p === 50 ? " · default" : ""}
                 </button>
               ))}
             </div>
@@ -693,7 +682,7 @@ export default function AutoCompoundPage() {
 
             <p className="mt-3 font-sans text-xs leading-relaxed text-[#6b7280]">
               {isNewDepositor
-                ? "100% is the default — deposit without changing anything and everything you earn is reinvested. Pick another rate here and save it before your first deposit."
+                ? "50% is the default — deposit without changing anything and half of what you earn reinvests. Pick another rate here and save it before your first deposit if you want something different."
                 : "Changes apply to rewards from here on."}
             </p>
           </Panel>
@@ -722,13 +711,13 @@ export default function AutoCompoundPage() {
                     ? `Everything you earn buys more ${cfg.tokenSymbol}.`
                     : `${pct}% buys more ${cfg.tokenSymbol}; the other ${
                         100 - pct
-                      }% is yours to claim as ${cfg.rewardSymbol}.`}
+                      }% is yours to claim as ${cfg.targetSymbol}.`}
                   {" Set it in the Reinvestment rate panel."}
                 </p>
                 {rateNeedsTx && (
                   <p className="mt-2 font-sans text-xs leading-relaxed text-[#B87333]">
                     Press Save rate first — it needs its own transaction, and
-                    depositing before it lands would set you to 100%.
+                    depositing before it lands would set you to the default.
                   </p>
                 )}
               </div>
@@ -775,7 +764,7 @@ export default function AutoCompoundPage() {
                 label={`Amount — ${fmt(balance)} in the vault`}
                 value={withdrawAmt}
                 onChange={setWithdrawAmt}
-                max={principal}
+                max={principalAmt}
                 symbol={cfg.tokenSymbol}
               />
               <div className="flex flex-wrap gap-2">
@@ -791,14 +780,14 @@ export default function AutoCompoundPage() {
                 <Button
                   variant="quiet"
                   onClick={() => send("withdrawAll")}
-                  disabled={busy || (principal === 0n && claimable === 0n)}
+                  disabled={busy || (principalAmt === 0n && claimable === 0n)}
                 >
                   Withdraw everything
                 </Button>
               </div>
               <p className="font-sans text-xs leading-relaxed text-[#6b7280]">
                 No lock-up and no exit fee. Withdrawing leaves your{" "}
-                {cfg.rewardSymbol} behind — claim it separately, or use Withdraw
+                {cfg.targetSymbol} behind — claim it separately, or use Withdraw
                 everything to take both.
               </p>
             </div>
