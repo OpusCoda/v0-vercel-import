@@ -251,9 +251,9 @@ function deadlineLabel(status: string | undefined, bettingTs?: number, resolutio
     return "Closes " + humanWhen(bettingTs, secs)
   }
   if (status === "Awaiting" && resolutionTs) {
-    const secs = resolutionTs - now
-    if (secs <= 0) return "Resolution open"
-    return "Resolves " + humanWhen(resolutionTs, secs)
+  const secs = resolutionTs - now
+  if (secs <= 0) return "Resolution open"
+  return "Resolution opens " + humanWhen(resolutionTs, secs)
   }
   return null
 }

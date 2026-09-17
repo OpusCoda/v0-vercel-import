@@ -182,6 +182,7 @@ export const SMAUG_ADDRESS =
   "0xf4754Aa585caBf38537A68660469A17E203D8632" as Address
 
 export const MIN_COMPOUND_PCT = 0
+export const DEFAULT_COMPOUND_PCT = 50
 
 export const VAULT_ABI = [
   {
