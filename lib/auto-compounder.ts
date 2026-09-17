@@ -86,6 +86,20 @@ export const VAULTS = {
     isConverter: true,
     deployBlock: 27567367n,
   },
+  CODA_PWBTC: {
+    key: "CODA_PWBTC" as const,
+    principal: "CODA" as const,
+    vault: "0xea7322A5D3e4e4b266e3D6722D43fEC2CB525b33" as Address,
+    token: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" as Address, // deposit token is CODA
+    tokenSymbol: "CODA",
+    rewardSymbol: "PLSX",
+    rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
+    rewardDecimals: 18,
+    targetSymbol: "pWBTC",
+    targetDecimals: 8,
+    isConverter: true,
+    deployBlock: 27567635n,
+  },
 } as const
 
 export type VaultKey = keyof typeof VAULTS
@@ -147,6 +161,14 @@ export const CIRCULATING_EXCLUSIONS: Record<VaultKey, Address[]> = {
     "0x0C24Ac492a01F8ddC9776f448A58De574C0eEdbE",
   ] as Address[],
   OPUS_PRVX: [
+    "0x0000000000000000000000000000000000000369",
+    "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a",
+    "0x15dD01082095F1234f48AC920997621D66687972",
+    "0x542Cc63EceD96F89D61B3cF727f3E87e67eC7d93",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x0C24Ac492a01F8ddC9776f448A58De574C0eEdbE",
+  ] as Address[],
+  CODA_PWBTC: [
     "0x0000000000000000000000000000000000000369",
     "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a",
     "0x15dD01082095F1234f48AC920997621D66687972",
