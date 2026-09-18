@@ -14,6 +14,8 @@ export const VAULTS = {
     targetSymbol: "OPUS",
     targetDecimals: 18,
     isConverter: false,
+    defaultCompoundPct: 100,
+    minCompoundPct: 5,
     deployBlock: 27509909n,
   },
   CODA: {
@@ -28,6 +30,8 @@ export const VAULTS = {
     targetSymbol: "CODA",
     targetDecimals: 18,
     isConverter: false,
+    defaultCompoundPct: 100,
+    minCompoundPct: 5,
     deployBlock: 27509915n,
   },
   OPUS_HEX: {
@@ -42,6 +46,8 @@ export const VAULTS = {
     targetSymbol: "HEX",     // what claim() actually pays out
     targetDecimals: 8,
     isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0, 
     deployBlock: 27560033n,
   },
   OPUS_EHEX: {
@@ -56,6 +62,8 @@ export const VAULTS = {
     targetSymbol: "EHEX",
     targetDecimals: 8,
     isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0, 
     deployBlock: 27566962n,
   },
   OPUS_INC: {
@@ -70,6 +78,8 @@ export const VAULTS = {
     targetSymbol: "INC",
     targetDecimals: 18,
     isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0, 
     deployBlock: 27567276n,
   },
   OPUS_PRVX: {
@@ -84,6 +94,8 @@ export const VAULTS = {
     targetSymbol: "PRVX",
     targetDecimals: 18,
     isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0, 
     deployBlock: 27567367n,
   },
   CODA_PWBTC: {
@@ -98,6 +110,8 @@ export const VAULTS = {
     targetSymbol: "pWBTC",
     targetDecimals: 8,
     isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0, 
     deployBlock: 27567635n,
   },
 } as const
@@ -180,9 +194,6 @@ export const CIRCULATING_EXCLUSIONS: Record<VaultKey, Address[]> = {
 
 export const SMAUG_ADDRESS =
   "0xf4754Aa585caBf38537A68660469A17E203D8632" as Address
-
-export const MIN_COMPOUND_PCT = 0
-export const DEFAULT_COMPOUND_PCT = 50
 
 export const VAULT_ABI = [
   {

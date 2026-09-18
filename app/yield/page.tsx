@@ -17,8 +17,6 @@ import {
   VAULTS,
   VAULT_ABI,
   ERC20_ABI,
-  MIN_COMPOUND_PCT,
-  DEFAULT_COMPOUND_PCT,
   PRINCIPALS,
   vaultsForPrincipal,
   formatTier,
@@ -365,7 +363,7 @@ export default function AutoCompoundPage() {
 
   const isNewDepositor = Number(compoundPct) === 0
   // Fixed: fall back to the contract's real default (50%), not a hardcoded 100.
-  const storedPct = isNewDepositor ? DEFAULT_COMPOUND_PCT : Number(compoundPct)
+  const storedPct = isNewDepositor ? cfg.defaultCompoundPct : Number(compoundPct)
 
   const pct = pctDraft ?? storedPct
   const pctChanged = pctDraft !== null && pctDraft !== storedPct
@@ -500,7 +498,7 @@ export default function AutoCompoundPage() {
 
             <input
               type="range"
-              min={MIN_COMPOUND_PCT}
+              min={cfg.minCompoundPct}
               max={100}
               step={1}
               value={pct}
@@ -519,18 +517,19 @@ export default function AutoCompoundPage() {
 
             <div className="mt-4 flex flex-wrap gap-1.5">
               {[0, 25, 50, 75, 100].map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPctDraft(p)}
-                  className={`rounded-md border px-3 py-1.5 font-sans text-[11px] transition-colors ${pct === p
-                    ? "border-[#B87333]/70 bg-[#B87333]/10 text-[#B87333]"
-                    : "border-[#25252e] text-[#5f636d] hover:border-[#3a3a45] hover:text-[#a8abb2]"
-                    }`}
-                >
-                  {p}%{p === 50 && <span className="ml-1 text-[#4f535d]">default</span>}
-                </button>
-              ))}
+  <button
+    key={p}
+    type="button"
+    onClick={() => setPctDraft(p)}
+    className={`rounded-md border px-3 py-1.5 font-sans text-[11px] transition-colors ${
+      pct === p
+        ? "border-[#B87333]/70 bg-[#B87333]/10 text-[#B87333]"
+        : "border-[#25252e] text-[#5f636d] hover:border-[#3a3a45] hover:text-[#a8abb2]"
+    }`}
+  >
+    {p}%{p === cfg.defaultCompoundPct && <span className="ml-1 text-[#4f535d]">default</span>}
+  </button>
+))}
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
