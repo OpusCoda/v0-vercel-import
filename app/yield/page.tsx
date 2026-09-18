@@ -416,12 +416,8 @@ export default function AutoCompoundPage() {
 
       <main className="mx-auto max-w-5xl px-4 pb-16 pt-8 md:px-6 md:pt-10">
         <header className="mb-6">
-          <div className="mb-2 flex items-center gap-3">
-            <span className="h-px w-7 bg-[#B87333]" />
-            <SectionLabel>Yield</SectionLabel>
-          </div>
           <h1 className="font-serif text-3xl tracking-[-0.02em] text-[#e8e6e3] md:text-4xl">
-            Put your rewards to work.
+            Compound some. Yield the rest.
           </h1>
           <p className="mt-2 max-w-xl font-sans text-sm leading-6 text-[#777b85]">
             Deposit {cfg.tokenSymbol}, choose your split between compounding and yield, and the vault takes care of the rest.
