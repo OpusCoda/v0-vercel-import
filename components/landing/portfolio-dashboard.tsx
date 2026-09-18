@@ -144,7 +144,7 @@ const CODA_SHARES_ABI = [
   'function shares(address) view returns (uint256 amount, uint256 wethTotalExcluded, uint256 wethTotalRealised, uint256 wbtcTotalExcluded, uint256 wbtcTotalRealised, uint256 plsTotalExcluded, uint256 plsTotalRealised)',
 ]
 
-// Auto-compounder vaults.
+// Yield vaults.
 const VAULT_POSITION_ABI = [
   'function positionOf(address) view returns (uint256 principal, uint256 smaugInWallet, uint256 tier, uint256 weight, uint256 pendingIn, uint256 claimableNow, uint8 compoundPct)',
 ]
@@ -186,21 +186,21 @@ const fetchDexPrice = async (
 
     const pairs = Array.isArray(data?.pairs)
       ? data.pairs
-          .filter((pair: any) => {
-            const price = Number(pair?.priceUsd)
-            const liquidity = Number(pair?.liquidity?.usd ?? 0)
+        .filter((pair: any) => {
+          const price = Number(pair?.priceUsd)
+          const liquidity = Number(pair?.liquidity?.usd ?? 0)
 
-            return (
-              Number.isFinite(price) &&
-              price > 0 &&
-              Number.isFinite(liquidity)
-            )
-          })
-          .sort(
-            (a: any, b: any) =>
-              Number(b?.liquidity?.usd ?? 0) -
-              Number(a?.liquidity?.usd ?? 0)
+          return (
+            Number.isFinite(price) &&
+            price > 0 &&
+            Number.isFinite(liquidity)
           )
+        })
+        .sort(
+          (a: any, b: any) =>
+            Number(b?.liquidity?.usd ?? 0) -
+            Number(a?.liquidity?.usd ?? 0)
+        )
       : []
 
     if (pairs.length === 0) {
@@ -274,7 +274,7 @@ export function PortfolioDashboard() {
   const [opusPlsPending, setOpusPlsPending] = useState(0)
   const [codaPlsxPending, setCodaPlsxPending] = useState(0)
 
-  // Auto-compounder positions
+  // Yield positions
   const [opusVaultBalance, setOpusVaultBalance] = useState(0)
   const [codaVaultBalance, setCodaVaultBalance] = useState(0)
   const [opusVaultClaimable, setOpusVaultClaimable] = useState(0)
@@ -479,37 +479,37 @@ export function PortfolioDashboard() {
           opusPls += BigInt(
             await opus.getTotalPlsEarned(address)
           )
-        } catch {}
+        } catch { }
 
         try {
           codaPlsx += BigInt(
             await coda.getTotalPlsxEarned(address)
           )
-        } catch {}
+        } catch { }
 
         try {
           codaPlsx += BigInt(
             (await codaV1.shares(address))[6]
           )
-        } catch {}
+        } catch { }
 
         try {
           codaPlsx += BigInt(
             (await codaV2.shares(address))[6]
           )
-        } catch {}
+        } catch { }
 
         try {
           opusPlsUnpaid += BigInt(
             await opusPending.getUnpaidEarnings(address)
           )
-        } catch {}
+        } catch { }
 
         try {
           codaPlsxUnpaid += BigInt(
             await codaPending.getUnpaidEarnings(address)
           )
-        } catch {}
+        } catch { }
       }
 
       setOpusPlsEarned(
@@ -537,7 +537,7 @@ export function PortfolioDashboard() {
     }
   }
 
-  // Auto-compounder positions across the given addresses.
+  // Yield positions across the given addresses.
   const fetchVaultPositions = async (addresses: string[]) => {
     try {
       const provider = new ethers.JsonRpcProvider(PULSECHAIN_RPC_URL)
@@ -568,7 +568,7 @@ export function PortfolioDashboard() {
             BigInt(p.pendingIn)
 
           opusClaim += BigInt(p.claimableNow)
-        } catch {}
+        } catch { }
 
         try {
           const p = await codaVault.positionOf(address)
@@ -578,7 +578,7 @@ export function PortfolioDashboard() {
             BigInt(p.pendingIn)
 
           codaClaim += BigInt(p.claimableNow)
-        } catch {}
+        } catch { }
       }
 
       setOpusVaultBalance(
@@ -959,11 +959,11 @@ export function PortfolioDashboard() {
                   {totalPortfolioValue === null
                     ? 'N/A'
                     : `$${totalPortfolioValue.toLocaleString(
-                        'en-US',
-                        {
-                          maximumFractionDigits: 2,
-                        }
-                      )}`}
+                      'en-US',
+                      {
+                        maximumFractionDigits: 2,
+                      }
+                    )}`}
                 </p>
               </div>
             )}
@@ -1061,10 +1061,10 @@ export function PortfolioDashboard() {
                         wallets.map((w) =>
                           w.id === wallet.id
                             ? {
-                                ...w,
-                                selected:
-                                  !w.selected,
-                              }
+                              ...w,
+                              selected:
+                                !w.selected,
+                            }
                             : w
                         )
 
@@ -1073,11 +1073,10 @@ export function PortfolioDashboard() {
                     className="flex items-center gap-3 flex-1 min-w-0 text-left"
                   >
                     <div
-                      className={`w-2 h-2 rounded-full ${
-                        wallet.selected
+                      className={`w-2 h-2 rounded-full ${wallet.selected
                           ? 'bg-[#3b82f6]'
                           : 'bg-[#3a3a40]'
-                      }`}
+                        }`}
                     />
 
                     <div>
@@ -1104,7 +1103,7 @@ export function PortfolioDashboard() {
                         ?.writeText(
                           wallet.address
                         )
-                        .catch(() => {})
+                        .catch(() => { })
                     }}
                     className="ml-2 p-1 rounded hover:bg-[rgba(255,255,255,0.05)] transition-colors"
                     title="Copy address"
@@ -1193,86 +1192,86 @@ export function PortfolioDashboard() {
               </div>
             </div>
 
-            {/* Auto-Compounder */}
+            {/* Yield */}
             {(opusVaultBalance > 0 ||
               codaVaultBalance > 0) && (
-              <div className="mb-8">
-                <h3 className="mb-4 font-serif text-xl font-bold text-[#B87333]">
-                  Auto-Compounder
-                </h3>
+                <div className="mb-8">
+                  <h3 className="mb-4 font-serif text-xl font-bold text-[#B87333]">
+                    Yield
+                  </h3>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
-                    <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">
-                      OPUS in the vault
-                    </p>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
+                      <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">
+                        OPUS in the vault
+                      </p>
 
-                    <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
-                      {opusVaultBalance.toLocaleString(
-                        undefined,
-                        {
-                          maximumFractionDigits: 0,
-                        }
-                      )}{' '}
-                      OPUS
-                    </p>
-
-                    <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
-                      Claimable:{' '}
-                      <span className="text-[#b8b6b1]">
-                        {opusVaultClaimable.toLocaleString(
+                      <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
+                        {opusVaultBalance.toLocaleString(
                           undefined,
                           {
                             maximumFractionDigits: 0,
                           }
                         )}{' '}
-                        PLS
-                      </span>
-                    </p>
-                  </div>
+                        OPUS
+                      </p>
 
-                  <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
-                    <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">
-                      CODA in the vault
-                    </p>
+                      <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
+                        Claimable:{' '}
+                        <span className="text-[#b8b6b1]">
+                          {opusVaultClaimable.toLocaleString(
+                            undefined,
+                            {
+                              maximumFractionDigits: 0,
+                            }
+                          )}{' '}
+                          PLS
+                        </span>
+                      </p>
+                    </div>
 
-                    <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
-                      {codaVaultBalance.toLocaleString(
-                        undefined,
-                        {
-                          maximumFractionDigits: 0,
-                        }
-                      )}{' '}
-                      CODA
-                    </p>
+                    <div className="rounded-lg border border-[#2a2a35] bg-[#101017] px-5 py-4">
+                      <p className="font-sans text-[10px] uppercase tracking-wider text-[#7c7a76]">
+                        CODA in the vault
+                      </p>
 
-                    <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
-                      Claimable:{' '}
-                      <span className="text-[#b8b6b1]">
-                        {codaVaultClaimable.toLocaleString(
+                      <p className="mt-1 font-serif text-2xl font-bold text-[#B87333]">
+                        {codaVaultBalance.toLocaleString(
                           undefined,
                           {
                             maximumFractionDigits: 0,
                           }
                         )}{' '}
-                        PLSX
-                      </span>
-                    </p>
+                        CODA
+                      </p>
+
+                      <p className="mt-1 font-sans text-xs text-[#9a9a9a]">
+                        Claimable:{' '}
+                        <span className="text-[#b8b6b1]">
+                          {codaVaultClaimable.toLocaleString(
+                            undefined,
+                            {
+                              maximumFractionDigits: 0,
+                            }
+                          )}{' '}
+                          PLSX
+                        </span>
+                      </p>
+                    </div>
                   </div>
+
+                  <p className="mt-3 font-sans text-xs text-[#7c7a76]">
+                    Deposit, withdraw and claim on the{' '}
+                    <a
+                      href="/yield"
+                      className="text-[#B87333] hover:underline"
+                    >
+                      Auto-Compounder
+                    </a>{' '}
+                    page.
+                  </p>
                 </div>
-
-                <p className="mt-3 font-sans text-xs text-[#7c7a76]">
-                  Deposit, withdraw and claim on the{' '}
-                  <a
-                    href="/auto-compound"
-                    className="text-[#B87333] hover:underline"
-                  >
-                    Auto-Compounder
-                  </a>{' '}
-                  page.
-                </p>
-              </div>
-            )}
+              )}
 
             {/* Tabs */}
             <div className="mb-8 border-b border-[#2a2a35]">
@@ -1288,11 +1287,10 @@ export function PortfolioDashboard() {
                     onClick={() =>
                       setActiveTab(tab.id)
                     }
-                    className={`pb-4 font-sans text-sm font-semibold transition-colors ${
-                      activeTab === tab.id
+                    className={`pb-4 font-sans text-sm font-semibold transition-colors ${activeTab === tab.id
                         ? 'border-b-2 border-[#B87333] text-[#B87333]'
                         : 'text-[#7c7a76] hover:text-[#b8b6b1]'
-                    }`}
+                      }`}
                   >
                     {tab.label}
                   </button>
@@ -1355,11 +1353,11 @@ export function PortfolioDashboard() {
                             {asset.value === null
                               ? 'N/A'
                               : `$${asset.value.toLocaleString(
-                                  'en-US',
-                                  {
-                                    maximumFractionDigits: 2,
-                                  }
-                                )}`}
+                                'en-US',
+                                {
+                                  maximumFractionDigits: 2,
+                                }
+                              )}`}
                           </td>
 
                           <td className="px-6 py-4 text-right">
@@ -1367,15 +1365,15 @@ export function PortfolioDashboard() {
                               {asset.price === null
                                 ? 'N/A'
                                 : `$${asset.price.toLocaleString(
-                                    'en-US',
-                                    {
-                                      maximumFractionDigits:
-                                        asset.price <
+                                  'en-US',
+                                  {
+                                    maximumFractionDigits:
+                                      asset.price <
                                         0.01
-                                          ? 8
-                                          : 4,
-                                    }
-                                  )}`}
+                                        ? 8
+                                        : 4,
+                                  }
+                                )}`}
                             </span>
                           </td>
                         </tr>

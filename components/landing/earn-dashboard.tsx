@@ -151,7 +151,7 @@ export function EarnDashboard() {
 
         {/* Your Earnings Cards */}
         <div className="mb-12">
-          <h2 className="mb-6 font-serif text-2xl font-bold text-[#B87333]">Your Earnings (auto-compounding)</h2>
+          <h2 className="mb-6 font-serif text-2xl font-bold text-[#B87333]">Your Earnings (yielding)</h2>
           <div className="grid gap-6 md:grid-cols-3">
             {/* Hold Opus */}
             <div className="rounded-lg border border-[#2a2a35] bg-gradient-to-br from-[#1a1f1a] to-[#101017] p-6">

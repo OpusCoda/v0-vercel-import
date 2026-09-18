@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useMemo } from "react"
-import { useReadContract, useReadContracts } from "wagmi"
+import { useAccount, useReadContract, useReadContracts } from "wagmi"
 import { formatUnits } from "viem"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { useSweepUnclaimed } from "@/hooks/useSweepUnclaimed"
@@ -18,11 +18,16 @@ function fmtDaysLeft(secondsLeft: bigint): string {
   if (hours >= 1) return `${Math.ceil(hours)} hours`
   return "under an hour"
 }
+// Shortens an address to the 0x1234…abcd form used elsewhere in the app.
+function shortAddr(addr: string): string {
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`
+}
 // Per-market settlement snapshot, assembled from getMarket + getSettlementInfo.
 interface SweepRow {
   marketId: bigint
   question: string
   resolvedAt: bigint
+  creator: string
   remainingBalance: bigint
   remainingSettlementPool: bigint
   totalWinningShares: bigint
@@ -33,6 +38,7 @@ interface SweepRow {
 }
 // One market's sweep card.
 function SweepCard({ row, nowSec, onSwept }: { row: SweepRow; nowSec: bigint; onSwept: () => void }) {
+  const { address } = useAccount()
   const { sweep, isPending, isConfirming, isSuccess, writeError } = useSweepUnclaimed()
   const {
     claim,
@@ -44,10 +50,10 @@ function SweepCard({ row, nowSec, onSwept }: { row: SweepRow; nowSec: bigint; on
   useEffect(() => {
     if (isSuccess || claimSuccess) onSwept()
   }, [isSuccess, claimSuccess, onSwept])
+  const isCreator = !!address && address.toLowerCase() === row.creator.toLowerCase()
   const windowPassed = nowSec >= row.sweepAt
   const hasBalance = row.remainingBalance > 0n
   const alreadySettled = row.residualClaimed
-  // Fraction of winning shares still unclaimed — the forfeiture exposure.
   const unclaimedShares = row.totalWinningShares - row.claimedWinningShares
   const unclaimedPct =
     row.totalWinningShares > 0n
@@ -73,6 +79,10 @@ function SweepCard({ row, nowSec, onSwept }: { row: SweepRow; nowSec: bigint; on
   if (isSuccess) btnLabel = "Swept ✓"
   else if (isPending) btnLabel = "Confirm in wallet…"
   else if (isConfirming) btnLabel = "Sweeping…"
+  let claimBtnLabel = "Claim residual liquidity"
+  if (claimSuccess) claimBtnLabel = "Residual claimed ✓"
+  else if (claimPending) claimBtnLabel = "Confirm in wallet…"
+  else if (claimConfirming) claimBtnLabel = "Claiming…"
   return (
     <div className="rounded-lg border border-[#2a2a35] bg-[#0d0d12] p-4">
       <div className="mb-2 truncate font-sans text-sm font-semibold text-[#e8e6e3]" title={row.question}>
@@ -116,18 +126,25 @@ function SweepCard({ row, nowSec, onSwept }: { row: SweepRow; nowSec: bigint; on
         <>
           <div className="mb-2 rounded border border-[#B87333]/20 bg-[#B87333]/5 px-2 py-1.5">
             <p className="font-sans text-[10px] leading-relaxed text-[#b8b6b1]">
-              All winners have claimed. The market creator can now reclaim the remaining{" "}
+              All winners have claimed. The market creator (
+              <span className="font-mono text-[#B87333]">{shortAddr(row.creator)}</span>) can now
+              reclaim the remaining{" "}
               <span className="text-[#B87333]">{fmtPls(row.remainingBalance)} PLS</span> of seed
               liquidity. (Callable by the market creator only.)
             </p>
           </div>
           <button
             onClick={() => claim(row.marketId, "residual")}
-            disabled={claimPending || claimConfirming || claimSuccess}
+            disabled={!isCreator || claimPending || claimConfirming || claimSuccess}
             className="w-full rounded border border-[#B87333]/30 bg-[#1a1a20] py-1.5 font-sans text-xs font-semibold text-[#B87333] transition-colors hover:bg-[#2a2a35] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {claimSuccess ? "Residual claimed ✓" : claimPending ? "Confirm in wallet…" : claimConfirming ? "Claiming…" : "Claim residual liquidity"}
+            {claimBtnLabel}
           </button>
+          {!isCreator && !claimSuccess && (
+            <p className="mt-1.5 font-sans text-[10px] text-[#7c7a76]">
+              Connect as {shortAddr(row.creator)} to claim — this admin wallet isn't the creator.
+            </p>
+          )}
           {claimError && (
             <p className="mt-1.5 font-sans text-[10px] text-red-400">Claim failed — see wallet / console.</p>
           )}
@@ -166,7 +183,7 @@ export function SweepPanel() {
   })
   const count = countData !== undefined ? Number(countData as bigint) : 0
   // getMarket + getSettlementInfo per market.
-    const calls = useMemo(() => {
+  const calls = useMemo(() => {
     // Typed as any[] to avoid wagmi's deep ABI type-inference blowing the
     // TS instantiation-depth limit (ts2589). Runtime behaviour is unchanged.
     const c: any[] = []
@@ -201,6 +218,7 @@ export function SweepPanel() {
         resolved: boolean
         voided: boolean
         resolvedAt: bigint
+        creator: string
       }
       // Only resolved, non-voided markets can be swept.
       if (!m.resolved || m.voided) continue
@@ -220,6 +238,7 @@ export function SweepPanel() {
         marketId: BigInt(i),
         question: m.question,
         resolvedAt: m.resolvedAt,
+        creator: m.creator,
         remainingBalance,
         remainingSettlementPool,
         totalWinningShares: s[2],

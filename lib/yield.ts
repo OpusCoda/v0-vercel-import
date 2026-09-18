@@ -1,64 +1,199 @@
-// lib/auto-compounder.ts
+// lib/yield.ts
 import type { Address } from "viem"
 
 export const VAULTS = {
   OPUS: {
     key: "OPUS" as const,
+    principal: "OPUS" as const,
     vault: "0xEf5B436f6832F19D34b81897FFAE0751c6612830" as Address,
     token: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" as Address,
     tokenSymbol: "OPUS",
     rewardSymbol: "PLS",
     rewardToken: null,
+    rewardDecimals: 18,
+    targetSymbol: "OPUS",
+    targetDecimals: 18,
+    isConverter: false,
+    defaultCompoundPct: 100,
+    minCompoundPct: 5,
     deployBlock: 27509909n,
   },
   CODA: {
     key: "CODA" as const,
+    principal: "CODA" as const,
     vault: "0x630ce372979B784db03e277A7c888D1A8b47819E" as Address,
     token: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" as Address,
     tokenSymbol: "CODA",
     rewardSymbol: "PLSX",
     rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
+    rewardDecimals: 18,
+    targetSymbol: "CODA",
+    targetDecimals: 18,
+    isConverter: false,
+    defaultCompoundPct: 100,
+    minCompoundPct: 5,
     deployBlock: 27509915n,
+  },
+  OPUS_HEX: {
+    key: "OPUS_HEX" as const,
+    principal: "OPUS" as const,
+    vault: "0x622ecC19e2c6c17758a46939C99e0677646AB708" as Address,
+    token: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" as Address, // deposit token is still OPUS
+    tokenSymbol: "OPUS",
+    rewardSymbol: "PLS",
+    rewardToken: null,
+    rewardDecimals: 18,
+    targetSymbol: "HEX",     // what claim() actually pays out
+    targetDecimals: 8,
+    isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0, 
+    deployBlock: 27560033n,
+  },
+  OPUS_EHEX: {
+    key: "OPUS_EHEX" as const,
+    principal: "OPUS" as const,
+    vault: "0x37d2553bF2F80333FBDAED37c989131859bBa994" as Address,
+    token: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" as Address, // deposit token is still OPUS
+    tokenSymbol: "OPUS",
+    rewardSymbol: "PLS",
+    rewardToken: null,
+    rewardDecimals: 18,
+    targetSymbol: "EHEX",
+    targetDecimals: 8,
+    isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0, 
+    deployBlock: 27566962n,
+  },
+  OPUS_INC: {
+    key: "OPUS_INC" as const,
+    principal: "OPUS" as const,
+    vault: "0x39f49E51069954A80e44559857EB07b72dDE5196" as Address,
+    token: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" as Address,
+    tokenSymbol: "OPUS",
+    rewardSymbol: "PLS",
+    rewardToken: null,
+    rewardDecimals: 18,
+    targetSymbol: "INC",
+    targetDecimals: 18,
+    isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0, 
+    deployBlock: 27567276n,
+  },
+  OPUS_PRVX: {
+    key: "OPUS_PRVX" as const,
+    principal: "OPUS" as const,
+    vault: "0x8da8F78B5Bc207A83dfe11bC167857C8F4eFef55" as Address,
+    token: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" as Address,
+    tokenSymbol: "OPUS",
+    rewardSymbol: "PLS",
+    rewardToken: null,
+    rewardDecimals: 18,
+    targetSymbol: "PRVX",
+    targetDecimals: 18,
+    isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0, 
+    deployBlock: 27567367n,
+  },
+  CODA_PWBTC: {
+    key: "CODA_PWBTC" as const,
+    principal: "CODA" as const,
+    vault: "0xea7322A5D3e4e4b266e3D6722D43fEC2CB525b33" as Address,
+    token: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" as Address, // deposit token is CODA
+    tokenSymbol: "CODA",
+    rewardSymbol: "PLSX",
+    rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
+    rewardDecimals: 18,
+    targetSymbol: "pWBTC",
+    targetDecimals: 8,
+    isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0, 
+    deployBlock: 27567635n,
   },
 } as const
 
 export type VaultKey = keyof typeof VAULTS
+export type PrincipalKey = "OPUS" | "CODA"
+
+export const PRINCIPALS: PrincipalKey[] = ["OPUS", "CODA"]
+
+/** All vault keys whose principal token matches, in declaration order. */
+export function vaultsForPrincipal(principal: PrincipalKey): VaultKey[] {
+  return (Object.keys(VAULTS) as VaultKey[]).filter(
+    (k) => VAULTS[k].principal === principal,
+  )
+}
 
 /**
  * Addresses excluded when working out effective circulating supply.
- *
- * The line is drawn at supply that is not circulating or cannot earn: the
- * burn address, the LP pair, the token contract's own accumulated fees, and
- * the named wallets that take no rewards.
- *
- * Protocol contracts holding USER deposits — the auto-compounder itself, the
- * Probability Shop, the Outcome Exchange — are deliberately NOT excluded.
- * Those tokens still belong to holders, and excluding the vault while
- * measuring what share sits in the vault would make the figure meaningless.
+ * OPUS_HEX reuses OPUS's list — same token, same non-circulating addresses,
+ * regardless of which vault happens to be holding deposits of it.
  */
 export const CIRCULATING_EXCLUSIONS: Record<VaultKey, Address[]> = {
   OPUS: [
-    "0x0000000000000000000000000000000000000369", // burn
-    "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a", // token contract (fee balance)
-    "0x15dD01082095F1234f48AC920997621D66687972", // OPUS/PLS LP
-    "0x542Cc63EceD96F89D61B3cF727f3E87e67eC7d93", // no rewards
-    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330", // no rewards
-    "0x0C24Ac492a01F8ddC9776f448A58De574C0eEdbE", // no rewards
+    "0x0000000000000000000000000000000000000369",
+    "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a",
+    "0x15dD01082095F1234f48AC920997621D66687972",
+    "0x542Cc63EceD96F89D61B3cF727f3E87e67eC7d93",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x0C24Ac492a01F8ddC9776f448A58De574C0eEdbE",
   ] as Address[],
   CODA: [
-    "0x0000000000000000000000000000000000000369", // burn
-    "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28", // token contract (fee balance)
-    "0xaA73Ad940094d0453AE547f1aCB7eB00A49f729e", // CODA/PLS LP
-    "0x85Dc2c3B8b6f341227a461212DFf59c4fF08AFb3", // no rewards
-    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330", // no rewards
-    "0x2694f6cB721396256418f33f68700c9a7029A9c1", // no rewards
+    "0x0000000000000000000000000000000000000369",
+    "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28",
+    "0xaA73Ad940094d0453AE547f1aCB7eB00A49f729e",
+    "0x85Dc2c3B8b6f341227a461212DFf59c4fF08AFb3",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x2694f6cB721396256418f33f68700c9a7029A9c1",
+  ] as Address[],
+  OPUS_HEX: [
+    "0x0000000000000000000000000000000000000369",
+    "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a",
+    "0x15dD01082095F1234f48AC920997621D66687972",
+    "0x542Cc63EceD96F89D61B3cF727f3E87e67eC7d93",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x0C24Ac492a01F8ddC9776f448A58De574C0eEdbE",
+  ] as Address[],
+  OPUS_EHEX: [
+    "0x0000000000000000000000000000000000000369",
+    "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a",
+    "0x15dD01082095F1234f48AC920997621D66687972",
+    "0x542Cc63EceD96F89D61B3cF727f3E87e67eC7d93",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x0C24Ac492a01F8ddC9776f448A58De574C0eEdbE",
+  ] as Address[],
+  OPUS_INC: [
+    "0x0000000000000000000000000000000000000369",
+    "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a",
+    "0x15dD01082095F1234f48AC920997621D66687972",
+    "0x542Cc63EceD96F89D61B3cF727f3E87e67eC7d93",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x0C24Ac492a01F8ddC9776f448A58De574C0eEdbE",
+  ] as Address[],
+  OPUS_PRVX: [
+    "0x0000000000000000000000000000000000000369",
+    "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a",
+    "0x15dD01082095F1234f48AC920997621D66687972",
+    "0x542Cc63EceD96F89D61B3cF727f3E87e67eC7d93",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x0C24Ac492a01F8ddC9776f448A58De574C0eEdbE",
+  ] as Address[],
+  CODA_PWBTC: [
+    "0x0000000000000000000000000000000000000369",
+    "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a",
+    "0x15dD01082095F1234f48AC920997621D66687972",
+    "0x542Cc63EceD96F89D61B3cF727f3E87e67eC7d93",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x0C24Ac492a01F8ddC9776f448A58De574C0eEdbE",
   ] as Address[],
 }
 
 export const SMAUG_ADDRESS =
   "0xf4754Aa585caBf38537A68660469A17E203D8632" as Address
-
-export const MIN_COMPOUND_PCT = 5
 
 export const VAULT_ABI = [
   {
@@ -81,24 +216,13 @@ export const VAULT_ABI = [
   { type: "function", name: "depositorCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "smaugCirculating", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 
-  // ── Vault-wide stats ──────────────────────────────────────────────
-  // totalCompoundWeight / totalWeight is the reinvestment rate weighted by
-  // position size — there is no stored average, it is derived from these.
   { type: "function", name: "totalWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalCompoundWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalClaimWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 
-  // Reward waiting to be compounded. sweepableRewards() is what the vault
-  // already holds; unpaidEarnings() is what the distributor still owes it.
-  // compound() harvests before it splits, so the sum is what the next run
-  // will actually act on.
   { type: "function", name: "sweepableRewards", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "unpaidEarnings", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 
-  // Protocol surplus: the gap between what the vault collects at its own
-  // Smaug tier and what its members are individually entitled to, in basis
-  // points of incoming rewards. Falls toward zero as depositors' own Smaug
-  // holdings approach the 1.20x cap.
   { type: "function", name: "surplusBps", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "accruedSurplus", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 
@@ -139,9 +263,21 @@ export const VAULT_ABI = [
     inputs: [{ name: "account", type: "address" }],
     outputs: [],
   },
+
+  // ── Converter-vault only (OPUS_HEX etc.) ─────────────────────────
+  { type: "function", name: "pendingTargetConversion", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  {
+    type: "function",
+    name: "quoteConvert",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [
+      { name: "amountIn", type: "uint256" },
+      { name: "amountOut", type: "uint256" },
+    ],
+  },
 ] as const
 
-/** Emitted whenever a position settles. `compounded` is principal folded in. */
 export const SETTLED_EVENT = {
   type: "event",
   name: "Settled",
@@ -152,7 +288,6 @@ export const SETTLED_EVENT = {
   ],
 } as const
 
-/** Emitted when a user takes their reward token. */
 export const CLAIMED_EVENT = {
   type: "event",
   name: "Claimed",
@@ -162,7 +297,6 @@ export const CLAIMED_EVENT = {
   ],
 } as const
 
-/** Emitted once per successful compound. Indexed for "last compounded". */
 export const COMPOUNDED_EVENT = {
   type: "event",
   name: "Compounded",
@@ -209,7 +343,6 @@ export const ERC20_ABI = [
   },
 ] as const
 
-/** The distributor's tier ladder, mirrored for the "next tier" helper. */
 export const TIER_LADDER: { ppm: bigint; tier: number }[] = [
   { ppm: 10_000n, tier: 120 },
   { ppm: 5_000n, tier: 119 },
@@ -223,7 +356,6 @@ export const TIER_LADDER: { ppm: bigint; tier: number }[] = [
   { ppm: 1n, tier: 102 },
 ]
 
-/** SMAUG a wallet needs to hold to reach the next tier above `currentTier`. */
 export function smaugForNextTier(
   currentTier: number,
   circulating: bigint,
@@ -239,12 +371,6 @@ export function formatTier(tier: number | bigint): string {
   return `${(Number(tier) / 100).toFixed(2)}×`
 }
 
-/**
- * Reinvestment rate across the vault, weighted by position size.
- *
- * Not a plain average of depositors — a large position at 25% moves this far
- * more than a small one at 100%. Returns null until both reads land.
- */
 export function weightedCompoundPct(
   totalCompoundWeight: bigint | undefined,
   totalWeight: bigint | undefined,
@@ -254,12 +380,6 @@ export function weightedCompoundPct(
   return Number((totalCompoundWeight * 10_000n) / totalWeight) / 100
 }
 
-/**
- * Share of effective circulating supply sitting in the vault, as a percentage.
- *
- * Effective circulating = totalSupply minus every excluded balance. Returns
- * null until the reads land, or if the denominator comes out at zero.
- */
 export function vaultShareOfCirculating(
   totalPrincipal: bigint | undefined,
   totalSupply: bigint | undefined,
@@ -276,7 +396,6 @@ export function vaultShareOfCirculating(
   return Number((totalPrincipal * 1_000_000n) / circulating) / 10_000
 }
 
-/** "3 hours ago" from a unix timestamp in seconds. */
 export function timeAgo(unixSeconds: number): string {
   const secs = Math.max(0, Math.floor(Date.now() / 1000) - unixSeconds)
   if (secs < 90) return "just now"
