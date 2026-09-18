@@ -721,7 +721,7 @@ export default function AutoCompoundPage() {
         )}
 
         <div className="mt-6 border-t border-[#1d1d25] pt-5">
-          <div className="grid grid-cols-2 gap-y-5 md:grid-cols-4 md:gap-5">
+           <div className="grid grid-cols-2 gap-y-5 md:grid-cols-3 md:gap-5 lg:grid-cols-5">
             <Stat
               label={`Total ${cfg.tokenSymbol} deposited`}
               value={fmt(totalPrincipal, 0)}
@@ -733,11 +733,16 @@ export default function AutoCompoundPage() {
               value={avgCompoundPct !== null ? `${avgCompoundPct.toFixed(0)}%` : "—"}
               hint="Weighted by position size"
             />
+            <Stat
+              label={`${cfg.rewardSymbol} awaiting compound`}
+              value={fmt(pendingRewards, 0)}
+              hint="Held plus owed by the distributor"
+            />
             {cfg.isConverter ? (
               <Stat
                 label={`Awaiting ${cfg.targetSymbol}`}
                 value={fmt(pendingTargetConversion, 2)}
-                hint={cfg.rewardSymbol}
+                hint={`${cfg.rewardSymbol} already split off for yield`}
               />
             ) : (
               <Stat
