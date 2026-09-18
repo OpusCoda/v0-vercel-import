@@ -7,6 +7,7 @@ import { useAccount, useReadContract } from 'wagmi'
 import type { Address } from 'viem'
 import { AdminLogin } from '@/components/admin/admin-login'
 import { CreateMarketForm } from '@/components/admin/create-market-form'
+import { MarketStatus } from '@/components/admin/market-status'
 import { WagerArbitration } from '@/components/admin/wager-arbitration'
 import { ProcessBurnPanel, SweepAbandonedPanel } from '@/components/admin/maintenance-panels'
 import { ManageAdmins } from '@/components/admin/manage-admins'
@@ -26,6 +27,7 @@ const OUTCOME_EXCHANGE_ADDRESS = '0x6FaE169714ba3BE839332785291f798d627BCE8c' as
 
 type AdminTab =
   | 'resolve'
+  | 'market-status'
   | 'create-market'
   | 'manage-admins'
   | 'manage-arbitrators'
@@ -96,7 +98,10 @@ export default function AdminPage() {
     if (showManageAdmins) list.push({ id: 'manage-admins', label: 'Manage Admins' })
     if (showManageArbitrators) list.push({ id: 'manage-arbitrators', label: 'Manage Arbitrators' })
     if (showManageResolver) list.push({ id: 'manage-resolver', label: 'Manage Resolver' })
-    if (showSweep) list.push({ id: 'sweep', label: 'Unclaimed Sweeps' })
+    if (showSweep) {
+      list.push({ id: 'market-status', label: 'Market Status' })
+      list.push({ id: 'sweep', label: 'Unclaimed Sweeps' })
+    }
     return list
   }, [showCreateMarket, showManageAdmins, showManageArbitrators, showManageResolver, showSweep])
 
@@ -213,6 +218,18 @@ export default function AdminPage() {
       {activeTab === 'manage-arbitrators' && showManageArbitrators && <ManageArbitrators />}
 
       {activeTab === 'manage-resolver' && showManageResolver && <ManageResolver />}
+
+      {activeTab === 'market-status' && showSweep && (
+        <section>
+          <div className="mb-6">
+            <h2 className="font-serif text-2xl font-bold text-[#e8e6e3]">Market Status</h2>
+            <p className="mt-2 font-sans text-sm text-[#7c7a76]">
+              Claim and sweep state for every market.
+            </p>
+          </div>
+          <MarketStatus />
+        </section>
+      )}
 
       {activeTab === 'sweep' && showSweep && (
         <section>
