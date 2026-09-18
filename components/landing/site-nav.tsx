@@ -8,7 +8,7 @@ const navLinks = [
   { label: "Home", href: "/" },
   { label: "Markets", href: "/markets" },
   { label: "Stake", href: "/stake" },
-  { label: "Compound", href: "/yield" },
+  { label: "Yield", href: "/yield" },
   { label: "Referrals", href: "/referrals" },
   { label: "Portfolio", href: "/portfolio" },
   { label: "Tokens", href: "/tokens" },

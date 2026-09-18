@@ -36,7 +36,7 @@ export const VAULTS = {
     vault: "0x622ecC19e2c6c17758a46939C99e0677646AB708" as Address,
     token: "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a" as Address, // deposit token is still OPUS
     tokenSymbol: "OPUS",
-    rewardSymbol: "PLS",     // what compound() harvests/converts pre-split
+    rewardSymbol: "PLS",
     rewardToken: null,
     rewardDecimals: 18,
     targetSymbol: "HEX",     // what claim() actually pays out

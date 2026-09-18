@@ -274,7 +274,7 @@ export function PortfolioDashboard() {
   const [opusPlsPending, setOpusPlsPending] = useState(0)
   const [codaPlsxPending, setCodaPlsxPending] = useState(0)
 
-  // Auto-compounder positions
+  // Yield positions
   const [opusVaultBalance, setOpusVaultBalance] = useState(0)
   const [codaVaultBalance, setCodaVaultBalance] = useState(0)
   const [opusVaultClaimable, setOpusVaultClaimable] = useState(0)

@@ -424,8 +424,7 @@ export default function AutoCompoundPage() {
             Put your rewards to work.
           </h1>
           <p className="mt-2 max-w-xl font-sans text-sm leading-6 text-[#777b85]">
-            Deposit {cfg.tokenSymbol}, choose how much of your rewards to reinvest, and let the vault handle the
-            compounding.
+            Deposit {cfg.tokenSymbol}, choose your split between compounding and yield, and the vault takes care of the rest.
           </p>
         </header>
 
