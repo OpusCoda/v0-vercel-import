@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { ArrowRight, ExternalLink, Copy, Check } from "lucide-react"
+import { ArrowRight, ExternalLink, Copy, Check, ChevronDown, ChevronUp } from "lucide-react"
 
 function OrnamentHeading({
   children,
@@ -89,6 +89,34 @@ const protocolContracts = [
   },
 ]
 
+const otherYieldContracts = [
+  {
+    name: "HEX Vault",
+    address: "0x622ecC19e2c6c17758a46939C99e0677646AB708",
+    url: "https://otter.pulsechain.com/address/0x622ecC19e2c6c17758a46939C99e0677646AB708",
+  },
+  {
+    name: "eHEX Vault",
+    address: "0x37d2553bF2F80333FBDAED37c989131859bBa994",
+    url: "https://otter.pulsechain.com/address/0x37d2553bF2F80333FBDAED37c989131859bBa994",
+  },
+  {
+    name: "INC Vault",
+    address: "0x39f49E51069954A80e44559857EB07b72dDE5196",
+    url: "https://otter.pulsechain.com/address/0x39f49E51069954A80e44559857EB07b72dDE5196",
+  },
+  {
+    name: "PRVX Vault",
+    address: "0x8da8F78B5Bc207A83dfe11bC167857C8F4eFef55",
+    url: "https://otter.pulsechain.com/address/0x8da8F78B5Bc207A83dfe11bC167857C8F4eFef55",
+  },
+  {
+    name: "pWBTC Vault",
+    address: "0xea7322A5D3e4e4b266e3D6722D43fEC2CB525b33",
+    url: "https://otter.pulsechain.com/address/0xea7322A5D3e4e4b266e3D6722D43fEC2CB525b33",
+  },
+]
+
 function AddressRow({
   contract,
   copiedId,
@@ -129,6 +157,7 @@ function AddressRow({
 
 export function BuyTokens() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [showOtherYieldContracts, setShowOtherYieldContracts] = useState(false)
 
   const handleCopy = (address: string, contractName: string) => {
     navigator.clipboard.writeText(address)
@@ -200,6 +229,35 @@ export function BuyTokens() {
               onCopy={handleCopy}
             />
           ))}
+          <div className="mt-3 border-t border-[#2a2a35] pt-3">
+  <button
+    onClick={() => setShowOtherYieldContracts(!showOtherYieldContracts)}
+    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-colors hover:bg-[#0d0d12]"
+  >
+    <span className="font-serif text-sm font-bold text-[#B87333]">
+      Other yield contracts
+    </span>
+
+    {showOtherYieldContracts ? (
+      <ChevronUp className="h-4 w-4 text-[#9ca3af]" />
+    ) : (
+      <ChevronDown className="h-4 w-4 text-[#9ca3af]" />
+    )}
+  </button>
+
+  {showOtherYieldContracts && (
+    <div className="mt-2 space-y-2">
+      {otherYieldContracts.map((contract) => (
+        <AddressRow
+          key={contract.name}
+          contract={contract}
+          copiedId={copiedId}
+          onCopy={handleCopy}
+        />
+      ))}
+    </div>
+  )}
+</div>
         </div>
       </div>
     </section>
