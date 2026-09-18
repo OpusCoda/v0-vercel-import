@@ -1,4 +1,4 @@
-// app/auto-compound/page.tsx
+// app/yield/page.tsx
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
@@ -31,7 +31,7 @@ import {
   SETTLED_EVENT,
   CLAIMED_EVENT,
   type PrincipalKey,
-} from "@/lib/auto-compounder"
+} from "@/lib/yield"
 
 const COPPER = "#B87333"
 const BORDER = "#25252e"
@@ -209,7 +209,7 @@ function useLifetimeEarned(vault: `0x${string}`, deployBlockInput: bigint | numb
       return
     }
     if (deployBlock === 0n) {
-      setError("deployBlock not set in lib/auto-compounder.ts")
+      setError("deployBlock not set in lib/yield.ts")
       return
     }
 
@@ -237,7 +237,7 @@ function useLifetimeEarned(vault: `0x${string}`, deployBlockInput: bigint | numb
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message.split("\n")[0] : String(e)
-        console.error("[auto-compound] lifetime scan failed:", e)
+        console.error("[yield] lifetime scan failed:", e)
         if (!cancelled) {
           setTotals(null)
           setError(msg.slice(0, 120))
@@ -342,10 +342,10 @@ export default function AutoCompoundPage() {
   const { data: userData, refetch: refetchUser } = useReadContracts({
     contracts: address
       ? [
-          { address: cfg.vault, abi: VAULT_ABI, functionName: "positionOf", args: [address] },
-          { address: cfg.token, abi: ERC20_ABI, functionName: "balanceOf", args: [address] },
-          { address: cfg.token, abi: ERC20_ABI, functionName: "allowance", args: [address, cfg.vault] },
-        ]
+        { address: cfg.vault, abi: VAULT_ABI, functionName: "positionOf", args: [address] },
+        { address: cfg.token, abi: ERC20_ABI, functionName: "balanceOf", args: [address] },
+        { address: cfg.token, abi: ERC20_ABI, functionName: "allowance", args: [address, cfg.vault] },
+      ]
       : [],
     query: { enabled: !!address, refetchInterval: 15_000 },
   })
@@ -418,7 +418,7 @@ export default function AutoCompoundPage() {
         <header className="mb-6">
           <div className="mb-2 flex items-center gap-3">
             <span className="h-px w-7 bg-[#B87333]" />
-            <SectionLabel>Auto-compounder</SectionLabel>
+            <SectionLabel>Yield</SectionLabel>
           </div>
           <h1 className="font-serif text-3xl tracking-[-0.02em] text-[#e8e6e3] md:text-4xl">
             Put your rewards to work.
@@ -441,9 +441,8 @@ export default function AutoCompoundPage() {
                   setTargetIdx(0)
                   resetInputs()
                 }}
-                className={`min-w-[92px] rounded-md px-5 py-2 font-sans text-sm transition-all ${
-                  principal === p ? "bg-[#B87333] text-[#09090b]" : "text-[#777b85] hover:text-[#e8e6e3]"
-                }`}
+                className={`min-w-[92px] rounded-md px-5 py-2 font-sans text-sm transition-all ${principal === p ? "bg-[#B87333] text-[#09090b]" : "text-[#777b85] hover:text-[#e8e6e3]"
+                  }`}
               >
                 {p}
               </button>
@@ -462,9 +461,8 @@ export default function AutoCompoundPage() {
                       setTargetIdx(i)
                       resetInputs()
                     }}
-                    className={`rounded-md px-3 py-1.5 font-sans text-xs transition-colors ${
-                      targetIdx === i ? "bg-[#B87333]/10 text-[#B87333]" : "text-[#626672] hover:text-[#b8bac0]"
-                    }`}
+                    className={`rounded-md px-3 py-1.5 font-sans text-xs transition-colors ${targetIdx === i ? "bg-[#B87333]/10 text-[#B87333]" : "text-[#626672] hover:text-[#b8bac0]"
+                      }`}
                   >
                     {VAULTS[k].targetSymbol}
                   </button>
@@ -530,11 +528,10 @@ export default function AutoCompoundPage() {
                   key={p}
                   type="button"
                   onClick={() => setPctDraft(p)}
-                  className={`rounded-md border px-3 py-1.5 font-sans text-[11px] transition-colors ${
-                    pct === p
-                      ? "border-[#B87333]/70 bg-[#B87333]/10 text-[#B87333]"
-                      : "border-[#25252e] text-[#5f636d] hover:border-[#3a3a45] hover:text-[#a8abb2]"
-                  }`}
+                  className={`rounded-md border px-3 py-1.5 font-sans text-[11px] transition-colors ${pct === p
+                    ? "border-[#B87333]/70 bg-[#B87333]/10 text-[#B87333]"
+                    : "border-[#25252e] text-[#5f636d] hover:border-[#3a3a45] hover:text-[#a8abb2]"
+                    }`}
                 >
                   {p}%{p === 50 && <span className="ml-1 text-[#4f535d]">default</span>}
                 </button>

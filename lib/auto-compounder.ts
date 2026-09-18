@@ -1,4 +1,4 @@
-// lib/auto-compounder.ts
+// lib/yield.ts
 import type { Address } from "viem"
 
 export const VAULTS = {
