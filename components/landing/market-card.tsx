@@ -1,11 +1,13 @@
 "use client"
 import { useState } from "react"
 import { useAccount, useReadContract } from "wagmi"
+import { formatUnits } from "viem"
 import { MarketResolutionControls } from "@/components/markets/market-resolution-controls"
 import { BuySection } from "@/components/markets/buy-section"
 import { SellSection } from "@/components/markets/sell-section"
 import { useAcceptWager } from "@/hooks/useAcceptWager"
 import { useCancelWager } from "@/hooks/useCancelWager"
+import { useMarketClaim } from "@/hooks/useMarketClaim"
 import { WAGER_MARKET_ADDRESS, WAGER_MARKET_ABI } from "@/lib/wager-market"
 import { predictionMarketAbi } from "@/lib/abis/prediction-market"
 import { WagerActions } from "@/components/markets/wager-actions"
@@ -55,6 +57,9 @@ export type MarketCardProps =
   }
 function pls(v: bigint): number {
   return Number(v) / 1e18
+}
+function fmtPls(wei: bigint, dp = 2): string {
+  return Number(formatUnits(wei, 18)).toLocaleString(undefined, { maximumFractionDigits: dp })
 }
 // Human label for time until resolution opens (the event date).
 // Standard wagers open VOTING at eventDate; price bets become RESOLVABLE.
@@ -242,6 +247,67 @@ function AcceptSection({
     </div>
   )
 }
+// Creator-only: shown on the market card once the market is Resolved. Fetches
+// its own data (getMarket for the creator address, getSettlementInfo for
+// residual eligibility) so it works without threading extra props through
+// every caller. Queries are gated to Resolved markets only — no point
+// spending RPC calls on cards that can never show this yet.
+function CreatorResidualClaim({ marketId }: { marketId: bigint }) {
+  const { address } = useAccount()
+  const { data: marketData } = useReadContract({
+    address: PREDICTION_MARKET_ADDRESS,
+    abi: predictionMarketAbi,
+    functionName: "getMarket",
+    args: [marketId],
+  })
+  const { data: settlementData } = useReadContract({
+    address: PREDICTION_MARKET_ADDRESS,
+    abi: predictionMarketAbi,
+    functionName: "getSettlementInfo",
+    args: [marketId],
+    query: { refetchInterval: 30000 },
+  })
+  const { claim, isPending, isConfirming, isSuccess, writeError } = useMarketClaim()
+
+  const creator = (marketData as { creator?: string } | undefined)?.creator
+  const isCreator = !!address && !!creator && address.toLowerCase() === creator.toLowerCase()
+
+  // getSettlementInfo: settlementPool, remainingSettlementPool,
+  // totalWinningShares, claimedWinningShares, remainingMarketBalance,
+  // residualClaimable, residualClaimed
+  const s = settlementData as readonly [bigint, bigint, bigint, bigint, bigint, boolean, boolean] | undefined
+  const remainingBalance = s?.[4] ?? 0n
+  const residualClaimable = s?.[5] ?? false
+  const residualClaimed = s?.[6] ?? false
+
+  console.log({ creator, address, isCreator, residualClaimable, residualClaimed })
+  if (!isCreator || !residualClaimable || residualClaimed) return null
+
+  let btnLabel = "Claim residual liquidity"
+  if (isSuccess) btnLabel = "Residual claimed ✓"
+  else if (isPending) btnLabel = "Confirm in wallet…"
+  else if (isConfirming) btnLabel = "Claiming…"
+
+  return (
+    <div className="mt-3 rounded-lg border border-[#B87333]/20 bg-[#B87333]/5 p-3">
+      <p className="font-sans text-[11px] leading-relaxed text-[#b8b6b1]">
+        All winners have claimed. As the market creator, you can reclaim the remaining{" "}
+        <span className="text-[#B87333] font-semibold">{fmtPls(remainingBalance)} PLS</span> of
+        seed liquidity.
+      </p>
+      <button
+        onClick={() => claim(marketId, "residual")}
+        disabled={isPending || isConfirming || isSuccess}
+        className="mt-2 w-full rounded border border-[#B87333]/30 bg-[#1a1a20] py-1.5 font-sans text-xs font-semibold text-[#B87333] transition-colors hover:bg-[#2a2a35] disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {btnLabel}
+      </button>
+      {writeError && (
+        <p className="mt-1.5 font-sans text-[10px] text-red-400">Claim failed — see wallet / console.</p>
+      )}
+    </div>
+  )
+}
 // Relative label when < 24h away, absolute (UTC) date beyond that.
 function deadlineLabel(status: string | undefined, bettingTs?: number, resolutionTs?: number): string | null {
   const now = Math.floor(Date.now() / 1000)
@@ -251,9 +317,9 @@ function deadlineLabel(status: string | undefined, bettingTs?: number, resolutio
     return "Closes " + humanWhen(bettingTs, secs)
   }
   if (status === "Awaiting" && resolutionTs) {
-  const secs = resolutionTs - now
-  if (secs <= 0) return "Resolution open"
-  return "Resolution opens " + humanWhen(resolutionTs, secs)
+    const secs = resolutionTs - now
+    if (secs <= 0) return "Resolution open"
+    return "Resolution opens " + humanWhen(resolutionTs, secs)
   }
   return null
 }
@@ -333,10 +399,10 @@ type PanelState = { side: boolean; mode: "buy" | "sell" } | null
 // Binary YES/NO market card with an inline buy/sell panel per side.
 function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }>) {
   const [panel, setPanel] = useState<PanelState>(null)
-  const fmtPls = (v?: number) =>
+  const fmtPlsRounded = (v?: number) =>
     v === undefined ? undefined : Math.round(v).toLocaleString()
-  const vol = fmtPls(props.volumePls)
-  const liq = fmtPls(props.liquidityPls)
+  const vol = fmtPlsRounded(props.volumePls)
+  const liq = fmtPlsRounded(props.liquidityPls)
   const timing = deadlineLabel(props.status, props.bettingDeadline, props.resolutionDeadline)
   const marketId = (() => {
     try { return props.id !== undefined ? BigInt(props.id) : undefined } catch { return undefined }
@@ -443,6 +509,11 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
       {/* Permissionless resolution — propose / finalize / dispute once betting closes */}
       {marketId !== undefined && <MarketResolutionControls marketId={marketId} />}
 
+      {/* Creator-only: reclaim residual seed liquidity once all winners have claimed */}
+      {marketId !== undefined && props.status === "Resolved" && (
+        <CreatorResidualClaim marketId={marketId} />
+      )}
+
       {/* Resolution details — collapsible; renders only when data is passed in */}
       {(props.resolutionCriteria || props.source || props.resolutionDeadline) && (
         <details className="mt-3 rounded-lg border border-[#2a2a35] bg-[#0d0d12] p-3">
@@ -457,17 +528,17 @@ function ProbabilityCard(props: Extract<MarketCardProps, { type: "probability" }
               <p>
                 <span className="text-[#7c7a76]">Source: </span>
                 {props.source.startsWith("http") ? (
-                  <a
-                    href={props.source}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#B87333] underline break-all"
-                  >
-                    {props.source}
-                  </a>
-                ) : (
-                  props.source
-                )}
+        <a
+         href={props.source}
+         target="_blank"
+         rel="noopener noreferrer"
+         className="text-[#B87333] underline break-all"
+      >
+          {props.source}
+    </a>
+) : (
+  props.source
+)}
               </p>
             )}
             {props.resolutionDeadline && (
