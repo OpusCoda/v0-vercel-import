@@ -536,6 +536,23 @@ export default function AutoCompoundPage() {
               <Button onClick={() => send("setCompoundPct", [pct])} disabled={busy || !pctChanged}>
                 {pctChanged ? "Save rate" : "Rate saved"}
               </Button>
+              <span className="font-sans text-[11px] text-[#555963]">
+                {pctChanged ? (
+                  <>
+                    Currently <span className="text-[#a8abb2] tabular-nums">{storedPct}%</span> on-chain
+                    {" → "}
+                    <span className="text-[#B87333] tabular-nums">{pct}%</span>
+                  </>
+                ) : isNewDepositor ? (
+                  <>
+                    Default <span className="text-[#a8abb2] tabular-nums">{storedPct}%</span> until you set one
+                  </>
+                ) : (
+                  <>
+                    Currently <span className="text-[#a8abb2] tabular-nums">{storedPct}%</span>
+                  </>
+                )}
+              </span>
               {rateNeedsTx && (
                 <p className="font-sans text-[11px] leading-5 text-[#B87333]">
                   Save the rate before your first deposit — it's a separate transaction.

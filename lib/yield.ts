@@ -11,7 +11,7 @@ export const VAULTS = {
     rewardSymbol: "PLS",
     rewardToken: null,
     rewardDecimals: 18,
-    targetSymbol: "OPUS",
+    targetSymbol: "PLS",
     targetDecimals: 18,
     isConverter: false,
     defaultCompoundPct: 100,
@@ -27,7 +27,7 @@ export const VAULTS = {
     rewardSymbol: "PLSX",
     rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
     rewardDecimals: 18,
-    targetSymbol: "CODA",
+    targetSymbol: "PLSX",
     targetDecimals: 18,
     isConverter: false,
     defaultCompoundPct: 100,
@@ -184,11 +184,11 @@ export const CIRCULATING_EXCLUSIONS: Record<VaultKey, Address[]> = {
   ] as Address[],
   CODA_PWBTC: [
     "0x0000000000000000000000000000000000000369",
-    "0x9B5a65E37f338ADD1263530DDac8CEc56204bB3a",
-    "0x15dD01082095F1234f48AC920997621D66687972",
-    "0x542Cc63EceD96F89D61B3cF727f3E87e67eC7d93",
+    "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28",
+    "0xaA73Ad940094d0453AE547f1aCB7eB00A49f729e",
+    "0x85Dc2c3B8b6f341227a461212DFf59c4fF08AFb3",
     "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
-    "0x0C24Ac492a01F8ddC9776f448A58De574C0eEdbE",
+    "0x2694f6cB721396256418f33f68700c9a7029A9c1",
   ] as Address[],
 }
 
