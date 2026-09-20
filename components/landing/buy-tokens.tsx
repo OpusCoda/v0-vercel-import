@@ -115,6 +115,11 @@ const otherYieldContracts = [
     address: "0xea7322A5D3e4e4b266e3D6722D43fEC2CB525b33",
     url: "https://otter.pulsechain.com/address/0xea7322A5D3e4e4b266e3D6722D43fEC2CB525b33",
   },
+  {
+    name: "pDAI Vault",
+    address: "0xaAeee3E41B0fa08Bcb3Ae70369AC4eFA25aC8370",
+    url: "https://otter.pulsechain.com/address/0xaAeee3E41B0fa08Bcb3Ae70369AC4eFA25aC8370",
+  },
 ]
 
 function AddressRow({
