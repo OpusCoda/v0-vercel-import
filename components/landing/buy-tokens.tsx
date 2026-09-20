@@ -120,6 +120,11 @@ const otherYieldContracts = [
     address: "0xaAeee3E41B0fa08Bcb3Ae70369AC4eFA25aC8370",
     url: "https://otter.pulsechain.com/address/0xaAeee3E41B0fa08Bcb3Ae70369AC4eFA25aC8370",
   },
+  {
+    name: "Finvesta Vault",
+    address: "0x2ac85128486fC2d75a539Dc24Df9969d57049be7",
+    url: "https://otter.pulsechain.com/address/0x2ac85128486fC2d75a539Dc24Df9969d57049be7",
+  },
 ]
 
 function AddressRow({
