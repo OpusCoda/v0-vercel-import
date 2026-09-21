@@ -145,7 +145,10 @@ function fmt(v: bigint | undefined, dp = 2, decimals = 18): string {
   if (v === undefined) return "—"
   const n = Number(formatUnits(v, decimals))
   if (n === 0) return "0"
-  if (n < 0.01) return "<0.01"
+  // Small amounts show significant digits rather than flooring to "<0.01".
+  // A dollar of pWBTC is a few ten-thousandths of a token — flooring it
+  // makes a real, claimable balance look like nothing.
+  if (n < 0.01) return n.toLocaleString(undefined, { maximumSignificantDigits: 4 })
   return n.toLocaleString(undefined, { maximumFractionDigits: dp })
 }
 
@@ -194,7 +197,12 @@ function useLastCompound(vault: `0x${string}`) {
   return ts
 }
 
-function useLifetimeEarned(vault: `0x${string}`, deployBlockInput: bigint | number | string, account?: `0x${string}`) {
+function useLifetimeEarned(
+  vault: `0x${string}`,
+  deployBlockInput: bigint | number | string,
+  account?: `0x${string}`,
+  refreshKey = 0,
+) {
   const deployBlock = BigInt(deployBlockInput)
   const client = usePublicClient()
   const [totals, setTotals] = useState<{ compounded: bigint; claimed: bigint } | null>(null)
@@ -247,7 +255,7 @@ function useLifetimeEarned(vault: `0x${string}`, deployBlockInput: bigint | numb
     return () => {
       cancelled = true
     }
-  }, [client, vault, deployBlock, account])
+  }, [client, vault, deployBlock, account, refreshKey])
 
   return { totals, error }
 }
@@ -268,7 +276,9 @@ export default function AutoCompoundPage() {
   const [txError, setTxError] = useState<string | null>(null)
 
   const { writeContract, data: txHash, isPending } = useWriteContract()
-  const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: txHash })
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  })
   const busy = isPending || isConfirming
 
   const resetInputs = () => {
@@ -335,7 +345,13 @@ export default function AutoCompoundPage() {
   )
 
   const lastCompound = useLastCompound(cfg.vault)
-  const { totals: lifetime, error: lifetimeError } = useLifetimeEarned(cfg.vault, cfg.deployBlock, address)
+  const [historyKey, setHistoryKey] = useState(0)
+  const { totals: lifetime, error: lifetimeError } = useLifetimeEarned(
+    cfg.vault,
+    cfg.deployBlock,
+    address,
+    historyKey,
+  )
 
   const { data: userData, refetch: refetchUser } = useReadContracts({
     contracts: address
@@ -347,6 +363,11 @@ export default function AutoCompoundPage() {
       : [],
     query: { enabled: !!address, refetchInterval: 15_000 },
   })
+  useEffect(() => {
+    if (!isConfirmed) return
+    refetchUser()
+    setHistoryKey((k) => k + 1)
+  }, [isConfirmed, refetchUser])
 
   const position = userData?.[0]?.result as
     | readonly [bigint, bigint, bigint, bigint, bigint, bigint, number]
@@ -396,7 +417,7 @@ export default function AutoCompoundPage() {
     setTxError(null)
     writeContract(
       { address: cfg.vault, abi: VAULT_ABI, functionName: fn as never, args: args as never },
-      { onSuccess: () => refetchUser(), onError: (e) => setTxError(readableError(e)) },
+      { onError: (e) => setTxError(readableError(e)) },
     )
   }
 
@@ -516,7 +537,9 @@ export default function AutoCompoundPage() {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-1.5">
-              {[0, 25, 50, 75, 100].map((p) => (
+              {[0, 25, 50, 75, 100]
+                .filter((p) => p >= cfg.minCompoundPct)
+                .map((p) => (
   <button
     key={p}
     type="button"
