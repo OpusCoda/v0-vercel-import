@@ -125,6 +125,11 @@ const otherYieldContracts = [
     address: "0x2ac85128486fC2d75a539Dc24Df9969d57049be7",
     url: "https://otter.pulsechain.com/address/0x2ac85128486fC2d75a539Dc24Df9969d57049be7",
   },
+  {
+    name: "FUPA Vault",
+    address: "0x63e51cf462a1ee38EA8feBE9DE4389641Fb9c6Cb",
+    url: "https://otter.pulsechain.com/address/0x63e51cf462a1ee38EA8feBE9DE4389641Fb9c6Cb",
+  },
 ]
 
 function AddressRow({
