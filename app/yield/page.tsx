@@ -590,7 +590,7 @@ export default function AutoCompoundPage() {
               </span>
               {rateNeedsTx && (
                 <p className="font-sans text-[11px] leading-5 text-[#B87333]">
-                  Save the rate before your first deposit — it's a separate transaction.
+                  If you want another rate than the default, save your preferred rate by submitting it to the blockchain.
                 </p>
               )}
             </div>
