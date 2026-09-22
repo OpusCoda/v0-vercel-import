@@ -478,7 +478,7 @@ export default function AutoCompoundPage() {
 
           {options.length > 1 && (
             <div className="flex items-center gap-2">
-              <span className="font-serif text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a99a82]">Rewards</span>
+              <span className="font-serif text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a99a82]">Rewards:</span>
               <div className="flex gap-1">
                 {options.map((k, i) => (
                   <button
