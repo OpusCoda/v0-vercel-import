@@ -524,25 +524,49 @@ export default function AutoCompoundPage() {
           </div>
 
           {options.length > 1 && (
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="shrink-0 font-serif text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a99a82]">Rewards:</span>
-              <div className="scrollbar-none flex gap-1 overflow-x-auto pb-1">
-                {options.map((k, i) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => {
-                      setTargetIdx(i)
-                      resetInputs()
-                    }}
-                    className={`shrink-0 rounded-sm px-3 py-1.5 font-serif text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${targetIdx === i ? "bg-[#b87333]/20 text-[#f0c08a] shadow-[inset_0_0_0_1px_rgba(184,115,51,0.45)]" : "text-[#b0aa9d] hover:bg-[#263027] hover:text-[#f0e7d8]"
-                      }`}
-                  >
-                    {VAULTS[k].targetSymbol}
-                  </button>
-                ))}
+            <>
+              {/* Desktop: horizontal scroll row */}
+              <div className="hidden min-w-0 flex-1 items-center gap-2 sm:flex">
+                <span className="shrink-0 font-serif text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a99a82]">Rewards:</span>
+                <div className="scrollbar-none flex gap-1 overflow-x-auto pb-1">
+                  {options.map((k, i) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => {
+                        setTargetIdx(i)
+                        resetInputs()
+                      }}
+                      className={`shrink-0 rounded-sm px-3 py-1.5 font-serif text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${targetIdx === i ? "bg-[#b87333]/20 text-[#f0c08a] shadow-[inset_0_0_0_1px_rgba(184,115,51,0.45)]" : "text-[#b0aa9d] hover:bg-[#263027] hover:text-[#f0e7d8]"
+                        }`}
+                    >
+                      {VAULTS[k].targetSymbol}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+
+              {/* Mobile: wraps below, everything visible, no scrolling needed */}
+              <div className="w-full sm:hidden">
+                <span className="mb-1.5 block font-serif text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a99a82]">Rewards</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {options.map((k, i) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => {
+                        setTargetIdx(i)
+                        resetInputs()
+                      }}
+                      className={`rounded-sm px-3 py-1.5 font-serif text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${targetIdx === i ? "bg-[#b87333]/20 text-[#f0c08a] shadow-[inset_0_0_0_1px_rgba(184,115,51,0.45)]" : "text-[#b0aa9d] hover:bg-[#263027] hover:text-[#f0e7d8]"
+                        }`}
+                    >
+                      {VAULTS[k].targetSymbol}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
         </div>
 
