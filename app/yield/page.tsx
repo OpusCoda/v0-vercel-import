@@ -42,7 +42,7 @@ function Panel({
   className?: string
 }) {
   return (
-    <section className={`rounded-xl border border-[#25252e] bg-[#0d0d12] ${className}`}>
+    <section className={`rounded-2xl border border-[#2a2a35] bg-[#101017]/95 shadow-[0_18px_60px_rgba(0,0,0,0.18)] ${className}`}>
       {children}
     </section>
   )
@@ -88,7 +88,7 @@ function Button({
   className?: string
 }) {
   const base =
-    "rounded-lg px-4 py-2.5 font-sans text-sm transition-all disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B87333]"
+    "rounded-md px-4 py-2.5 font-sans text-[11px] font-semibold uppercase tracking-[0.12em] transition-all disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B87333]"
   const styles =
     variant === "primary"
       ? "bg-[#B87333] text-[#09090b] hover:bg-[#c98442] active:scale-[0.99]"
@@ -447,7 +447,7 @@ export default function AutoCompoundPage() {
         </div>
 
         <header className="mb-6">
-          <h1 className="font-serif text-3xl tracking-[-0.02em] text-[#e8e6e3] md:text-4xl">
+          <h1 className="font-serif text-3xl font-bold tracking-[-0.02em] text-[#e8e6e3] md:text-4xl">
             Compound some. Yield the rest.
           </h1>
           <p className="mt-2 max-w-xl font-sans text-sm leading-6 text-[#777b85]">
@@ -457,7 +457,7 @@ export default function AutoCompoundPage() {
 
         {/* Principal + reward selector — kept on one visual row to save vertical space */}
         <div className="mb-6 flex flex-wrap items-center gap-3">
-          <div className="inline-flex w-fit rounded-lg border border-[#25252e] bg-[#0a0a0d] p-1">
+          <div className="inline-flex w-fit rounded-md border border-[#2a2a35] bg-[#101017]/80 p-1 shadow-inner shadow-black/20">
             {PRINCIPALS.map((p) => (
               <button
                 key={p}
@@ -467,7 +467,7 @@ export default function AutoCompoundPage() {
                   setTargetIdx(0)
                   resetInputs()
                 }}
-                className={`min-w-[92px] rounded-md px-5 py-2 font-sans text-sm transition-all ${principal === p ? "bg-[#B87333] text-[#09090b]" : "text-[#777b85] hover:text-[#e8e6e3]"
+                className={`min-w-[92px] rounded-md px-5 py-2 font-sans text-sm transition-all ${principal === p ? "bg-[#B87333] text-[#09090b] shadow-[0_4px_18px_rgba(184,115,51,0.22)]" : "text-[#777b85] hover:bg-[#1b211d] hover:text-[#e8e6e3]"
                   }`}
               >
                 {p}
