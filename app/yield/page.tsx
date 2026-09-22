@@ -480,17 +480,17 @@ export default function AutoCompoundPage() {
     <>
       <SiteNav />
 
-      <main className="relative isolate mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-[#1b211d]/55 px-4 pb-16 pt-8 md:px-6 md:pt-10">
+      <main className="relative isolate mx-auto min-h-[calc(100vh-4rem)] max-w-5xl overflow-hidden bg-transparent px-4 pb-16 pt-8 md:px-6 md:pt-10">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[34rem] overflow-hidden"
+          className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
         >
           <img
             src="/landing/hoard.png"
             alt=""
             className="absolute inset-0 h-full w-full object-cover object-center opacity-[0.28] mix-blend-screen"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1b211d]/10 via-[#1b211d]/55 to-[#1b211d]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1b211d]/10 via-[#1b211d]/55 to-[#1b211d]/95" />
         </div>
 
         <header className="mb-6">
