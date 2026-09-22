@@ -91,8 +91,8 @@ function Button({
     "rounded-md px-4 py-2.5 font-sans text-[11px] font-semibold uppercase tracking-[0.12em] transition-all disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B87333]"
   const styles =
     variant === "primary"
-      ? "bg-[#B87333] text-[#09090b] hover:bg-[#c98442] active:scale-[0.99]"
-      : "border border-[#292933] bg-transparent text-[#cfcdc8] hover:border-[#B87333]/60 hover:text-[#B87333]"
+? "bg-[#B87333] text-[#09090b] shadow-[0_8px_24px_rgba(184,115,51,0.2)] hover:bg-[#c98442] active:scale-[0.99]"
+    : "border border-[#B87333]/45 bg-transparent text-[#cfcdc8] hover:border-[#B87333] hover:bg-[#B87333]/10 hover:text-[#f0c08a]"
   return (
     <button type="button" onClick={onClick} disabled={disabled} className={`${base} ${styles} ${className}`}>
       {children}
@@ -433,7 +433,7 @@ export default function AutoCompoundPage() {
     <>
       <SiteNav />
 
-      <main className="relative isolate mx-auto max-w-5xl overflow-hidden px-4 pb-16 pt-8 md:px-6 md:pt-10">
+      <main className="relative isolate mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-[#1b211d]/55 px-4 pb-16 pt-8 md:px-6 md:pt-10">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[34rem] overflow-hidden"
@@ -487,7 +487,7 @@ export default function AutoCompoundPage() {
                       setTargetIdx(i)
                       resetInputs()
                     }}
-                    className={`rounded-md px-3 py-1.5 font-sans text-xs transition-colors ${targetIdx === i ? "bg-[#B87333]/10 text-[#B87333]" : "text-[#626672] hover:text-[#b8bac0]"
+                    className={`rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${targetIdx === i ? "bg-[#B87333]/15 text-[#f0c08a] shadow-[inset_0_0_0_1px_rgba(184,115,51,0.35)]" : "text-[#8d918b] hover:bg-[#1b211d] hover:text-[#e8e6e3]"
                       }`}
                   >
                     {VAULTS[k].targetSymbol}
@@ -558,8 +558,8 @@ export default function AutoCompoundPage() {
     onClick={() => setPctDraft(p)}
     className={`rounded-md border px-3 py-1.5 font-sans text-[11px] transition-colors ${
       pct === p
-        ? "border-[#B87333]/70 bg-[#B87333]/10 text-[#B87333]"
-        : "border-[#25252e] text-[#5f636d] hover:border-[#3a3a45] hover:text-[#a8abb2]"
+? "border-[#B87333]/70 bg-[#B87333]/15 text-[#f0c08a] shadow-[0_4px_14px_rgba(184,115,51,0.14)]"
+                  : "border-[#3a443d] text-[#8d918b] hover:border-[#B87333]/70 hover:bg-[#1b211d] hover:text-[#e8e6e3]"
     }`}
   >
     {p}%{p === cfg.defaultCompoundPct && <span className="ml-1 text-[#4f535d]">default</span>}
