@@ -433,7 +433,19 @@ export default function AutoCompoundPage() {
     <>
       <SiteNav />
 
-      <main className="mx-auto max-w-5xl px-4 pb-16 pt-8 md:px-6 md:pt-10">
+      <main className="relative isolate mx-auto max-w-5xl overflow-hidden px-4 pb-16 pt-8 md:px-6 md:pt-10">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[34rem] overflow-hidden"
+        >
+          <img
+            src="/landing/hoard.png"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-[0.12] mix-blend-screen"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#09090b]/30 via-[#09090b]/75 to-[#09090b]" />
+        </div>
+
         <header className="mb-6">
           <h1 className="font-serif text-3xl tracking-[-0.02em] text-[#e8e6e3] md:text-4xl">
             Compound some. Yield the rest.
