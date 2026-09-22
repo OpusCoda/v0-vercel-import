@@ -480,10 +480,10 @@ export default function AutoCompoundPage() {
     <>
       <SiteNav />
 
-      <main className="relative isolate mx-auto min-h-[calc(100vh-4rem)] max-w-5xl overflow-hidden bg-transparent px-4 pb-16 pt-8 md:px-6 md:pt-10">
+      <main className="relative isolate mx-auto min-h-[calc(100vh-4rem)] max-w-5xl overflow-hidden bg-transparent px-4 pb-16 pt-8 md:px-6 md:pt-10 [&>header]:relative [&>header]:z-10 [&>section]:relative [&>section]:z-10 [&>div:not(.yield-background)]:relative [&>div:not(.yield-background)]:z-10">
         <div
           aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+          className="yield-background pointer-events-none fixed inset-0 z-0 overflow-hidden"
         >
           <img
             src="/landing/hoard.png"
