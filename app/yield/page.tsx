@@ -88,7 +88,7 @@ function Button({
   className?: string
 }) {
   const base =
-    "rounded-md px-4 py-2.5 font-sans text-[11px] font-semibold uppercase tracking-[0.12em] transition-all disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B87333]"
+    "rounded-sm px-4 py-2.5 font-serif text-[11px] font-semibold uppercase tracking-[0.14em] transition-all disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B87333]"
   const styles =
     variant === "primary"
 ? "bg-[#B87333] text-[#09090b] shadow-[0_8px_24px_rgba(184,115,51,0.2)] hover:bg-[#c98442] active:scale-[0.99]"
@@ -457,7 +457,8 @@ export default function AutoCompoundPage() {
 
         {/* Principal + reward selector — kept on one visual row to save vertical space */}
         <div className="mb-6 flex flex-wrap items-center gap-3">
-          <div className="inline-flex w-fit rounded-md border border-[#2a2a35] bg-[#101017]/80 p-1 shadow-inner shadow-black/20">
+          <span aria-hidden="true" className="mr-1 hidden font-serif text-xs text-[#b87333]/70 sm:inline">◆</span>
+          <div className="inline-flex w-fit rounded-sm border border-[#8f6237]/55 bg-[#111713]/90 p-1 shadow-[inset_0_0_0_1px_rgba(184,115,51,0.08),0_8px_24px_rgba(0,0,0,0.18)]">
             {PRINCIPALS.map((p) => (
               <button
                 key={p}
@@ -467,7 +468,7 @@ export default function AutoCompoundPage() {
                   setTargetIdx(0)
                   resetInputs()
                 }}
-                className={`min-w-[92px] rounded-md px-5 py-2 font-sans text-sm transition-all ${principal === p ? "bg-[#B87333] text-[#09090b] shadow-[0_4px_18px_rgba(184,115,51,0.22)]" : "text-[#777b85] hover:bg-[#1b211d] hover:text-[#e8e6e3]"
+                className={`min-w-[92px] rounded-sm px-5 py-2 font-serif text-sm font-semibold tracking-[0.08em] transition-all ${principal === p ? "bg-[#c4813c] text-[#17110b] shadow-[0_4px_18px_rgba(184,115,51,0.28)]" : "text-[#a8a99f] hover:bg-[#263027] hover:text-[#f0e7d8]"
                   }`}
               >
                 {p}
@@ -477,7 +478,7 @@ export default function AutoCompoundPage() {
 
           {options.length > 1 && (
             <div className="flex items-center gap-2">
-              <span className="font-sans text-[10px] uppercase tracking-[0.18em] text-[#4e525c]">Rewards</span>
+              <span className="font-serif text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a99a82]">Rewards</span>
               <div className="flex gap-1">
                 {options.map((k, i) => (
                   <button
@@ -487,7 +488,7 @@ export default function AutoCompoundPage() {
                       setTargetIdx(i)
                       resetInputs()
                     }}
-                    className={`rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${targetIdx === i ? "bg-[#B87333]/15 text-[#f0c08a] shadow-[inset_0_0_0_1px_rgba(184,115,51,0.35)]" : "text-[#8d918b] hover:bg-[#1b211d] hover:text-[#e8e6e3]"
+                    className={`rounded-sm px-3 py-1.5 font-serif text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${targetIdx === i ? "bg-[#b87333]/20 text-[#f0c08a] shadow-[inset_0_0_0_1px_rgba(184,115,51,0.45)]" : "text-[#b0aa9d] hover:bg-[#263027] hover:text-[#f0e7d8]"
                       }`}
                   >
                     {VAULTS[k].targetSymbol}
