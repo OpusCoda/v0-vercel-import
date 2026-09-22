@@ -451,7 +451,7 @@ export default function AutoCompoundPage() {
             Compound some. Yield the rest.
           </h1>
           <p className="mt-2 max-w-xl font-sans text-sm leading-6 text-[#777b85]">
-            Deposit {cfg.tokenSymbol}, choose your split between compounding and yield, and the vault takes care of the rest.
+            Deposit Opus or Coda, choose your split between compounding and yield, and the vault takes care of the rest.
           </p>
         </header>
 
