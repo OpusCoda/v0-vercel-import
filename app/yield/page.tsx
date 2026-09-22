@@ -33,6 +33,9 @@ import {
 
 const COPPER = "#B87333"
 const BORDER = "#25252e"
+const BUY_TAX = 0.05
+const SLIPPAGE = 0.03
+const DEADLINE_SECONDS = 300
 
 function Panel({
   children,
@@ -42,7 +45,7 @@ function Panel({
   className?: string
 }) {
   return (
-    <section className={`rounded-xl border border-[#25252e] bg-[#0d0d12] ${className}`}>
+    <section className={`rounded-2xl border border-[#2a2a35] bg-[#101017]/95 shadow-[0_18px_60px_rgba(0,0,0,0.18)] ${className}`}>
       {children}
     </section>
   )
@@ -88,11 +91,11 @@ function Button({
   className?: string
 }) {
   const base =
-    "rounded-lg px-4 py-2.5 font-sans text-sm transition-all disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B87333]"
+    "rounded-sm px-4 py-2.5 font-serif text-[11px] font-semibold uppercase tracking-[0.14em] transition-all disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B87333]"
   const styles =
     variant === "primary"
-      ? "bg-[#B87333] text-[#09090b] hover:bg-[#c98442] active:scale-[0.99]"
-      : "border border-[#292933] bg-transparent text-[#cfcdc8] hover:border-[#B87333]/60 hover:text-[#B87333]"
+      ? "bg-[#B87333] text-[#09090b] shadow-[0_8px_24px_rgba(184,115,51,0.2)] hover:bg-[#c98442] active:scale-[0.99]"
+      : "border border-[#B87333]/45 bg-transparent text-[#cfcdc8] hover:border-[#B87333] hover:bg-[#B87333]/10 hover:text-[#f0c08a]"
   return (
     <button type="button" onClick={onClick} disabled={disabled} className={`${base} ${styles} ${className}`}>
       {children}
@@ -160,7 +163,7 @@ function toWei(v: string): bigint {
   }
 }
 
-function useLastCompound(vault: `0x${string}`) {
+function useLastCompound(vault: `0x${string}`, refreshKey = 0) {
   const client = usePublicClient()
   const [ts, setTs] = useState<number | null>(null)
 
@@ -192,7 +195,7 @@ function useLastCompound(vault: `0x${string}`) {
       cancelled = true
       clearInterval(id)
     }
-  }, [client, vault])
+  }, [client, vault, refreshKey])
 
   return ts
 }
@@ -344,8 +347,8 @@ export default function AutoCompoundPage() {
     (excludedBalances ?? []).map((r) => r?.result as bigint | undefined),
   )
 
-  const lastCompound = useLastCompound(cfg.vault)
   const [historyKey, setHistoryKey] = useState(0)
+  const lastCompound = useLastCompound(cfg.vault, historyKey)
   const { totals: lifetime, error: lifetimeError } = useLifetimeEarned(
     cfg.vault,
     cfg.deployBlock,
@@ -383,7 +386,6 @@ export default function AutoCompoundPage() {
   const needsApproval = depositWei > 0n && allowance < depositWei
 
   const isNewDepositor = Number(compoundPct) === 0
-  // Fixed: fall back to the contract's real default (50%), not a hardcoded 100.
   const storedPct = isNewDepositor ? cfg.defaultCompoundPct : Number(compoundPct)
 
   const pct = pctDraft ?? storedPct
@@ -395,7 +397,6 @@ export default function AutoCompoundPage() {
     return smaugForNextTier(Number(tier), circulating)
   }, [tier, circulating])
 
-  // Fixed: real progress toward the next tier, not a hardcoded 62%.
   const tierProgressPct = useMemo(() => {
     if (!nextTier) return 100
     const target = Number(nextTier.smaug)
@@ -429,23 +430,82 @@ export default function AutoCompoundPage() {
 
   const compoundedTotal = lifetime ? lifetime.compounded + pendingIn : undefined
 
+  // ── Manual owner/keeper trigger ──────────────────────────────────
+  // compound() and convertToTarget() are both keeper/owner-gated on-chain
+  // (NotAuthorized otherwise) — this section only renders for a connected
+  // wallet matching either address on this specific vault. Two separate
+  // transactions: the contracts have no combined function.
+  const { data: authData } = useReadContracts({
+    contracts: [
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "owner" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "keeper" },
+      { address: cfg.vault, abi: VAULT_ABI, functionName: "quoteCompound" },
+    ],
+    query: { enabled: !!address, refetchInterval: 30_000 },
+  })
+
+  const vaultOwner = authData?.[0]?.result as `0x${string}` | undefined
+  const vaultKeeper = authData?.[1]?.result as `0x${string}` | undefined
+  const isAuthorized =
+    !!address &&
+    (address.toLowerCase() === vaultOwner?.toLowerCase() ||
+      address.toLowerCase() === vaultKeeper?.toLowerCase())
+
+  const compoundQuote = authData?.[2]?.result as readonly [bigint, bigint] | undefined
+  const [, compoundOut] = compoundQuote ?? [0n, 0n]
+
+  const { data: convertQuoteData } = useReadContract({
+    address: cfg.vault,
+    abi: VAULT_ABI,
+    functionName: "quoteConvert",
+    query: { enabled: isAuthorized && cfg.isConverter, refetchInterval: 30_000 },
+  })
+  const [, convertOut] = (convertQuoteData as readonly [bigint, bigint] | undefined) ?? [0n, 0n]
+
+  const doCompound = () => {
+    if (compoundOut === 0n) return
+    const minOut = (compoundOut * BigInt(Math.round((1 - BUY_TAX) * (1 - SLIPPAGE) * 10000))) / 10000n
+    const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_SECONDS)
+    send("compound", [minOut, deadline])
+  }
+
+  const doConvert = () => {
+    if (convertOut === 0n) return
+    const minOut = (convertOut * BigInt(Math.round((1 - SLIPPAGE) * 10000))) / 10000n
+    const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_SECONDS)
+    send("convertToTarget", [minOut, deadline])
+  }
+
   return (
     <>
       <SiteNav />
 
-      <main className="mx-auto max-w-5xl px-4 pb-16 pt-8 md:px-6 md:pt-10">
+      <main className="relative isolate mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-[#1b211d]/55 px-4 pb-16 pt-8 md:px-6 md:pt-10">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[34rem] overflow-hidden"
+        >
+          <img
+            src="/landing/hoard.png"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-[0.28] mix-blend-screen"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1b211d]/10 via-[#1b211d]/55 to-[#1b211d]" />
+        </div>
+
         <header className="mb-6">
-          <h1 className="font-serif text-3xl tracking-[-0.02em] text-[#e8e6e3] md:text-4xl">
+          <h1 className="font-serif text-3xl font-bold tracking-[-0.02em] text-[#e8e6e3] md:text-4xl">
             Compound some. Yield the rest.
           </h1>
           <p className="mt-2 max-w-xl font-sans text-sm leading-6 text-[#777b85]">
-            Deposit {cfg.tokenSymbol}, choose your split between compounding and yield, and the vault takes care of the rest.
+            Deposit Opus or Coda, choose your split between compounding and yield, and the vault takes care of the rest.
           </p>
         </header>
 
         {/* Principal + reward selector — kept on one visual row to save vertical space */}
         <div className="mb-6 flex flex-wrap items-center gap-3">
-          <div className="inline-flex w-fit rounded-lg border border-[#25252e] bg-[#0a0a0d] p-1">
+          <span aria-hidden="true" className="mr-1 hidden font-serif text-xs text-[#b87333]/70 sm:inline">◆</span>
+          <div className="inline-flex w-fit rounded-sm border border-[#8f6237]/55 bg-[#111713]/90 p-1 shadow-[inset_0_0_0_1px_rgba(184,115,51,0.08),0_8px_24px_rgba(0,0,0,0.18)]">
             {PRINCIPALS.map((p) => (
               <button
                 key={p}
@@ -455,7 +515,7 @@ export default function AutoCompoundPage() {
                   setTargetIdx(0)
                   resetInputs()
                 }}
-                className={`min-w-[92px] rounded-md px-5 py-2 font-sans text-sm transition-all ${principal === p ? "bg-[#B87333] text-[#09090b]" : "text-[#777b85] hover:text-[#e8e6e3]"
+                className={`min-w-[92px] rounded-sm px-5 py-2 font-serif text-sm font-semibold tracking-[0.08em] transition-all ${principal === p ? "bg-[#c4813c] text-[#17110b] shadow-[0_4px_18px_rgba(184,115,51,0.28)]" : "text-[#a8a99f] hover:bg-[#263027] hover:text-[#f0e7d8]"
                   }`}
               >
                 {p}
@@ -465,7 +525,7 @@ export default function AutoCompoundPage() {
 
           {options.length > 1 && (
             <div className="flex items-center gap-2">
-              <span className="font-sans text-[10px] uppercase tracking-[0.18em] text-[#4e525c]">Rewards</span>
+              <span className="font-serif text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a99a82]">Rewards:</span>
               <div className="flex gap-1">
                 {options.map((k, i) => (
                   <button
@@ -475,7 +535,7 @@ export default function AutoCompoundPage() {
                       setTargetIdx(i)
                       resetInputs()
                     }}
-                    className={`rounded-md px-3 py-1.5 font-sans text-xs transition-colors ${targetIdx === i ? "bg-[#B87333]/10 text-[#B87333]" : "text-[#626672] hover:text-[#b8bac0]"
+                    className={`rounded-sm px-3 py-1.5 font-serif text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${targetIdx === i ? "bg-[#b87333]/20 text-[#f0c08a] shadow-[inset_0_0_0_1px_rgba(184,115,51,0.45)]" : "text-[#b0aa9d] hover:bg-[#263027] hover:text-[#f0e7d8]"
                       }`}
                   >
                     {VAULTS[k].targetSymbol}
@@ -540,19 +600,18 @@ export default function AutoCompoundPage() {
               {[0, 25, 50, 75, 100]
                 .filter((p) => p >= cfg.minCompoundPct)
                 .map((p) => (
-  <button
-    key={p}
-    type="button"
-    onClick={() => setPctDraft(p)}
-    className={`rounded-md border px-3 py-1.5 font-sans text-[11px] transition-colors ${
-      pct === p
-        ? "border-[#B87333]/70 bg-[#B87333]/10 text-[#B87333]"
-        : "border-[#25252e] text-[#5f636d] hover:border-[#3a3a45] hover:text-[#a8abb2]"
-    }`}
-  >
-    {p}%{p === cfg.defaultCompoundPct && <span className="ml-1 text-[#4f535d]">default</span>}
-  </button>
-))}
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPctDraft(p)}
+                    className={`rounded-md border px-3 py-1.5 font-sans text-[11px] transition-colors ${pct === p
+                      ? "border-[#B87333]/70 bg-[#B87333]/15 text-[#f0c08a] shadow-[0_4px_14px_rgba(184,115,51,0.14)]"
+                      : "border-[#3a443d] text-[#8d918b] hover:border-[#B87333]/70 hover:bg-[#1b211d] hover:text-[#e8e6e3]"
+                      }`}
+                  >
+                    {p}%{p === cfg.defaultCompoundPct && <span className="ml-1 text-[#4f535d]">default</span>}
+                  </button>
+                ))}
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -578,7 +637,7 @@ export default function AutoCompoundPage() {
               </span>
               {rateNeedsTx && (
                 <p className="font-sans text-[11px] leading-5 text-[#B87333]">
-                  Save the rate before your first deposit — it's a separate transaction.
+                  If you want another rate than the default, save your preferred rate by submitting it to the blockchain.
                 </p>
               )}
             </div>
@@ -587,6 +646,33 @@ export default function AutoCompoundPage() {
 
         {isConnected ? (
           <>
+            {isAuthorized && (
+              <Panel className="mt-4 p-5 md:p-6">
+                <SectionLabel>Manual trigger (owner/keeper only)</SectionLabel>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <Button
+                    variant="quiet"
+                    onClick={doCompound}
+                    disabled={busy || compoundOut === 0n}
+                  >
+                    Compound now {compoundOut > 0n && `(${fmt(compoundOut)} ${cfg.tokenSymbol})`}
+                  </Button>
+                  {cfg.isConverter && (
+                    <Button
+                      variant="quiet"
+                      onClick={doConvert}
+                      disabled={busy || convertOut === 0n}
+                    >
+                      Convert now {convertOut > 0n && `(${fmt(convertOut, 2, cfg.targetDecimals)} ${cfg.targetSymbol})`}
+                    </Button>
+                  )}
+                </div>
+                <p className="mt-2 font-sans text-[11px] text-[#555963]">
+                  Two separate transactions — compounding and converting run independently on-chain.
+                </p>
+              </Panel>
+            )}
+
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <Panel className="p-5 md:p-6">
                 <div className="flex items-center justify-between">
@@ -761,7 +847,7 @@ export default function AutoCompoundPage() {
         )}
 
         <div className="mt-6 border-t border-[#1d1d25] pt-5">
-           <div className="grid grid-cols-2 gap-y-5 md:grid-cols-3 md:gap-5 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-y-5 md:grid-cols-3 md:gap-5 lg:grid-cols-6">
             <Stat
               label={`Total ${cfg.tokenSymbol} deposited`}
               value={fmt(totalPrincipal, 0)}
@@ -778,17 +864,16 @@ export default function AutoCompoundPage() {
               value={fmt(pendingRewards, 0)}
               hint="Held plus owed by the distributor"
             />
-            {cfg.isConverter ? (
+            <Stat
+              label="Last compounded"
+              value={lastCompound ? timeAgo(lastCompound) : "—"}
+              hint={lastCompound ? undefined : "No compound in the last week"}
+            />
+            {cfg.isConverter && (
               <Stat
                 label={`Awaiting ${cfg.targetSymbol}`}
                 value={fmt(pendingTargetConversion, 2)}
                 hint={`${cfg.rewardSymbol} already split off for yield`}
-              />
-            ) : (
-              <Stat
-                label="Last compounded"
-                value={lastCompound ? timeAgo(lastCompound) : "—"}
-                hint={lastCompound ? undefined : "No compound in the last week"}
               />
             )}
           </div>

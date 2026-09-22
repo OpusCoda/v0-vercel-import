@@ -130,6 +130,16 @@ const otherYieldContracts = [
     address: "0x63e51cf462a1ee38EA8feBE9DE4389641Fb9c6Cb",
     url: "https://otter.pulsechain.com/address/0x63e51cf462a1ee38EA8feBE9DE4389641Fb9c6Cb",
   },
+  {
+  name: "pTGC Vault",
+    address: "0x2A75521E42f4FcA684A2c813C41DcE774f113cc4",
+    url: "https://otter.pulsechain.com/address/0x2A75521E42f4FcA684A2c813C41DcE774f113cc4",
+  },
+  {
+  name: "UFO Vault",
+    address: "0x8a6fCf756C154c9968055039e73c0288FFC3ec96",
+    url: "https://otter.pulsechain.com/address/0x8a6fCf756C154c9968055039e73c0288FFC3ec96",
+  },
 ]
 
 function AddressRow({

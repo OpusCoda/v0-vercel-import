@@ -11,7 +11,7 @@ export const VAULTS = {
     rewardSymbol: "PLS",
     rewardToken: null,
     rewardDecimals: 18,
-    targetSymbol: "PLS",
+    targetSymbol: "OPUS",
     targetDecimals: 18,
     isConverter: false,
     defaultCompoundPct: 100,
@@ -27,7 +27,7 @@ export const VAULTS = {
     rewardSymbol: "PLSX",
     rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
     rewardDecimals: 18,
-    targetSymbol: "PLSX",
+    targetSymbol: "CODA",
     targetDecimals: 18,
     isConverter: false,
     defaultCompoundPct: 100,
@@ -162,6 +162,38 @@ export const VAULTS = {
     minCompoundPct: 0,
     deployBlock: 27601422n,
   },
+  CODA_PTGC: {
+    key: "CODA_PTGC" as const,
+    principal: "CODA" as const,
+    vault: "0x2A75521E42f4FcA684A2c813C41DcE774f113cc4" as Address,
+    token: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" as Address, // deposit token is CODA
+    tokenSymbol: "CODA",
+    rewardSymbol: "PLSX",
+    rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
+    rewardDecimals: 18,
+    targetSymbol: "pTGC",
+    targetDecimals: 18,
+    isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0,
+    deployBlock: 27611120n,
+  },
+  CODA_UFO: {
+    key: "CODA_UFO" as const,
+    principal: "CODA" as const,
+    vault: "0x8a6fCf756C154c9968055039e73c0288FFC3ec96" as Address,
+    token: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" as Address,
+    tokenSymbol: "CODA",
+    rewardSymbol: "PLSX",
+    rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
+    rewardDecimals: 18,
+    targetSymbol: "UFO",
+    targetDecimals: 18,
+    isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0,
+    deployBlock: 27611143n,
+  },
 } as const
 
 export type VaultKey = keyof typeof VAULTS
@@ -262,6 +294,22 @@ export const CIRCULATING_EXCLUSIONS: Record<VaultKey, Address[]> = {
     "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
     "0x2694f6cB721396256418f33f68700c9a7029A9c1",
   ] as Address[],
+  CODA_PTGC: [
+    "0x0000000000000000000000000000000000000369",
+    "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28",
+    "0xaA73Ad940094d0453AE547f1aCB7eB00A49f729e",
+    "0x85Dc2c3B8b6f341227a461212DFf59c4fF08AFb3",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x2694f6cB721396256418f33f68700c9a7029A9c1",
+  ] as Address[],
+  CODA_UFO: [
+    "0x0000000000000000000000000000000000000369",
+    "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28",
+    "0xaA73Ad940094d0453AE547f1aCB7eB00A49f729e",
+    "0x85Dc2c3B8b6f341227a461212DFf59c4fF08AFb3",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x2694f6cB721396256418f33f68700c9a7029A9c1",
+  ] as Address[],
 }
 
 export const SMAUG_ADDRESS =
@@ -287,6 +335,39 @@ export const VAULT_ABI = [
   { type: "function", name: "totalPrincipal", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "depositorCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "smaugCirculating", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+
+  { type: "function", name: "owner", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+{ type: "function", name: "keeper", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+{
+  type: "function",
+  name: "quoteCompound",
+  stateMutability: "view",
+  inputs: [],
+  outputs: [
+    { name: "amountIn", type: "uint256" },
+    { name: "amountOut", type: "uint256" },
+  ],
+},
+{
+  type: "function",
+  name: "compound",
+  stateMutability: "nonpayable",
+  inputs: [
+    { name: "minAmountOut", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+  outputs: [{ name: "received", type: "uint256" }],
+},
+{
+  type: "function",
+  name: "convertToTarget",
+  stateMutability: "nonpayable",
+  inputs: [
+    { name: "minAmountOut", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+  outputs: [{ name: "received", type: "uint256" }],
+},
 
   { type: "function", name: "totalWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalCompoundWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
