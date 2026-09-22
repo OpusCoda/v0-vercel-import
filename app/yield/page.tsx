@@ -441,9 +441,9 @@ export default function AutoCompoundPage() {
           <img
             src="/landing/hoard.png"
             alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center opacity-[0.12] mix-blend-screen"
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-[0.28] mix-blend-screen"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#09090b]/30 via-[#09090b]/75 to-[#09090b]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#09090b]/10 via-[#09090b]/55 to-[#09090b]" />
         </div>
 
         <header className="mb-6">
