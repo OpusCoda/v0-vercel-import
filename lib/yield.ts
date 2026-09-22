@@ -11,7 +11,7 @@ export const VAULTS = {
     rewardSymbol: "PLS",
     rewardToken: null,
     rewardDecimals: 18,
-    targetSymbol: "PLS",
+    targetSymbol: "OPUS",
     targetDecimals: 18,
     isConverter: false,
     defaultCompoundPct: 100,
@@ -27,7 +27,7 @@ export const VAULTS = {
     rewardSymbol: "PLSX",
     rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
     rewardDecimals: 18,
-    targetSymbol: "PLSX",
+    targetSymbol: "CODA",
     targetDecimals: 18,
     isConverter: false,
     defaultCompoundPct: 100,
@@ -182,7 +182,7 @@ export const VAULTS = {
     key: "CODA_UFO" as const,
     principal: "CODA" as const,
     vault: "0x8a6fCf756C154c9968055039e73c0288FFC3ec96" as Address,
-    token: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" as Address, // deposit token is CODA
+    token: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" as Address,
     tokenSymbol: "CODA",
     rewardSymbol: "PLSX",
     rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
@@ -335,6 +335,39 @@ export const VAULT_ABI = [
   { type: "function", name: "totalPrincipal", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "depositorCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "smaugCirculating", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+
+  { type: "function", name: "owner", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+{ type: "function", name: "keeper", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+{
+  type: "function",
+  name: "quoteCompound",
+  stateMutability: "view",
+  inputs: [],
+  outputs: [
+    { name: "amountIn", type: "uint256" },
+    { name: "amountOut", type: "uint256" },
+  ],
+},
+{
+  type: "function",
+  name: "compound",
+  stateMutability: "nonpayable",
+  inputs: [
+    { name: "minAmountOut", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+  outputs: [{ name: "received", type: "uint256" }],
+},
+{
+  type: "function",
+  name: "convertToTarget",
+  stateMutability: "nonpayable",
+  inputs: [
+    { name: "minAmountOut", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+  outputs: [{ name: "received", type: "uint256" }],
+},
 
   { type: "function", name: "totalWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalCompoundWeight", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
