@@ -111,6 +111,16 @@ const otherYieldContracts = [
     url: "https://otter.pulsechain.com/address/0x8da8F78B5Bc207A83dfe11bC167857C8F4eFef55",
   },
   {
+    name: "WBTC Vault",
+    address: "0x7daBB6Fd166710B4Bc9733E32C1CAca7F9CC992f",
+    url: "https://otter.pulsechain.com/address/0x7daBB6Fd166710B4Bc9733E32C1CAca7F9CC992f",
+  },
+  {
+    name: "WETH Vault",
+    address: "0x00b30bb3a8a0d724687F9CF2e397909B716833da",
+    url: "https://otter.pulsechain.com/address/0x00b30bb3a8a0d724687F9CF2e397909B716833da",
+  },
+  {
     name: "pWBTC Vault",
     address: "0xea7322A5D3e4e4b266e3D6722D43fEC2CB525b33",
     url: "https://otter.pulsechain.com/address/0xea7322A5D3e4e4b266e3D6722D43fEC2CB525b33",
