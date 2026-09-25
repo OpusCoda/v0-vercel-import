@@ -381,6 +381,8 @@ export const VAULT_ABI = [
   },
   { type: "function", name: "vaultTier", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "totalPrincipal", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "targetBalance", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "totalReservedTarget", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "depositorCount", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { type: "function", name: "smaugCirculating", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 

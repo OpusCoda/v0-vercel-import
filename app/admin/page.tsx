@@ -15,9 +15,11 @@ import { ManageArbitrators } from '@/components/admin/manage-arbitrators'
 import { ManageResolver } from '@/components/admin/manage-resolver'
 import { SweepPanel } from '@/components/admin/sweep-panel'
 import { DisputesResolutions } from '@/components/admin/disputes-resolutions'
+import { VaultSurplusPanel } from '@/components/admin/vault-surplus-panel'
 import { ConnectWalletButton } from '@/components/landing/connect-wallet-button'
 import { predictionMarketAbi } from '@/lib/abis/prediction-market'
 import { outcomeExchangeAbi } from '@/lib/abis/outcome-exchange'
+import { VAULTS, VAULT_ABI } from '@/lib/yield'
 
 const PREDICTION_MARKET_ADDRESS =
   (process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS as Address) ||
@@ -33,6 +35,7 @@ type AdminTab =
   | 'manage-arbitrators'
   | 'manage-resolver'
   | 'sweep'
+  | 'vault-surplus'
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -65,6 +68,12 @@ export default function AdminPage() {
     functionName: 'owner',
     query: { enabled: isAuthenticated },
   })
+  const { data: vaultOwner } = useReadContract({
+    address: VAULTS.OPUS.vault,
+    abi: VAULT_ABI,
+    functionName: 'owner',
+    query: { enabled: isAuthenticated },
+  })
   const { data: pmIsAdmin } = useReadContract({
     address: PREDICTION_MARKET_ADDRESS,
     abi: predictionMarketAbi,
@@ -75,6 +84,7 @@ export default function AdminPage() {
 
   const isPmOwner = Boolean(address) && pmOwner?.toLowerCase() === address?.toLowerCase()
   const isOeOwner = Boolean(address) && oeOwner?.toLowerCase() === address?.toLowerCase()
+  const isVaultOwner = Boolean(address) && vaultOwner?.toLowerCase() === address?.toLowerCase()
 
   // Tab visibility:
   //   - Disputes & Resolutions: always (default landing).
@@ -89,6 +99,7 @@ export default function AdminPage() {
   const showManageArbitrators = isOeOwner
   const showManageResolver = isPmOwner
   const showSweep = isPmOwner
+  const showVaultSurplus = isVaultOwner
 
   const tabs = useMemo(() => {
     const list: { id: AdminTab; label: string }[] = [
@@ -102,8 +113,9 @@ export default function AdminPage() {
       list.push({ id: 'market-status', label: 'Market Status' })
       list.push({ id: 'sweep', label: 'Unclaimed Sweeps' })
     }
+    if (showVaultSurplus) list.push({ id: 'vault-surplus', label: 'Vault Surplus' })
     return list
-  }, [showCreateMarket, showManageAdmins, showManageArbitrators, showManageResolver, showSweep])
+  }, [showCreateMarket, showManageAdmins, showManageArbitrators, showManageResolver, showSweep, showVaultSurplus])
 
   // If the active tab becomes hidden (e.g. wallet changed), fall back to resolve.
   useEffect(() => {
@@ -240,6 +252,18 @@ export default function AdminPage() {
             </p>
           </div>
           <SweepPanel />
+        </section>
+      )}
+
+      {activeTab === 'vault-surplus' && showVaultSurplus && (
+        <section>
+          <div className="mb-6">
+            <h2 className="font-serif text-2xl font-bold text-[#e8e6e3]">Vault Surplus</h2>
+            <p className="mt-2 font-sans text-sm text-[#7c7a76]">
+              Accrued PLS/PLSX surplus and target-token excess across every yield vault.
+            </p>
+          </div>
+          <VaultSurplusPanel />
         </section>
       )}
     </main>
