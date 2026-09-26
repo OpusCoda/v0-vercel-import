@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { formatUnits, parseUnits, maxUint256 } from "viem"
+import { formatUnits, parseUnits, maxUint256, isAddress } from "viem"
 import {
   useAccount,
   usePublicClient,
@@ -155,6 +155,10 @@ function fmt(v: bigint | undefined, dp = 2, decimals = 18): string {
   return n.toLocaleString(undefined, { maximumFractionDigits: dp })
 }
 
+function shortAddress(value: `0x${string}`): string {
+  return `${value.slice(0, 6)}…${value.slice(-4)}`
+}
+
 function toWei(v: string): bigint {
   try {
     return v.trim() === "" ? 0n : parseUnits(v.trim(), 18)
@@ -272,6 +276,10 @@ export default function AutoCompoundPage() {
   const cfg = VAULTS[active]
 
   const { address, isConnected } = useAccount()
+  const [viewInput, setViewInput] = useState("")
+  const viewAddress = isAddress(viewInput) ? (viewInput as `0x${string}`) : undefined
+  const displayAddress = viewAddress ?? address
+  const isViewingOther = !!viewAddress && (!address || viewAddress.toLowerCase() !== address.toLowerCase())
 
   const [depositAmt, setDepositAmt] = useState("")
   const [withdrawAmt, setWithdrawAmt] = useState("")
@@ -352,19 +360,19 @@ export default function AutoCompoundPage() {
   const { totals: lifetime, error: lifetimeError } = useLifetimeEarned(
     cfg.vault,
     cfg.deployBlock,
-    address,
+    displayAddress,
     historyKey,
   )
 
   const { data: userData, refetch: refetchUser } = useReadContracts({
-    contracts: address
+    contracts: displayAddress
       ? [
-        { address: cfg.vault, abi: VAULT_ABI, functionName: "positionOf", args: [address] },
-        { address: cfg.token, abi: ERC20_ABI, functionName: "balanceOf", args: [address] },
-        { address: cfg.token, abi: ERC20_ABI, functionName: "allowance", args: [address, cfg.vault] },
+        { address: cfg.vault, abi: VAULT_ABI, functionName: "positionOf", args: [displayAddress] },
+        { address: cfg.token, abi: ERC20_ABI, functionName: "balanceOf", args: [displayAddress] },
+        { address: cfg.token, abi: ERC20_ABI, functionName: "allowance", args: [displayAddress, cfg.vault] },
       ]
       : [],
-    query: { enabled: !!address, refetchInterval: 15_000 },
+    query: { enabled: !!displayAddress, refetchInterval: 15_000 },
   })
   useEffect(() => {
     if (!isConfirmed) return
@@ -570,6 +578,25 @@ export default function AutoCompoundPage() {
           )}
         </div>
 
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <input
+            type="text"
+            placeholder="0x… (view any address)"
+            value={viewInput}
+            onChange={(e) => setViewInput(e.target.value.trim())}
+            aria-label="View another wallet address"
+            className="w-full max-w-sm rounded-lg border border-[#292933] bg-[#09090c] px-3 py-2 font-mono text-xs text-[#e8e6e3] outline-none focus:border-[#B87333]/70"
+          />
+          {viewInput && !isAddress(viewInput) && (
+            <span className="font-sans text-[11px] text-[#B87333]">Not a valid address</span>
+          )}
+          {isViewingOther && viewAddress && (
+            <span className="rounded-full border border-[#B87333]/40 px-2.5 py-1 font-sans text-[10px] uppercase tracking-wider text-[#B87333]">
+              Viewing {shortAddress(viewAddress)} — read only
+            </span>
+          )}
+        </div>
+
         <Panel className="overflow-hidden">
           <div className="flex flex-wrap items-start justify-between gap-5 border-b border-[#25252e] px-5 py-4 md:px-7">
             <div>
@@ -677,7 +704,7 @@ export default function AutoCompoundPage() {
                   <Button
                     variant="quiet"
                     onClick={doCompound}
-                    disabled={busy || compoundOut === 0n}
+                    disabled={busy || isViewingOther || compoundOut === 0n}
                   >
                     Compound now {compoundOut > 0n && `(${fmt(compoundOut)} ${cfg.tokenSymbol})`}
                   </Button>
@@ -685,7 +712,7 @@ export default function AutoCompoundPage() {
                     <Button
                       variant="quiet"
                       onClick={doConvert}
-                      disabled={busy || convertOut === 0n}
+                      disabled={busy || isViewingOther || convertOut === 0n}
                     >
                       Convert now {convertOut > 0n && `(${fmt(convertOut, 2, cfg.targetDecimals)} ${cfg.targetSymbol})`}
                     </Button>
@@ -718,7 +745,7 @@ export default function AutoCompoundPage() {
                   </span>
                 </div>
 
-                <Button className="mt-4 w-full" onClick={() => send("claim")} disabled={busy || claimable === 0n}>
+                <Button className="mt-4 w-full" onClick={() => send("claim")} disabled={busy || isViewingOther || claimable === 0n}>
                   Claim {cfg.targetSymbol}
                 </Button>
 
@@ -749,7 +776,7 @@ export default function AutoCompoundPage() {
                 </p>
 
                 <div className="mt-4 flex items-center gap-3">
-                  <Button variant="quiet" onClick={() => send("refreshWeight", [address])} disabled={busy}>
+                  <Button variant="quiet" onClick={() => send("refreshWeight", [address])} disabled={busy || isViewingOther}>
                     Refresh tier
                   </Button>
                   <span className="font-sans text-[11px] text-[#4e525c]">Updates automatically over time</span>
@@ -793,7 +820,7 @@ export default function AutoCompoundPage() {
                           { onError: (e) => setTxError(readableError(e)) },
                         )
                       }}
-                      disabled={busy}
+                      disabled={busy || isViewingOther}
                       className="flex-1"
                     >
                       Approve
@@ -804,7 +831,7 @@ export default function AutoCompoundPage() {
                       send("deposit", [depositWei])
                       setDepositAmt("")
                     }}
-                    disabled={busy || needsApproval || rateNeedsTx || depositWei === 0n}
+                    disabled={busy || isViewingOther || needsApproval || rateNeedsTx || depositWei === 0n}
                     className="flex-1"
                   >
                     Deposit
@@ -838,7 +865,7 @@ export default function AutoCompoundPage() {
                       send("withdraw", [toWei(withdrawAmt)])
                       setWithdrawAmt("")
                     }}
-                    disabled={busy || toWei(withdrawAmt) === 0n}
+                    disabled={busy || isViewingOther || toWei(withdrawAmt) === 0n}
                     className="flex-1"
                   >
                     Withdraw
