@@ -150,7 +150,12 @@ const otherYieldContracts = [
     address: "0x8a6fCf756C154c9968055039e73c0288FFC3ec96",
     url: "https://repo.sourcify.dev/369/0x8a6fCf756C154c9968055039e73c0288FFC3ec96",
   },
-]
+  {
+    name: "SYDE Vault",
+    address: "0x17DB8ca7b50393739183C5573E31633Eb19D275f",
+    url: "https://repo.sourcify.dev/369/0x17DB8ca7b50393739183C5573E31633Eb19D275f",
+  },
+  ]
 
 function AddressRow({
   contract,
