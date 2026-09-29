@@ -155,6 +155,11 @@ const otherYieldContracts = [
     address: "0x17DB8ca7b50393739183C5573E31633Eb19D275f",
     url: "https://repo.sourcify.dev/369/0x17DB8ca7b50393739183C5573E31633Eb19D275f",
   },
+  {
+    name: "SCADA Vault",
+    address: "0xd693e4AeAE3fD8AE796107D3c1B7F2c1a41309d5",
+    url: "https://repo.sourcify.dev/369/0xd693e4AeAE3fD8AE796107D3c1B7F2c1a41309d5",
+  },
   ]
 
 function AddressRow({
