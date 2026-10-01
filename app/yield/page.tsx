@@ -204,6 +204,34 @@ function useLastCompound(vault: `0x${string}`, refreshKey = 0) {
   return ts
 }
 
+function useTargetPriceUsd(tokenAddress: `0x${string}` | undefined) {
+  const [price, setPrice] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setPrice(null)
+    if (!tokenAddress) return
+
+    fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const pairs = (data.pairs ?? []).filter((p: any) => p.priceUsd)
+        if (!pairs.length) return
+        const best = pairs.reduce((a: any, b: any) =>
+          (Number(b.liquidity?.usd) || 0) > (Number(a.liquidity?.usd) || 0) ? b : a,
+        )
+        if (!cancelled) setPrice(Number(best.priceUsd))
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [tokenAddress])
+
+  return price
+}
+
 function useLifetimeEarned(
   vault: `0x${string}`,
   deployBlockInput: bigint | number | string,
@@ -274,6 +302,12 @@ export default function AutoCompoundPage() {
   const options = vaultsForPrincipal(principal)
   const active = options[targetIdx] ?? options[0]
   const cfg = VAULTS[active]
+  const { data: targetTokenAddr } = useReadContract({
+    address: cfg.vault,
+    abi: VAULT_ABI,
+    functionName: "targetToken",
+  })
+  const targetPriceUsd = useTargetPriceUsd(targetTokenAddr as `0x${string}` | undefined)
 
   const { address, isConnected } = useAccount()
   const [viewInput, setViewInput] = useState("")
@@ -735,6 +769,15 @@ export default function AutoCompoundPage() {
 
                 <div className="mt-3 font-sans text-2xl text-[#e8e6e3] tabular-nums">
                   {fmt(claimable, 2, cfg.targetDecimals)}
+                  {targetPriceUsd !== null && claimable > 0n && (
+                    <span className="ml-2 font-sans text-sm font-normal text-[#626672]">
+                      ($
+                      {(
+                        Number(formatUnits(claimable, cfg.targetDecimals)) * targetPriceUsd
+                      ).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      )
+                    </span>
+                  )}
                 </div>
                 <div className="mt-0.5 font-sans text-xs text-[#626672]">{cfg.targetSymbol} ready to claim</div>
 
