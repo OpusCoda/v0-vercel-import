@@ -204,30 +204,51 @@ function useLastCompound(vault: `0x${string}`, refreshKey = 0) {
   return ts
 }
 
-function useTargetPriceUsd(tokenAddress: `0x${string}` | undefined) {
+async function fetchPairPriceUsd(pairAddress: string): Promise<number | null> {
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/pulsechain/${pairAddress}`)
+    const data = await res.json()
+    const price = data?.pair?.priceUsd
+    return price ? Number(price) : null
+  } catch {
+    return null
+  }
+}
+
+function useTargetPriceUsd(tokenAddress: `0x${string}` | undefined, pairOverride?: string) {
   const [price, setPrice] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setPrice(null)
-    if (!tokenAddress) return
 
-    fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`)
-      .then((r) => r.json())
-      .then((data) => {
+    const run = async () => {
+      if (pairOverride) {
+        const price = await fetchPairPriceUsd(pairOverride)
+        if (!cancelled) setPrice(price)
+        return
+      }
+      if (!tokenAddress) return
+
+      try {
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`)
+        const data = await res.json()
         const pairs = (data.pairs ?? []).filter((p: any) => p.priceUsd)
         if (!pairs.length) return
         const best = pairs.reduce((a: any, b: any) =>
           (Number(b.liquidity?.usd) || 0) > (Number(a.liquidity?.usd) || 0) ? b : a,
         )
         if (!cancelled) setPrice(Number(best.priceUsd))
-      })
-      .catch(() => {})
+      } catch {
+        // leave price null
+      }
+    }
 
+    run()
     return () => {
       cancelled = true
     }
-  }, [tokenAddress])
+  }, [tokenAddress, pairOverride])
 
   return price
 }
@@ -307,7 +328,10 @@ export default function AutoCompoundPage() {
     abi: VAULT_ABI,
     functionName: "targetToken",
   })
-  const targetPriceUsd = useTargetPriceUsd(targetTokenAddr as `0x${string}` | undefined)
+  const targetPriceUsd = useTargetPriceUsd(
+    targetTokenAddr as `0x${string}` | undefined,
+    (cfg as any).priceOverridePair,
+  )
 
   const { address, isConnected } = useAccount()
   const [viewInput, setViewInput] = useState("")
