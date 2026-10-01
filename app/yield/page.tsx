@@ -204,6 +204,55 @@ function useLastCompound(vault: `0x${string}`, refreshKey = 0) {
   return ts
 }
 
+async function fetchPairPriceUsd(pairAddress: string): Promise<number | null> {
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/pulsechain/${pairAddress}`)
+    const data = await res.json()
+    const price = data?.pair?.priceUsd
+    return price ? Number(price) : null
+  } catch {
+    return null
+  }
+}
+
+function useTargetPriceUsd(tokenAddress: `0x${string}` | undefined, pairOverride?: string) {
+  const [price, setPrice] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setPrice(null)
+
+    const run = async () => {
+      if (pairOverride) {
+        const price = await fetchPairPriceUsd(pairOverride)
+        if (!cancelled) setPrice(price)
+        return
+      }
+      if (!tokenAddress) return
+
+      try {
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`)
+        const data = await res.json()
+        const pairs = (data.pairs ?? []).filter((p: any) => p.priceUsd)
+        if (!pairs.length) return
+        const best = pairs.reduce((a: any, b: any) =>
+          (Number(b.liquidity?.usd) || 0) > (Number(a.liquidity?.usd) || 0) ? b : a,
+        )
+        if (!cancelled) setPrice(Number(best.priceUsd))
+      } catch {
+        // leave price null
+      }
+    }
+
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [tokenAddress, pairOverride])
+
+  return price
+}
+
 function useLifetimeEarned(
   vault: `0x${string}`,
   deployBlockInput: bigint | number | string,
@@ -274,6 +323,15 @@ export default function AutoCompoundPage() {
   const options = vaultsForPrincipal(principal)
   const active = options[targetIdx] ?? options[0]
   const cfg = VAULTS[active]
+  const { data: targetTokenAddr } = useReadContract({
+    address: cfg.vault,
+    abi: VAULT_ABI,
+    functionName: "targetToken",
+  })
+  const targetPriceUsd = useTargetPriceUsd(
+    targetTokenAddr as `0x${string}` | undefined,
+    (cfg as any).priceOverridePair,
+  )
 
   const { address, isConnected } = useAccount()
   const [viewInput, setViewInput] = useState("")
@@ -735,6 +793,15 @@ export default function AutoCompoundPage() {
 
                 <div className="mt-3 font-sans text-2xl text-[#e8e6e3] tabular-nums">
                   {fmt(claimable, 2, cfg.targetDecimals)}
+                  {targetPriceUsd !== null && claimable > 0n && (
+                    <span className="ml-2 font-sans text-sm font-normal text-[#626672]">
+                      ($
+                      {(
+                        Number(formatUnits(claimable, cfg.targetDecimals)) * targetPriceUsd
+                      ).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      )
+                    </span>
+                  )}
                 </div>
                 <div className="mt-0.5 font-sans text-xs text-[#626672]">{cfg.targetSymbol} ready to claim</div>
 
