@@ -283,6 +283,22 @@ export const VAULTS = {
     minCompoundPct: 0,
     deployBlock: 27752110n,
   },
+  CODA_CV: {
+    key: "CODA_CV" as const,
+    principal: "CODA" as const,
+    vault: "0x05789D00A4E20D385396590C917cACF65EF7aa5F" as Address,
+    token: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" as Address,
+    tokenSymbol: "CODA",
+    rewardSymbol: "PLSX",
+    rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
+    rewardDecimals: 18,
+    targetSymbol: "CV",
+    targetDecimals: 18,
+    isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0,
+    deployBlock: 27753515n,
+  },
 } as const
 
 export type VaultKey = keyof typeof VAULTS
@@ -432,6 +448,14 @@ export const CIRCULATING_EXCLUSIONS: Record<VaultKey, Address[]> = {
     "0x2694f6cB721396256418f33f68700c9a7029A9c1",
   ] as Address[],
   CODA_OMEGA: [
+    "0x0000000000000000000000000000000000000369",
+    "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28",
+    "0xaA73Ad940094d0453AE547f1aCB7eB00A49f729e",
+    "0x85Dc2c3B8b6f341227a461212DFf59c4fF08AFb3",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x2694f6cB721396256418f33f68700c9a7029A9c1",
+  ] as Address[],
+    CODA_CV: [
     "0x0000000000000000000000000000000000000369",
     "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28",
     "0xaA73Ad940094d0453AE547f1aCB7eB00A49f729e",
