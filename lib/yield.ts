@@ -261,6 +261,23 @@ export const VAULTS = {
     minCompoundPct: 0,
     deployBlock: 27671477n,
   },
+    CODA_OMEGA: {
+    key: "CODA_OMEGA" as const,
+    principal: "CODA" as const,
+    vault: "0xd8a64Df150370a591e4c13c8E85ea6006a53a38b" as Address,
+    token: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" as Address,
+    tokenSymbol: "CODA",
+    rewardSymbol: "PLSX",
+    rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
+    rewardDecimals: 18,
+    targetSymbol: "OMEGA",
+    targetDecimals: 18,
+    targetTax: 0.05,
+    isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0,
+    deployBlock: 27752110n,
+  },
 } as const
 
 export type VaultKey = keyof typeof VAULTS
