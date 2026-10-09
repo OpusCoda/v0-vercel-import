@@ -1,5 +1,6 @@
 // lib/yield.ts
 import type { Address } from "viem"
+import { parseAbi } from "viem"
 
 export const VAULTS = {
   OPUS: {
@@ -173,8 +174,10 @@ export const VAULTS = {
     rewardSymbol: "PLSX",
     rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
     rewardDecimals: 18,
+    targetTax: 0.05,
     targetSymbol: "FINVESTA",
     targetDecimals: 8,
+    
     isConverter: true,
     defaultCompoundPct: 50,
     minCompoundPct: 0,
@@ -207,6 +210,7 @@ export const VAULTS = {
     rewardDecimals: 18,
     targetSymbol: "pTGC",
     targetDecimals: 18,
+    targetTax: 0.05,
     isConverter: true,
     defaultCompoundPct: 50,
     minCompoundPct: 0,
@@ -223,6 +227,7 @@ export const VAULTS = {
     rewardDecimals: 18,
     targetSymbol: "UFO",
     targetDecimals: 18,
+    targetTax: 0.06,
     isConverter: true,
     defaultCompoundPct: 50,
     minCompoundPct: 0,
@@ -260,6 +265,23 @@ export const VAULTS = {
     defaultCompoundPct: 50,
     minCompoundPct: 0,
     deployBlock: 27671477n,
+  },
+    CODA_OMEGA: {
+    key: "CODA_OMEGA" as const,
+    principal: "CODA" as const,
+    vault: "0xd8a64Df150370a591e4c13c8E85ea6006a53a38b" as Address,
+    token: "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28" as Address,
+    tokenSymbol: "CODA",
+    rewardSymbol: "PLSX",
+    rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
+    rewardDecimals: 18,
+    targetSymbol: "OMEGA",
+    targetDecimals: 18,
+    targetTax: 0.05,
+    isConverter: true,
+    defaultCompoundPct: 50,
+    minCompoundPct: 0,
+    deployBlock: 27752110n,
   },
 } as const
 
@@ -409,10 +431,26 @@ export const CIRCULATING_EXCLUSIONS: Record<VaultKey, Address[]> = {
     "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
     "0x2694f6cB721396256418f33f68700c9a7029A9c1",
   ] as Address[],
+  CODA_OMEGA: [
+    "0x0000000000000000000000000000000000000369",
+    "0x9F8d74dF6DD3145e858578B0bE1d9B11f41E0A28",
+    "0xaA73Ad940094d0453AE547f1aCB7eB00A49f729e",
+    "0x85Dc2c3B8b6f341227a461212DFf59c4fF08AFb3",
+    "0xFe7cf37AbaA78DA00B83C10fCc635083EA446330",
+    "0x2694f6cB721396256418f33f68700c9a7029A9c1",
+  ] as Address[],
 }
 
 export const SMAUG_ADDRESS =
   "0xf4754Aa585caBf38537A68660469A17E203D8632" as Address
+export const RELAY_ADDRESS =
+  "0x49E6b8E0259C8386D8f22155711136aBeBD74de1" as Address
+
+export const RELAY_ABI = parseAbi([
+  "function status(address vault) view returns (bool enabled, bool compoundAvailable, bool convertAvailable, uint256 compoundIn, uint256 compoundOut, uint256 convertIn, uint256 convertOut, uint256 cap, uint64 lastTouched)",
+  "function pokeCompound(address vault, uint256 minAmountOut, uint256 deadline) returns (uint256 received)",
+  "function pokeConvert(address vault, uint256 minAmountOut, uint256 deadline) returns (uint256 received)",
+])
 
 export const VAULT_ABI = [
   {
