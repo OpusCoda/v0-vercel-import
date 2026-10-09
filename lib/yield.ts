@@ -1,5 +1,6 @@
 // lib/yield.ts
 import type { Address } from "viem"
+import { parseAbi } from "viem"
 
 export const VAULTS = {
   OPUS: {
@@ -173,8 +174,10 @@ export const VAULTS = {
     rewardSymbol: "PLSX",
     rewardToken: "0x95B303987A60C71504D99Aa1b13B4DA07b0790ab" as Address,
     rewardDecimals: 18,
+    targetTax: 0.05,
     targetSymbol: "FINVESTA",
     targetDecimals: 8,
+    
     isConverter: true,
     defaultCompoundPct: 50,
     minCompoundPct: 0,
@@ -207,6 +210,7 @@ export const VAULTS = {
     rewardDecimals: 18,
     targetSymbol: "pTGC",
     targetDecimals: 18,
+    targetTax: 0.05,
     isConverter: true,
     defaultCompoundPct: 50,
     minCompoundPct: 0,
@@ -223,6 +227,7 @@ export const VAULTS = {
     rewardDecimals: 18,
     targetSymbol: "UFO",
     targetDecimals: 18,
+    targetTax: 0.06,
     isConverter: true,
     defaultCompoundPct: 50,
     minCompoundPct: 0,
@@ -438,6 +443,14 @@ export const CIRCULATING_EXCLUSIONS: Record<VaultKey, Address[]> = {
 
 export const SMAUG_ADDRESS =
   "0xf4754Aa585caBf38537A68660469A17E203D8632" as Address
+export const RELAY_ADDRESS =
+  "0x49E6b8E0259C8386D8f22155711136aBeBD74de1" as Address
+
+export const RELAY_ABI = parseAbi([
+  "function status(address vault) view returns (bool enabled, bool compoundAvailable, bool convertAvailable, uint256 compoundIn, uint256 compoundOut, uint256 convertIn, uint256 convertOut, uint256 cap, uint64 lastTouched)",
+  "function pokeCompound(address vault, uint256 minAmountOut, uint256 deadline) returns (uint256 received)",
+  "function pokeConvert(address vault, uint256 minAmountOut, uint256 deadline) returns (uint256 received)",
+])
 
 export const VAULT_ABI = [
   {

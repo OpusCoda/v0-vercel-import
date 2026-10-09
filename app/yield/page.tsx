@@ -593,9 +593,9 @@ export default function AutoCompoundPage() {
           {options.length > 1 && (
             <>
               {/* Desktop: horizontal scroll row */}
-              <div className="hidden min-w-0 flex-1 items-center gap-2 sm:flex">
-                <span className="shrink-0 font-serif text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a99a82]">Rewards:</span>
-                <div className="scrollbar-none flex gap-1 overflow-x-auto pb-1">
+              <div className="hidden min-w-0 flex-1 items-start gap-2 sm:flex">
+               <span className="shrink-0 pt-2 font-serif text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a99a82]">Rewards:</span>
+                <div className="flex flex-wrap gap-1">
                   {options.map((k, i) => (
                     <button
                       key={k}
@@ -653,6 +653,26 @@ export default function AutoCompoundPage() {
             <span className="rounded-full border border-[#B87333]/40 px-2.5 py-1 font-sans text-[10px] uppercase tracking-wider text-[#B87333]">
               Viewing {shortAddress(viewAddress)} — read only
             </span>
+          )}
+        </div>
+        
+        <div className="mb-6 flex flex-wrap gap-x-10 gap-y-4">
+          <Stat
+            label={`${cfg.rewardSymbol} awaiting compound`}
+            value={fmt(pendingRewards, 0)}
+            hint="Held plus owed by the distributor"
+          />
+          <Stat
+            label="Last compounded"
+            value={lastCompound ? timeAgo(lastCompound) : "—"}
+            hint={lastCompound ? undefined : "No compound in the last week"}
+          />
+          {cfg.isConverter && (
+            <Stat
+              label={`Awaiting ${cfg.targetSymbol}`}
+              value={fmt(pendingTargetConversion, 2)}
+              hint={`${cfg.rewardSymbol} already split off for yield`}
+            />
           )}
         </div>
 
@@ -959,7 +979,7 @@ export default function AutoCompoundPage() {
         )}
 
         <div className="mt-6 border-t border-[#1d1d25] pt-5">
-          <div className="grid grid-cols-2 gap-y-5 md:grid-cols-3 md:gap-5 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-y-5 md:grid-cols-3 md:gap-5">
             <Stat
               label={`Total ${cfg.tokenSymbol} deposited`}
               value={fmt(totalPrincipal, 0)}
@@ -971,23 +991,6 @@ export default function AutoCompoundPage() {
               value={avgCompoundPct !== null ? `${avgCompoundPct.toFixed(0)}%` : "—"}
               hint="Weighted by position size"
             />
-            <Stat
-              label={`${cfg.rewardSymbol} awaiting compound`}
-              value={fmt(pendingRewards, 0)}
-              hint="Held plus owed by the distributor"
-            />
-            <Stat
-              label="Last compounded"
-              value={lastCompound ? timeAgo(lastCompound) : "—"}
-              hint={lastCompound ? undefined : "No compound in the last week"}
-            />
-            {cfg.isConverter && (
-              <Stat
-                label={`Awaiting ${cfg.targetSymbol}`}
-                value={fmt(pendingTargetConversion, 2)}
-                hint={`${cfg.rewardSymbol} already split off for yield`}
-              />
-            )}
           </div>
         </div>
 
