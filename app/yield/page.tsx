@@ -691,8 +691,8 @@ export default function AutoCompoundPage() {
                 )}
               </div>
               <p className="mt-2 font-sans text-[11px] text-[#555963]">
-                Anyone can do this manually if they wish. "Compound" reinvests rewards into the vault; "Distribute" makes the
-yield share claimable. If it's greyed out there is nothing yet to run.
+                Anyone can run this manually if they wish. Compound reinvests rewards into the vault; Distribute makes the
+yield share claimable. If it is greyed out there is nothing yet to run.
               </p>
             </div>
           )}
