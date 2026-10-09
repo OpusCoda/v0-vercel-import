@@ -160,6 +160,11 @@ const otherYieldContracts = [
     address: "0xd693e4AeAE3fD8AE796107D3c1B7F2c1a41309d5",
     url: "https://repo.sourcify.dev/369/0xd693e4AeAE3fD8AE796107D3c1B7F2c1a41309d5",
   },
+  {
+    name: "OMEGA Vault",
+    address: "0xd8a64Df150370a591e4c13c8E85ea6006a53a38b",
+    url: "https://repo.sourcify.dev/369/0xd8a64Df150370a591e4c13c8E85ea6006a53a38b",
+  },
   ]
 
 function AddressRow({
