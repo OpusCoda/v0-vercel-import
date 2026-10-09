@@ -165,6 +165,16 @@ const otherYieldContracts = [
     address: "0xd8a64Df150370a591e4c13c8E85ea6006a53a38b",
     url: "https://repo.sourcify.dev/369/0xd8a64Df150370a591e4c13c8E85ea6006a53a38b",
   },
+  {
+    name: "CV Vault",
+    address: "0x05789D00A4E20D385396590C917cACF65EF7aa5F",
+    url: "https://repo.sourcify.dev/369/0x05789D00A4E20D385396590C917cACF65EF7aa5F",
+  },
+  {
+    name: "SWARM Vault",
+    address: "0x3315ea30C99E06344642E40B9AA0d373ae775EDA",
+    url: "https://repo.sourcify.dev/369/0x3315ea30C99E06344642E40B9AA0d373ae775EDA",
+  },
   ]
 
 function AddressRow({
