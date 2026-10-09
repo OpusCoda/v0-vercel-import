@@ -28,6 +28,8 @@ import {
   COMPOUNDED_EVENT,
   SETTLED_EVENT,
   CLAIMED_EVENT,
+  RELAY_ADDRESS,
+  RELAY_ABI,
   type PrincipalKey,
 } from "@/lib/yield"
 
@@ -36,6 +38,7 @@ const BORDER = "#25252e"
 const BUY_TAX = 0.05
 const SLIPPAGE = 0.03
 const DEADLINE_SECONDS = 300
+const NO_RELAY = RELAY_ADDRESS === "0x0000000000000000000000000000000000000000"
 
 function Panel({
   children,
@@ -496,50 +499,48 @@ export default function AutoCompoundPage() {
 
   const compoundedTotal = lifetime ? lifetime.compounded + pendingIn : undefined
 
-  // ── Manual owner/keeper trigger ──────────────────────────────────
-  // compound() and convertToTarget() are both keeper/owner-gated on-chain
-  // (NotAuthorized otherwise) — this section only renders for a connected
-  // wallet matching either address on this specific vault. Two separate
-  // transactions: the contracts have no combined function.
-  const { data: authData } = useReadContracts({
-    contracts: [
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "owner" },
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "keeper" },
-      { address: cfg.vault, abi: VAULT_ABI, functionName: "quoteCompound" },
-    ],
-    query: { enabled: !!address, refetchInterval: 30_000 },
+  // ── Public trigger via KeeperRelay ───────────────────────────────
+  // status() folds in paused / disabled / over-cap, so the two flags are
+  // all the buttons need. The floor is computed here from a quote read a
+  // moment ago; the relay only checks it is not absurdly low.
+  const { data: relayStatus, refetch: refetchRelay } = useReadContract({
+    address: RELAY_ADDRESS,
+    abi: RELAY_ABI,
+    functionName: "status",
+    args: [cfg.vault],
+    query: { enabled: !NO_RELAY, refetchInterval: 30_000 },
   })
+  useEffect(() => {
+    if (!isConfirmed || NO_RELAY) return
+    refetchRelay()
+  }, [isConfirmed, refetchRelay])
 
-  const vaultOwner = authData?.[0]?.result as `0x${string}` | undefined
-  const vaultKeeper = authData?.[1]?.result as `0x${string}` | undefined
-  const isAuthorized =
-    !!address &&
-    (address.toLowerCase() === vaultOwner?.toLowerCase() ||
-      address.toLowerCase() === vaultKeeper?.toLowerCase())
+  const [relayEnabled, compoundAvailable, convertAvailable, , rCompoundOut, , rConvertOut] =
+    (relayStatus as
+      | readonly [boolean, boolean, boolean, bigint, bigint, bigint, bigint, bigint, bigint]
+      | undefined) ?? [false, false, false, 0n, 0n, 0n, 0n, 0n, 0n]
 
-  const compoundQuote = authData?.[2]?.result as readonly [bigint, bigint] | undefined
-  const [, compoundOut] = compoundQuote ?? [0n, 0n]
+  const targetTax: number = (cfg as any).targetTax ?? 0
 
-  const { data: convertQuoteData } = useReadContract({
-    address: cfg.vault,
-    abi: VAULT_ABI,
-    functionName: "quoteConvert",
-    query: { enabled: isAuthorized && cfg.isConverter, refetchInterval: 30_000 },
-  })
-  const [, convertOut] = (convertQuoteData as readonly [bigint, bigint] | undefined) ?? [0n, 0n]
+  const poke = (fn: "pokeCompound" | "pokeConvert", minOut: bigint) => {
+    setTxError(null)
+    const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_SECONDS)
+    writeContract(
+      { address: RELAY_ADDRESS, abi: RELAY_ABI, functionName: fn, args: [cfg.vault, minOut, deadline] },
+      { onError: (e) => setTxError(readableError(e)) },
+    )
+  }
 
   const doCompound = () => {
-    if (compoundOut === 0n) return
-    const minOut = (compoundOut * BigInt(Math.round((1 - BUY_TAX) * (1 - SLIPPAGE) * 10000))) / 10000n
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_SECONDS)
-    send("compound", [minOut, deadline])
+    if (!compoundAvailable) return
+    const factor = BigInt(Math.round((1 - BUY_TAX) * (1 - SLIPPAGE) * 10000))
+    poke("pokeCompound", (rCompoundOut * factor) / 10000n)
   }
 
   const doConvert = () => {
-    if (convertOut === 0n) return
-    const minOut = (convertOut * BigInt(Math.round((1 - SLIPPAGE) * 10000))) / 10000n
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_SECONDS)
-    send("convertToTarget", [minOut, deadline])
+    if (!convertAvailable) return
+    const factor = BigInt(Math.round((1 - targetTax) * (1 - SLIPPAGE) * 10000))
+    poke("pokeConvert", (rConvertOut * factor) / 10000n)
   }
 
   return (
@@ -755,29 +756,22 @@ export default function AutoCompoundPage() {
 
         {isConnected ? (
           <>
-            {isAuthorized && (
+            {relayEnabled && (
               <Panel className="mt-4 p-5 md:p-6">
-                <SectionLabel>Manual trigger (owner/keeper only)</SectionLabel>
+                <SectionLabel>Run the vault yourself</SectionLabel>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <Button
-                    variant="quiet"
-                    onClick={doCompound}
-                    disabled={busy || isViewingOther || compoundOut === 0n}
-                  >
-                    Compound now {compoundOut > 0n && `(${fmt(compoundOut)} ${cfg.tokenSymbol})`}
+                  <Button variant="quiet" onClick={doCompound} disabled={busy || !compoundAvailable}>
+                    Compound now
                   </Button>
                   {cfg.isConverter && (
-                    <Button
-                      variant="quiet"
-                      onClick={doConvert}
-                      disabled={busy || isViewingOther || convertOut === 0n}
-                    >
-                      Convert now {convertOut > 0n && `(${fmt(convertOut, 2, cfg.targetDecimals)} ${cfg.targetSymbol})`}
+                    <Button variant="quiet" onClick={doConvert} disabled={busy || !convertAvailable}>
+                      Convert now
                     </Button>
                   )}
                 </div>
                 <p className="mt-2 font-sans text-[11px] text-[#555963]">
-                  Two separate transactions — compounding and converting run independently on-chain.
+                  Anyone can do this and pays the gas. Two separate transactions. Greyed out means there is
+                  nothing to run, or the amount is above the public limit and the keeper handles it.
                 </p>
               </Panel>
             )}
