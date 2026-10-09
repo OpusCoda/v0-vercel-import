@@ -656,25 +656,47 @@ export default function AutoCompoundPage() {
           )}
         </div>
         
-        <div className="mb-6 flex flex-wrap gap-x-10 gap-y-4">
-          <Stat
-            label={`${cfg.rewardSymbol} awaiting compound`}
-            value={fmt(pendingRewards, 0)}
-            hint="Held plus owed by the distributor"
-          />
-          <Stat
-            label="Last compounded"
-            value={lastCompound ? timeAgo(lastCompound) : "—"}
-            hint={lastCompound ? undefined : "No compound in the last week"}
-          />
-          {cfg.isConverter && (
+        <Panel className="mb-4 p-5 md:p-6">
+          <div className="flex flex-wrap gap-x-10 gap-y-4">
             <Stat
-              label={`Awaiting ${cfg.targetSymbol}`}
-              value={fmt(pendingTargetConversion, 2)}
-              hint={`${cfg.rewardSymbol} already split off for yield`}
+              label={`${cfg.rewardSymbol} awaiting compound`}
+              value={fmt(pendingRewards, 0)}
+              hint="Held plus owed by the distributor"
             />
+            <Stat
+              label="Last compounded"
+              value={lastCompound ? timeAgo(lastCompound) : "—"}
+              hint={lastCompound ? undefined : "No compound in the last week"}
+            />
+            {cfg.isConverter && (
+              <Stat
+                label={`Awaiting ${cfg.targetSymbol}`}
+                value={fmt(pendingTargetConversion, 2)}
+                hint={`${cfg.rewardSymbol} already split off for yield`}
+              />
+            )}
+          </div>
+
+          {isConnected && relayEnabled && (
+            <div className="mt-5 border-t border-[#202029] pt-4">
+              <SectionLabel>Run the vault yourself</SectionLabel>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <Button variant="quiet" onClick={doCompound} disabled={busy || !compoundAvailable}>
+                  Compound
+                </Button>
+                {cfg.isConverter && (
+                  <Button variant="quiet" onClick={doConvert} disabled={busy || !convertAvailable}>
+                    Distribute
+                  </Button>
+                )}
+              </div>
+              <p className="mt-2 font-sans text-[11px] text-[#555963]">
+                Anyone can do this manually if they wish. "Compound" reinvests rewards into the vault; "Distribute" makes the
+yield share claimable. If it's greyed out there is nothing yet to run.
+              </p>
+            </div>
           )}
-        </div>
+        </Panel>
 
         <Panel className="overflow-hidden">
           <div className="flex flex-wrap items-start justify-between gap-5 border-b border-[#25252e] px-5 py-4 md:px-7">
@@ -776,25 +798,6 @@ export default function AutoCompoundPage() {
 
         {isConnected ? (
           <>
-            {relayEnabled && (
-              <Panel className="mt-4 p-5 md:p-6">
-                <SectionLabel>Run the vault yourself</SectionLabel>
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <Button variant="quiet" onClick={doCompound} disabled={busy || !compoundAvailable}>
-                    Compound now
-                  </Button>
-                  {cfg.isConverter && (
-                    <Button variant="quiet" onClick={doConvert} disabled={busy || !convertAvailable}>
-                      Convert now
-                    </Button>
-                  )}
-                </div>
-                <p className="mt-2 font-sans text-[11px] text-[#555963]">
-                  Anyone can do this and pays the gas. Two separate transactions. Greyed out means there is
-                  nothing to run, or the amount is above the public limit and the keeper handles it.
-                </p>
-              </Panel>
-            )}
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <Panel className="p-5 md:p-6">
