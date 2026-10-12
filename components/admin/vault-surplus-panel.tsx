@@ -1,14 +1,26 @@
 "use client"
 
-import { useMemo } from "react"
-import { useReadContracts } from "wagmi"
-import { formatUnits } from "viem"
+import { useEffect, useMemo, useState } from "react"
+import { useAccount, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from "wagmi"
+import { formatUnits, parseAbi } from "viem"
 import { VAULTS, VAULT_ABI, type VaultKey } from "@/lib/yield"
 
 const VAULT_LIST = Object.values(VAULTS)
 
+// Owner functions of the vault contracts (not necessarily in VAULT_ABI).
+const ADMIN_ABI = parseAbi([
+  "function owner() view returns (address)",
+  "function targetToken() view returns (address)",
+  "function withdrawSurplus(address to, uint256 amount)",
+  "function rescueToken(address token, address to, uint256 amount)",
+])
+
 function fmtAmount(wei: bigint, decimals = 18, dp = 2): string {
   return Number(formatUnits(wei, decimals)).toLocaleString(undefined, { maximumFractionDigits: dp })
+}
+
+function short(addr?: string): string {
+  return addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "—"
 }
 
 interface SurplusRow {
@@ -20,6 +32,8 @@ interface SurplusRow {
   targetDecimals: number
   isConverter: boolean
   surplus: bigint
+  owner?: `0x${string}`
+  targetToken?: `0x${string}`
   excessTarget?: bigint
 }
 
@@ -28,16 +42,21 @@ interface SurplusRow {
  * gap) across every yield vault, plus target-token excess for converter
  * vaults whose target carries its own reflections (e.g. pTGC, UFO) —
  * tokens that land on the contract outside the normal compound/convert
- * flow and never touch totalReservedTarget.
+ * flow and never touch totalReservedTarget. The connected owner wallet can
+ * withdraw both to itself.
  */
 export function VaultSurplusPanel() {
+  const { address } = useAccount()
+
   const contracts = useMemo(() => {
     const c: any[] = []
     for (const v of VAULT_LIST) {
       c.push({ address: v.vault, abi: VAULT_ABI, functionName: "accruedSurplus" })
+      c.push({ address: v.vault, abi: ADMIN_ABI, functionName: "owner" })
       if (v.isConverter) {
         c.push({ address: v.vault, abi: VAULT_ABI, functionName: "targetBalance" })
         c.push({ address: v.vault, abi: VAULT_ABI, functionName: "totalReservedTarget" })
+        c.push({ address: v.vault, abi: ADMIN_ABI, functionName: "targetToken" })
       }
     }
     return c
@@ -55,15 +74,19 @@ export function VaultSurplusPanel() {
     let idx = 0
     for (const v of VAULT_LIST) {
       const surplusRes = reads[idx++]
+      const ownerRes = reads[idx++]
       let excessTarget: bigint | undefined
+      let targetToken: `0x${string}` | undefined
       if (v.isConverter) {
         const targetBalRes = reads[idx++]
         const reservedRes = reads[idx++]
+        const targetTokenRes = reads[idx++]
         if (targetBalRes?.status === "success" && reservedRes?.status === "success") {
           const targetBal = targetBalRes.result as bigint
           const reserved = reservedRes.result as bigint
           excessTarget = targetBal > reserved ? targetBal - reserved : 0n
         }
+        if (targetTokenRes?.status === "success") targetToken = targetTokenRes.result as `0x${string}`
       }
       out.push({
         key: v.key,
@@ -74,6 +97,8 @@ export function VaultSurplusPanel() {
         targetDecimals: v.targetDecimals,
         isConverter: v.isConverter,
         surplus: surplusRes?.status === "success" ? (surplusRes.result as bigint) : 0n,
+        owner: ownerRes?.status === "success" ? (ownerRes.result as `0x${string}`) : undefined,
+        targetToken,
         excessTarget,
       })
     }
@@ -90,6 +115,60 @@ export function VaultSurplusPanel() {
     return { pls, plsx }
   }, [rows])
 
+  // One owner shown at the top when every vault has the same one; otherwise per vault.
+  const owners = useMemo(() => Array.from(new Set(rows.map((r) => r.owner?.toLowerCase()).filter(Boolean))), [rows])
+  const sharedOwner = owners.length === 1 ? rows.find((r) => r.owner)?.owner : undefined
+
+  // ── withdrawals ─────────────────────────────────────────────────────
+  const { writeContractAsync } = useWriteContract()
+  const [pending, setPending] = useState<{ id: string; hash?: `0x${string}` } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const { isSuccess: confirmed, isError: failed } = useWaitForTransactionReceipt({ hash: pending?.hash })
+
+  useEffect(() => {
+    if (confirmed || failed) {
+      if (failed) setError("Transaction failed")
+      setPending(null)
+      refetch()
+    }
+  }, [confirmed, failed, refetch])
+
+  async function send(id: string, call: () => Promise<`0x${string}`>) {
+    setError(null)
+    setPending({ id })
+    try {
+      const hash = await call()
+      setPending({ id, hash })
+    } catch (e: any) {
+      setError(e?.shortMessage ?? e?.message ?? "Transaction rejected")
+      setPending(null)
+    }
+  }
+
+  function withdrawSurplus(row: SurplusRow) {
+    if (!address) return
+    send(`${row.key}-surplus`, () =>
+      writeContractAsync({ address: row.vault, abi: ADMIN_ABI, functionName: "withdrawSurplus", args: [address, row.surplus] }),
+    )
+  }
+
+  function withdrawExcess(row: SurplusRow) {
+    if (!address || !row.targetToken || !row.excessTarget) return
+    send(`${row.key}-excess`, () =>
+      writeContractAsync({
+        address: row.vault,
+        abi: ADMIN_ABI,
+        functionName: "rescueToken",
+        args: [row.targetToken!, address, row.excessTarget!],
+      }),
+    )
+  }
+
+  const isOwner = (row: SurplusRow) => !!address && !!row.owner && address.toLowerCase() === row.owner.toLowerCase()
+
+  const btn =
+    "rounded border border-[#B87333]/30 bg-[#1a1a20] px-2.5 py-1 font-sans text-[11px] font-semibold text-[#B87333] transition-colors hover:bg-[#2a2a35] disabled:cursor-not-allowed disabled:opacity-40"
+
   return (
     <div className="space-y-4">
       <div>
@@ -98,8 +177,25 @@ export function VaultSurplusPanel() {
           accruedSurplus is PLS/PLSX skimmed from the tier-boost gap on each yield vault —
           withdrawable via withdrawSurplus() or convertSurplusToTarget(). Target-token excess is
           reflections or other tokens that landed on the contract outside the normal
-          compound/convert flow — withdrawable via rescueToken().
+          compound/convert flow — withdrawable via rescueToken(). Withdrawals go to the connected
+          owner wallet.
         </p>
+        <p className="mt-2 font-sans text-[11px] text-[#7c7a76]">
+          Owner:{" "}
+          {sharedOwner ? (
+            <a
+              href={`https://scan.pulsechain.com/address/${sharedOwner}`}
+              target="_blank"
+              rel="noreferrer"
+              className="font-mono text-[#e8e6e3] hover:text-[#B87333]"
+            >
+              {sharedOwner}
+            </a>
+          ) : (
+            <span className="text-[#e8e6e3]">{owners.length > 1 ? "differs per vault (see below)" : "—"}</span>
+          )}
+        </p>
+        {error && <p className="mt-2 font-sans text-[11px] text-red-400">{error}</p>}
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -121,25 +217,46 @@ export function VaultSurplusPanel() {
         <p className="py-4 font-sans text-sm text-[#7c7a76]">Loading vault surplus…</p>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
-          {rows.map((row) => (
-            <div key={row.key} className="rounded-lg border border-[#2a2a35] bg-[#0d0d12] p-4">
-              <div className="mb-2 font-sans text-sm font-semibold text-[#e8e6e3]">{row.name}</div>
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="font-sans text-xs text-[#7c7a76]">{row.rewardSymbol} surplus</span>
-                <span className="font-sans text-sm font-semibold text-[#B87333]">
-                  {fmtAmount(row.surplus)} {row.rewardSymbol}
-                </span>
-              </div>
-              {row.isConverter && row.excessTarget !== undefined && row.excessTarget > 0n && (
-                <div className="mt-1 flex items-baseline justify-between gap-3">
-                  <span className="font-sans text-xs text-[#7c7a76]">{row.targetSymbol} excess</span>
-                  <span className="font-sans text-sm font-semibold text-orange-400">
-                    +{fmtAmount(row.excessTarget, row.targetDecimals)} {row.targetSymbol}
+          {rows.map((row) => {
+            const owner = isOwner(row)
+            const busy = pending !== null
+            return (
+              <div key={row.key} className="rounded-lg border border-[#2a2a35] bg-[#0d0d12] p-4">
+                <div className="mb-2 flex items-baseline justify-between gap-3">
+                  <span className="font-sans text-sm font-semibold text-[#e8e6e3]">{row.name}</span>
+                  {!sharedOwner && (
+                    <span className="font-mono text-[10px] text-[#7c7a76]">owner {short(row.owner)}</span>
+                  )}
+                </div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-sans text-xs text-[#7c7a76]">{row.rewardSymbol} surplus</span>
+                  <span className="font-sans text-sm font-semibold text-[#B87333]">
+                    {fmtAmount(row.surplus)} {row.rewardSymbol}
                   </span>
                 </div>
-              )}
-            </div>
-          ))}
+                {row.isConverter && row.excessTarget !== undefined && row.excessTarget > 0n && (
+                  <div className="mt-1 flex items-baseline justify-between gap-3">
+                    <span className="font-sans text-xs text-[#7c7a76]">{row.targetSymbol} excess</span>
+                    <span className="font-sans text-sm font-semibold text-orange-400">
+                      +{fmtAmount(row.excessTarget, row.targetDecimals)} {row.targetSymbol}
+                    </span>
+                  </div>
+                )}
+                {owner && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button className={btn} disabled={busy || row.surplus === 0n} onClick={() => withdrawSurplus(row)}>
+                      {pending?.id === `${row.key}-surplus` ? "Withdrawing…" : `Withdraw ${row.rewardSymbol}`}
+                    </button>
+                    {row.isConverter && !!row.excessTarget && row.excessTarget > 0n && row.targetToken && (
+                      <button className={btn} disabled={busy} onClick={() => withdrawExcess(row)}>
+                        {pending?.id === `${row.key}-excess` ? "Withdrawing…" : `Withdraw ${row.targetSymbol}`}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 
