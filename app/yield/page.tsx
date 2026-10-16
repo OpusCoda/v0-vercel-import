@@ -236,7 +236,11 @@ function useTargetPriceUsd(tokenAddress: `0x${string}` | undefined, pairOverride
       try {
         const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`)
         const data = await res.json()
-        const pairs = (data.pairs ?? []).filter((p: any) => p.priceUsd)
+        const pairs = (data.pairs ?? []).filter(
+        (p: any) =>
+          p.priceUsd &&
+          p.baseToken?.address?.toLowerCase() === tokenAddress.toLowerCase(),
+        )
         if (!pairs.length) return
         const best = pairs.reduce((a: any, b: any) =>
           (Number(b.liquidity?.usd) || 0) > (Number(a.liquidity?.usd) || 0) ? b : a,
