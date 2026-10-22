@@ -439,6 +439,36 @@ export default function AutoCompoundPage() {
       : [],
     query: { enabled: !!displayAddress, refetchInterval: 15_000 },
   })
+  
+  const allVaults = vaultsForPrincipal(principal)
+
+  const { data: aggregateData } = useReadContracts({
+    contracts: displayAddress
+      ? allVaults.map((k) => ({
+          address: VAULTS[k].vault,
+          abi: VAULT_ABI,
+          functionName: "positionOf" as const,
+          args: [displayAddress] as const,
+        }))
+      : [],
+    query: { enabled: !!displayAddress, refetchInterval: 30_000 },
+  })
+
+  const aggregate = useMemo(() => {
+    let total = 0n
+    let count = 0
+    aggregateData?.forEach((r) => {
+      const pos = r.result as readonly [bigint, bigint, bigint, bigint, bigint, bigint, number] | undefined
+      if (!pos) return
+      const bal = pos[0] + pos[4]
+      if (bal > 0n) {
+        total += bal
+        count++
+      }
+    })
+    return { total, count }
+  }, [aggregateData])
+  
   useEffect(() => {
     if (!isConfirmed) return
     refetchUser()
@@ -572,6 +602,12 @@ export default function AutoCompoundPage() {
             Deposit Opus or Coda, choose your split between compounding and yield, and the vault takes care of the rest.
           </p>
         </header>
+
+        {aggregate.count > 0 && (
+          <p className="mb-3 font-sans text-sm text-[#a8abb2]">
+            You have {fmt(aggregate.total)} {principal} across {aggregate.count} Vault{aggregate.count === 1 ? "" : "s"}
+          </p>
+        )}
 
         {/* Principal + reward selector — kept on one visual row to save vertical space */}
         <div className="mb-6 flex flex-wrap items-center gap-3">
