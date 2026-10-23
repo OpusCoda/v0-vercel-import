@@ -287,7 +287,7 @@ function usdFmt(n: number): string {
   return `$${Math.round(n).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
 }
 
-const WHOLE_TOKENS = new Set(["OPUS", "CODA", "PLS", "PLSX", "PRVX", "HEX", "EHEX"])
+const WHOLE_TOKENS = new Set(["OPUS", "CODA", "PLS", "PLSX", "PRVX", "HEX", "EHEX", "PTGC", "UFO"])
 
 // Whole-number display for the listed tokens, otherwise the given decimals.
 function dpFor(symbol: string, fallback: number): number {
