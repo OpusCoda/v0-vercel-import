@@ -1,7 +1,7 @@
 // app/yield/page.tsx
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef useState } from "react"
 import { formatUnits, parseUnits, maxUint256, isAddress } from "viem"
 import {
   useAccount,
@@ -324,52 +324,79 @@ function useLifetimeEarned(
   return { totals, error }
 }
 
-// Scans CLAIMED logs per vault. Only runs while `enabled` (the summary panel is open).
+type ClaimedState = {
+  status: "idle" | "loading" | "ready"
+  data: Record<string, bigint>
+}
+
+// Scans CLAIMED logs for all vaults in parallel. Only runs while `enabled`
+// (the summary panel is open). Cached per wallet until refreshKey changes.
 function useClaimedPerVault(
   vaults: { key: VaultKey; vault: `0x${string}`; deployBlock: bigint }[],
   account: `0x${string}` | undefined,
   enabled: boolean,
-) {
+  refreshKey = 0,
+): ClaimedState {
   const client = usePublicClient()
-  const [claimedByVault, setClaimedByVault] = useState<Record<string, bigint>>({})
+  const cache = useRef(new Map<string, Record<string, bigint>>())
+  const [state, setState] = useState<ClaimedState>({ status: "idle", data: {} })
 
   useEffect(() => {
     let cancelled = false
-    if (!client || !account || !enabled) return
+    if (!client || !account || !enabled || vaults.length === 0) {
+      setState({ status: "idle", data: {} })
+      return
+    }
+
+    const cacheKey = `${account.toLowerCase()}-${refreshKey}`
+    const cached = cache.current.get(cacheKey)
+    if (cached) {
+      setState({ status: "ready", data: cached })
+      return
+    }
+
+    setState({ status: "loading", data: {} })
 
     const run = async () => {
-      const latest = await client.getBlockNumber()
-      const result: Record<string, bigint> = {}
-      for (const v of vaults) {
-        let claimed = 0n
-        try {
-          for (let from = v.deployBlock; from <= latest; from += 9_000n) {
-            const to = from + 8_999n > latest ? latest : from + 8_999n
-            const logs = await client.getLogs({
-              address: v.vault,
-              event: CLAIMED_EVENT,
-              args: { user: account },
-              fromBlock: from,
-              toBlock: to,
-            })
-            for (const log of logs) claimed += log.args.amount ?? 0n
-            if (cancelled) return
-          }
-        } catch {
-          // leave this vault at 0n on failure
-        }
-        result[v.key] = claimed
+      try {
+        const latest = await client.getBlockNumber()
+        const results = await Promise.all(
+          vaults.map(async (v) => {
+            let claimed = 0n
+            try {
+              for (let from = v.deployBlock; from <= latest; from += 9_000n) {
+                const to = from + 8_999n > latest ? latest : from + 8_999n
+                const logs = await client.getLogs({
+                  address: v.vault,
+                  event: CLAIMED_EVENT,
+                  args: { user: account },
+                  fromBlock: from,
+                  toBlock: to,
+                })
+                for (const log of logs) claimed += log.args.amount ?? 0n
+              }
+            } catch {
+              // a failed vault shows 0 rather than blocking the whole table
+            }
+            return [v.key, claimed] as const
+          }),
+        )
+        if (cancelled) return
+        const data = Object.fromEntries(results) as Record<string, bigint>
+        cache.current.set(cacheKey, data)
+        setState({ status: "ready", data })
+      } catch {
+        if (!cancelled) setState({ status: "ready", data: {} })
       }
-      if (!cancelled) setClaimedByVault(result)
     }
 
     run()
     return () => {
       cancelled = true
     }
-  }, [client, account, enabled, vaults])
+  }, [client, account, enabled, vaults, refreshKey])
 
-  return claimedByVault
+  return state
 }
 
 export default function AutoCompoundPage() {
@@ -542,7 +569,8 @@ export default function AutoCompoundPage() {
     [allVaults],
   )
 
-  const claimedByVault = useClaimedPerVault(vaultMeta, displayAddress, summaryOpen)
+const claimed = useClaimedPerVault(vaultMeta, displayAddress, summaryOpen, historyKey)
+const summaryReady = claimed.status === "ready" && aggregateData !== undefined
 
   useEffect(() => {
     if (!isConfirmed) return
@@ -766,42 +794,52 @@ export default function AutoCompoundPage() {
           )}
         </div>
 
-        <details
-          className="mb-6 rounded-lg border border-[#292933] bg-[#0b0b0f] px-4 py-3"
-          onToggle={(e) => setSummaryOpen((e.target as HTMLDetailsElement).open)}
-        >
-          <summary className="cursor-pointer font-sans text-sm font-medium text-[#d39150]">
-            Vault summary
-          </summary>
-          <div className="mt-4 overflow-x-auto">
-            <div className="grid min-w-[480px] grid-cols-[1.2fr_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 font-sans text-sm">
-              <div className="text-[11px] uppercase tracking-[0.14em] text-[#b5b9c2]">Vault</div>
-              <div className="text-right text-[11px] uppercase tracking-[0.14em] text-[#b5b9c2]">Claimable</div>
-              <div className="text-right text-[11px] uppercase tracking-[0.14em] text-[#b5b9c2]">Claimed</div>
-              <div className="text-right text-[11px] uppercase tracking-[0.14em] text-[#b5b9c2]">Balance</div>
+<details
+  className="mb-6 rounded-lg border border-[#3a3a46] bg-[#0b0b0f] px-4 py-3"
+  onToggle={(e) => setSummaryOpen((e.target as HTMLDetailsElement).open)}
+>
+  <summary className="cursor-pointer font-sans text-sm font-medium text-[#f0c08a]">
+    Vault summary
+  </summary>
+  <div className="mt-4 overflow-x-auto">
+    {!displayAddress ? (
+      <p className="font-sans text-sm text-[#e8e6e3]">
+        Connect a wallet or enter an address to see the summary.
+      </p>
+    ) : !summaryReady ? (
+      <p className="font-sans text-sm text-[#e8e6e3]">
+        Loading your vault data… this can take a moment the first time.
+      </p>
+    ) : (
+      <>
+        <div className="grid min-w-[480px] grid-cols-[1.2fr_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 font-sans text-sm">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#d1d5db]">Vault</div>
+          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#d1d5db]">Claimable</div>
+          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#d1d5db]">Claimed</div>
+          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#d1d5db]">Balance</div>
 
-              {vaultSummary.map((v) => (
-                <div key={v.key} className="contents">
-                  <div className="font-medium text-[#ffffff]">{VAULTS[v.key].targetSymbol}</div>
-                  <div className="text-right tabular-nums text-[#ffffff]">
-                    {fmt(v.claimable, 4, VAULTS[v.key].targetDecimals)} {VAULTS[v.key].targetSymbol}
-                  </div>
-                  <div className="text-right tabular-nums text-[#ffffff]">
-                    {claimedByVault[v.key] !== undefined
-                      ? `${fmt(claimedByVault[v.key], 4, VAULTS[v.key].targetDecimals)} ${VAULTS[v.key].targetSymbol}`
-                      : "—"}
-                  </div>
-                  <div className="text-right tabular-nums text-[#ffffff]">
-                    {fmt(v.balance)} {principal}
-                  </div>
-                </div>
-              ))}
+          {vaultSummary.map((v) => (
+            <div key={v.key} className="contents">
+              <div className="font-medium text-[#ffffff]">{VAULTS[v.key].targetSymbol}</div>
+              <div className="text-right tabular-nums text-[#ffffff]">
+                {fmt(v.claimable, 4, VAULTS[v.key].targetDecimals)} {VAULTS[v.key].targetSymbol}
+              </div>
+              <div className="text-right tabular-nums text-[#ffffff]">
+                {fmt(claimed.data[v.key] ?? 0n, 4, VAULTS[v.key].targetDecimals)} {VAULTS[v.key].targetSymbol}
+              </div>
+              <div className="text-right tabular-nums text-[#ffffff]">
+                {fmt(v.balance)} {principal}
+              </div>
             </div>
-            {vaultSummary.length === 0 && (
-              <p className="mt-3 font-sans text-sm text-[#b5b9c2]">No positions in this token.</p>
-            )}
-          </div>
-        </details>
+          ))}
+        </div>
+        {vaultSummary.length === 0 && (
+          <p className="mt-3 font-sans text-sm text-[#e8e6e3]">No positions in this token.</p>
+        )}
+      </>
+    )}
+  </div>
+</details>
 
         <Panel className="mb-4 p-5 md:p-6">
           <div className="flex flex-wrap gap-x-10 gap-y-4">
