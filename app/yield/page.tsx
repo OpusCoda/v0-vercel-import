@@ -1,7 +1,7 @@
 // app/yield/page.tsx
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { formatUnits, parseUnits, maxUint256, isAddress } from "viem"
 import {
   useAccount,
@@ -26,8 +26,6 @@ import {
   smaugForNextTier,
   timeAgo,
   COMPOUNDED_EVENT,
-  SETTLED_EVENT,
-  CLAIMED_EVENT,
   RELAY_ADDRESS,
   RELAY_ABI,
   type PrincipalKey,
@@ -329,142 +327,38 @@ function useTargetPriceUsd(tokenAddress: `0x${string}` | undefined, pairOverride
   return price
 }
 
-function useLifetimeEarned(
-  vault: `0x${string}`,
-  deployBlockInput: bigint | number | string,
-  account?: `0x${string}`,
-  refreshKey = 0,
-) {
-  const deployBlock = BigInt(deployBlockInput)
-  const client = usePublicClient()
-  const [totals, setTotals] = useState<{ compounded: bigint; claimed: bigint } | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    if (!client || !account) {
-      setTotals(null)
-      return
-    }
-    if (deployBlock === 0n) {
-      setError("deployBlock not set in lib/yield.ts")
-      return
-    }
-
-    const run = async () => {
-      try {
-        const latest = await client.getBlockNumber()
-        const CHUNK = 9_000n
-        let compounded = 0n
-        let claimed = 0n
-
-        for (let from = deployBlock; from <= latest; from += CHUNK) {
-          const to = from + CHUNK - 1n > latest ? latest : from + CHUNK - 1n
-          const [settled, claims] = await Promise.all([
-            client.getLogs({ address: vault, event: SETTLED_EVENT, args: { user: account }, fromBlock: from, toBlock: to }),
-            client.getLogs({ address: vault, event: CLAIMED_EVENT, args: { user: account }, fromBlock: from, toBlock: to }),
-          ])
-          for (const log of settled) compounded += log.args.compounded ?? 0n
-          for (const log of claims) claimed += log.args.amount ?? 0n
-          if (cancelled) return
-        }
-
-        if (!cancelled) {
-          setTotals({ compounded, claimed })
-          setError(null)
-        }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message.split("\n")[0] : String(e)
-        console.error("[yield] lifetime scan failed:", e)
-        if (!cancelled) {
-          setTotals(null)
-          setError(msg.slice(0, 120))
-        }
-      }
-    }
-
-    run()
-    return () => {
-      cancelled = true
-    }
-  }, [client, vault, deployBlock, account, refreshKey])
-
-  return { totals, error }
-}
+type StoredTotals = Record<string, { claimed: string; compounded: string }>
 
 type ClaimedState = {
   status: "idle" | "loading" | "ready"
   data: Record<string, bigint>
 }
 
-// Scans CLAIMED logs for all vaults in parallel. Only runs while `enabled`
-// (the summary panel is open). Cached per wallet until refreshKey changes.
-function useClaimedPerVault(
-  vaults: { key: VaultKey; vault: `0x${string}`; deployBlock: bigint }[],
-  account: `0x${string}` | undefined,
-  enabled: boolean,
-  refreshKey = 0,
-): ClaimedState {
-  const client = usePublicClient()
-  const cache = useRef(new Map<string, Record<string, bigint>>())
-  const [state, setState] = useState<ClaimedState>({ status: "idle", data: {} })
+function useStoredTotals(address: `0x${string}` | undefined, refreshKey = 0) {
+  const [data, setData] = useState<StoredTotals | null>(null)
 
   useEffect(() => {
+    if (!address) {
+      setData(null)
+      return
+    }
     let cancelled = false
-    if (!client || !account || !enabled || vaults.length === 0) {
-      setState({ status: "idle", data: {} })
-      return
-    }
+    const load = () =>
+      fetch(`/api/yield/user?address=${address}`)
+        .then((response) => response.json())
+        .then((result) => {
+          if (!cancelled && result.totals) setData(result.totals)
+        })
+        .catch(() => {})
 
-    const cacheKey = `${account.toLowerCase()}-${refreshKey}-${vaults.map((v) => v.key).join(",")}`
-    const cached = cache.current.get(cacheKey)
-    if (cached) {
-      setState({ status: "ready", data: cached })
-      return
-    }
-
-    setState({ status: "loading", data: {} })
-
-    const run = async () => {
-      try {
-        const latest = await client.getBlockNumber()
-        const results = await Promise.all(
-          vaults.map(async (v) => {
-            let claimed = 0n
-            try {
-              for (let from = v.deployBlock; from <= latest; from += 9_000n) {
-                const to = from + 8_999n > latest ? latest : from + 8_999n
-                const logs = await client.getLogs({
-                  address: v.vault,
-                  event: CLAIMED_EVENT,
-                  args: { user: account },
-                  fromBlock: from,
-                  toBlock: to,
-                })
-                for (const log of logs) claimed += log.args.amount ?? 0n
-              }
-            } catch {
-              // a failed vault shows 0 rather than blocking the whole table
-            }
-            return [v.key, claimed] as const
-          }),
-        )
-        if (cancelled) return
-        const data = Object.fromEntries(results) as Record<string, bigint>
-        cache.current.set(cacheKey, data)
-        setState({ status: "ready", data })
-      } catch {
-        if (!cancelled) setState({ status: "ready", data: {} })
-      }
-    }
-
-    run()
+    load()
+    fetch("/api/yield/refresh", { method: "POST" }).then(load).catch(() => {})
     return () => {
       cancelled = true
     }
-  }, [client, account, enabled, vaults, refreshKey])
+  }, [address, refreshKey])
 
-  return state
+  return data
 }
 
 export default function AutoCompoundPage() {
@@ -567,12 +461,11 @@ export default function AutoCompoundPage() {
 
   const [historyKey, setHistoryKey] = useState(0)
   const lastCompound = useLastCompound(cfg.vault, historyKey)
-  const { totals: lifetime, error: lifetimeError } = useLifetimeEarned(
-    cfg.vault,
-    cfg.deployBlock,
-    displayAddress,
-    historyKey,
-  )
+  const stored = useStoredTotals(displayAddress, historyKey)
+  const lifetime = stored?.[active]
+    ? { claimed: BigInt(stored[active].claimed), compounded: BigInt(stored[active].compounded) }
+    : null
+  const lifetimeError = null
 
   const { data: userData, refetch: refetchUser } = useReadContracts({
     contracts: displayAddress
@@ -627,16 +520,6 @@ export default function AutoCompoundPage() {
     return rows
   }, [aggregateData, allVaults])
 
-  const vaultMeta = useMemo(
-    () =>
-      allVaults.map((k) => ({
-        key: k,
-        vault: VAULTS[k].vault,
-        deployBlock: BigInt(VAULTS[k].deployBlock),
-      })),
-    [allVaults],
-  )
-
   const { data: targetAddrData } = useReadContracts({
     contracts: allVaults.map((k) => ({
       address: VAULTS[k].vault,
@@ -658,7 +541,12 @@ export default function AutoCompoundPage() {
   )
   const { prices, loaded: pricesLoaded } = usePriceMap(priceItems)
 
-  const claimed = useClaimedPerVault(vaultMeta, displayAddress, summaryOpen, historyKey)
+  const claimed: ClaimedState = {
+    status: stored ? "ready" : "loading",
+    data: Object.fromEntries(
+      Object.entries(stored ?? {}).map(([key, value]) => [key, BigInt(value.claimed)]),
+    ),
+  }
   const summaryTotals = useMemo(() => {
     let claimableUsd = 0
     let claimedUsd = 0
