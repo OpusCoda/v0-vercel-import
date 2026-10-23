@@ -245,7 +245,7 @@ async function fetchTokenPriceUsd(token?: `0x${string}`): Promise<number | null>
   }
 }
 
-function usePriceMap(items: PriceItem[]) {
+function usePriceMap(items: PriceItem[], ready = true) {
   const [state, setState] = useState<{ prices: Record<string, number>; loaded: boolean }>({
     prices: {},
     loaded: false,
@@ -254,7 +254,7 @@ function usePriceMap(items: PriceItem[]) {
 
   useEffect(() => {
     let cancelled = false
-    if (items.some((i) => !i.token && !i.pairOverride)) return
+    if (!ready) return
 
     const run = async () => {
       const entries = await Promise.all(
@@ -276,7 +276,7 @@ function usePriceMap(items: PriceItem[]) {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sig])
+  }, [sig, ready])
 
   return state
 }
@@ -539,8 +539,9 @@ export default function AutoCompoundPage() {
     ],
     [allVaults, targetAddrData],
   )
-  const { prices, loaded: pricesLoaded } = usePriceMap(priceItems)
-
+  const { prices, loaded: pricesLoaded } = usePriceMap(priceItems, targetAddrData !== undefined)
+    console.log("[yield] prices", prices, "loaded:", pricesLoaded)
+  
   const claimed: ClaimedState = {
     status: stored ? "ready" : "loading",
     data: Object.fromEntries(
