@@ -226,14 +226,22 @@ async function fetchTokenPriceUsd(token?: `0x${string}`): Promise<number | null>
   try {
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${token}`)
     const data = await res.json()
-    const pairs = (data.pairs ?? []).filter(
-      (p: any) => p.priceUsd && p.baseToken?.address?.toLowerCase() === token.toLowerCase(),
-    )
-    if (!pairs.length) return null
-    const best = pairs.reduce((a: any, b: any) =>
-      (Number(b.liquidity?.usd) || 0) > (Number(a.liquidity?.usd) || 0) ? b : a,
-    )
-    return Number(best.priceUsd)
+    const t = token.toLowerCase()
+
+    const candidates: { price: number; liq: number }[] = []
+    for (const p of data.pairs ?? []) {
+      const liq = Number(p.liquidity?.usd) || 0
+      const base = p.baseToken?.address?.toLowerCase()
+      const quote = p.quoteToken?.address?.toLowerCase()
+      if (base === t && p.priceUsd) {
+        candidates.push({ price: Number(p.priceUsd), liq })
+      } else if (quote === t && p.priceUsd && p.priceNative) {
+        // priceNative is the base token's price in this token, so this token's USD price is priceUsd / priceNative.
+        candidates.push({ price: Number(p.priceUsd) / Number(p.priceNative), liq })
+      }
+    }
+    if (!candidates.length) return null
+    return candidates.reduce((a, b) => (b.liq > a.liq ? b : a)).price
   } catch {
     return null
   }
@@ -279,6 +287,13 @@ function usdFmt(n: number): string {
   return `$${Math.round(n).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
 }
 
+const WHOLE_TOKENS = new Set(["OPUS", "CODA", "PLS", "PLSX", "PRVX", "HEX", "EHEX"])
+
+// Whole-number display for the listed tokens, otherwise the given decimals.
+function dpFor(symbol: string, fallback: number): number {
+  return WHOLE_TOKENS.has(symbol.toUpperCase()) ? 0 : fallback
+}
+
 function usdOf(amount: bigint, decimals: number, price?: number): string | null {
   if (!price) return null
   return usdFmt(Number(formatUnits(amount, decimals)) * price)
@@ -299,33 +314,12 @@ function useTargetPriceUsd(tokenAddress: `0x${string}` | undefined, pairOverride
   useEffect(() => {
     let cancelled = false
     setPrice(null)
-
     const run = async () => {
-      if (pairOverride) {
-        const price = await fetchPairPriceUsd(pairOverride)
-        if (!cancelled) setPrice(price)
-        return
-      }
-      if (!tokenAddress) return
-
-      try {
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`)
-        const data = await res.json()
-        const pairs = (data.pairs ?? []).filter(
-          (p: any) =>
-            p.priceUsd &&
-            p.baseToken?.address?.toLowerCase() === tokenAddress.toLowerCase(),
-        )
-        if (!pairs.length) return
-        const best = pairs.reduce((a: any, b: any) =>
-          (Number(b.liquidity?.usd) || 0) > (Number(a.liquidity?.usd) || 0) ? b : a,
-        )
-        if (!cancelled) setPrice(Number(best.priceUsd))
-      } catch {
-        // leave price null
-      }
+      const p = pairOverride
+        ? await fetchPairPriceUsd(pairOverride)
+        : await fetchTokenPriceUsd(tokenAddress)
+      if (!cancelled) setPrice(p)
     }
-
     run()
     return () => {
       cancelled = true
@@ -928,7 +922,7 @@ export default function AutoCompoundPage() {
           <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Claimed</div>
           <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Deposited in vault</div>
 
-          {vaultSummary.map((v) => {
+                    {vaultSummary.map((v) => {
             const dec = VAULTS[v.key].targetDecimals
             const sym = VAULTS[v.key].targetSymbol
             const claimedAmt = claimed.data[v.key] ?? 0n
@@ -937,14 +931,14 @@ export default function AutoCompoundPage() {
                 <div className="font-medium text-[#ffffff]">{sym}</div>
                 <div className="text-right tabular-nums text-[#ffffff]">
                   <Amt
-                    text={`${fmt(v.claimable, 4, dec)} ${sym}`}
+                    text={`${fmt(v.claimable, dpFor(sym, 4), dec)} ${sym}`}
                     usd={usdOf(v.claimable, dec, prices[v.key])}
                   />
                 </div>
                 <div className="text-right tabular-nums text-[#ffffff]">
                   {claimed.status === "ready" ? (
                     <Amt
-                      text={`${fmt(claimedAmt, 4, dec)} ${sym}`}
+                      text={`${fmt(claimedAmt, dpFor(sym, 4), dec)} ${sym}`}
                       usd={usdOf(claimedAmt, dec, prices[v.key])}
                     />
                   ) : (
@@ -953,7 +947,7 @@ export default function AutoCompoundPage() {
                 </div>
                 <div className="text-right tabular-nums text-[#ffffff]">
                   <Amt
-                    text={`${fmt(v.balance)} ${principal}`}
+                    text={`${fmt(v.balance, dpFor(principal, 2))} ${principal}`}
                     usd={usdOf(v.balance, 18, prices.principal)}
                   />
                 </div>
