@@ -348,8 +348,7 @@ function useClaimedPerVault(
       return
     }
 
-    const cacheKey = `${account.toLowerCase()}-${refreshKey}`
-    const cached = cache.current.get(cacheKey)
+    const cacheKey = `${account.toLowerCase()}-${refreshKey}-${vaults.map((v) => v.key).join(",")}`    const cached = cache.current.get(cacheKey)
     if (cached) {
       setState({ status: "ready", data: cached })
       return
