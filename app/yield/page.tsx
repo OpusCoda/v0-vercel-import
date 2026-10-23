@@ -533,7 +533,7 @@ export default function AutoCompoundPage() {
       { key: "principal", token: VAULTS[allVaults[0]].token as `0x${string}` },
       ...allVaults.map((k, i) => ({
         key: k,
-        token: targetAddrData?.[i]?.result as `0x${string}` | undefined,
+        token: ((VAULTS[k] as any).targetToken ?? targetAddrData?.[i]?.result) as `0x${string}` | undefined,
         pairOverride: (VAULTS[k] as any).priceOverridePair as string | undefined,
       })),
     ],
