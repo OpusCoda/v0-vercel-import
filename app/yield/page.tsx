@@ -314,33 +314,12 @@ function useTargetPriceUsd(tokenAddress: `0x${string}` | undefined, pairOverride
   useEffect(() => {
     let cancelled = false
     setPrice(null)
-
     const run = async () => {
-      if (pairOverride) {
-        const price = await fetchPairPriceUsd(pairOverride)
-        if (!cancelled) setPrice(price)
-        return
-      }
-      if (!tokenAddress) return
-
-      try {
-        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`)
-        const data = await res.json()
-        const pairs = (data.pairs ?? []).filter(
-          (p: any) =>
-            p.priceUsd &&
-            p.baseToken?.address?.toLowerCase() === tokenAddress.toLowerCase(),
-        )
-        if (!pairs.length) return
-        const best = pairs.reduce((a: any, b: any) =>
-          (Number(b.liquidity?.usd) || 0) > (Number(a.liquidity?.usd) || 0) ? b : a,
-        )
-        if (!cancelled) setPrice(Number(best.priceUsd))
-      } catch {
-        // leave price null
-      }
+      const p = pairOverride
+        ? await fetchPairPriceUsd(pairOverride)
+        : await fetchTokenPriceUsd(tokenAddress)
+      if (!cancelled) setPrice(p)
     }
-
     run()
     return () => {
       cancelled = true
