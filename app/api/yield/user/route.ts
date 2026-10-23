@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get("address") ?? ""
   if (!isAddress(address)) return NextResponse.json({ error: "bad address" }, { status: 400 })
 
-  const hash = (await redis.hgetall<Record<string, string>>(keys.user(address))) ?? {}
+const hash = (await redis.hgetall<Record<string, string>>(keys.user(address.toLowerCase()))) ?? {}
   const totals: Record<string, { claimed: string; compounded: string }> = {}
   for (const key of Object.keys(VAULTS)) {
     totals[key] = {
