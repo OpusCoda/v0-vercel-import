@@ -1,7 +1,7 @@
 // app/yield/page.tsx
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { formatUnits, parseUnits, maxUint256, isAddress } from "viem"
 import {
   useAccount,
@@ -31,6 +31,7 @@ import {
   RELAY_ADDRESS,
   RELAY_ABI,
   type PrincipalKey,
+  type VaultKey,
 } from "@/lib/yield"
 
 const COPPER = "#B87333"
@@ -39,6 +40,8 @@ const BUY_TAX = 0.05
 const SLIPPAGE = 0.03
 const DEADLINE_SECONDS = 300
 const NO_RELAY = RELAY_ADDRESS === "0x0000000000000000000000000000000000000000"
+
+type Position = readonly [bigint, bigint, bigint, bigint, bigint, bigint, number]
 
 function Panel({
   children,
@@ -152,8 +155,6 @@ function fmt(v: bigint | undefined, dp = 2, decimals = 18): string {
   const n = Number(formatUnits(v, decimals))
   if (n === 0) return "0"
   // Small amounts show significant digits rather than flooring to "<0.01".
-  // A dollar of pWBTC is a few ten-thousandths of a token — flooring it
-  // makes a real, claimable balance look like nothing.
   if (n < 0.01) return n.toLocaleString(undefined, { maximumSignificantDigits: 4 })
   return n.toLocaleString(undefined, { maximumFractionDigits: dp })
 }
@@ -237,9 +238,9 @@ function useTargetPriceUsd(tokenAddress: `0x${string}` | undefined, pairOverride
         const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`)
         const data = await res.json()
         const pairs = (data.pairs ?? []).filter(
-        (p: any) =>
-          p.priceUsd &&
-          p.baseToken?.address?.toLowerCase() === tokenAddress.toLowerCase(),
+          (p: any) =>
+            p.priceUsd &&
+            p.baseToken?.address?.toLowerCase() === tokenAddress.toLowerCase(),
         )
         if (!pairs.length) return
         const best = pairs.reduce((a: any, b: any) =>
@@ -323,6 +324,81 @@ function useLifetimeEarned(
   return { totals, error }
 }
 
+type ClaimedState = {
+  status: "idle" | "loading" | "ready"
+  data: Record<string, bigint>
+}
+
+// Scans CLAIMED logs for all vaults in parallel. Only runs while `enabled`
+// (the summary panel is open). Cached per wallet until refreshKey changes.
+function useClaimedPerVault(
+  vaults: { key: VaultKey; vault: `0x${string}`; deployBlock: bigint }[],
+  account: `0x${string}` | undefined,
+  enabled: boolean,
+  refreshKey = 0,
+): ClaimedState {
+  const client = usePublicClient()
+  const cache = useRef(new Map<string, Record<string, bigint>>())
+  const [state, setState] = useState<ClaimedState>({ status: "idle", data: {} })
+
+  useEffect(() => {
+    let cancelled = false
+    if (!client || !account || !enabled || vaults.length === 0) {
+      setState({ status: "idle", data: {} })
+      return
+    }
+
+    const cacheKey = `${account.toLowerCase()}-${refreshKey}`
+    const cached = cache.current.get(cacheKey)
+    if (cached) {
+      setState({ status: "ready", data: cached })
+      return
+    }
+
+    setState({ status: "loading", data: {} })
+
+    const run = async () => {
+      try {
+        const latest = await client.getBlockNumber()
+        const results = await Promise.all(
+          vaults.map(async (v) => {
+            let claimed = 0n
+            try {
+              for (let from = v.deployBlock; from <= latest; from += 9_000n) {
+                const to = from + 8_999n > latest ? latest : from + 8_999n
+                const logs = await client.getLogs({
+                  address: v.vault,
+                  event: CLAIMED_EVENT,
+                  args: { user: account },
+                  fromBlock: from,
+                  toBlock: to,
+                })
+                for (const log of logs) claimed += log.args.amount ?? 0n
+              }
+            } catch {
+              // a failed vault shows 0 rather than blocking the whole table
+            }
+            return [v.key, claimed] as const
+          }),
+        )
+        if (cancelled) return
+        const data = Object.fromEntries(results) as Record<string, bigint>
+        cache.current.set(cacheKey, data)
+        setState({ status: "ready", data })
+      } catch {
+        if (!cancelled) setState({ status: "ready", data: {} })
+      }
+    }
+
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [client, account, enabled, vaults, refreshKey])
+
+  return state
+}
+
 export default function AutoCompoundPage() {
   const [principal, setPrincipal] = useState<PrincipalKey>("OPUS")
   const [targetIdx, setTargetIdx] = useState(0)
@@ -350,6 +426,7 @@ export default function AutoCompoundPage() {
   const [withdrawAmt, setWithdrawAmt] = useState("")
   const [pctDraft, setPctDraft] = useState<number | null>(null)
   const [txError, setTxError] = useState<string | null>(null)
+  const [summaryOpen, setSummaryOpen] = useState(false)
 
   const { writeContract, data: txHash, isPending } = useWriteContract()
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
@@ -432,15 +509,15 @@ export default function AutoCompoundPage() {
   const { data: userData, refetch: refetchUser } = useReadContracts({
     contracts: displayAddress
       ? [
-        { address: cfg.vault, abi: VAULT_ABI, functionName: "positionOf", args: [displayAddress] },
-        { address: cfg.token, abi: ERC20_ABI, functionName: "balanceOf", args: [displayAddress] },
-        { address: cfg.token, abi: ERC20_ABI, functionName: "allowance", args: [displayAddress, cfg.vault] },
-      ]
+          { address: cfg.vault, abi: VAULT_ABI, functionName: "positionOf", args: [displayAddress] },
+          { address: cfg.token, abi: ERC20_ABI, functionName: "balanceOf", args: [displayAddress] },
+          { address: cfg.token, abi: ERC20_ABI, functionName: "allowance", args: [displayAddress, cfg.vault] },
+        ]
       : [],
     query: { enabled: !!displayAddress, refetchInterval: 15_000 },
   })
-  
-  const allVaults = vaultsForPrincipal(principal)
+
+  const allVaults = useMemo(() => vaultsForPrincipal(principal), [principal])
 
   const { data: aggregateData } = useReadContracts({
     contracts: displayAddress
@@ -458,7 +535,7 @@ export default function AutoCompoundPage() {
     let total = 0n
     let count = 0
     aggregateData?.forEach((r) => {
-      const pos = r.result as readonly [bigint, bigint, bigint, bigint, bigint, bigint, number] | undefined
+      const pos = r.result as Position | undefined
       if (!pos) return
       const bal = pos[0] + pos[4]
       if (bal > 0n) {
@@ -468,16 +545,40 @@ export default function AutoCompoundPage() {
     })
     return { total, count }
   }, [aggregateData])
-  
+
+  const vaultSummary = useMemo(() => {
+    const rows: { key: VaultKey; balance: bigint; claimable: bigint }[] = []
+    aggregateData?.forEach((r, i) => {
+      const pos = r.result as Position | undefined
+      if (!pos) return
+      const balance = pos[0] + pos[4]
+      const claimable = pos[5]
+      if (balance === 0n && claimable === 0n) return
+      rows.push({ key: allVaults[i], balance, claimable })
+    })
+    return rows
+  }, [aggregateData, allVaults])
+
+  const vaultMeta = useMemo(
+    () =>
+      allVaults.map((k) => ({
+        key: k,
+        vault: VAULTS[k].vault,
+        deployBlock: BigInt(VAULTS[k].deployBlock),
+      })),
+    [allVaults],
+  )
+
+const claimed = useClaimedPerVault(vaultMeta, displayAddress, summaryOpen, historyKey)
+const summaryReady = claimed.status === "ready" && aggregateData !== undefined
+
   useEffect(() => {
     if (!isConfirmed) return
     refetchUser()
     setHistoryKey((k) => k + 1)
   }, [isConfirmed, refetchUser])
 
-  const position = userData?.[0]?.result as
-    | readonly [bigint, bigint, bigint, bigint, bigint, bigint, number]
-    | undefined
+  const position = userData?.[0]?.result as Position | undefined
 
   const [principalAmt, smaugInWallet, tier, , pendingIn, claimable, compoundPct] =
     position ?? [0n, 0n, 100n, 0n, 0n, 0n, 100]
@@ -622,8 +723,7 @@ export default function AutoCompoundPage() {
                   setTargetIdx(0)
                   resetInputs()
                 }}
-                className={`min-w-[92px] rounded-sm px-5 py-2 font-serif text-sm font-semibold tracking-[0.08em] transition-all ${principal === p ? "bg-[#c4813c] text-[#17110b] shadow-[0_4px_18px_rgba(184,115,51,0.28)]" : "text-[#a8a99f] hover:bg-[#263027] hover:text-[#f0e7d8]"
-                  }`}
+                className={`min-w-[92px] rounded-sm px-5 py-2 font-serif text-sm font-semibold tracking-[0.08em] transition-all ${principal === p ? "bg-[#c4813c] text-[#17110b] shadow-[0_4px_18px_rgba(184,115,51,0.28)]" : "text-[#a8a99f] hover:bg-[#263027] hover:text-[#f0e7d8]"}`}
               >
                 {p}
               </button>
@@ -634,7 +734,7 @@ export default function AutoCompoundPage() {
             <>
               {/* Desktop: horizontal scroll row */}
               <div className="hidden min-w-0 flex-1 items-start gap-2 sm:flex">
-               <span className="shrink-0 pt-2 font-serif text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a99a82]">Rewards:</span>
+                <span className="shrink-0 pt-2 font-serif text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a99a82]">Rewards:</span>
                 <div className="flex flex-wrap gap-1">
                   {options.map((k, i) => (
                     <button
@@ -644,8 +744,7 @@ export default function AutoCompoundPage() {
                         setTargetIdx(i)
                         resetInputs()
                       }}
-                      className={`shrink-0 rounded-sm px-3 py-1.5 font-serif text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${targetIdx === i ? "bg-[#b87333]/20 text-[#f0c08a] shadow-[inset_0_0_0_1px_rgba(184,115,51,0.45)]" : "text-[#b0aa9d] hover:bg-[#263027] hover:text-[#f0e7d8]"
-                        }`}
+                      className={`shrink-0 rounded-sm px-3 py-1.5 font-serif text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${targetIdx === i ? "bg-[#b87333]/20 text-[#f0c08a] shadow-[inset_0_0_0_1px_rgba(184,115,51,0.45)]" : "text-[#b0aa9d] hover:bg-[#263027] hover:text-[#f0e7d8]"}`}
                     >
                       {VAULTS[k].targetSymbol}
                     </button>
@@ -665,8 +764,7 @@ export default function AutoCompoundPage() {
                         setTargetIdx(i)
                         resetInputs()
                       }}
-                      className={`rounded-sm px-3 py-1.5 font-serif text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${targetIdx === i ? "bg-[#b87333]/20 text-[#f0c08a] shadow-[inset_0_0_0_1px_rgba(184,115,51,0.45)]" : "text-[#b0aa9d] hover:bg-[#263027] hover:text-[#f0e7d8]"
-                        }`}
+                      className={`rounded-sm px-3 py-1.5 font-serif text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${targetIdx === i ? "bg-[#b87333]/20 text-[#f0c08a] shadow-[inset_0_0_0_1px_rgba(184,115,51,0.45)]" : "text-[#b0aa9d] hover:bg-[#263027] hover:text-[#f0e7d8]"}`}
                     >
                       {VAULTS[k].targetSymbol}
                     </button>
@@ -695,7 +793,55 @@ export default function AutoCompoundPage() {
             </span>
           )}
         </div>
-        
+
+<details
+  className="relative z-10 mb-6 rounded-2xl border border-[#2a2a35] px-5 py-4 shadow-[0_18px_60px_rgba(0,0,0,0.18)]"
+  style={{ backgroundColor: "#101017" }}
+  onToggle={(e) => setSummaryOpen((e.target as HTMLDetailsElement).open)}
+>
+  <summary className="cursor-pointer font-sans text-sm font-medium text-[#ffffff]">
+    Vault summary
+  </summary>
+  <div className="mt-4 overflow-x-auto">
+    {!displayAddress ? (
+      <p className="font-sans text-sm text-[#ffffff]">
+        Connect a wallet or enter an address to see the summary.
+      </p>
+    ) : !summaryReady ? (
+      <p className="font-sans text-sm text-[#ffffff]">
+        Loading your vault data… this can take a moment the first time.
+      </p>
+    ) : (
+      <>
+        <div className="grid min-w-[480px] grid-cols-[1.2fr_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 font-sans text-sm">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Vault</div>
+          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Claimable</div>
+          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Claimed</div>
+          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Deposited in vault</div>
+
+          {vaultSummary.map((v) => (
+            <div key={v.key} className="contents">
+              <div className="font-medium text-[#ffffff]">{VAULTS[v.key].targetSymbol}</div>
+              <div className="text-right tabular-nums text-[#ffffff]">
+                {fmt(v.claimable, 4, VAULTS[v.key].targetDecimals)} {VAULTS[v.key].targetSymbol}
+              </div>
+              <div className="text-right tabular-nums text-[#ffffff]">
+                {fmt(claimed.data[v.key] ?? 0n, 4, VAULTS[v.key].targetDecimals)} {VAULTS[v.key].targetSymbol}
+              </div>
+              <div className="text-right tabular-nums text-[#ffffff]">
+                {fmt(v.balance)} {principal}
+              </div>
+            </div>
+          ))}
+        </div>
+        {vaultSummary.length === 0 && (
+          <p className="mt-3 font-sans text-sm text-[#ffffff]">No positions in this token.</p>
+        )}
+      </>
+    )}
+  </div>
+</details>
+
         <Panel className="mb-4 p-5 md:p-6">
           <div className="flex flex-wrap gap-x-10 gap-y-4">
             <Stat
@@ -732,7 +878,7 @@ export default function AutoCompoundPage() {
               </div>
               <p className="mt-2 font-sans text-[11px] text-[#555963]">
                 Anyone can run this manually if they wish. Compound reinvests rewards into the vault; Distribute makes the
-yield share claimable. If it is greyed out there is nothing yet to run.
+                yield share claimable. If it is greyed out there is nothing yet to run.
               </p>
             </div>
           )}
@@ -798,8 +944,7 @@ yield share claimable. If it is greyed out there is nothing yet to run.
                     onClick={() => setPctDraft(p)}
                     className={`rounded-md border px-3 py-1.5 font-sans text-[11px] transition-colors ${pct === p
                       ? "border-[#B87333]/70 bg-[#B87333]/15 text-[#f0c08a] shadow-[0_4px_14px_rgba(184,115,51,0.14)]"
-                      : "border-[#3a443d] text-[#8d918b] hover:border-[#B87333]/70 hover:bg-[#1b211d] hover:text-[#e8e6e3]"
-                      }`}
+                      : "border-[#3a443d] text-[#8d918b] hover:border-[#B87333]/70 hover:bg-[#1b211d] hover:text-[#e8e6e3]"}`}
                   >
                     {p}%{p === cfg.defaultCompoundPct && <span className="ml-1 text-[#4f535d]">default</span>}
                   </button>
@@ -838,7 +983,6 @@ yield share claimable. If it is greyed out there is nothing yet to run.
 
         {isConnected ? (
           <>
-
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <Panel className="p-5 md:p-6">
                 <div className="flex items-center justify-between">
@@ -852,11 +996,9 @@ yield share claimable. If it is greyed out there is nothing yet to run.
                   {fmt(claimable, 2, cfg.targetDecimals)}
                   {targetPriceUsd !== null && claimable > 0n && (
                     <span className="ml-2 font-sans text-sm font-normal text-[#626672]">
-                      ($
-                      {(
+                      (${(
                         Number(formatUnits(claimable, cfg.targetDecimals)) * targetPriceUsd
-                      ).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                      )
+                      ).toLocaleString(undefined, { maximumFractionDigits: 2 })})
                     </span>
                   )}
                 </div>
