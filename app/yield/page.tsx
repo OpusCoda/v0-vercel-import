@@ -279,6 +279,13 @@ function usdFmt(n: number): string {
   return `$${Math.round(n).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
 }
 
+const WHOLE_TOKENS = new Set(["OPUS", "CODA", "PLS", "PLSX", "PRVX", "HEX", "EHEX"])
+
+// Whole-number display for the listed tokens, otherwise the given decimals.
+function dpFor(symbol: string, fallback: number): number {
+  return WHOLE_TOKENS.has(symbol.toUpperCase()) ? 0 : fallback
+}
+
 function usdOf(amount: bigint, decimals: number, price?: number): string | null {
   if (!price) return null
   return usdFmt(Number(formatUnits(amount, decimals)) * price)
@@ -928,7 +935,7 @@ export default function AutoCompoundPage() {
           <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Claimed</div>
           <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Deposited in vault</div>
 
-          {vaultSummary.map((v) => {
+                    {vaultSummary.map((v) => {
             const dec = VAULTS[v.key].targetDecimals
             const sym = VAULTS[v.key].targetSymbol
             const claimedAmt = claimed.data[v.key] ?? 0n
@@ -937,14 +944,14 @@ export default function AutoCompoundPage() {
                 <div className="font-medium text-[#ffffff]">{sym}</div>
                 <div className="text-right tabular-nums text-[#ffffff]">
                   <Amt
-                    text={`${fmt(v.claimable, 4, dec)} ${sym}`}
+                    text={`${fmt(v.claimable, dpFor(sym, 4), dec)} ${sym}`}
                     usd={usdOf(v.claimable, dec, prices[v.key])}
                   />
                 </div>
                 <div className="text-right tabular-nums text-[#ffffff]">
                   {claimed.status === "ready" ? (
                     <Amt
-                      text={`${fmt(claimedAmt, 4, dec)} ${sym}`}
+                      text={`${fmt(claimedAmt, dpFor(sym, 4), dec)} ${sym}`}
                       usd={usdOf(claimedAmt, dec, prices[v.key])}
                     />
                   ) : (
@@ -953,7 +960,7 @@ export default function AutoCompoundPage() {
                 </div>
                 <div className="text-right tabular-nums text-[#ffffff]">
                   <Amt
-                    text={`${fmt(v.balance)} ${principal}`}
+                    text={`${fmt(v.balance, dpFor(principal, 2))} ${principal}`}
                     usd={usdOf(v.balance, 18, prices.principal)}
                   />
                 </div>
