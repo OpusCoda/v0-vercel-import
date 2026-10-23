@@ -31,6 +31,7 @@ import {
   RELAY_ADDRESS,
   RELAY_ABI,
   type PrincipalKey,
+  type VaultKey,
 } from "@/lib/yield"
 
 const COPPER = "#B87333"
@@ -469,6 +470,19 @@ export default function AutoCompoundPage() {
     return { total, count }
   }, [aggregateData])
   
+    const vaultSummary = useMemo(() => {
+    const rows: { key: VaultKey; balance: bigint; claimable: bigint }[] = []
+    aggregateData?.forEach((r, i) => {
+      const pos = r.result as readonly [bigint, bigint, bigint, bigint, bigint, bigint, number] | undefined
+      if (!pos) return
+      const balance = pos[0] + pos[4]
+      const claimable = pos[5]
+      if (balance === 0n && claimable === 0n) return
+      rows.push({ key: allVaults[i], balance, claimable })
+    })
+    return rows
+  }, [aggregateData, allVaults])
+  
   useEffect(() => {
     if (!isConfirmed) return
     refetchUser()
@@ -695,6 +709,36 @@ export default function AutoCompoundPage() {
             </span>
           )}
         </div>
+        
+                <details className="mb-6 rounded-lg border border-[#292933] bg-[#09090c] px-4 py-3">
+          <summary className="cursor-pointer font-sans text-xs font-medium text-[#B87333]">
+            Vault summary
+          </summary>
+          <div className="mt-4 overflow-x-auto">
+            <div className="grid min-w-[420px] grid-cols-[1.2fr_1fr_1fr_1fr] gap-x-4 gap-y-3 font-sans text-xs">
+              <div className="text-[10px] uppercase tracking-[0.14em] text-[#6b7280]">Vault</div>
+              <div className="text-[10px] uppercase tracking-[0.14em] text-[#6b7280]">Balance</div>
+              <div className="text-[10px] uppercase tracking-[0.14em] text-[#6b7280]">Claimable</div>
+              <div className="text-[10px] uppercase tracking-[0.14em] text-[#6b7280]">Claimed</div>
+
+              {vaultSummary.map((v) => (
+                <div key={v.key} className="contents">
+                  <div className="text-[#e8e6e3]">{VAULTS[v.key].targetSymbol}</div>
+                  <div className="tabular-nums text-[#e8e6e3]">
+                    {fmt(v.balance)} {principal}
+                  </div>
+                  <div className="tabular-nums text-[#e8e6e3]">
+                    {fmt(v.claimable, 4, VAULTS[v.key].targetDecimals)} {VAULTS[v.key].targetSymbol}
+                  </div>
+                  <div className="tabular-nums text-[#555963]">—</div>
+                </div>
+              ))}
+            </div>
+            {vaultSummary.length === 0 && (
+              <p className="mt-3 font-sans text-xs text-[#6b7280]">No positions in this token.</p>
+            )}
+          </div>
+        </details>
         
         <Panel className="mb-4 p-5 md:p-6">
           <div className="flex flex-wrap gap-x-10 gap-y-4">
