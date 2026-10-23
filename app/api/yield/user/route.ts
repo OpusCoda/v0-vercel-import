@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
   if (!isAddress(address)) return NextResponse.json({ error: "bad address" }, { status: 400 })
 
 const hash = (await redis.hgetall<Record<string, string>>(keys.user(address.toLowerCase()))) ?? {}
+  console.log("[yield-user]", address.toLowerCase(), Object.keys(hash).length)
   const totals: Record<string, { claimed: string; compounded: string }> = {}
   for (const key of Object.keys(VAULTS)) {
     totals[key] = {
