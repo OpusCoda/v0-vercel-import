@@ -817,7 +817,7 @@ const summaryReady = claimed.status === "ready" && aggregateData !== undefined
           <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Vault</div>
           <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Claimable</div>
           <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Claimed</div>
-          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Balance</div>
+          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Deposited in vault</div>
 
           {vaultSummary.map((v) => (
             <div key={v.key} className="contents">
