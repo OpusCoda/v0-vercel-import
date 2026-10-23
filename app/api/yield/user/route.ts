@@ -9,8 +9,14 @@ export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get("address") ?? ""
   if (!isAddress(address)) return NextResponse.json({ error: "bad address" }, { status: 400 })
 
-const hash = (await redis.hgetall<Record<string, string>>(keys.user(address.toLowerCase()))) ?? {}
-  console.log("[yield-user]", address.toLowerCase(), Object.keys(hash).length)
+  const raw = (await redis.hgetall(keys.user(address.toLowerCase()))) as unknown
+  const hash: Record<string, string> = {}
+  if (Array.isArray(raw)) {
+    for (let i = 0; i < raw.length; i += 2) hash[String(raw[i])] = String(raw[i + 1])
+  } else if (raw && typeof raw === "object") {
+    Object.assign(hash, raw)
+  }
+
   const totals: Record<string, { claimed: string; compounded: string }> = {}
   for (const key of Object.keys(VAULTS)) {
     totals[key] = {
