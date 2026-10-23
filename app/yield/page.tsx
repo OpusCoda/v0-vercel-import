@@ -665,7 +665,6 @@ export default function AutoCompoundPage() {
   const { prices, loaded: pricesLoaded } = usePriceMap(priceItems)
 
   const claimed = useClaimedPerVault(vaultMeta, displayAddress, summaryOpen, historyKey)
-  const summaryReady = claimed.status === "ready" && aggregateData !== undefined && pricesLoaded
   const summaryTotals = useMemo(() => {
     let claimableUsd = 0
     let claimedUsd = 0
@@ -919,10 +918,8 @@ export default function AutoCompoundPage() {
       <p className="font-sans text-sm text-[#ffffff]">
         Connect a wallet or enter an address to see the summary.
       </p>
-    ) : !summaryReady ? (
-      <p className="font-sans text-sm text-[#ffffff]">
-        Loading your vault data… this can take a moment the first time.
-      </p>
+    ) : aggregateData === undefined ? (
+      <p className="font-sans text-sm text-[#ffffff]">Loading your vault data…</p>
     ) : (
       <>
         <div className="grid min-w-[560px] grid-cols-[1.2fr_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 font-sans text-sm">
@@ -945,10 +942,14 @@ export default function AutoCompoundPage() {
                   />
                 </div>
                 <div className="text-right tabular-nums text-[#ffffff]">
-                  <Amt
-                    text={`${fmt(claimedAmt, 4, dec)} ${sym}`}
-                    usd={usdOf(claimedAmt, dec, prices[v.key])}
-                  />
+                  {claimed.status === "ready" ? (
+                    <Amt
+                      text={`${fmt(claimedAmt, 4, dec)} ${sym}`}
+                      usd={usdOf(claimedAmt, dec, prices[v.key])}
+                    />
+                  ) : (
+                    "…"
+                  )}
                 </div>
                 <div className="text-right tabular-nums text-[#ffffff]">
                   <Amt
@@ -962,13 +963,13 @@ export default function AutoCompoundPage() {
 
           <div className="border-t border-[#3a3a46] pt-3 font-semibold text-[#ffffff]">Total</div>
           <div className="border-t border-[#3a3a46] pt-3 text-right font-semibold tabular-nums text-[#ffffff]">
-            {usdFmt(summaryTotals.claimableUsd)}
+            {pricesLoaded ? usdFmt(summaryTotals.claimableUsd) : "…"}
           </div>
           <div className="border-t border-[#3a3a46] pt-3 text-right font-semibold tabular-nums text-[#ffffff]">
-            {usdFmt(summaryTotals.claimedUsd)}
+            {pricesLoaded && claimed.status === "ready" ? usdFmt(summaryTotals.claimedUsd) : "…"}
           </div>
           <div className="border-t border-[#3a3a46] pt-3 text-right font-semibold tabular-nums text-[#ffffff]">
-            {usdFmt(summaryTotals.balanceUsd)}
+            {pricesLoaded ? usdFmt(summaryTotals.balanceUsd) : "…"}
           </div>
         </div>
         {vaultSummary.length === 0 && (
@@ -977,7 +978,7 @@ export default function AutoCompoundPage() {
       </>
     )}
   </div>
-</details>
+</details>   
 
         <Panel className="mb-4 p-5 md:p-6">
           <div className="flex flex-wrap gap-x-10 gap-y-4">
