@@ -226,14 +226,22 @@ async function fetchTokenPriceUsd(token?: `0x${string}`): Promise<number | null>
   try {
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${token}`)
     const data = await res.json()
-    const pairs = (data.pairs ?? []).filter(
-      (p: any) => p.priceUsd && p.baseToken?.address?.toLowerCase() === token.toLowerCase(),
-    )
-    if (!pairs.length) return null
-    const best = pairs.reduce((a: any, b: any) =>
-      (Number(b.liquidity?.usd) || 0) > (Number(a.liquidity?.usd) || 0) ? b : a,
-    )
-    return Number(best.priceUsd)
+    const t = token.toLowerCase()
+
+    const candidates: { price: number; liq: number }[] = []
+    for (const p of data.pairs ?? []) {
+      const liq = Number(p.liquidity?.usd) || 0
+      const base = p.baseToken?.address?.toLowerCase()
+      const quote = p.quoteToken?.address?.toLowerCase()
+      if (base === t && p.priceUsd) {
+        candidates.push({ price: Number(p.priceUsd), liq })
+      } else if (quote === t && p.priceUsd && p.priceNative) {
+        // priceNative is the base token's price in this token, so this token's USD price is priceUsd / priceNative.
+        candidates.push({ price: Number(p.priceUsd) / Number(p.priceNative), liq })
+      }
+    }
+    if (!candidates.length) return null
+    return candidates.reduce((a, b) => (b.liq > a.liq ? b : a)).price
   } catch {
     return null
   }
