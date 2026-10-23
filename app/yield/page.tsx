@@ -1,7 +1,7 @@
 // app/yield/page.tsx
 "use client"
 
-import { useEffect, useMemo, useRef useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { formatUnits, parseUnits, maxUint256, isAddress } from "viem"
 import {
   useAccount,
@@ -795,28 +795,28 @@ const summaryReady = claimed.status === "ready" && aggregateData !== undefined
         </div>
 
 <details
-  className="mb-6 rounded-lg border border-[#3a3a46] bg-[#0b0b0f] px-4 py-3"
+  className="mb-6 rounded-2xl border border-[#2a2a35] bg-[#101017] px-5 py-4 shadow-[0_18px_60px_rgba(0,0,0,0.18)]"
   onToggle={(e) => setSummaryOpen((e.target as HTMLDetailsElement).open)}
 >
-  <summary className="cursor-pointer font-sans text-sm font-medium text-[#f0c08a]">
+  <summary className="cursor-pointer font-sans text-sm font-medium text-[#ffffff]">
     Vault summary
   </summary>
   <div className="mt-4 overflow-x-auto">
     {!displayAddress ? (
-      <p className="font-sans text-sm text-[#e8e6e3]">
+      <p className="font-sans text-sm text-[#ffffff]">
         Connect a wallet or enter an address to see the summary.
       </p>
     ) : !summaryReady ? (
-      <p className="font-sans text-sm text-[#e8e6e3]">
+      <p className="font-sans text-sm text-[#ffffff]">
         Loading your vault data… this can take a moment the first time.
       </p>
     ) : (
       <>
         <div className="grid min-w-[480px] grid-cols-[1.2fr_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 font-sans text-sm">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#d1d5db]">Vault</div>
-          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#d1d5db]">Claimable</div>
-          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#d1d5db]">Claimed</div>
-          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#d1d5db]">Balance</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Vault</div>
+          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Claimable</div>
+          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Claimed</div>
+          <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Balance</div>
 
           {vaultSummary.map((v) => (
             <div key={v.key} className="contents">
@@ -834,7 +834,7 @@ const summaryReady = claimed.status === "ready" && aggregateData !== undefined
           ))}
         </div>
         {vaultSummary.length === 0 && (
-          <p className="mt-3 font-sans text-sm text-[#e8e6e3]">No positions in this token.</p>
+          <p className="mt-3 font-sans text-sm text-[#ffffff]">No positions in this token.</p>
         )}
       </>
     )}
