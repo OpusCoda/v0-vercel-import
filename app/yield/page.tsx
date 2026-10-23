@@ -795,7 +795,8 @@ const summaryReady = claimed.status === "ready" && aggregateData !== undefined
         </div>
 
 <details
-  className="mb-6 rounded-2xl border border-[#2a2a35] bg-[#101017] px-5 py-4 shadow-[0_18px_60px_rgba(0,0,0,0.18)]"
+  className="mb-6 rounded-2xl border border-[#2a2a35] px-5 py-4 shadow-[0_18px_60px_rgba(0,0,0,0.18)]"
+  style={{ backgroundColor: "#101017" }}
   onToggle={(e) => setSummaryOpen((e.target as HTMLDetailsElement).open)}
 >
   <summary className="cursor-pointer font-sans text-sm font-medium text-[#ffffff]">
