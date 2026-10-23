@@ -975,6 +975,17 @@ export default function AutoCompoundPage() {
         {vaultSummary.length === 0 && (
           <p className="mt-3 font-sans text-sm text-[#ffffff]">No positions in this token.</p>
         )}
+                {(claimed.status !== "ready" || !pricesLoaded) && (
+          <p className="mt-3 font-sans text-sm text-[#ffffff]">
+            Please wait, still loading{" "}
+            {claimed.status !== "ready" && !pricesLoaded
+              ? "claimed amounts and USD values"
+              : claimed.status !== "ready"
+                ? "claimed amounts"
+                : "USD values"}
+            …
+          </p>
+        )}
       </>
     )}
   </div>
