@@ -219,6 +219,80 @@ async function fetchPairPriceUsd(pairAddress: string): Promise<number | null> {
   }
 }
 
+type PriceItem = { key: string; token?: `0x${string}`; pairOverride?: string }
+
+async function fetchTokenPriceUsd(token?: `0x${string}`): Promise<number | null> {
+  if (!token) return null
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${token}`)
+    const data = await res.json()
+    const pairs = (data.pairs ?? []).filter(
+      (p: any) => p.priceUsd && p.baseToken?.address?.toLowerCase() === token.toLowerCase(),
+    )
+    if (!pairs.length) return null
+    const best = pairs.reduce((a: any, b: any) =>
+      (Number(b.liquidity?.usd) || 0) > (Number(a.liquidity?.usd) || 0) ? b : a,
+    )
+    return Number(best.priceUsd)
+  } catch {
+    return null
+  }
+}
+
+function usePriceMap(items: PriceItem[]) {
+  const [state, setState] = useState<{ prices: Record<string, number>; loaded: boolean }>({
+    prices: {},
+    loaded: false,
+  })
+  const sig = items.map((i) => `${i.key}:${i.token ?? ""}:${i.pairOverride ?? ""}`).join("|")
+
+  useEffect(() => {
+    let cancelled = false
+    if (items.some((i) => !i.token && !i.pairOverride)) return
+
+    const run = async () => {
+      const entries = await Promise.all(
+        items.map(async (i) => {
+          const price = i.pairOverride
+            ? await fetchPairPriceUsd(i.pairOverride)
+            : await fetchTokenPriceUsd(i.token)
+          return [i.key, price] as const
+        }),
+      )
+      if (cancelled) return
+      const prices: Record<string, number> = {}
+      for (const [k, p] of entries) if (p) prices[k] = p
+      setState({ prices, loaded: true })
+    }
+
+    run()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig])
+
+  return state
+}
+
+function usdFmt(n: number): string {
+  return `$${Math.round(n).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+}
+
+function usdOf(amount: bigint, decimals: number, price?: number): string | null {
+  if (!price) return null
+  return usdFmt(Number(formatUnits(amount, decimals)) * price)
+}
+
+function Amt({ text, usd }: { text: string; usd: string | null }) {
+  return (
+    <>
+      {text}
+      {usd && <span> ({usd})</span>}
+    </>
+  )
+}
+
 function useTargetPriceUsd(tokenAddress: `0x${string}` | undefined, pairOverride?: string) {
   const [price, setPrice] = useState<number | null>(null)
 
@@ -569,8 +643,44 @@ export default function AutoCompoundPage() {
     [allVaults],
   )
 
-const claimed = useClaimedPerVault(vaultMeta, displayAddress, summaryOpen, historyKey)
-const summaryReady = claimed.status === "ready" && aggregateData !== undefined
+  const { data: targetAddrData } = useReadContracts({
+    contracts: allVaults.map((k) => ({
+      address: VAULTS[k].vault,
+      abi: VAULT_ABI,
+      functionName: "targetToken" as const,
+    })),
+    query: { refetchInterval: 300_000 },
+  })
+  const priceItems: PriceItem[] = useMemo(
+    () => [
+      { key: "principal", token: VAULTS[allVaults[0]].token as `0x${string}` },
+      ...allVaults.map((k, i) => ({
+        key: k,
+        token: targetAddrData?.[i]?.result as `0x${string}` | undefined,
+        pairOverride: (VAULTS[k] as any).priceOverridePair as string | undefined,
+      })),
+    ],
+    [allVaults, targetAddrData],
+  )
+  const { prices, loaded: pricesLoaded } = usePriceMap(priceItems)
+
+  const claimed = useClaimedPerVault(vaultMeta, displayAddress, summaryOpen, historyKey)
+  const summaryTotals = useMemo(() => {
+    let claimableUsd = 0
+    let claimedUsd = 0
+    let balanceUsd = 0
+    for (const v of vaultSummary) {
+      const dec = VAULTS[v.key].targetDecimals
+      const tp = prices[v.key]
+      if (tp) {
+        claimableUsd += Number(formatUnits(v.claimable, dec)) * tp
+        claimedUsd += Number(formatUnits(claimed.data[v.key] ?? 0n, dec)) * tp
+      }
+      if (prices.principal) balanceUsd += Number(formatUnits(v.balance, 18)) * prices.principal
+    }
+    return { claimableUsd, claimedUsd, balanceUsd }
+  }, [vaultSummary, prices, claimed.data])
+  const aggregateUsd = usdOf(aggregate.total, 18, prices.principal)
 
   useEffect(() => {
     if (!isConfirmed) return
@@ -705,9 +815,10 @@ const summaryReady = claimed.status === "ready" && aggregateData !== undefined
         </header>
 
         {aggregate.count > 0 && (
-          <p className="mb-3 font-sans text-sm text-[#a8abb2]">
-            You have {fmt(aggregate.total)} {principal} across {aggregate.count} Vault{aggregate.count === 1 ? "" : "s"}
-          </p>
+  <p className="mb-3 font-sans text-sm text-[#a8abb2]">
+    You have {fmt(aggregate.total)} {principal}
+    {aggregateUsd && <span> ({aggregateUsd})</span>} across {aggregate.count} Vault{aggregate.count === 1 ? "" : "s"}
+  </p>
         )}
 
         {/* Principal + reward selector — kept on one visual row to save vertical space */}
@@ -807,40 +918,78 @@ const summaryReady = claimed.status === "ready" && aggregateData !== undefined
       <p className="font-sans text-sm text-[#ffffff]">
         Connect a wallet or enter an address to see the summary.
       </p>
-    ) : !summaryReady ? (
-      <p className="font-sans text-sm text-[#ffffff]">
-        Loading your vault data… this can take a moment the first time.
-      </p>
+    ) : aggregateData === undefined ? (
+      <p className="font-sans text-sm text-[#ffffff]">Loading your vault data…</p>
     ) : (
       <>
-        <div className="grid min-w-[480px] grid-cols-[1.2fr_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 font-sans text-sm">
+        <div className="grid min-w-[560px] grid-cols-[1.2fr_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 font-sans text-sm">
           <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Vault</div>
           <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Claimable</div>
           <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Claimed</div>
           <div className="text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffffff]">Deposited in vault</div>
 
-          {vaultSummary.map((v) => (
-            <div key={v.key} className="contents">
-              <div className="font-medium text-[#ffffff]">{VAULTS[v.key].targetSymbol}</div>
-              <div className="text-right tabular-nums text-[#ffffff]">
-                {fmt(v.claimable, 4, VAULTS[v.key].targetDecimals)} {VAULTS[v.key].targetSymbol}
+          {vaultSummary.map((v) => {
+            const dec = VAULTS[v.key].targetDecimals
+            const sym = VAULTS[v.key].targetSymbol
+            const claimedAmt = claimed.data[v.key] ?? 0n
+            return (
+              <div key={v.key} className="contents">
+                <div className="font-medium text-[#ffffff]">{sym}</div>
+                <div className="text-right tabular-nums text-[#ffffff]">
+                  <Amt
+                    text={`${fmt(v.claimable, 4, dec)} ${sym}`}
+                    usd={usdOf(v.claimable, dec, prices[v.key])}
+                  />
+                </div>
+                <div className="text-right tabular-nums text-[#ffffff]">
+                  {claimed.status === "ready" ? (
+                    <Amt
+                      text={`${fmt(claimedAmt, 4, dec)} ${sym}`}
+                      usd={usdOf(claimedAmt, dec, prices[v.key])}
+                    />
+                  ) : (
+                    "…"
+                  )}
+                </div>
+                <div className="text-right tabular-nums text-[#ffffff]">
+                  <Amt
+                    text={`${fmt(v.balance)} ${principal}`}
+                    usd={usdOf(v.balance, 18, prices.principal)}
+                  />
+                </div>
               </div>
-              <div className="text-right tabular-nums text-[#ffffff]">
-                {fmt(claimed.data[v.key] ?? 0n, 4, VAULTS[v.key].targetDecimals)} {VAULTS[v.key].targetSymbol}
-              </div>
-              <div className="text-right tabular-nums text-[#ffffff]">
-                {fmt(v.balance)} {principal}
-              </div>
-            </div>
-          ))}
+            )
+          })}
+
+          <div className="border-t border-[#3a3a46] pt-3 font-semibold text-[#ffffff]">Total</div>
+          <div className="border-t border-[#3a3a46] pt-3 text-right font-semibold tabular-nums text-[#ffffff]">
+            {pricesLoaded ? usdFmt(summaryTotals.claimableUsd) : "…"}
+          </div>
+          <div className="border-t border-[#3a3a46] pt-3 text-right font-semibold tabular-nums text-[#ffffff]">
+            {pricesLoaded && claimed.status === "ready" ? usdFmt(summaryTotals.claimedUsd) : "…"}
+          </div>
+          <div className="border-t border-[#3a3a46] pt-3 text-right font-semibold tabular-nums text-[#ffffff]">
+            {pricesLoaded ? usdFmt(summaryTotals.balanceUsd) : "…"}
+          </div>
         </div>
         {vaultSummary.length === 0 && (
           <p className="mt-3 font-sans text-sm text-[#ffffff]">No positions in this token.</p>
         )}
+                {(claimed.status !== "ready" || !pricesLoaded) && (
+          <p className="mt-3 font-sans text-sm text-[#ffffff]">
+            Please wait, still loading{" "}
+            {claimed.status !== "ready" && !pricesLoaded
+              ? "claimed amounts and USD values"
+              : claimed.status !== "ready"
+                ? "claimed amounts"
+                : "USD values"}
+            …
+          </p>
+        )}
       </>
     )}
   </div>
-</details>
+</details>   
 
         <Panel className="mb-4 p-5 md:p-6">
           <div className="flex flex-wrap gap-x-10 gap-y-4">
