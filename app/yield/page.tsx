@@ -1082,8 +1082,8 @@ export default function AutoCompoundPage() {
               </Panel>
             </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <Panel className="p-5 md:p-6">
+            <div className="mt-4 grid grid-cols-1 gap-4">
+              <Panel className="hidden p-5 md:p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <SectionLabel>Deposit {cfg.tokenSymbol}</SectionLabel>
                   <span className="font-sans text-[11px] text-[#555963]">{fmt(walletToken)} in wallet</span>
