@@ -1015,7 +1015,7 @@ export default function AutoCompoundPage() {
 
         {isConnected ? (
           <>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-4">
               <Panel className="p-5 md:p-6">
                 <div className="flex items-center justify-between">
                   <SectionLabel>Your rewards</SectionLabel>
@@ -1052,7 +1052,7 @@ export default function AutoCompoundPage() {
                 )}
               </Panel>
 
-              <Panel className="p-5 md:p-6">
+              <Panel className="hidden p-5 md:p-6">
                 <div className="flex items-center justify-between">
                   <SectionLabel>Your Smaug tier</SectionLabel>
                   <span className="font-sans text-xs text-[#626672]">{fmt(smaugInWallet, 0)} SMAUG</span>
