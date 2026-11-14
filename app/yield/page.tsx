@@ -825,7 +825,7 @@ export default function AutoCompoundPage() {
   </div>
 </details>   
 
-        <Panel className="mb-4 p-5 md:p-6">
+        <Panel className="hidden mb-4 p-5 md:p-6">
           <div className="flex flex-wrap gap-x-10 gap-y-4">
             <Stat
               label={`${cfg.rewardSymbol} awaiting compound`}
