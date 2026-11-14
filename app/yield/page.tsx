@@ -690,10 +690,10 @@ export default function AutoCompoundPage() {
 
         <header className="mb-6">
           <h1 className="font-serif text-3xl font-bold tracking-[-0.02em] text-[#e8e6e3] md:text-4xl">
-            Compound some. Yield the rest.
+            The yield vaults are discontinued.
           </h1>
           <p className="mt-2 max-w-xl font-sans text-sm leading-6 text-[#777b85]">
-            Deposit Opus or Coda, choose your split between compounding and yield, and the vault takes care of the rest.
+            You can claim any pending rewards.
           </p>
         </header>
 
