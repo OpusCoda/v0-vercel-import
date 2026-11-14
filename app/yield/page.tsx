@@ -867,7 +867,7 @@ export default function AutoCompoundPage() {
           )}
         </Panel>
 
-        <Panel className="overflow-hidden">
+        <Panel className="hidden overflow-hidden">
           <div className="flex flex-wrap items-start justify-between gap-5 border-b border-[#25252e] px-5 py-4 md:px-7">
             <div>
               <SectionLabel>{cfg.tokenSymbol} vault</SectionLabel>
@@ -1137,7 +1137,7 @@ export default function AutoCompoundPage() {
               <SectionLabel>Get started</SectionLabel>
               <h2 className="mt-2 font-serif text-2xl text-[#e8e6e3]">Connect your wallet</h2>
               <p className="mx-auto mt-2 max-w-md font-sans text-sm leading-6 text-[#6b7280]">
-                Deposit {cfg.tokenSymbol}, set your reinvestment rate, and let the vault compound your rewards.
+                Connect your wallet to view your vault position and manage rewards.
               </p>
               <div className="mt-5 flex justify-center">
                 <ConnectWalletButton />
@@ -1146,7 +1146,7 @@ export default function AutoCompoundPage() {
           </Panel>
         )}
 
-        <div className="mt-6 border-t border-[#1d1d25] pt-5">
+        <div className="hidden mt-6 border-t border-[#1d1d25] pt-5">
           <div className="grid grid-cols-2 gap-y-5 md:grid-cols-3 md:gap-5">
             <Stat
               label={`Total ${cfg.tokenSymbol} deposited`}
