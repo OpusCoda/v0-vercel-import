@@ -16,6 +16,7 @@ import { ManageResolver } from '@/components/admin/manage-resolver'
 import { SweepPanel } from '@/components/admin/sweep-panel'
 import { DisputesResolutions } from '@/components/admin/disputes-resolutions'
 import { VaultSurplusPanel } from '@/components/admin/vault-surplus-panel'
+import { SmaugRescuePanel } from '@/components/admin/smaug-rescue-panel'
 import { ConnectWalletButton } from '@/components/landing/connect-wallet-button'
 import { predictionMarketAbi } from '@/lib/abis/prediction-market'
 import { outcomeExchangeAbi } from '@/lib/abis/outcome-exchange'
@@ -36,6 +37,7 @@ type AdminTab =
   | 'manage-resolver'
   | 'sweep'
   | 'vault-surplus'
+  | 'smaug-rescue'
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -114,6 +116,7 @@ export default function AdminPage() {
       list.push({ id: 'sweep', label: 'Unclaimed Sweeps' })
     }
     if (showVaultSurplus) list.push({ id: 'vault-surplus', label: 'Vault Surplus' })
+    if (showVaultSurplus) list.push({ id: 'smaug-rescue', label: 'Smaug Rescue' })
     return list
   }, [showCreateMarket, showManageAdmins, showManageArbitrators, showManageResolver, showSweep, showVaultSurplus])
 
@@ -264,6 +267,18 @@ export default function AdminPage() {
             </p>
           </div>
           <VaultSurplusPanel />
+        </section>
+      )}
+
+      {activeTab === 'smaug-rescue' && showVaultSurplus && (
+        <section>
+          <div className="mb-6">
+            <h2 className="font-serif text-2xl font-bold text-[#e8e6e3]">Smaug Rescue</h2>
+            <p className="mt-2 font-sans text-sm text-[#7c7a76]">
+              Move the SMAUG held by each yield vault to another address (vault owner only).
+            </p>
+          </div>
+          <SmaugRescuePanel />
         </section>
       )}
     </main>
