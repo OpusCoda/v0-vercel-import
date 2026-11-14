@@ -1091,16 +1091,12 @@ export default function AutoCompoundPage() {
               <Panel className="p-5 md:p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <SectionLabel>Withdraw</SectionLabel>
-                  <span className="font-sans text-[11px] text-[#555963]">
-                    {fmt(balance)} {cfg.tokenSymbol}
-                  </span>
                 </div>
 
                 <AmountInput
                   label="Amount"
                   value={withdrawAmt}
                   onChange={setWithdrawAmt}
-                  max={principalAmt}
                   symbol={cfg.tokenSymbol}
                 />
 
