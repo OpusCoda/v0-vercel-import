@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { ArrowRight, ExternalLink, Copy, Check, ChevronDown, ChevronUp } from "lucide-react"
+import { ArrowRight, ExternalLink, Copy, Check } from "lucide-react"
 
 function OrnamentHeading({
   children,
@@ -68,16 +68,6 @@ const protocolContracts = [
     url: "https://repo.sourcify.dev/369/0x8Fa4a2f0E465d63C287d4147638d5514bDE2f38D",
   },
   {
-    name: "Opus Yield",
-    address: "0xEf5B436f6832F19D34b81897FFAE0751c6612830",
-    url: "https://repo.sourcify.dev/369/0xEf5B436f6832F19D34b81897FFAE0751c6612830",
-  },
-  {
-    name: "Coda Yield",
-    address: "0x630ce372979B784db03e277A7c888D1A8b47819E",
-    url: "https://repo.sourcify.dev/369/0x630ce372979B784db03e277A7c888D1A8b47819E",
-  },
-  {
     name: "Probability Shop",
     address: "0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392",
     url: "https://repo.sourcify.dev/369/0xBeE9e50cF2b522D225b2B2115C0c0F2ce2aFE392",
@@ -88,94 +78,6 @@ const protocolContracts = [
     url: "https://repo.sourcify.dev/369/0x6FaE169714ba3BE839332785291f798d627BCE8c",
   },
 ]
-
-const otherYieldContracts = [
-  {
-    name: "HEX Vault",
-    address: "0x622ecC19e2c6c17758a46939C99e0677646AB708",
-    url: "https://repo.sourcify.dev/369/0x622ecC19e2c6c17758a46939C99e0677646AB708",
-  },
-  {
-    name: "eHEX Vault",
-    address: "0x37d2553bF2F80333FBDAED37c989131859bBa994",
-    url: "https://repo.sourcify.dev/369/0x37d2553bF2F80333FBDAED37c989131859bBa994",
-  },
-  {
-    name: "INC Vault",
-    address: "0x39f49E51069954A80e44559857EB07b72dDE5196",
-    url: "https://repo.sourcify.dev/369/0x39f49E51069954A80e44559857EB07b72dDE5196",
-  },
-  {
-    name: "PRVX Vault",
-    address: "0x8da8F78B5Bc207A83dfe11bC167857C8F4eFef55",
-    url: "https://repo.sourcify.dev/369/0x8da8F78B5Bc207A83dfe11bC167857C8F4eFef55",
-  },
-  {
-    name: "WBTC Vault",
-    address: "0x7daBB6Fd166710B4Bc9733E32C1CAca7F9CC992f",
-    url: "https://repo.sourcify.dev/369/0x7daBB6Fd166710B4Bc9733E32C1CAca7F9CC992f",
-  },
-  {
-    name: "WETH Vault",
-    address: "0x00b30bb3a8a0d724687F9CF2e397909B716833da",
-    url: "https://repo.sourcify.dev/369/0x00b30bb3a8a0d724687F9CF2e397909B716833da",
-  },
-  {
-    name: "pWBTC Vault",
-    address: "0xea7322A5D3e4e4b266e3D6722D43fEC2CB525b33",
-    url: "https://repo.sourcify.dev/369/0xea7322A5D3e4e4b266e3D6722D43fEC2CB525b33",
-  },
-  {
-    name: "pDAI Vault",
-    address: "0xaAeee3E41B0fa08Bcb3Ae70369AC4eFA25aC8370",
-    url: "https://repo.sourcify.dev/369/0xaAeee3E41B0fa08Bcb3Ae70369AC4eFA25aC8370",
-  },
-  {
-    name: "Finvesta Vault",
-    address: "0x2ac85128486fC2d75a539Dc24Df9969d57049be7",
-    url: "https://repo.sourcify.dev/369/0x2ac85128486fC2d75a539Dc24Df9969d57049be7",
-  },
-  {
-    name: "FUPA Vault",
-    address: "0x63e51cf462a1ee38EA8feBE9DE4389641Fb9c6Cb",
-    url: "https://repo.sourcify.dev/369/0x63e51cf462a1ee38EA8feBE9DE4389641Fb9c6Cb",
-  },
-  {
-    name: "pTGC Vault",
-    address: "0x2A75521E42f4FcA684A2c813C41DcE774f113cc4",
-    url: "https://repo.sourcify.dev/369/0x2A75521E42f4FcA684A2c813C41DcE774f113cc4",
-  },
-  {
-    name: "UFO Vault",
-    address: "0x8a6fCf756C154c9968055039e73c0288FFC3ec96",
-    url: "https://repo.sourcify.dev/369/0x8a6fCf756C154c9968055039e73c0288FFC3ec96",
-  },
-  {
-    name: "SYDE Vault",
-    address: "0x17DB8ca7b50393739183C5573E31633Eb19D275f",
-    url: "https://repo.sourcify.dev/369/0x17DB8ca7b50393739183C5573E31633Eb19D275f",
-  },
-  {
-    name: "SCADA Vault",
-    address: "0xd693e4AeAE3fD8AE796107D3c1B7F2c1a41309d5",
-    url: "https://repo.sourcify.dev/369/0xd693e4AeAE3fD8AE796107D3c1B7F2c1a41309d5",
-  },
-  {
-    name: "OMEGA Vault",
-    address: "0xd8a64Df150370a591e4c13c8E85ea6006a53a38b",
-    url: "https://repo.sourcify.dev/369/0xd8a64Df150370a591e4c13c8E85ea6006a53a38b",
-  },
-  {
-    name: "CV Vault",
-    address: "0x05789D00A4E20D385396590C917cACF65EF7aa5F",
-    url: "https://repo.sourcify.dev/369/0x05789D00A4E20D385396590C917cACF65EF7aa5F",
-  },
-  {
-    name: "SWARM Vault",
-    address: "0x3315ea30C99E06344642E40B9AA0d373ae775EDA",
-    url: "https://repo.sourcify.dev/369/0x3315ea30C99E06344642E40B9AA0d373ae775EDA",
-  },
-  ]
 
 function AddressRow({
   contract,
@@ -217,7 +119,6 @@ function AddressRow({
 
 export function BuyTokens() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [showOtherYieldContracts, setShowOtherYieldContracts] = useState(false)
 
   const handleCopy = (address: string, contractName: string) => {
     navigator.clipboard.writeText(address)
@@ -289,35 +190,6 @@ export function BuyTokens() {
               onCopy={handleCopy}
             />
           ))}
-          <div className="mt-3 border-t border-[#2a2a35] pt-3">
-            <button
-              onClick={() => setShowOtherYieldContracts(!showOtherYieldContracts)}
-              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-colors hover:bg-[#0d0d12]"
-            >
-              <span className="font-serif text-sm font-bold text-[#B87333]">
-                Other yield contracts
-              </span>
-
-              {showOtherYieldContracts ? (
-                <ChevronUp className="h-4 w-4 text-[#9ca3af]" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-[#9ca3af]" />
-              )}
-            </button>
-
-            {showOtherYieldContracts && (
-              <div className="mt-2 space-y-2">
-                {otherYieldContracts.map((contract) => (
-                  <AddressRow
-                    key={contract.name}
-                    contract={contract}
-                    copiedId={copiedId}
-                    onCopy={handleCopy}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </section>
