@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { formatUnits, parseUnits, maxUint256, isAddress } from "viem"
+import { formatUnits, parseUnits, maxUint256 } from "viem"
 import {
   useAccount,
   usePublicClient,
@@ -155,10 +155,6 @@ function fmt(v: bigint | undefined, dp = 2, decimals = 18): string {
   // Small amounts show significant digits rather than flooring to "<0.01".
   if (n < 0.01) return n.toLocaleString(undefined, { maximumSignificantDigits: 4 })
   return n.toLocaleString(undefined, { maximumFractionDigits: dp })
-}
-
-function shortAddress(value: `0x${string}`): string {
-  return `${value.slice(0, 6)}…${value.slice(-4)}`
 }
 
 function toWei(v: string): bigint {
@@ -379,10 +375,6 @@ export default function AutoCompoundPage() {
   )
 
   const { address, isConnected } = useAccount()
-  const [viewInput, setViewInput] = useState("")
-  const viewAddress = isAddress(viewInput) ? (viewInput as `0x${string}`) : undefined
-  const displayAddress = viewAddress ?? address
-  const isViewingOther = !!viewAddress && (!address || viewAddress.toLowerCase() !== address.toLowerCase())
 
   const [depositAmt, setDepositAmt] = useState("")
   const [withdrawAmt, setWithdrawAmt] = useState("")
@@ -461,51 +453,36 @@ export default function AutoCompoundPage() {
 
   const [historyKey, setHistoryKey] = useState(0)
   const lastCompound = useLastCompound(cfg.vault, historyKey)
-  const stored = useStoredTotals(displayAddress, historyKey)
+  const stored = useStoredTotals(address, historyKey)
   const lifetime = stored?.[active]
     ? { claimed: BigInt(stored[active].claimed), compounded: BigInt(stored[active].compounded) }
     : null
   const lifetimeError = null
 
   const { data: userData, refetch: refetchUser } = useReadContracts({
-    contracts: displayAddress
+    contracts: address
       ? [
-          { address: cfg.vault, abi: VAULT_ABI, functionName: "positionOf", args: [displayAddress] },
-          { address: cfg.token, abi: ERC20_ABI, functionName: "balanceOf", args: [displayAddress] },
-          { address: cfg.token, abi: ERC20_ABI, functionName: "allowance", args: [displayAddress, cfg.vault] },
+          { address: cfg.vault, abi: VAULT_ABI, functionName: "positionOf", args: [address] },
+          { address: cfg.token, abi: ERC20_ABI, functionName: "balanceOf", args: [address] },
+          { address: cfg.token, abi: ERC20_ABI, functionName: "allowance", args: [address, cfg.vault] },
         ]
       : [],
-    query: { enabled: !!displayAddress, refetchInterval: 15_000 },
+    query: { enabled: !!address, refetchInterval: 15_000 },
   })
 
   const allVaults = useMemo(() => vaultsForPrincipal(principal), [principal])
 
   const { data: aggregateData } = useReadContracts({
-    contracts: displayAddress
+    contracts: address
       ? allVaults.map((k) => ({
           address: VAULTS[k].vault,
           abi: VAULT_ABI,
           functionName: "positionOf" as const,
-          args: [displayAddress] as const,
+          args: [address] as const,
         }))
       : [],
-    query: { enabled: !!displayAddress, refetchInterval: 30_000 },
+    query: { enabled: !!address, refetchInterval: 30_000 },
   })
-
-  const aggregate = useMemo(() => {
-    let total = 0n
-    let count = 0
-    aggregateData?.forEach((r) => {
-      const pos = r.result as Position | undefined
-      if (!pos) return
-      const bal = pos[0] + pos[4]
-      if (bal > 0n) {
-        total += bal
-        count++
-      }
-    })
-    return { total, count }
-  }, [aggregateData])
 
   const vaultSummary = useMemo(() => {
     const rows: { key: VaultKey; balance: bigint; claimable: bigint }[] = []
@@ -563,7 +540,6 @@ export default function AutoCompoundPage() {
     }
     return { claimableUsd, claimedUsd, balanceUsd }
   }, [vaultSummary, prices, claimed.data])
-  const aggregateUsd = usdOf(aggregate.total, 18, prices.principal)
 
   useEffect(() => {
     if (!isConfirmed) return
@@ -697,12 +673,6 @@ export default function AutoCompoundPage() {
           </p>
         </header>
 
-        {aggregate.count > 0 && (
-  <p className="mb-3 font-sans text-sm text-[#a8abb2]">
-    You have {fmt(aggregate.total)} {principal}
-    {aggregateUsd && <span> ({aggregateUsd})</span>} across {aggregate.count} Vault{aggregate.count === 1 ? "" : "s"}
-  </p>
-        )}
 
         {/* Principal + reward selector — kept on one visual row to save vertical space */}
         <div className="mb-6 flex flex-wrap items-center gap-3">
@@ -769,25 +739,6 @@ export default function AutoCompoundPage() {
           )}
         </div>
 
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          <input
-            type="text"
-            placeholder="0x… (view any address)"
-            value={viewInput}
-            onChange={(e) => setViewInput(e.target.value.trim())}
-            aria-label="View another wallet address"
-            className="w-full max-w-sm rounded-lg border border-[#292933] bg-[#09090c] px-3 py-2 font-mono text-xs text-[#e8e6e3] outline-none focus:border-[#B87333]/70"
-          />
-          {viewInput && !isAddress(viewInput) && (
-            <span className="font-sans text-[11px] text-[#B87333]">Not a valid address</span>
-          )}
-          {isViewingOther && viewAddress && (
-            <span className="rounded-full border border-[#B87333]/40 px-2.5 py-1 font-sans text-[10px] uppercase tracking-wider text-[#B87333]">
-              Viewing {shortAddress(viewAddress)} — read only
-            </span>
-          )}
-        </div>
-
 <details
   className="relative z-10 mb-6 rounded-2xl border border-[#2a2a35] px-5 py-4 shadow-[0_18px_60px_rgba(0,0,0,0.18)]"
   style={{ backgroundColor: "#101017" }}
@@ -797,9 +748,9 @@ export default function AutoCompoundPage() {
     Vault summary
   </summary>
   <div className="mt-4 overflow-x-auto">
-    {!displayAddress ? (
+    {!address ? (
       <p className="font-sans text-sm text-[#ffffff]">
-        Connect a wallet or enter an address to see the summary.
+        Connect a wallet to see the summary.
       </p>
     ) : aggregateData === undefined ? (
       <p className="font-sans text-sm text-[#ffffff]">Loading your vault data…</p>
@@ -1043,7 +994,7 @@ export default function AutoCompoundPage() {
                   </span>
                 </div>
 
-                <Button className="mt-4 w-full" onClick={() => send("claim")} disabled={busy || isViewingOther || claimable === 0n}>
+                <Button className="mt-4 w-full" onClick={() => send("claim")} disabled={busy || claimable === 0n}>
                   Claim {cfg.targetSymbol}
                 </Button>
 
@@ -1074,7 +1025,7 @@ export default function AutoCompoundPage() {
                 </p>
 
                 <div className="mt-4 flex items-center gap-3">
-                  <Button variant="quiet" onClick={() => send("refreshWeight", [address])} disabled={busy || isViewingOther}>
+                  <Button variant="quiet" onClick={() => send("refreshWeight", [address])} disabled={busy}>
                     Refresh tier
                   </Button>
                   <span className="font-sans text-[11px] text-[#4e525c]">Updates automatically over time</span>
@@ -1118,7 +1069,7 @@ export default function AutoCompoundPage() {
                           { onError: (e) => setTxError(readableError(e)) },
                         )
                       }}
-                      disabled={busy || isViewingOther}
+                      disabled={busy}
                       className="flex-1"
                     >
                       Approve
@@ -1129,7 +1080,7 @@ export default function AutoCompoundPage() {
                       send("deposit", [depositWei])
                       setDepositAmt("")
                     }}
-                    disabled={busy || isViewingOther || needsApproval || rateNeedsTx || depositWei === 0n}
+                    disabled={busy || needsApproval || rateNeedsTx || depositWei === 0n}
                     className="flex-1"
                   >
                     Deposit
@@ -1163,7 +1114,7 @@ export default function AutoCompoundPage() {
                       send("withdraw", [toWei(withdrawAmt)])
                       setWithdrawAmt("")
                     }}
-                    disabled={busy || isViewingOther || toWei(withdrawAmt) === 0n}
+                    disabled={busy || toWei(withdrawAmt) === 0n}
                     className="flex-1"
                   >
                     Withdraw
