@@ -1088,7 +1088,7 @@ export default function AutoCompoundPage() {
                 </div>
               </Panel>
 
-              <Panel className="p-5 md:p-6">
+              <Panel className="hidden p-5 md:p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <SectionLabel>Withdraw</SectionLabel>
                 </div>
