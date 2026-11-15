@@ -669,7 +669,7 @@ export default function AutoCompoundPage() {
             The yield vaults are discontinued.
           </h1>
           <p className="mt-2 max-w-xl font-sans text-sm leading-6 text-[#777b85]">
-            You can claim any pending rewards.
+            You can claim any pending rewards. Any Opus and Coda you had in the vaults have been transferred back to your account.
           </p>
         </header>
 
@@ -1088,7 +1088,7 @@ export default function AutoCompoundPage() {
                 </div>
               </Panel>
 
-              <Panel className="p-5 md:p-6">
+              <Panel className="hidden p-5 md:p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <SectionLabel>Withdraw</SectionLabel>
                 </div>
