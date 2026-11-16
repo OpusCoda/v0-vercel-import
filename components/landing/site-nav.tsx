@@ -13,8 +13,20 @@ const navLinks = [
   { label: "Portfolio", href: "/portfolio" },
   { label: "Tokens", href: "/tokens" },
 ]
-export function SiteNav() {
+export function SiteNav({
+  hideYield = false,
+  hideReferrals = false,
+}: {
+  hideYield?: boolean
+  hideReferrals?: boolean
+}) {
   const [open, setOpen] = useState(false)
+  const visibleNavLinks = navLinks.filter(
+    (link) =>
+      !(hideYield && link.href === "/yield") &&
+      !(hideReferrals && link.href === "/referrals"),
+  )
+
   return (
     <header className="border-b border-[#2a2a35] bg-[#0a0a0c]/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
@@ -34,7 +46,7 @@ export function SiteNav() {
         </Link>
         {/* Desktop nav */}
         <nav className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
+          {visibleNavLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
@@ -73,7 +85,7 @@ export function SiteNav() {
       {open && (
         <nav className="border-t border-[#2a2a35] px-4 py-4 md:hidden">
           <ul className="flex flex-col gap-1">
-            {navLinks.map((link) => (
+            {visibleNavLinks.map((link) => (
               <li key={link.label}>
                 <Link
                   href={link.href}

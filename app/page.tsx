@@ -9,7 +9,7 @@ import { SiteFooter } from "@/components/landing/site-footer"
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#0a0a0c]">
-      <SiteNav />
+      <SiteNav hideYield hideReferrals />
       <Hero />
       <StatCards />
       <Participate />
