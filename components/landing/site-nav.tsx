@@ -9,23 +9,14 @@ const navLinks = [
   { label: "Markets", href: "/markets" },
   { label: "Stake", href: "/stake" },
   { label: "Yield", href: "/yield" },
-  { label: "Referrals", href: "/referrals" },
   { label: "Portfolio", href: "/portfolio" },
   { label: "Tokens", href: "/tokens" },
 ]
-export function SiteNav({
-  hideYield = false,
-  hideReferrals = false,
-}: {
-  hideYield?: boolean
-  hideReferrals?: boolean
-}) {
+export function SiteNav({ hideYield = false }: { hideYield?: boolean }) {
   const [open, setOpen] = useState(false)
-  const visibleNavLinks = navLinks.filter(
-    (link) =>
-      !(hideYield && link.href === "/yield") &&
-      !(hideReferrals && link.href === "/referrals"),
-  )
+  const visibleNavLinks = hideYield
+    ? navLinks.filter((link) => link.href !== "/yield")
+    : navLinks
 
   return (
     <header className="border-b border-[#2a2a35] bg-[#0a0a0c]/85 backdrop-blur-md">
