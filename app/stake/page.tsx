@@ -91,7 +91,7 @@ export default function StakePage() {
   }, [showSuccess])
   return (
     <>
-      <SiteNav />
+      <SiteNav hideYield />
       <main className="min-h-screen bg-[#09090B] px-6 py-12 text-[#f4f4f4]">
         <div className="mx-auto max-w-7xl space-y-8">
           <WalletContextPrompt />

@@ -30,7 +30,7 @@ export default function MarketsPage() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0c]">
-      <SiteNav />
+      <SiteNav hideYield />
       <div className="mx-auto max-w-7xl px-6 pt-4">
         <WalletContextPrompt />
       </div>

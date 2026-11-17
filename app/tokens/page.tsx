@@ -8,7 +8,7 @@ import { Play } from "lucide-react"
 export default function TokensPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0c]">
-      <SiteNav />
+      <SiteNav hideYield />
 
       <div className="mx-auto max-w-7xl px-4 pt-14 md:px-6">
         <h1 className="text-balance font-serif text-4xl font-bold text-[#e8e6e3] md:text-5xl">
